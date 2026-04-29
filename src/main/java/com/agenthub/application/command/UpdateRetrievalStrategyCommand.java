@@ -1,0 +1,13 @@
+package com.agenthub.application.command;
+
+/**
+ * 更新检索策略命令。
+ *
+ * @param name        策略名称
+ * @param description 策略描述
+ */
+public record UpdateRetrievalStrategyCommand(
+    String name,
+    String description
+) {
+}

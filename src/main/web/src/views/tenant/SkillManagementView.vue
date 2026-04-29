@@ -1,0 +1,298 @@
+<template>
+  <section class="skill-management">
+    <div class="page-header">
+      <h2>技能管理</h2>
+      <p class="muted">管理Agent可调用的技能定义</p>
+    </div>
+
+    <div class="toolbar">
+      <button @click="showCreateDialog = true" class="btn-primary">新建技能</button>
+    </div>
+
+    <div class="skill-list">
+      <table v-if="skills.length > 0">
+        <thead>
+          <tr>
+            <th>编码</th>
+            <th>名称</th>
+            <th>类型</th>
+            <th>状态</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="skill in skills" :key="skill.id">
+            <td>{{ skill.skillCode }}</td>
+            <td>{{ skill.name }}</td>
+            <td>{{ skill.skillType }}</td>
+            <td>
+              <span :class="skill.enabled ? 'status-enabled' : 'status-disabled'">
+                {{ skill.enabled ? '已启用' : '已禁用' }}
+              </span>
+            </td>
+            <td>{{ formatDate(skill.createdAt) }}</td>
+            <td>
+              <button @click="editSkill(skill)" class="btn-small">编辑</button>
+              <button @click="toggleSkill(skill)" class="btn-small">
+                {{ skill.enabled ? '禁用' : '启用' }}
+              </button>
+              <button @click="deleteSkillHandler(skill.id)" class="btn-small btn-danger">删除</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-state">
+        <p>暂无技能数据</p>
+      </div>
+    </div>
+
+    <!-- 创建/编辑对话框 -->
+    <div v-if="showCreateDialog || showEditDialog" class="dialog-overlay">
+      <div class="dialog">
+        <h3>{{ showEditDialog ? '编辑技能' : '新建技能' }}</h3>
+        <form @submit.prevent="showEditDialog ? updateSkillHandler() : createSkillHandler()">
+          <div class="form-group">
+            <label>技能编码</label>
+            <input v-model="form.skillCode" :disabled="showEditDialog" required />
+          </div>
+          <div class="form-group">
+            <label>名称</label>
+            <input v-model="form.name" required />
+          </div>
+          <div class="form-group">
+            <label>描述</label>
+            <textarea v-model="form.description" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>技能类型</label>
+            <select v-model="form.skillType" required>
+              <option value="FUNCTION">函数</option>
+              <option value="API">API调用</option>
+              <option value="WORKFLOW">工作流</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>定义 (JSON)</label>
+            <textarea v-model="form.definition" rows="5"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="closeDialog" class="btn-secondary">取消</button>
+            <button type="submit" class="btn-primary">{{ showEditDialog ? '更新' : '创建' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useWorkspaceStore } from '@/store/workspace-store'
+import { listSkills, createSkill, updateSkill, enableSkill, disableSkill, deleteSkill } from '@/api/skill-api'
+import type { Skill } from '@/types/memory'
+
+const store = useWorkspaceStore()
+const skills = ref<Skill[]>([])
+const showCreateDialog = ref(false)
+const showEditDialog = ref(false)
+const editingSkillId = ref('')
+
+const form = ref({
+  skillCode: '',
+  name: '',
+  description: '',
+  skillType: 'FUNCTION',
+  definition: '{}'
+})
+
+const selection = () => ({
+  tenantId: store.tenantId,
+  workspaceId: store.workspaceId
+})
+
+onMounted(async () => {
+  await loadSkills()
+})
+
+async function loadSkills() {
+  try {
+    skills.value = await listSkills(selection())
+  } catch (e) {
+    console.error('Failed to load skills', e)
+  }
+}
+
+async function createSkillHandler() {
+  try {
+    await createSkill(selection(), form.value.skillCode, form.value.name, form.value.description, form.value.skillType, form.value.definition, '{}')
+    await loadSkills()
+    closeDialog()
+  } catch (e) {
+    console.error('Failed to create skill', e)
+  }
+}
+
+async function updateSkillHandler() {
+  try {
+    await updateSkill(selection(), editingSkillId.value, form.value.name, form.value.description, form.value.definition, '{}')
+    await loadSkills()
+    closeDialog()
+  } catch (e) {
+    console.error('Failed to update skill', e)
+  }
+}
+
+async function toggleSkill(skill: Skill) {
+  try {
+    if (skill.enabled) {
+      await disableSkill(selection(), skill.id)
+    } else {
+      await enableSkill(selection(), skill.id)
+    }
+    await loadSkills()
+  } catch (e) {
+    console.error('Failed to toggle skill', e)
+  }
+}
+
+async function deleteSkillHandler(id: string) {
+  if (confirm('确定删除此技能？')) {
+    try {
+      await deleteSkill(selection(), id)
+      await loadSkills()
+    } catch (e) {
+      console.error('Failed to delete skill', e)
+    }
+  }
+}
+
+function editSkill(skill: Skill) {
+  editingSkillId.value = skill.id
+  form.value = {
+    skillCode: skill.skillCode,
+    name: skill.name,
+    description: skill.description,
+    skillType: skill.skillType,
+    definition: skill.definition
+  }
+  showEditDialog.value = true
+}
+
+function closeDialog() {
+  showCreateDialog.value = false
+  showEditDialog.value = false
+  form.value = { skillCode: '', name: '', description: '', skillType: 'FUNCTION', definition: '{}' }
+}
+
+function formatDate(date: string): string {
+  return new Date(date).toLocaleString()
+}
+</script>
+
+<style scoped>
+.skill-management {
+  padding: 2rem;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.toolbar {
+  margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  padding: 0.5rem 1rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-small {
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.status-enabled {
+  color: #28a745;
+}
+
+.status-disabled {
+  color: #6c757d;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  min-width: 400px;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+</style>

@@ -1,0 +1,225 @@
+:root {
+  font-family: "Bahnschrift", "Segoe UI", sans-serif;
+  color: #1a1e29;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(247, 203, 110, 0.32), transparent 22%),
+    radial-gradient(circle at 80% 0%, rgba(89, 156, 255, 0.28), transparent 26%),
+    linear-gradient(180deg, #fffaf0 0%, #eef4ff 48%, #f7fbff 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.shell {
+  width: min(1160px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 28px 0 44px;
+}
+
+.panel,
+.stat,
+.endpoint-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(26, 30, 41, 0.08);
+  box-shadow: 0 20px 40px rgba(32, 44, 68, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.endpoint-card,
+.panel,
+.stat {
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.endpoint-card {
+  display: grid;
+  gap: 10px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 12px;
+  color: #916b1f;
+}
+
+.muted {
+  color: #5d6678;
+}
+
+.nav {
+  display: flex;
+  gap: 12px;
+  padding: 18px 0 24px;
+}
+
+.nav a {
+  padding: 11px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: #27415d;
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.nav a.router-link-exact-active {
+  background: linear-gradient(135deg, #27415d, #4683d5);
+  color: #fff;
+}
+
+.grid,
+.stats,
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(39, 65, 93, 0.14);
+  background: rgba(249, 251, 255, 0.92);
+}
+
+.toolbar,
+.chip-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primary,
+.secondary,
+.ghost {
+  border: none;
+  border-radius: 14px;
+  padding: 11px 16px;
+  cursor: pointer;
+}
+
+.primary {
+  background: linear-gradient(135deg, #27415d, #4683d5);
+  color: #fff;
+}
+
+.secondary {
+  background: #deebff;
+  color: #27415d;
+}
+
+.ghost {
+  background: rgba(39, 65, 93, 0.08);
+  color: #27415d;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(26, 30, 41, 0.08);
+  text-align: left;
+}
+
+.tag {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(70, 131, 213, 0.14);
+}
+
+.status {
+  color: #953f2b;
+}
+
+/* ── TenantsView extras ─────────────────────────────── */
+
+.grid.two-up,
+.field-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+}
+
+.page-header h2 {
+  margin: 0;
+}
+
+.table-card {
+  border-radius: 16px;
+  background: rgba(249, 251, 255, 0.6);
+  padding: 4px 12px;
+}
+
+.table-card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-card th,
+.table-card td {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(26, 30, 41, 0.08);
+  text-align: left;
+}
+
+.empty-state {
+  border-radius: 16px;
+  padding: 20px;
+  background: rgba(249, 251, 255, 0.6);
+  color: #5d6678;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .stats,
+  .form-grid,
+  .grid.two-up,
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+}
