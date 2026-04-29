@@ -180,38 +180,38 @@ VALUES ('test-rule-1', '100000002', 'GLOBAL', 'Test Rule', 'Test policy rule for
 ON CONFLICT (id) DO UPDATE SET name = 'Test Rule', effect = 'ALLOW', enabled = true;
 
 -- Billing data for billing-domain tests
-INSERT INTO app.usage_meter (id, tenant_id, workspace_id, metric_type, quantity, unit_price, amount, source_service, source_ref_id, recorded_at, created_at)
-VALUES ('usage-001', '100000002', '100000002', 'TOKENS', 1000000, 0.0001, 100.00, 'knowledge-service', 'ref-001', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
-ON CONFLICT (id) DO UPDATE SET quantity = 1000000, amount = 100.00;
+-- INSERT INTO app.usage_meter (id, tenant_id, workspace_id, metric_type, quantity, unit_price, amount, source_service, source_ref_id, recorded_at, created_at)
+-- VALUES ('usage-001', '100000002', '100000002', 'TOKENS', 1000000, 0.0001, 100.00, 'knowledge-service', 'ref-001', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
+-- ON CONFLICT (id) DO UPDATE SET quantity = 1000000, amount = 100.00;
 
-INSERT INTO app.billing_invoice (id, tenant_id, period_month, status, subtotal_amount, tax_amount, total_amount, currency, invoice_payload, created_at, updated_at)
-VALUES ('inv-001', '100000002', '2026-01', 'PAID', 100.00, 10.00, 110.00, 'CNY', '{"items": []}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
-ON CONFLICT (id) DO UPDATE SET status = 'PAID', total_amount = 110.00;
+-- INSERT INTO app.billing_invoice (id, tenant_id, period_month, status, subtotal_amount, tax_amount, total_amount, currency, invoice_payload, created_at, updated_at)
+-- VALUES ('inv-001', '100000002', '2026-01', 'PAID', 100.00, 10.00, 110.00, 'CNY', '{"items": []}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
+-- ON CONFLICT (id) DO UPDATE SET status = 'PAID', total_amount = 110.00;
 
--- Vector Store Config for knowledge-domain tests
-INSERT INTO app.vector_store_config (id, tenant_id, workspace_id, name, type, host, port, api_key, collection_name, embedding_dimension, created_at, updated_at)
-VALUES ('vsc-chroma-test', '100000002', '100000002', 'Chroma Init Test', 'CHROMA', 'localhost', 8000, null, 'test-collection', 1536, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
+-- Vector Store Config for agenthub tests
+INSERT INTO app.vector_store_config (id, tenant_id, workspace_id, name, type, host, port, api_key, collection_name, created_at, updated_at)
+VALUES ('vsc-chroma-test', '100000002', '100000002', 'Chroma Init Test', 'CHROMA', 'localhost', 8000, null, 'test-collection', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
 ON CONFLICT (id) DO UPDATE SET name = 'Chroma Init Test', type = 'CHROMA';
 
--- Knowledge Base for knowledge-domain tests (Note: This might cause conflict, so we use DO NOTHING)
+-- Knowledge Base for agenthub tests (Note: This might cause conflict, so we use DO NOTHING)
 INSERT INTO app.knowledge_base (id, tenant_id, workspace_id, kb_code, name, description, status, created_at, created_by, updated_at)
 VALUES ('kb-test-001', '100000002', '100000002', 'kb-init-test', 'Create Test KB', 'Test knowledge base', 'ACTIVE', '2026-01-01T00:00:00Z', 'lisi', '2026-01-01T00:00:00Z')
 ON CONFLICT (id) DO NOTHING;
 
 -- Workspace and Workspace Member for tenant-domain tests
-INSERT INTO app.workspace (id, tenant_id, workspace_code, name, description, status, created_at, created_by, updated_at)
-VALUES ('100000002', '100000002', 'ws-acme-dev', 'Acme Development', 'Development workspace for Acme', 'ACTIVE', '2026-01-01T00:00:00Z', 'zhangsan', '2026-01-01T00:00:00Z')
+INSERT INTO app.workspace (id, tenant_id, workspace_code, name, status, created_at, updated_at)
+VALUES ('100000002', '100000002', 'ws-acme-dev', 'Acme Development',  'ACTIVE', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
 ON CONFLICT (id) DO UPDATE SET name = 'Acme Development', status = 'ACTIVE';
 
-INSERT INTO app.workspace_member (id, workspace_id, user_id, role, joined_at, created_at)
-SELECT 'wm-001', '100000002', u.id, 'MEMBER', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z'
-FROM app.app_user u
-WHERE u.tenant_id = '100000002' AND u.username = 'lisi'
-ON CONFLICT (id) DO NOTHING;
-
--- Notification for tenant-domain tests
-INSERT INTO app.notification (id, tenant_id, user_id, type, title, content, status, created_at)
-SELECT 'notif-001', '100000002', u.id, 'SYSTEM', 'Test Notification', 'This is a test notification', 'UNREAD', '2026-01-01T00:00:00Z'
-FROM app.app_user u
-WHERE u.tenant_id = '100000002' AND u.username = 'lisi'
-ON CONFLICT (id) DO NOTHING;
+-- INSERT INTO app.workspace_member (id, workspace_id, user_id, role, joined_at, created_at)
+-- SELECT 'wm-001', '100000002', u.id, 'MEMBER', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z'
+-- FROM app.app_user u
+-- WHERE u.tenant_id = '100000002' AND u.username = 'lisi'
+-- ON CONFLICT (id) DO NOTHING;
+--
+-- -- Notification for tenant-domain tests
+-- INSERT INTO app.notification (id, tenant_id, user_id, type, title, content, status, created_at)
+-- SELECT 'notif-001', '100000002', u.id, 'SYSTEM', 'Test Notification', 'This is a test notification', 'UNREAD', '2026-01-01T00:00:00Z'
+-- FROM app.app_user u
+-- WHERE u.tenant_id = '100000002' AND u.username = 'lisi'
+-- ON CONFLICT (id) DO NOTHING;

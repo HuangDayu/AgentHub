@@ -1,6 +1,6 @@
 -- =========================================================
 -- Things Knowledge Platform - Auto-generated Schema
--- Generated: 2026-04-27T03:31:40.917574Z
+-- Generated: 2026-04-29T08:39:38.908944600Z
 -- Source: MyBatis-Plus Entity Classes
 -- =========================================================
 

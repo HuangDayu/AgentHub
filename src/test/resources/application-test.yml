@@ -8,11 +8,11 @@ spring:
   sql:
     init:
       mode: always
-      schema-locations: file:${project.root}\sql\schema.sql
-      data-locations: file:${project.root}\sql\init.sql
+      schema-locations: file:${user.dir}\sql\schema.sql
+      data-locations: file:${user.dir}\sql\init.sql
       platform: postgresql
   datasource:
-    url: jdbc:postgresql://localhost:5432/things_knowledge
+    url: jdbc:postgresql://localhost:5432/agenthub
     username: things
     password: things123
     driver-class-name: org.postgresql.Driver
@@ -71,7 +71,7 @@ spring:
       read-timeout: 300000
 
 mybatis-plus:
-  type-handlers-package: com.thingsknowledge.knowledge.infrastructure.persistence.handler
+  type-handlers-package: com.agenthub.infrastructure.persistence.handler
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
@@ -93,7 +93,7 @@ agenthub:
       endpoint: http://localhost:9000
       access-key: minioadmin
       secret-key: minioadmin
-      bucket: things-knowledge
+      bucket: agenthub
   persistence:
     mode: mybatis
   text-search:
@@ -121,6 +121,5 @@ management:
 
 logging:
   level:
-    com.thingsknowledge: DEBUG
-    com.thingsknowledge.tenant.service.infrastructure.persistence.mybatis: DEBUG
+    com.agenthub: DEBUG
     org.springframework.security: WARN

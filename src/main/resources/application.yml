@@ -1,5 +1,5 @@
 server:
-  port: 0
+  port: 8080
 
 spring:
   main:
@@ -8,8 +8,8 @@ spring:
   sql:
     init:
       mode: always
-      schema-locations: file:${project.root}\sql\schema.sql
-      data-locations: file:${project.root}\sql\init.sql
+      schema-locations: file:${user.dir}\sql\schema.sql
+      data-locations: file:${user.dir}\sql\init.sql
       platform: postgresql
   datasource:
     url: jdbc:postgresql://localhost:5432/agenthub

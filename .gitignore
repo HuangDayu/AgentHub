@@ -30,3 +30,4 @@ services/monolith-service/src/main/resources/static/
 .arts/
 .vscode/
 .**/
+src/main/resources/static/
