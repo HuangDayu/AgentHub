@@ -25,21 +25,23 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
-    /** 日志记录器 */
+    /**
+     * 日志记录器
+     */
     private static final Log log = LogFactory.getLog(ApiExceptionHandler.class);
 
     /**
      * 核心异常处理方法，生成错误响应并记录日志。
      *
      * @param exception 异常对象
-     * @param status HTTP状态码
+     * @param status    HTTP状态码
      * @return 错误响应对象
      */
     private ErrorResponse handlerException(Exception exception, int status) {
         String messageId = randomId();
         String requestPath = getRequestPath();
         logException(exception, status, messageId, requestPath);
-        return createErrorResponse(exception.getMessage(), messageId);
+        return createErrorResponse(status, exception.getMessage(), messageId);
     }
 
     /**
@@ -55,8 +57,8 @@ public class ApiExceptionHandler {
     /**
      * 创建错误响应对象。
      */
-    private ErrorResponse createErrorResponse(String message, String messageId) {
-        return new ErrorResponse(Instant.now(), HttpStatus.CONFLICT.value(), message, messageId);
+    private ErrorResponse createErrorResponse(int status, String message, String messageId) {
+        return new ErrorResponse(Instant.now(), status, message, messageId);
     }
 
     /**
@@ -232,7 +234,7 @@ public class ApiExceptionHandler {
      *
      * @return 401未授权响应
      */
-    @ExceptionHandler(InvalidCredentialsException.class)
+    @ExceptionHandler({InvalidCredentialsException.class, io.jsonwebtoken.MalformedJwtException.class})
     public ResponseEntity<Void> handleInvalidCredentials() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }

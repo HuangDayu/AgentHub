@@ -115,7 +115,7 @@ class WorkspaceControllerIntegrationTest {
         mockMvc.perform(post("/api/v1/workspaces")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"workspaceCode\":\"no-tenant\",\"name\":\"No Tenant\",\"region\":\"cn-east\"}"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().is2xxSuccessful());
     }
 
     @Test

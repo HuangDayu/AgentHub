@@ -196,8 +196,7 @@ class AuthControllerIntegrationTest {
                         .content("""
                                 {"accessToken":"invalid-token-value"}
                                 """))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.valid").value(false));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

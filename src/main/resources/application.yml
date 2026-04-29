@@ -1,16 +1,15 @@
 server:
-  port: 8088
+  port: 0
 
 spring:
-  application:
-    name: knowledge-domain
   main:
     allow-bean-definition-overriding: true
     allow-circular-references: true
   sql:
     init:
       mode: always
-      schema-locations: file:${user.dir}\sql\schema.sql
+      schema-locations: file:${project.root}\sql\schema.sql
+      data-locations: file:${project.root}\sql\init.sql
       platform: postgresql
   datasource:
     url: jdbc:postgresql://localhost:5432/agenthub
@@ -38,19 +37,38 @@ spring:
   mail:
     host: localhost
     port: 25
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:a5554de4c86b48898f37bfe707a6b9a5.6cxppk3EjHa9YeD8W7BEavhM}
+      base-url: https://ollama.com
+      embedding:
+        base-url: http://127.0.0.1:9090
+        options:
+          model: qwen3-embedding
+      chat:
+        options:
+          model: nemotron-3-super:cloud
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        collection-name: document_chunks
+        initialize-schema: true
+    model:
+      embedding: openai
+      chat: openai
     retry:
       backoff:
         initial-interval: 20000ms
-  http:
-    clients:
-      connect-timeout: 60000
-      read-timeout: 300000
-  ai:
     chat:
       memory:
         repository:
           jdbc:
             initialize-schema: always
+  http:
+    clients:
+      connect-timeout: 60000
+      read-timeout: 300000
 
 mybatis-plus:
   type-handlers-package: com.agenthub.infrastructure.persistence.handler

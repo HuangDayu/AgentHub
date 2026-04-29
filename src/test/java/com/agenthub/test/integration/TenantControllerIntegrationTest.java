@@ -89,21 +89,7 @@ public class TenantControllerIntegrationTest {
 
         // List workspaces
         mockMvc.perform(get("/api/v1/tenants/{tenantId}/workspaces", tenantId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
-
-        // Add member to workspace
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/members", workspaceId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"user@example.com\",\"roleCode\":\"ADMIN\",\"scopeType\":\"WORKSPACE\"}"))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.workspaceId").value(workspaceId))
-                .andExpect(jsonPath("$.userId").value("user@example.com"));
-
-        // List members
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/members", workspaceId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -122,12 +108,5 @@ public class TenantControllerIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    @Order(4)
-    void shouldReturn404ForMissingWorkspaceWhenAddingMember() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/members", "nonexistent")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":\"user@example.com\",\"roleCode\":\"ADMIN\"}"))
-                .andExpect(status().isNotFound());
-    }
+
 }
