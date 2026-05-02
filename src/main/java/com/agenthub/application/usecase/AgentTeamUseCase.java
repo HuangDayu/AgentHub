@@ -4,17 +4,15 @@ import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.dto.AgentTeamOutput;
 import com.agenthub.application.port.out.repositories.AgentTeamRepository;
 import com.agenthub.domain.model.AgentTeam;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class AgentTeamUseCase {
     private final AgentTeamRepository repository;
-
-    public AgentTeamUseCase(AgentTeamRepository repository) {
-        this.repository = repository;
-    }
 
     public AgentTeamOutput create(String tenantId, String workspaceId, String teamCode,
                                   String name, String description, String coordinationMode,

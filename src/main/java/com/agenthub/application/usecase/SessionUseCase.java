@@ -5,6 +5,7 @@ import com.agenthub.application.dto.SessionOutput;
 import com.agenthub.application.port.out.repositories.StudioSessionRepository;
 import com.agenthub.domain.model.ChatMessage;
 import com.agenthub.domain.model.Session;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,15 +14,11 @@ import java.util.List;
  * @author huangdayu
  */
 @Component
+@RequiredArgsConstructor
 public class SessionUseCase {
 
     private final StudioSessionRepository studioSessionRepository;
     private final AgentUseCase agentUseCase;
-
-    public SessionUseCase(StudioSessionRepository studioSessionRepository, AgentUseCase agentUseCase) {
-        this.studioSessionRepository = studioSessionRepository;
-        this.agentUseCase = agentUseCase;
-    }
 
 
     /**

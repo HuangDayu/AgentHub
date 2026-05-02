@@ -5,6 +5,7 @@ import com.agenthub.application.command.CreateRetrievalStrategyCommand;
 import com.agenthub.application.command.UpdateRetrievalStrategyCommand;
 import com.agenthub.application.port.out.repositories.RetrievalStrategyRepository;
 import com.agenthub.domain.model.RetrievalStrategy;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,13 +14,10 @@ import java.util.List;
  * @author huangdayu
  */
 @Component
+@RequiredArgsConstructor
 public class RetrievalStrategyUseCase {
 
     private final RetrievalStrategyRepository repository;
-
-    public RetrievalStrategyUseCase(RetrievalStrategyRepository repository) {
-        this.repository = repository;
-    }
 
 
     public RetrievalStrategy update(String id, UpdateRetrievalStrategyCommand command) {

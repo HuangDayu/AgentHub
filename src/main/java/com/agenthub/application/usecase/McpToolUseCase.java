@@ -4,18 +4,17 @@ import com.agenthub.application.port.out.repositories.McpToolRepository;
 import com.agenthub.application.dto.McpToolOutput;
 import com.agenthub.domain.model.McpTool;
 import com.agenthub.common.exception.NotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
-@Service
+@Component
+@RequiredArgsConstructor
 public class McpToolUseCase {
     private final McpToolRepository repository;
-
-    public McpToolUseCase(McpToolRepository repository) {
-        this.repository = repository;
-    }
 
     public McpToolOutput create(String workspaceId, String tenantId, String name, String description,
                                 String serverUrl, String serverType, String command,

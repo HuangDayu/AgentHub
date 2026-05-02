@@ -3,25 +3,22 @@ package com.agenthub.application.usecase;
 import com.agenthub.application.port.out.repositories.PromptTemplateRepository;
 import com.agenthub.application.dto.PromptTemplateOutput;
 import com.agenthub.application.dto.VariableOutput;
-import com.agenthub.domain.model.PromptTemplate;
+import com.agenthub.domain.model.PromptTemplateInfo;
 import com.agenthub.common.exception.NotFoundException;
-import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Service
+@Component
+@RequiredArgsConstructor
 public class PromptTemplateUseCase {
     private final PromptTemplateRepository repository;
-
-    public PromptTemplateUseCase(PromptTemplateRepository repository) {
-        this.repository = repository;
-    }
-
     public PromptTemplateOutput create(String workspaceId, String tenantId, String name, String description,
                                        String category, String content, List<VariableOutput> variables,
                                        Boolean isActive) {
-        List<PromptTemplate.Variable> vars = toVariables(variables);
-        PromptTemplate template = PromptTemplate.create(null, tenantId, workspaceId, name, description,
+        List<PromptTemplateInfo.Variable> vars = toVariables(variables);
+        PromptTemplateInfo template = PromptTemplateInfo.create(null, tenantId, workspaceId, name, description,
                 category, content, vars, isActive != null ? isActive : true);
         return toResult(repository.save(template));
     }
@@ -41,10 +38,10 @@ public class PromptTemplateUseCase {
 
     public PromptTemplateOutput update(String id, String name, String description, String category,
                                        String content, List<VariableOutput> variables, Boolean isActive) {
-        List<PromptTemplate.Variable> vars = toVariables(variables);
-        PromptTemplate existing = repository.findById(id)
+        List<PromptTemplateInfo.Variable> vars = toVariables(variables);
+        PromptTemplateInfo existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Prompt Template not found: " + id));
-        PromptTemplate updated = existing.patch(name, description, category, content, vars, isActive);
+        PromptTemplateInfo updated = existing.patch(name, description, category, content, vars, isActive);
         return toResult(repository.update(updated));
     }
 
@@ -52,12 +49,12 @@ public class PromptTemplateUseCase {
         repository.deleteById(id);
     }
 
-    private List<PromptTemplate.Variable> toVariables(List<VariableOutput> results) {
+    private List<PromptTemplateInfo.Variable> toVariables(List<VariableOutput> results) {
         if (results == null) return List.of();
-        return results.stream().map(v -> new PromptTemplate.Variable(v.name(), v.description(), v.defaultValue(), v.required())).toList();
+        return results.stream().map(v -> new PromptTemplateInfo.Variable(v.name(), v.description(), v.defaultValue(), v.required())).toList();
     }
 
-    private PromptTemplateOutput toResult(PromptTemplate template) {
+    private PromptTemplateOutput toResult(PromptTemplateInfo template) {
         List<PromptTemplateOutput.VariableResult> vars = template.variables() != null
                 ? template.variables().stream().map(v -> new PromptTemplateOutput.VariableResult(v.name(), v.description(), v.defaultValue(), v.required())).toList()
                 : List.of();

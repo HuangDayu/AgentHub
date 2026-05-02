@@ -3,6 +3,7 @@ package com.agenthub.application.usecase;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.Tenant;
 import com.agenthub.application.port.out.repositories.TenantRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,17 +13,9 @@ import org.springframework.stereotype.Component;
  * </p>
  */
 @Component
+@RequiredArgsConstructor
 public class GetTenantUseCase {
     private final TenantRepository tenantRepository;
-
-    /**
-     * 构造获取租户用例。
-     *
-     * @param tenantRepository 租户仓储
-     */
-    public GetTenantUseCase(TenantRepository tenantRepository) {
-        this.tenantRepository = tenantRepository;
-    }
 
     /**
      * 执行获取租户操作。

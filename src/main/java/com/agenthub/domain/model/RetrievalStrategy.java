@@ -1,5 +1,7 @@
 package com.agenthub.domain.model;
 
+import lombok.Data;
+
 import java.time.Instant;
 
 import static com.agenthub.common.utils.RandomUtils.randomId;
@@ -7,6 +9,7 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
 /**
  * 检索策略聚合根。
  */
+@Data
 public class RetrievalStrategy {
     private final String id;
     private final String tenantId;
@@ -16,6 +19,8 @@ public class RetrievalStrategy {
     private RetrievalType retrievalType;
     private int topK;
     private double scoreThreshold;
+    private boolean enableTranslationQuery;
+    private boolean enableCompressionQuery;
     private boolean enableRerank;
     private boolean enableQueryRewrite;
     private boolean enableTextSearch;
@@ -109,123 +114,5 @@ public class RetrievalStrategy {
         this.updatedAt = Instant.now();
     }
 
-    public String getId() {
-        return id;
-    }
 
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public String getWorkspaceId() {
-        return workspaceId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public RetrievalType getRetrievalType() {
-        return retrievalType;
-    }
-
-    public void setRetrievalType(RetrievalType retrievalType) {
-        this.retrievalType = retrievalType;
-    }
-
-    public int getTopK() {
-        return topK;
-    }
-
-    public void setTopK(int topK) {
-        this.topK = topK;
-    }
-
-    public double getScoreThreshold() {
-        return scoreThreshold;
-    }
-
-    public void setScoreThreshold(double scoreThreshold) {
-        this.scoreThreshold = scoreThreshold;
-    }
-
-    public boolean isEnableRerank() {
-        return enableRerank;
-    }
-
-    public void setEnableRerank(boolean enableRerank) {
-        this.enableRerank = enableRerank;
-    }
-
-    public boolean isEnableQueryRewrite() {
-        return enableQueryRewrite;
-    }
-
-    public void setEnableQueryRewrite(boolean enableQueryRewrite) {
-        this.enableQueryRewrite = enableQueryRewrite;
-    }
-
-    public boolean isEnableTextSearch() {
-        return enableTextSearch;
-    }
-
-    public void setEnableTextSearch(boolean enableTextSearch) {
-        this.enableTextSearch = enableTextSearch;
-    }
-
-    public boolean isEnableVectorSearch() {
-        return enableVectorSearch;
-    }
-
-    public void setEnableVectorSearch(boolean enableVectorSearch) {
-        this.enableVectorSearch = enableVectorSearch;
-    }
-
-    public String getRerankModel() {
-        return rerankModel;
-    }
-
-    public void setRerankModel(String rerankModel) {
-        this.rerankModel = rerankModel;
-    }
-
-    public double getVectorWeight() {
-        return vectorWeight;
-    }
-
-    public void setVectorWeight(double vectorWeight) {
-        this.vectorWeight = vectorWeight;
-    }
-
-    public double getKeywordWeight() {
-        return keywordWeight;
-    }
-
-    public void setKeywordWeight(double keywordWeight) {
-        this.keywordWeight = keywordWeight;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

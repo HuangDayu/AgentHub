@@ -3,12 +3,13 @@ package com.agenthub.application.usecase;
 import com.agenthub.application.command.CreateModelConfigCommand;
 import com.agenthub.application.command.UpdateModelConfigCommand;
 import com.agenthub.application.dto.ModelTestOutput;
-import com.agenthub.application.port.out.rag.ModelManagerPort;
+import com.agenthub.application.port.out.ModelPoolManagerPort;
 import com.agenthub.application.port.out.repositories.ModelConfigRepository;
 import com.agenthub.domain.model.ModelConfig;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -22,21 +23,16 @@ import java.util.Optional;
  * 模型实例带有缓存，避免重复创建开销。
  * </p>
  */
-@Service
+@Component
+@RequiredArgsConstructor
 public class ModelConfigUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(ModelConfigUseCase.class);
 
     private final ModelConfigRepository modelConfigRepository;
-    private final ModelManagerPort modelManagerPort;
+    private final ModelPoolManagerPort modelPoolManagerPort;
 
-    /**
-     * 构造函数。
-     */
-    public ModelConfigUseCase(ModelConfigRepository modelConfigRepository, ModelManagerPort modelManagerPort) {
-        this.modelConfigRepository = modelConfigRepository;
-        this.modelManagerPort = modelManagerPort;
-    }
+
 
     /**
      * 创建模型配置。
@@ -77,7 +73,7 @@ public class ModelConfigUseCase {
         ModelConfig existing = findExistingConfig(command.id());
         ModelConfig updated = buildUpdatedConfig(existing, command);
         ModelConfig saved = modelConfigRepository.save(updated);
-        modelManagerPort.evictCache(command.id());
+        modelPoolManagerPort.evictCache(command.id());
         log.info("Updated model config: id={}", saved.id());
         return saved;
     }
@@ -158,7 +154,7 @@ public class ModelConfigUseCase {
     public boolean deleteByIdAndTenant(String id, String tenantId) {
         boolean deleted = modelConfigRepository.deleteByIdAndTenant(id, tenantId);
         if (deleted) {
-            modelManagerPort.evictCache(id);
+            modelPoolManagerPort.evictCache(id);
             log.info("Deleted model config: id={}, tenantId={}", id, tenantId);
         }
         return deleted;
@@ -193,7 +189,7 @@ public class ModelConfigUseCase {
     }
 
     public ModelTestOutput testModel(String configId) {
-        return modelManagerPort.testModel(configId);
+        return modelPoolManagerPort.testModel(configId);
     }
 
 }

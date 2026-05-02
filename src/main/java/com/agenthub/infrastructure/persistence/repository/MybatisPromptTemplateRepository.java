@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.persistence.repository;
 
 import com.agenthub.application.port.out.repositories.PromptTemplateRepository;
-import com.agenthub.domain.model.PromptTemplate;
+import com.agenthub.domain.model.PromptTemplateInfo;
 import com.agenthub.infrastructure.persistence.entity.PromptTemplateEntity;
 import com.agenthub.infrastructure.persistence.mapper.PromptTemplateMybatisMapper;
 import org.springframework.context.annotation.Primary;
@@ -24,24 +24,24 @@ public class MybatisPromptTemplateRepository implements PromptTemplateRepository
     }
 
     @Override
-    public PromptTemplate save(PromptTemplate template) {
+    public PromptTemplateInfo save(PromptTemplateInfo template) {
         PromptTemplateEntity entity = toEntity(template);
         mapper.insert(entity);
         return toDomain(entity);
     }
 
     @Override
-    public Optional<PromptTemplate> findById(String id) {
+    public Optional<PromptTemplateInfo> findById(String id) {
         return Optional.ofNullable(mapper.selectById(id)).map(this::toDomain);
     }
 
     @Override
-    public List<PromptTemplate> findByWorkspaceId(String workspaceId) {
+    public List<PromptTemplateInfo> findByWorkspaceId(String workspaceId) {
         return mapper.selectByWorkspaceId(workspaceId).stream().map(this::toDomain).toList();
     }
 
     @Override
-    public List<PromptTemplate> findByWorkspaceIdAndCategory(String workspaceId, String category) {
+    public List<PromptTemplateInfo> findByWorkspaceIdAndCategory(String workspaceId, String category) {
         return mapper.selectByWorkspaceIdAndCategory(workspaceId, category).stream().map(this::toDomain).toList();
     }
 
@@ -51,13 +51,13 @@ public class MybatisPromptTemplateRepository implements PromptTemplateRepository
     }
 
     @Override
-    public PromptTemplate update(PromptTemplate template) {
+    public PromptTemplateInfo update(PromptTemplateInfo template) {
         PromptTemplateEntity entity = toEntity(template);
         mapper.updateById(entity);
         return toDomain(entity);
     }
 
-    private PromptTemplateEntity toEntity(PromptTemplate template) {
+    private PromptTemplateEntity toEntity(PromptTemplateInfo template) {
         PromptTemplateEntity entity = new PromptTemplateEntity();
         entity.setId(template.id());
         entity.setTenantId(template.tenantId());
@@ -73,8 +73,8 @@ public class MybatisPromptTemplateRepository implements PromptTemplateRepository
         return entity;
     }
 
-    private PromptTemplate toDomain(PromptTemplateEntity entity) {
-        return new PromptTemplate(
+    private PromptTemplateInfo toDomain(PromptTemplateEntity entity) {
+        return new PromptTemplateInfo(
                 entity.getId(), entity.getTenantId(), entity.getWorkspaceId(),
                 entity.getName(), entity.getDescription(), entity.getCategory(),
                 entity.getContent(), fromJson(entity.getVariables(), new TypeReference<>() {}),

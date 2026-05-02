@@ -4,17 +4,15 @@ import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.dto.SkillOutput;
 import com.agenthub.application.port.out.repositories.SkillRepository;
 import com.agenthub.domain.model.Skill;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class SkillUseCase {
     private final SkillRepository repository;
-
-    public SkillUseCase(SkillRepository repository) {
-        this.repository = repository;
-    }
 
     public SkillOutput create(String tenantId, String workspaceId, String skillCode,
                               String name, String description, String skillType,

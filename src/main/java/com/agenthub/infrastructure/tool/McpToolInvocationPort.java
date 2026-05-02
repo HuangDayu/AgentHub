@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.tool;
 
 import com.agenthub.application.command.InvokeToolCommand;
-import com.agenthub.application.port.out.rag.ToolInvocationPort;
+import com.agenthub.application.port.out.ToolInvocationPort;
 import com.agenthub.domain.model.ToolInvokeView;
 import org.springframework.stereotype.Component;
 

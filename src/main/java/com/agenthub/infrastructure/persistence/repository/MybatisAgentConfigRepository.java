@@ -91,6 +91,15 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
         return toDomain(entity);
     }
 
+    @Override
+    public String getConfigId(String agentId, AgentConfig.Category category, AgentConfig.Type type) {
+        AgentConfig config = findOneAgentConfig(agentId, category, type);
+        if (config == null) {
+            throw new IllegalStateException("未找到对应的配置");
+        }
+        return config.configId();
+    }
+
     private AgentConfigEntity toEntity(AgentConfig config) {
         AgentConfigEntity entity = new AgentConfigEntity();
         entity.setId(config.id());

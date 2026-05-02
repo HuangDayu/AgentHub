@@ -29,7 +29,7 @@ public class JwtTokenProvider implements JwtTokenProviderPort {
      *
      * @param secret HMAC-SHA256签名密钥
      */
-    public JwtTokenProvider(@Value("${jwt.secret}") String secret) {
+    public JwtTokenProvider(@Value("${agenthub.jwt.secret}") String secret) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

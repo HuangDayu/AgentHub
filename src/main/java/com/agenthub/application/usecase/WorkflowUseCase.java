@@ -4,17 +4,15 @@ import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.dto.WorkflowOutput;
 import com.agenthub.application.port.out.repositories.WorkflowRepository;
 import com.agenthub.domain.model.Workflow;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class WorkflowUseCase {
     private final WorkflowRepository repository;
-
-    public WorkflowUseCase(WorkflowRepository repository) {
-        this.repository = repository;
-    }
 
     public WorkflowOutput create(String tenantId, String workspaceId, String workflowCode,
                                  String name, String description, String graphDefinition) {

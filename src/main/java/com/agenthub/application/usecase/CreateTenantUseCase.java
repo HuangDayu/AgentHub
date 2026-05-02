@@ -4,6 +4,7 @@ import com.agenthub.application.port.out.IdGenerator;
 import com.agenthub.application.port.out.TimeProvider;
 import com.agenthub.domain.model.Tenant;
 import com.agenthub.application.port.out.repositories.TenantRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
@@ -13,23 +14,11 @@ import org.springframework.stereotype.Component;
  * </p>
  */
 @Component
+@RequiredArgsConstructor
 public class CreateTenantUseCase {
     private final TenantRepository tenantRepository;
     private final IdGenerator idGenerator;
     private final TimeProvider timeProvider;
-
-    /**
-     * 构造创建租户用例。
-     *
-     * @param tenantRepository 租户仓储
-     * @param idGenerator      ID生成器
-     * @param timeProvider     时间提供者
-     */
-    public CreateTenantUseCase(TenantRepository tenantRepository, IdGenerator idGenerator, TimeProvider timeProvider) {
-        this.tenantRepository = tenantRepository;
-        this.idGenerator = idGenerator;
-        this.timeProvider = timeProvider;
-    }
 
     /**
      * 执行创建租户操作。

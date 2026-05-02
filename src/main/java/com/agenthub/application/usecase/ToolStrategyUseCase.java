@@ -5,6 +5,7 @@ import com.agenthub.application.command.CreateToolStrategyCommand;
 import com.agenthub.application.command.UpdateToolStrategyCommand;
 import com.agenthub.application.port.out.repositories.ToolStrategyRepository;
 import com.agenthub.domain.model.ToolStrategy;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,13 +14,10 @@ import java.util.List;
  * @author huangdayu
  */
 @Component
+@RequiredArgsConstructor
 public class ToolStrategyUseCase {
 
     private final ToolStrategyRepository repository;
-
-    public ToolStrategyUseCase(ToolStrategyRepository repository) {
-        this.repository = repository;
-    }
 
 
     public ToolStrategy update(String id, UpdateToolStrategyCommand command) {

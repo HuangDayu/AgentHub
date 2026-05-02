@@ -32,7 +32,7 @@ public class AuthConfiguration {
      * @return JWT令牌提供者实例
      */
     @Bean
-    public JwtTokenProvider jwtTokenProvider(@Value("${jwt.secret}") String secret) {
+    public JwtTokenProvider jwtTokenProvider(@Value("${agenthub.jwt.secret}") String secret) {
         return new JwtTokenProvider(secret);
     }
 

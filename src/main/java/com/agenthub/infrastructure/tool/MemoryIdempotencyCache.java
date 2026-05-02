@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.tool;
 
-import com.agenthub.application.port.out.rag.IdempotencyCachePort;
+import com.agenthub.application.port.out.IdempotencyCachePort;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

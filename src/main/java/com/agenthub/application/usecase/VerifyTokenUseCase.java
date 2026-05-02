@@ -2,6 +2,8 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.application.port.out.JwtTokenProviderPort;
 import io.jsonwebtoken.Claims;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -10,14 +12,11 @@ import java.util.Map;
 /**
  * 令牌验证用例。
  */
-@Service
+@Component
+@RequiredArgsConstructor
 public class VerifyTokenUseCase {
     
     private final JwtTokenProviderPort jwtTokenProvider;
-
-    public VerifyTokenUseCase(JwtTokenProviderPort jwtTokenProvider) {
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
 
     public Map<String, Object> execute(String token) {
         Claims claims = jwtTokenProvider.validateToken(token);

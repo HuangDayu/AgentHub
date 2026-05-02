@@ -103,6 +103,9 @@ public final class DocumentContent {
         if (lowerName.endsWith(".md")) {
             return DocumentFormat.MARKDOWN;
         }
+        if (lowerName.endsWith(".json")) {
+            return DocumentFormat.JSON;
+        }
         if (lowerName.endsWith(".html") || lowerName.endsWith(".htm")) {
             return DocumentFormat.HTML;
         }
@@ -144,6 +147,7 @@ public final class DocumentContent {
         EXCEL,
         TEXT,
         MARKDOWN,
+        JSON,
         HTML,
         UNKNOWN
     }

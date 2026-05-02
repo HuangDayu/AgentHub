@@ -7,7 +7,7 @@ spring:
     allow-circular-references: true
   sql:
     init:
-      mode: always
+      mode: never
       schema-locations: file:${user.dir}\sql\schema.sql
       data-locations: file:${user.dir}\sql\init.sql
       platform: postgresql
@@ -82,8 +82,6 @@ mybatis-plus:
       logic-not-delete-value: 0
 
 agenthub:
-  deployment:
-    mode: monolith
   jwt:
     secret: monolith-dev-secret-key-please-change-in-production-2026
     expiration: 3600000
@@ -94,21 +92,12 @@ agenthub:
       access-key: minioadmin
       secret-key: minioadmin
       bucket: agenthub
-  persistence:
-    mode: mybatis
-  text-search:
-    enabled: false
-  query-rewrite:
-    llm:
-      enabled: false
-  remote:
-    model-gateway:
-      enabled: false
-    retrieval:
-      enabled: false
-  reranker:
-    cross-encoder:
-      enabled: false
+  rag:
+    impl-type: spring
+    reranker:
+      type: keyword
+  etl:
+    impl-type: spring
 
 # JWT
 jwt.secret: monolith-dev-secret-key-please-change-in-production-2026

@@ -2,13 +2,15 @@ package com.agenthub.api.controller;
 
 import com.agenthub.api.dto.*;
 import com.agenthub.api.mapper.IngestionJobResponseMapper;
+import com.agenthub.application.command.RetrievalCommand;
 import com.agenthub.application.dto.IngestionJobOutput;
 import com.agenthub.application.dto.RetrievalOutput;
+import com.agenthub.application.port.out.rag.RagRetrievalPort;
 import com.agenthub.application.usecase.DocumentsUseCase;
 import com.agenthub.application.usecase.IngestionJobUseCase;
 import com.agenthub.application.usecase.KnowledgeBaseUseCase;
-import com.agenthub.application.usecase.RetrieveUseCase;
 import com.agenthub.domain.model.KnowledgeBase;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,27 +21,20 @@ import reactor.core.publisher.Flux;
 
 import java.util.List;
 
-import static com.agenthub.common.utils.RandomUtils.randomShortId;
 import static com.agenthub.api.dto.SearchResponse.toSearchResponse;
+import static com.agenthub.common.utils.RandomUtils.randomShortId;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/workspaces/{workspaceId}/knowledge-bases")
 public class KnowledgeBaseController {
     private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseController.class);
 
     private final KnowledgeBaseUseCase knowledgeBaseUseCase;
-    private final RetrieveUseCase retrieveUseCase;
+    private final RagRetrievalPort ragRetrievalPort;
     private final DocumentsUseCase documentsUseCase;
     private final IngestionJobUseCase ingestionJobUseCase;
     private final IngestionJobResponseMapper responseMapper;
-
-    public KnowledgeBaseController(KnowledgeBaseUseCase knowledgeBaseUseCase, RetrieveUseCase retrieveUseCase, DocumentsUseCase documentsUseCase, IngestionJobUseCase ingestionJobUseCase, IngestionJobResponseMapper responseMapper) {
-        this.knowledgeBaseUseCase = knowledgeBaseUseCase;
-        this.retrieveUseCase = retrieveUseCase;
-        this.documentsUseCase = documentsUseCase;
-        this.ingestionJobUseCase = ingestionJobUseCase;
-        this.responseMapper = responseMapper;
-    }
 
     @GetMapping
     public KnowledgeBaseListResponse listKnowledgeBases(@PathVariable String workspaceId) {
@@ -102,12 +97,7 @@ public class KnowledgeBaseController {
             @PathVariable String kbId,
             @RequestBody RetrieveRequest request
     ) {
-        RetrievalOutput result = retrieveUseCase.retrieve(
-                new RetrieveUseCase.Command(
-                        kbId, request.query(), request.topK(), request.scoreThreshold(),
-                        request.enableQueryRewrite(), request.enableRerank(), request.enableTextSearch(),
-                        request.enableVectorSearch(), request.rerankModel(), request.vectorWeight(), request.keywordWeight()
-                ));
+        RetrievalOutput result = ragRetrievalPort.retrieve(buildRetrievalCommand(kbId, request));
         return toSearchResponse(result);
     }
 
@@ -123,13 +113,16 @@ public class KnowledgeBaseController {
             @PathVariable String kbId,
             @RequestBody RetrieveRequest request
     ) {
-        RetrievalOutput result = retrieveUseCase.retrieve(
-                new RetrieveUseCase.Command(
-                        kbId, request.query(), request.topK(), request.scoreThreshold(),
-                        request.enableQueryRewrite(), request.enableRerank(), request.enableTextSearch(),
-                        request.enableVectorSearch(), request.rerankModel(), request.vectorWeight(), request.keywordWeight()
-                ));
+        RetrievalOutput result = ragRetrievalPort.retrieve(buildRetrievalCommand(kbId, request));
         return Flux.just(toSearchResponse(result));
+    }
+
+    private RetrievalCommand buildRetrievalCommand(String kbId, RetrieveRequest request) {
+        return new RetrievalCommand(
+                kbId, request.query(), request.topK(), request.scoreThreshold(),
+                request.enableQueryRewrite(), request.enableRerank(), request.enableTextSearch(),
+                request.enableVectorSearch(), request.rerankModel(), request.vectorWeight(), request.keywordWeight()
+        );
     }
 
     /**
@@ -147,12 +140,11 @@ public class KnowledgeBaseController {
             @PathVariable String kbId,
             @RequestBody SearchRequest request
     ) {
-        RetrievalOutput result = retrieveUseCase.retrieve(
-                new RetrieveUseCase.Command(
-                        kbId, request.query(), request.topK(), request.scoreThreshold(),
-                        request.enableQueryRewrite(), request.enableRerank(), request.enableTextSearch(),
-                        request.enableVectorSearch(), request.rerankModel(), request.vectorWeight(), request.keywordWeight()
-                ));
+        RetrievalOutput result = ragRetrievalPort.retrieve(new RetrievalCommand(
+                kbId, request.query(), request.topK(), request.scoreThreshold(),
+                request.enableQueryRewrite(), request.enableRerank(), request.enableTextSearch(),
+                request.enableVectorSearch(), request.rerankModel(), request.vectorWeight(), request.keywordWeight()
+        ));
         return toSearchResponse(result);
     }
 

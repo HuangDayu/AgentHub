@@ -1,15 +1,15 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.PromptTemplate;
+import com.agenthub.domain.model.PromptTemplateInfo;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface PromptTemplateRepository {
-    PromptTemplate save(PromptTemplate template);
-    Optional<PromptTemplate> findById(String id);
-    List<PromptTemplate> findByWorkspaceId(String workspaceId);
-    List<PromptTemplate> findByWorkspaceIdAndCategory(String workspaceId, String category);
+    PromptTemplateInfo save(PromptTemplateInfo template);
+    Optional<PromptTemplateInfo> findById(String id);
+    List<PromptTemplateInfo> findByWorkspaceId(String workspaceId);
+    List<PromptTemplateInfo> findByWorkspaceIdAndCategory(String workspaceId, String category);
     void deleteById(String id);
-    PromptTemplate update(PromptTemplate template);
+    PromptTemplateInfo update(PromptTemplateInfo template);
 }

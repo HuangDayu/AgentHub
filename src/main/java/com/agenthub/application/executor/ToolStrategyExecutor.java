@@ -1,9 +1,10 @@
 package com.agenthub.application.executor;
 
-import com.agenthub.application.port.out.rag.ToolInvocationPort;
+import com.agenthub.application.port.out.ToolInvocationPort;
 import com.agenthub.domain.model.ToolStrategy;
 import com.agenthub.domain.model.ToolStrategy.ToolBinding;
 import com.agenthub.application.command.InvokeToolCommand;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,12 +15,9 @@ import java.util.stream.Collectors;
  * 工具策略执行器 - 管理和执行工具
  */
 @Component
+@AllArgsConstructor
 public class ToolStrategyExecutor {
     private final ToolInvocationPort toolInvocationPort;
-
-    public ToolStrategyExecutor(ToolInvocationPort toolInvocationPort) {
-        this.toolInvocationPort = toolInvocationPort;
-    }
 
     public List<ToolInfo> getAvailableTools(ToolStrategy strategy) {
         List<ToolBinding> bindings = strategy.getToolBindings();

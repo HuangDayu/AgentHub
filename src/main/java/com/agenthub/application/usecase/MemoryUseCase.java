@@ -4,18 +4,16 @@ import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.dto.MemoryOutput;
 import com.agenthub.application.port.out.repositories.MemoryRepository;
 import com.agenthub.domain.model.Memory;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class MemoryUseCase {
     private final MemoryRepository repository;
-
-    public MemoryUseCase(MemoryRepository repository) {
-        this.repository = repository;
-    }
 
     public MemoryOutput create(String tenantId, String workspaceId, String agentId,
                                String memoryType, String content, String metadata,

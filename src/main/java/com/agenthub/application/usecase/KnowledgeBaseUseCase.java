@@ -4,18 +4,16 @@ import com.agenthub.common.exception.ConflictException;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.port.out.repositories.KnowledgeBaseRepository;
 import com.agenthub.domain.model.KnowledgeBase;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class KnowledgeBaseUseCase {
     private final KnowledgeBaseRepository repository;
-
-    public KnowledgeBaseUseCase(KnowledgeBaseRepository repository) {
-        this.repository = repository;
-    }
 
     public KnowledgeBase create(Command command) {
         validateKbCode(command.kbCode());

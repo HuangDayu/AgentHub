@@ -4,17 +4,16 @@ import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.dto.AgentConfigOutput;
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
 import com.agenthub.domain.model.AgentConfig;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
+@Component
+@RequiredArgsConstructor
 public class AgentConfigUseCase {
     private final AgentConfigRepository repository;
-
-    public AgentConfigUseCase(AgentConfigRepository repository) {
-        this.repository = repository;
-    }
 
 
     public AgentConfigOutput setConfig(String agentId, String category, String type,

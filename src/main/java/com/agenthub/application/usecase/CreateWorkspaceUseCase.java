@@ -6,6 +6,7 @@ import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.port.out.repositories.TenantRepository;
 import com.agenthub.domain.model.Workspace;
 import com.agenthub.application.port.out.repositories.WorkspaceRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,31 +17,12 @@ import org.springframework.stereotype.Component;
  * </p>
  */
 @Component
+@RequiredArgsConstructor
 public class CreateWorkspaceUseCase {
     private final TenantRepository tenantRepository;
     private final WorkspaceRepository workspaceRepository;
     private final IdGenerator idGenerator;
     private final TimeProvider timeProvider;
-
-    /**
-     * 构造创建工作空间用例。
-     *
-     * @param tenantRepository    租户仓储
-     * @param workspaceRepository 工作空间仓储
-     * @param idGenerator         ID生成器
-     * @param timeProvider        时间提供者
-     */
-    public CreateWorkspaceUseCase(
-            TenantRepository tenantRepository,
-            WorkspaceRepository workspaceRepository,
-            IdGenerator idGenerator,
-            TimeProvider timeProvider
-    ) {
-        this.tenantRepository = tenantRepository;
-        this.workspaceRepository = workspaceRepository;
-        this.idGenerator = idGenerator;
-        this.timeProvider = timeProvider;
-    }
 
     /**
      * 执行创建工作空间操作。

@@ -5,6 +5,7 @@ import com.agenthub.application.command.CreateGuardrailStrategyCommand;
 import com.agenthub.application.command.UpdateGuardrailStrategyCommand;
 import com.agenthub.application.port.out.repositories.GuardrailStrategyRepository;
 import com.agenthub.domain.model.GuardrailStrategy;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,13 +14,10 @@ import java.util.List;
  * @author huangdayu
  */
 @Component
+@RequiredArgsConstructor
 public class GuardrailStrategyUseCase {
 
     private final GuardrailStrategyRepository repository;
-
-    public GuardrailStrategyUseCase(GuardrailStrategyRepository repository) {
-        this.repository = repository;
-    }
 
 
     public List<GuardrailStrategy> list(String workspaceId) {

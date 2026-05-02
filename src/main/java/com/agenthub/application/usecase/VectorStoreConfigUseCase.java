@@ -5,12 +5,13 @@ import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.command.CreateVectorStoreConfigCommand;
 import com.agenthub.application.command.UpdateVectorStoreConfigCommand;
 import com.agenthub.application.dto.VectorStoreTestOutput;
-import com.agenthub.application.port.out.rag.VectorStoreManagerPort;
+import com.agenthub.application.port.out.VectorPoolManagerPort;
 import com.agenthub.application.port.out.repositories.VectorStoreConfigRepository;
 import com.agenthub.domain.model.VectorStoreConfig;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
@@ -22,26 +23,14 @@ import java.util.List;
  * 提供向量库配置的 CRUD 操作，负责协调领域层和基础设施层。
  * </p>
  */
-@Service
+@Component
+@RequiredArgsConstructor
 public class VectorStoreConfigUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(VectorStoreConfigUseCase.class);
 
     private final VectorStoreConfigRepository repository;
-    private final VectorStoreManagerPort vectorStoreManagerPort;
-
-    /**
-     * 构造向量库配置应用服务。
-     *
-     * @param repository             向量库配置仓库
-     * @param vectorStoreManagerPort 向量库管理器
-     */
-    public VectorStoreConfigUseCase(
-            VectorStoreConfigRepository repository,
-            VectorStoreManagerPort vectorStoreManagerPort) {
-        this.repository = repository;
-        this.vectorStoreManagerPort = vectorStoreManagerPort;
-    }
+    private final VectorPoolManagerPort vectorPoolManagerPort;
 
     /**
      * 创建新的向量库配置。
@@ -184,6 +173,6 @@ public class VectorStoreConfigUseCase {
 
 
     public VectorStoreTestOutput testConnection(String configId) {
-        return vectorStoreManagerPort.testConnection(configId);
+        return vectorPoolManagerPort.testConnection(configId);
     }
 }

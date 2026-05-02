@@ -1,21 +1,22 @@
 package com.agenthub.application.service;
 
-import com.agenthub.common.exception.JobNotFoundException;
+import com.agenthub.application.command.EtlCommand;
 import com.agenthub.application.dto.IngestionPipelineError;
-import com.agenthub.application.port.out.rag.DocumentChunkerPort;
-import com.agenthub.application.port.out.rag.DocumentCleanerPort;
-import com.agenthub.application.port.out.rag.DocumentParserPort;
-import com.agenthub.application.port.out.rag.DocumentStoragePort;
-import com.agenthub.application.port.out.rag.ChunkStorePort;
+import com.agenthub.application.port.out.DocumentFileStoragePort;
+import com.agenthub.application.port.out.etl.ExtractTransformLoadPort;
 import com.agenthub.application.port.out.repositories.IngestionDocumentChunkRepository;
 import com.agenthub.application.port.out.repositories.IngestionDocumentRepository;
 import com.agenthub.application.port.out.repositories.IngestionJobRepository;
-import com.agenthub.domain.model.*;
-import com.agenthub.domain.model.*;
+import com.agenthub.common.exception.JobNotFoundException;
+import com.agenthub.domain.model.DocumentChunk;
+import com.agenthub.domain.model.IngestionDocument;
+import com.agenthub.domain.model.IngestionJob;
+import com.agenthub.domain.model.JobPhase;
+import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -31,55 +32,18 @@ import java.util.concurrent.ExecutorService;
  * 异步执行，返回{@link CompletableFuture}。
  * </p>
  */
-@Service
+@RequiredArgsConstructor
+@Component
 public class IngestionPipelineService {
     private static final Logger log = LoggerFactory.getLogger(IngestionPipelineService.class);
-
-    private static final int DEFAULT_CHUNK_SIZE = 512;
-    private static final int DEFAULT_OVERLAP_SIZE = 50;
 
     private final IngestionJobRepository jobRepository;
     private final IngestionDocumentRepository documentRepository;
     private final IngestionDocumentChunkRepository ingestionDocumentChunkRepository;
-    private final DocumentStoragePort documentStorage;
-    private final DocumentParserPort documentParser;
-    private final DocumentCleanerPort contentCleaner;
-    private final DocumentChunkerPort documentChunker;
-    private final ChunkStorePort chunkStorePort;
-    private final ExecutorService ttlExecutorService;
-
-    /**
-     * 构造函数，注入流水线所需的各个端口和仓库。
-     *
-     * @param jobRepository      任务仓库
-     * @param documentRepository 文档仓库
-     * @param documentStorage    文档存储端口
-     * @param documentParser     文档解析端口
-     * @param contentCleaner     内容清洗端口
-     * @param documentChunker    文档分块端口
-     * @param chunkStorePort    分块仓库
-     */
-    public IngestionPipelineService(
-            IngestionJobRepository jobRepository,
-            IngestionDocumentRepository documentRepository,
-            IngestionDocumentChunkRepository ingestionDocumentChunkRepository,
-            DocumentStoragePort documentStorage,
-            DocumentParserPort documentParser,
-            DocumentCleanerPort contentCleaner,
-            DocumentChunkerPort documentChunker,
-            ChunkStorePort chunkStorePort,
-            @Qualifier("ttlExecutorService") ExecutorService ttlExecutorService
-    ) {
-        this.jobRepository = Objects.requireNonNull(jobRepository, "jobRepository must not be null");
-        this.documentRepository = Objects.requireNonNull(documentRepository, "documentRepository must not be null");
-        this.ingestionDocumentChunkRepository = ingestionDocumentChunkRepository;
-        this.documentStorage = Objects.requireNonNull(documentStorage, "documentStorage must not be null");
-        this.documentParser = Objects.requireNonNull(documentParser, "documentParser must not be null");
-        this.contentCleaner = Objects.requireNonNull(contentCleaner, "contentCleaner must not be null");
-        this.documentChunker = Objects.requireNonNull(documentChunker, "documentChunker must not be null");
-        this.chunkStorePort = Objects.requireNonNull(chunkStorePort, "chunkRepository must not be null");
-        this.ttlExecutorService = ttlExecutorService;
-    }
+    private final DocumentFileStoragePort documentStorage;
+    private final ExtractTransformLoadPort extractTransformLoadPort;
+    @Resource(name = "ttlExecutorService")
+    private ExecutorService ttlExecutorService;
 
     public CompletableFuture<IngestionJob> execute(IngestionJob job) {
         Objects.requireNonNull(job, "job must not be null");
@@ -124,7 +88,10 @@ public class IngestionPipelineService {
      * 处理所有文档。
      */
     private List<DocumentChunk> processAllDocuments(String jobId, IngestionJob job) {
-        List<IngestionDocument> documents = documentRepository.findByJobId(jobId);
+        List<IngestionDocument> documents = job.getDocuments();
+        if (documents == null || documents.isEmpty()) {
+            documents = documentRepository.findByJobId(jobId);
+        }
         return processDocuments(documents, job);
     }
 
@@ -137,12 +104,8 @@ public class IngestionPipelineService {
         return job;
     }
 
-    /**
-     * 完成向量化阶段。
-     */
     private IngestionJob completeVectorizing(IngestionJob job, List<DocumentChunk> allChunks) {
         job = transitionTo(job, JobPhase.VECTORIZING);
-        chunkStorePort.saveAll(allChunks);
         ingestionDocumentChunkRepository.saveAll(allChunks);
         return transitionTo(job, JobPhase.COMPLETED);
     }
@@ -164,41 +127,9 @@ public class IngestionPipelineService {
         return allChunks;
     }
 
-    /**
-     * 处理单个文档：解析内容、清洗、分块。
-     *
-     * @param document 入库文档
-     * @param job      入库任务
-     * @return 该文档的分块列表
-     */
     private List<DocumentChunk> processDocument(IngestionDocument document, IngestionJob job) {
-        log.info("Job [{}]: processing document [{}]", job.getJobId(), document.getId());
-
-        DocumentContent parsed = parseDocument(document);
-        DocumentContent cleaned = contentCleaner.clean(parsed);
-        return documentChunker.chunk(
-                document.getId(),
-                document.getKbId(),
-                cleaned.getCleanedContent(),
-                DEFAULT_CHUNK_SIZE,
-                DEFAULT_OVERLAP_SIZE
-        );
-    }
-
-    /**
-     * 从文档存储中读取并解析文档内容。
-     *
-     * @param document 入库文档
-     * @return 解析后的文档内容
-     */
-    private DocumentContent parseDocument(IngestionDocument document) {
         try (InputStream content = documentStorage.retrieve(document.getStoragePath())) {
-            return documentParser.parse(
-                    document.getId(),
-                    content,
-                    document.getContentType(),
-                    document.getFileName()
-            );
+            return extractTransformLoadPort.etl(new EtlCommand(job.getKbId(), document.getId(), content, document.getContentType(), document.getFileName()));
         } catch (Exception e) {
             throw new IngestionPipelineError(
                     "Failed to parse document: " + document.getId(), e);
@@ -248,7 +179,7 @@ public class IngestionPipelineService {
         log.error("Job [{}]: pipeline failed", jobId, ex);
         try {
             IngestionJob job = loadJob(jobId);
-            return jobRepository.save(job.markFailed(ex.getMessage().substring(0, 1000)));
+            return jobRepository.save(job.markFailed(ex.getMessage().substring(0, Math.min(ex.getMessage().length(), 222))));
         } catch (Exception persistEx) {
             log.error("Job [{}]: failed to persist failure status", jobId, persistEx);
             throw new IngestionPipelineError("Pipeline failed for job: " + jobId, ex);

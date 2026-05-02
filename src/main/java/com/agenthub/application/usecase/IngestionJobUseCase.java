@@ -6,15 +6,16 @@ import com.agenthub.application.dto.IngestionJobOutput;
 import com.agenthub.application.port.in.CreateIngestionJobUseCase;
 import com.agenthub.application.port.in.GetIngestionJobUseCase;
 import com.agenthub.application.port.in.UploadDocumentsUseCase;
-import com.agenthub.application.port.out.rag.DocumentStoragePort;
+import com.agenthub.application.port.out.DocumentFileStoragePort;
 import com.agenthub.application.port.out.repositories.IngestionDocumentRepository;
 import com.agenthub.application.port.out.repositories.IngestionJobRepository;
 import com.agenthub.application.service.IngestionPipelineService;
 import com.agenthub.domain.model.IngestionDocument;
 import com.agenthub.domain.model.IngestionJob;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,7 +29,8 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
 /**
  * 入库任务应用服务。
  */
-@Service
+@Component
+@RequiredArgsConstructor
 public class IngestionJobUseCase
         implements CreateIngestionJobUseCase, GetIngestionJobUseCase, UploadDocumentsUseCase {
     private static final Logger log = LoggerFactory.getLogger(IngestionJobUseCase.class);
@@ -36,24 +38,7 @@ public class IngestionJobUseCase
     private final IngestionJobRepository jobRepository;
     private final IngestionDocumentRepository documentRepository;
     private final IngestionPipelineService pipelineService;
-    private final DocumentStoragePort documentStorage;
-
-    /**
-     * 构造函数，注入任务仓库、文档仓库和流水线服务。
-     *
-     * @param jobRepository      任务仓库
-     * @param documentRepository 文档仓库
-     * @param pipelineService    流水线服务
-     */
-    public IngestionJobUseCase(
-            IngestionJobRepository jobRepository,
-            IngestionDocumentRepository documentRepository,
-            IngestionPipelineService pipelineService, DocumentStoragePort documentStorage) {
-        this.jobRepository = Objects.requireNonNull(jobRepository, "jobRepository must not be null");
-        this.documentRepository = Objects.requireNonNull(documentRepository, "documentRepository must not be null");
-        this.pipelineService = Objects.requireNonNull(pipelineService, "pipelineService must not be null");
-        this.documentStorage = documentStorage;
-    }
+    private final DocumentFileStoragePort documentStorage;
 
     /**
      * 创建入库任务并触发异步处理流水线。

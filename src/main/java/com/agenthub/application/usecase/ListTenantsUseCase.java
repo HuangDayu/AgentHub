@@ -2,6 +2,7 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.domain.model.Tenant;
 import com.agenthub.application.port.out.repositories.TenantRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,17 +14,9 @@ import java.util.List;
  * </p>
  */
 @Component
+@RequiredArgsConstructor
 public class ListTenantsUseCase {
     private final TenantRepository tenantRepository;
-
-    /**
-     * 构造列出租户用例。
-     *
-     * @param tenantRepository 租户仓储
-     */
-    public ListTenantsUseCase(TenantRepository tenantRepository) {
-        this.tenantRepository = tenantRepository;
-    }
 
     /**
      * 执行分页查询租户列表操作。

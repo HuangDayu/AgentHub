@@ -5,6 +5,8 @@ import com.agenthub.application.dto.AvailableConfigOutput;
 import com.agenthub.application.port.out.repositories.*;
 import com.agenthub.application.port.out.repositories.*;
 import com.agenthub.domain.model.AgentConfig;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,7 +14,8 @@ import java.util.List;
 import static com.agenthub.domain.model.AgentConfig.Category.*;
 import static com.agenthub.domain.model.AgentConfig.Type.*;
 
-@Service
+@Component
+@RequiredArgsConstructor
 public class AgentConfigTypeUseCase {
     private final RetrievalStrategyRepository retrievalStrategyRepository;
     private final ModelStrategyRepository modelStrategyRepository;
@@ -22,22 +25,6 @@ public class AgentConfigTypeUseCase {
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final McpToolRepository mcpToolRepository;
     private final PromptTemplateRepository templateRepository;
-
-    public AgentConfigTypeUseCase(
-            RetrievalStrategyRepository retrievalStrategyRepository,
-            ModelStrategyRepository modelStrategyRepository,
-            ToolStrategyRepository toolStrategyRepository,
-            GuardrailStrategyRepository guardrailStrategyRepository,
-            ModelConfigRepository modelConfigRepository, KnowledgeBaseRepository knowledgeBaseRepository, McpToolRepository mcpToolRepository, PromptTemplateRepository templateRepository) {
-        this.retrievalStrategyRepository = retrievalStrategyRepository;
-        this.modelStrategyRepository = modelStrategyRepository;
-        this.toolStrategyRepository = toolStrategyRepository;
-        this.guardrailStrategyRepository = guardrailStrategyRepository;
-        this.modelConfigRepository = modelConfigRepository;
-        this.knowledgeBaseRepository = knowledgeBaseRepository;
-        this.mcpToolRepository = mcpToolRepository;
-        this.templateRepository = templateRepository;
-    }
 
     public List<AvailableConfigOutput> getAvailableConfigs(String category, String type, String workspaceId) {
         if (workspaceId == null) return List.of();

@@ -4,6 +4,7 @@ import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.port.out.repositories.TenantRepository;
 import com.agenthub.domain.model.Workspace;
 import com.agenthub.application.port.out.repositories.WorkspaceRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -16,20 +17,10 @@ import java.util.List;
  * </p>
  */
 @Component
+@RequiredArgsConstructor
 public class ListWorkspacesUseCase {
     private final TenantRepository tenantRepository;
     private final WorkspaceRepository workspaceRepository;
-
-    /**
-     * 构造列出工作空间用例。
-     *
-     * @param tenantRepository    租户仓储
-     * @param workspaceRepository 工作空间仓储
-     */
-    public ListWorkspacesUseCase(TenantRepository tenantRepository, WorkspaceRepository workspaceRepository) {
-        this.tenantRepository = tenantRepository;
-        this.workspaceRepository = workspaceRepository;
-    }
 
     /**
      * 执行分页查询工作空间列表操作。

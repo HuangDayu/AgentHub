@@ -1,24 +1,19 @@
 package com.agenthub.application.usecase;
 
 import com.agenthub.domain.model.VectorStoreConfig;
-import com.agenthub.application.port.out.rag.VectorStoreManagerPort;
-import org.springframework.stereotype.Service;
+import com.agenthub.application.port.out.VectorPoolManagerPort;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * 向量库管理用例。
  */
-@Service
+@Component
+@RequiredArgsConstructor
 public class ManageVectorStoreUseCase {
     
     private final VectorStoreConfigUseCase configAppService;
-    private final VectorStoreManagerPort vectorStoreManager;
-
-    public ManageVectorStoreUseCase(
-            VectorStoreConfigUseCase configAppService,
-            VectorStoreManagerPort vectorStoreManager) {
-        this.configAppService = configAppService;
-        this.vectorStoreManager = vectorStoreManager;
-    }
+    private final VectorPoolManagerPort vectorStoreManager;
 
     public void deleteConfigAndClearCache(String configId) {
         VectorStoreConfig config = configAppService.getById(configId);

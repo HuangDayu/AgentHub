@@ -5,6 +5,7 @@ import com.agenthub.application.command.CreateModelStrategyCommand;
 import com.agenthub.application.command.UpdateModelStrategyCommand;
 import com.agenthub.application.port.out.repositories.ModelStrategyRepository;
 import com.agenthub.domain.model.ModelStrategy;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,13 +14,10 @@ import java.util.List;
  * @author huangdayu
  */
 @Component
+@RequiredArgsConstructor
 public class ModelStrategyUseCase {
 
     private final ModelStrategyRepository repository;
-
-    public ModelStrategyUseCase(ModelStrategyRepository repository) {
-        this.repository = repository;
-    }
 
 
     public ModelStrategy update(String id, UpdateModelStrategyCommand command) {

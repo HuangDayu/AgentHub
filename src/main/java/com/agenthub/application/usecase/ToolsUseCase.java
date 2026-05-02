@@ -11,9 +11,10 @@ import com.agenthub.domain.model.Tool;
 import com.agenthub.domain.model.ToolId;
 import com.agenthub.domain.model.ToolInvocationResult;
 import com.agenthub.application.port.out.ToolInvoker;
-import com.agenthub.application.port.out.rag.IdempotencyCachePort;
+import com.agenthub.application.port.out.IdempotencyCachePort;
 import com.agenthub.common.exception.ToolNotFoundException;
-import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
@@ -21,21 +22,14 @@ import java.util.Map;
 /**
  * 工具管理用例服务。
  */
-@Service
+@Component
+@RequiredArgsConstructor
 public class ToolsUseCase {
     private static final int IDEMPOTENCY_TTL_SECONDS = 3600;
     private final ToolRepository repository;
     private final ToolInvoker toolInvoker;
     private final IdempotencyCachePort idempotencyCache;
     private final ObjectMapper objectMapper;
-
-    public ToolsUseCase(ToolRepository repository, ToolInvoker toolInvoker,
-                        IdempotencyCachePort idempotencyCache, ObjectMapper objectMapper) {
-        this.repository = repository;
-        this.toolInvoker = toolInvoker;
-        this.idempotencyCache = idempotencyCache;
-        this.objectMapper = objectMapper;
-    }
 
     public List<ToolView> listTools() {
         return repository.findAll().stream().map(this::toView).toList();

@@ -5,6 +5,7 @@ import com.agenthub.application.port.out.TimeProvider;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.Tenant;
 import com.agenthub.application.port.out.repositories.TenantRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,20 +15,10 @@ import org.springframework.stereotype.Component;
  * </p>
  */
 @Component
+@RequiredArgsConstructor
 public class PatchTenantUseCase {
     private final TenantRepository tenantRepository;
     private final TimeProvider timeProvider;
-
-    /**
-     * 构造更新租户用例。
-     *
-     * @param tenantRepository 租户仓储
-     * @param timeProvider     时间提供者
-     */
-    public PatchTenantUseCase(TenantRepository tenantRepository, TimeProvider timeProvider) {
-        this.tenantRepository = tenantRepository;
-        this.timeProvider = timeProvider;
-    }
 
     /**
      * 执行更新租户操作。

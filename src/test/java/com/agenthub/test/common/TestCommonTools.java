@@ -4,7 +4,7 @@ import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static com.agenthub.common.utils.RandomUtils.randomId;
-import static com.agenthub.common.context.TenantContextHeaders.*;
+import static com.agenthub.infrastructure.context.TenantContextHeaders.*;
 
 
 /**

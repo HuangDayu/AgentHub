@@ -23,4 +23,6 @@ public interface AgentConfigRepository {
     void deleteByAgentId(String agentId);
 
     AgentConfig update(AgentConfig config);
+
+    String getConfigId(String agentId, AgentConfig.Category category, AgentConfig.Type type);
 }

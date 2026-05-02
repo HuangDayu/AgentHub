@@ -3,6 +3,8 @@ package com.agenthub.application.usecase;
 import com.agenthub.application.port.out.JwtTokenProviderPort;
 import com.agenthub.domain.model.UserInfo;
 import io.jsonwebtoken.Claims;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,14 +12,12 @@ import java.util.List;
 /**
  * 获取当前用户信息用例。
  */
-@Service
+@Component
+@RequiredArgsConstructor
 public class GetCurrentUserUseCase {
     
     private final JwtTokenProviderPort jwtTokenProvider;
 
-    public GetCurrentUserUseCase(JwtTokenProviderPort jwtTokenProvider) {
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
 
     public UserInfo execute(String token) {
         Claims claims = jwtTokenProvider.validateToken(token);

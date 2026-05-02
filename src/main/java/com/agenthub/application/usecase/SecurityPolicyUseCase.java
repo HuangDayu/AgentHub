@@ -4,17 +4,15 @@ import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.dto.SecurityPolicyOutput;
 import com.agenthub.application.port.out.repositories.SecurityPolicyRepository;
 import com.agenthub.domain.model.SecurityPolicy;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class SecurityPolicyUseCase {
     private final SecurityPolicyRepository repository;
-
-    public SecurityPolicyUseCase(SecurityPolicyRepository repository) {
-        this.repository = repository;
-    }
 
     public SecurityPolicyOutput create(String tenantId, String workspaceId,
                                        String name, String description) {

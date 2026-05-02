@@ -54,7 +54,7 @@ class McpToolControllerIntegrationTest {
                                     "description": "File system MCP server",
                                     "serverUrl": "/usr/local/bin/mcp-filesystem",
                                     "serverType": "STDIO",
-                                    "command": "node",
+                                    "retrievalCommand": "node",
                                     "args": ["server.js"],
                                     "env": {"NODE_ENV": "production"},
                                     "enabled": true
