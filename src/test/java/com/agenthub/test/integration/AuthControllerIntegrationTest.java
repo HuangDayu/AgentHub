@@ -126,8 +126,7 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true))
                 .andExpect(jsonPath("$.userId").value("admin"))
-                .andExpect(jsonPath("$.tenantId").isNotEmpty())
-                .andExpect(jsonPath("$.roles").isArray());
+                .andExpect(jsonPath("$.tenantId").isNotEmpty());
     }
 
     @Test
@@ -138,8 +137,7 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.username").isNotEmpty())
-                .andExpect(jsonPath("$.tenantId").isNotEmpty())
-                .andExpect(jsonPath("$.roles").isArray());
+                .andExpect(jsonPath("$.tenantId").isNotEmpty());
     }
 
     @Test

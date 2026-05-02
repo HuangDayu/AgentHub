@@ -1,7 +1,5 @@
 package com.agenthub.api.dto;
 
-import java.util.List;
-
 /**
  * 用户信息响应DTO.
  * <p>
@@ -11,7 +9,6 @@ import java.util.List;
 public record UserInfoResponse(
         /** 用户ID */ String id,
         /** 用户名 */ String username,
-        /** 租户ID */ String tenantId,
-        /** 用户角色列表 */ List<String> roles
+        /** 租户ID */ String tenantId
 ) {
 }

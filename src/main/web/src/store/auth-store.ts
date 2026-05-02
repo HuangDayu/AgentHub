@@ -12,7 +12,7 @@ function removeFromStorage(key: string) {
 }
 
 // Tenant auth
-const TENANT_TOKEN_KEY = 'tenant_console_access_token'
+const TENANT_TOKEN_KEY = 'agenthub_access_token'
 const TENANT_REFRESH_KEY = 'tenant_console_refresh_token'
 
 export const useTenantAuthStore = defineStore('tenant-auth', () => {
@@ -31,7 +31,7 @@ export const useTenantAuthStore = defineStore('tenant-auth', () => {
 })
 
 // User auth
-const USER_TOKEN_KEY = 'user_console_access_token'
+const USER_TOKEN_KEY = 'agenthub_access_token'
 const USER_REFRESH_KEY = 'user_console_refresh_token'
 
 export const useUserAuthStore = defineStore('user-auth', () => {

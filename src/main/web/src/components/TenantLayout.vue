@@ -2,7 +2,7 @@
   <div class="shell">
     <header class="console-header">
       <div class="header-left">
-        <h1>租户控制台</h1>
+        <h1>AgentHub 控制台</h1>
       </div>
       <div class="header-right">
         <WorkspaceSelector />
@@ -10,16 +10,16 @@
       </div>
     </header>
     <nav class="nav">
-      <RouterLink to="/tenant">工作区</RouterLink>
-      <RouterLink to="/tenant/knowledge">知识库</RouterLink>
-      <RouterLink to="/tenant/retrieval">知识检索</RouterLink>
-      <RouterLink to="/tenant/agents">Agent Studio</RouterLink>
-      <RouterLink to="/tenant/chat">Agent 对话</RouterLink>
-      <RouterLink to="/tenant/vector-stores">向量数据库</RouterLink>
-      <RouterLink to="/tenant/models">大模型配置</RouterLink>
-      <RouterLink to="/tenant/strategies">策略管理</RouterLink>
-      <RouterLink to="/tenant/mcp-tools">MCP工具</RouterLink>
-      <RouterLink to="/tenant/prompt-templates">提示词</RouterLink>
+      <RouterLink to="/agenthub">工作区</RouterLink>
+      <RouterLink to="/agenthub/knowledge">知识库</RouterLink>
+      <RouterLink to="/agenthub/retrieval">知识检索</RouterLink>
+      <RouterLink to="/agenthub/agents">Agent Studio</RouterLink>
+      <RouterLink to="/agenthub/chat">Agent 对话</RouterLink>
+      <RouterLink to="/agenthub/vector-stores">向量数据库</RouterLink>
+      <RouterLink to="/agenthub/models">大模型配置</RouterLink>
+      <RouterLink to="/agenthub/strategies">策略管理</RouterLink>
+      <RouterLink to="/agenthub/mcp-tools">MCP工具</RouterLink>
+      <RouterLink to="/agenthub/prompt-templates">提示词</RouterLink>
     </nav>
     <main class="content">
       <RouterView />
@@ -50,10 +50,8 @@ onMounted(async () => {
 })
 
 function logout() {
-  localStorage.removeItem('things_knowledge_access_token')
-  localStorage.removeItem('things_knowledge_refresh_token')
-  localStorage.removeItem('tenant_console_access_token')
-  localStorage.removeItem('user_console_access_token')
+  localStorage.removeItem('agenthub_access_token')
+  localStorage.removeItem('agenthub_refresh_token')
   router.push('/login')
 }
 </script>

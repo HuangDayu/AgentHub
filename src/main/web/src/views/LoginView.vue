@@ -2,8 +2,8 @@
   <div class="login-wrapper">
     <div class="login-card">
       <div class="login-header">
-        <h1>Things Knowledge</h1>
-        <p class="muted">多租户知识库平台</p>
+        <h1>AgentHub</h1>
+        <p class="muted">AI Agent 管理平台</p>
       </div>
       <form @submit.prevent="handleLogin">
         <div class="field">
@@ -36,9 +36,8 @@
       <div class="demo-accounts">
         <p class="muted">演示账号（密码均为 <code>admin123</code>）</p>
         <div class="demo-list">
-            <button class="demo-btn" @click="fillDemo('admin')">admin（平台）</button>
-          <button class="demo-btn" @click="fillDemo('zhangsan')">zhangsan（租户）</button>
-          <button class="demo-btn" @click="fillDemo('wangwu')">wangwu（用户）</button>
+          <button class="demo-btn" @click="fillDemo('admin')">admin</button>
+          <button class="demo-btn" @click="fillDemo('zhangsan')">zhangsan</button>
         </div>
       </div>
     </div>
@@ -58,8 +57,6 @@ const loading = ref(false)
 const demoPasswords: Record<string, string> = {
   admin: 'admin123',
   zhangsan: 'user123',
-  lisi: 'user123',
-  wangwu: 'user123',
 }
 
 function fillDemo(user: string) {
@@ -83,44 +80,16 @@ async function handleLogin() {
     }
     const tokens = await loginResp.json()
 
-    // Step 2: Get user info
-    const meResp = await fetch('/api/v1/auth/me', {
-      headers: { Authorization: `Bearer ${tokens.accessToken}` },
-    })
-    let roles: string[] = []
-    if (meResp.ok) {
-      const userInfo = await meResp.json()
-      roles = userInfo.roles ?? []
-    }
-
-    // Step 3: Determine console from API roles
-    const normalizedRoles = roles.map((r: string) => r.replace(/^ROLE_/, ''))
-    let targetRoute = '/user'
-    if (normalizedRoles.includes('OWNER')) {
-      targetRoute = '/admin'
-    } else if (normalizedRoles.includes('ADMIN')) {
-      targetRoute = '/tenant'
-    } else if (normalizedRoles.includes('USER')) {
-      targetRoute = '/user'
-    } else {
-      targetRoute = '/user'
-    }
-
-    // Step 4: Store token and navigate based on role
-    const tokenKey = 'things_knowledge_access_token'
+    // Step 2: Store token and navigate
+    const tokenKey = 'agenthub_access_token'
     localStorage.setItem(tokenKey, tokens.accessToken)
-    localStorage.setItem('things_knowledge_refresh_token', tokens.refreshToken)
-    localStorage.setItem('things_knowledge_user_role', normalizedRoles[0] ?? 'VIEWER')
+    localStorage.setItem('agenthub_refresh_token', tokens.refreshToken)
     localStorage.setItem('things_knowledge_username', username.value)
 
-    // Also set per-console tokens for backward compatibility
-    localStorage.setItem('tenant_console_access_token', tokens.accessToken)
-    localStorage.setItem('user_console_access_token', tokens.accessToken)
-
-    // Step 5: Navigate to appropriate console
-    router.push(targetRoute)
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '登录失败'
+    // Step 3: Navigate to AgentHub console
+    router.push('/agenthub')
+  } catch (err: any) {
+    error.value = err.message || '登录失败'
   } finally {
     loading.value = false
   }
@@ -130,27 +99,28 @@ async function handleLogin() {
 <style scoped>
 .login-wrapper {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, #0f172a, #1e3a5f);
-  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e293b, #334155);
 }
 .login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px;
   background: #fff;
-  border-radius: 16px;
-  padding: 40px;
-  width: min(420px, 100%);
-  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.2);
 }
 .login-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 .login-header h1 {
-  font-size: 1.8rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 4px;
+  margin: 0 0 6px;
 }
 .field {
   margin-bottom: 20px;

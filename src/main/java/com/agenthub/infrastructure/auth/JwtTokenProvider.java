@@ -12,15 +12,14 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 
 /**
  * JWT令牌提供者，基于HMAC-SHA256签名算法。
  */
 @Component
 public class JwtTokenProvider implements JwtTokenProviderPort {
-    private static final long ACCESS_TOKEN_EXPIRY_SECONDS = 7200 * 100;
-    private static final long REFRESH_TOKEN_EXPIRY_SECONDS = 604800 * 100;
+    private static final long ACCESS_TOKEN_EXPIRY_SECONDS = 3600; // 1小时
+    private static final long REFRESH_TOKEN_EXPIRY_SECONDS = 86400 * 7; // 7天
 
     private final SecretKey secretKey;
 
@@ -34,20 +33,18 @@ public class JwtTokenProvider implements JwtTokenProviderPort {
     }
 
     /**
-     * 生成访问令牌，包含用户ID、租户ID和角色信息。
+     * 生成访问令牌，包含用户ID和租户ID。
      *
      * @param userId   用户ID
      * @param tenantId 租户ID
-     * @param roles    用户角色列表
      * @return JWT令牌字符串
      */
     @Override
-    public String generateAccessToken(String userId, String tenantId, List<String> roles) {
+    public String generateAccessToken(String userId, String tenantId) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(userId)
                 .claim("tenantId", tenantId)
-                .claim("roles", roles)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusSeconds(ACCESS_TOKEN_EXPIRY_SECONDS)))
                 .signWith(secretKey)

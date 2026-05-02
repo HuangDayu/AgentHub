@@ -1,7 +1,7 @@
 ﻿import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-const TOKEN_KEY = 'user_console_access_token'
+const TOKEN_KEY = 'agenthub_access_token'
 const REFRESH_KEY = 'user_console_refresh_token'
 
 export const useAuthStore = defineStore('auth', () => {

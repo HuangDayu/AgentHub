@@ -3,27 +3,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 // ── Login ───────────────────────────────────────────────
 const LoginView = () => import('@/views/LoginView.vue')
 
-// ── Admin ───────────────────────────────────────────────
-const adminRoutes = {
-  path: '/admin',
-  component: () => import('@/components/AdminLayout.vue'),
-  meta: { requiresAuth: true, role: 'OWNER' },
-  children: [
-    { path: '', component: () => import('@/views/admin/OverviewView.vue') },
-    { path: 'tenants', component: () => import('@/views/admin/TenantsView.vue') },
-    { path: 'billing', component: () => import('@/views/admin/BillingView.vue') },
-    { path: 'audit', component: () => import('@/views/admin/AuditView.vue') },
-    { path: 'connectors', component: () => import('@/views/admin/ConnectorsView.vue') },
-    { path: 'policies', component: () => import('@/views/admin/PolicyView.vue') },
-    { path: 'tools', component: () => import('@/views/admin/ToolView.vue') },
-  ],
-}
-
-// ── Tenant ──────────────────────────────────────────────
-const tenantRoutes = {
-  path: '/tenant',
+// ── AgentHub ──────────────────────────────────────────────
+const agentHubRoutes = {
+  path: '/agenthub',
   component: () => import('@/components/TenantLayout.vue'),
-  meta: { requiresAuth: true, role: 'ADMIN' },
+  meta: { requiresAuth: true },
   children: [
     { path: '', component: () => import('@/views/tenant/WorkspaceOverviewView.vue') },
     { path: 'knowledge', component: () => import('@/views/tenant/KnowledgeWorkbenchView.vue') },
@@ -43,29 +27,12 @@ const tenantRoutes = {
   ],
 }
 
-// ── User ────────────────────────────────────────────────
-const userRoutes = {
-  path: '/user',
-  component: () => import('@/components/UserLayout.vue'),
-  meta: { requiresAuth: true, role: 'VIEWER' },
-  children: [
-    { path: '', component: () => import('@/views/user/HomeView.vue') },
-    { path: 'search', component: () => import('@/views/user/SearchView.vue') },
-    { path: 'chat', component: () => import('@/views/user/ChatView.vue') },
-    { path: 'chat/:sessionId', component: () => import('@/views/user/ChatView.vue') },
-    { path: 'notifications', component: () => import('@/views/user/NotificationView.vue') },
-    { path: 'settings', component: () => import('@/views/user/SettingsView.vue') },
-  ],
-}
-
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', redirect: '/login' },
     { path: '/login', component: LoginView },
-    adminRoutes,
-    tenantRoutes,
-    userRoutes,
+    agentHubRoutes,
     { path: '/:pathMatch(.*)*', redirect: '/login' },
   ],
 })
@@ -76,23 +43,8 @@ router.beforeEach((to) => {
   if (to.path === '/login') return true
 
   // Check if authenticated
-  const token = localStorage.getItem('things_knowledge_access_token')
+  const token = localStorage.getItem('agenthub_access_token')
   if (!token) return '/login'
-
-  // Check role-based access
-  const storedRole = localStorage.getItem('things_knowledge_user_role') ?? ''
-  const allowedRole = to.meta.role as string
-
-  if (allowedRole) {
-    const normalizedStored = storedRole.replace(/^ROLE_/, '')
-    const normalizedAllowed = allowedRole.replace(/^ROLE_/, '')
-
-    // Admin console: only OWNER
-    if (normalizedAllowed === 'OWNER' && normalizedStored !== 'OWNER') return '/tenant'
-    // Tenant console: OWNER or ADMIN
-    if (normalizedAllowed === 'ADMIN' && normalizedStored !== 'ADMIN' && normalizedStored !== 'OWNER') return '/user'
-    // User console: everyone allowed
-  }
 
   return true
 })

@@ -6,8 +6,6 @@ import com.agenthub.domain.model.DocumentChunk;
 import com.agenthub.domain.model.DocumentContent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.prompt.AssistantPromptTemplate;
-import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.document.DocumentReader;
 import org.springframework.ai.model.transformer.KeywordMetadataEnricher;
@@ -26,8 +24,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.agenthub.infrastructure.rag.RagPromptTemplate.KEYWORDS_PROMPT_TEMPLATE;
-
 /**
  * @author huangdayu
  * @doc https://docs.spring.io/spring-ai/reference/2.0/api/etl-pipeline.html
@@ -35,7 +31,7 @@ import static com.agenthub.infrastructure.rag.RagPromptTemplate.KEYWORDS_PROMPT_
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "agenthub.etl.impl-type", havingValue = "spring", matchIfMissing = true)
-public class SpringAiEtlDocumentAdapter implements ExtractTransformLoadPort {
+public class SpringAiEtlStorageAdapter implements ExtractTransformLoadPort {
     private final SpringAiObjectPoolManager springAiObjectPoolManager;
 
     @Override
@@ -48,7 +44,7 @@ public class SpringAiEtlDocumentAdapter implements ExtractTransformLoadPort {
         documents = summaryDocuments(chatModel, documents);
         vectorStore.add(documents);
         return documents.stream()
-                .map(d -> DocumentChunk.reconstruct(d.getId(), etlCommand.getDocumentId(), etlCommand.getKbId(), d.hashCode(), null, 0, null))
+                .map(d -> DocumentChunk.reconstruct(d.getId(), etlCommand.getDocumentId(), etlCommand.getKbId(), d.hashCode(), "null", 0, null))
                 .collect(Collectors.toList());
     }
 
@@ -88,7 +84,6 @@ public class SpringAiEtlDocumentAdapter implements ExtractTransformLoadPort {
      */
     List<Document> enrichDocuments(ChatModel chatModel, List<Document> documents) {
         KeywordMetadataEnricher enricher = KeywordMetadataEnricher.builder(chatModel)
-                .keywordsTemplate(new PromptTemplate(KEYWORDS_PROMPT_TEMPLATE.formatted(5)))
                 .keywordCount(5)
                 .build();
         return enricher.apply(documents);

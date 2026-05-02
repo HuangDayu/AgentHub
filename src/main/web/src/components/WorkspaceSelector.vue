@@ -46,7 +46,7 @@ function handleWorkspaceChange() {
     const oldWorkspaceId = store.workspaceId
     store.selectWorkspace(selectedWorkspaceId.value)
     // 触发页面刷新（只在非工作区管理页面刷新）
-    if (router.currentRoute.value.path !== '/tenant') {
+    if (router.currentRoute.value.path !== '/agenthub') {
       refreshCurrentPage()
     }
   }
@@ -73,7 +73,7 @@ watch(() => store.tenantId, () => {
 // 监听路由变化，当进入或离开工作区管理页面时刷新列表
 watch(() => router.currentRoute.value.path, (newPath, oldPath) => {
   // 当从工作区管理页面离开时，重新加载工作区列表
-  if (oldPath === '/tenant' && newPath !== '/tenant') {
+  if (oldPath === '/agenthub' && newPath !== '/agenthub') {
     loadWorkspaces()
   }
 })

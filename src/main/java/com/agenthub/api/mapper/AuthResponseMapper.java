@@ -36,6 +36,6 @@ public class AuthResponseMapper {
     public UserInfoResponse toResponse(UserInfo userInfo) {
         return new UserInfoResponse(
                 userInfo.id(), userInfo.username(),
-                userInfo.tenantId(), userInfo.roles());
+                userInfo.tenantId());
     }
 }

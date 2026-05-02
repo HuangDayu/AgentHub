@@ -108,7 +108,7 @@ export async function sendMessageStream(
 
   // Auth
   try {
-    const token = localStorage.getItem('tenant_console_access_token')
+    const token = localStorage.getItem('agenthub_access_token')
     if (token) headers['Authorization'] = `Bearer ${token}`
   } catch {
     // localStorage unavailable

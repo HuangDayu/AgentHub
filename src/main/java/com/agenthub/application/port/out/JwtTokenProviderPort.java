@@ -3,8 +3,6 @@ package com.agenthub.application.port.out;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 
-import java.util.List;
-
 /**
  * JWT令牌提供者端口接口。
  * 定义application层与infrastructure层的边界。
@@ -12,14 +10,13 @@ import java.util.List;
 public interface JwtTokenProviderPort {
     
     /**
-     * 生成访问令牌，包含用户ID、租户ID和角色信息。
+     * 生成访问令牌，包含用户ID和租户ID。
      *
      * @param userId   用户ID
      * @param tenantId 租户ID
-     * @param roles    用户角色列表
      * @return JWT令牌字符串
      */
-    String generateAccessToken(String userId, String tenantId, List<String> roles);
+    String generateAccessToken(String userId, String tenantId);
     
     /**
      * 生成刷新令牌。

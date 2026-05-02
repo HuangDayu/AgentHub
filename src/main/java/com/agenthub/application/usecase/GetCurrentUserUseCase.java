@@ -5,9 +5,6 @@ import com.agenthub.domain.model.UserInfo;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * 获取当前用户信息用例。
@@ -18,7 +15,6 @@ public class GetCurrentUserUseCase {
     
     private final JwtTokenProviderPort jwtTokenProvider;
 
-
     public UserInfo execute(String token) {
         Claims claims = jwtTokenProvider.validateToken(token);
         return buildUserInfo(claims);
@@ -27,13 +23,6 @@ public class GetCurrentUserUseCase {
     private UserInfo buildUserInfo(Claims claims) {
         String userId = claims.getSubject();
         String tenantId = claims.get("tenantId", String.class);
-        List<String> roles = extractRoles(claims);
-        return new UserInfo(userId, userId, tenantId, roles);
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<String> extractRoles(Claims claims) {
-        List<String> roles = claims.get("roles", List.class);
-        return roles != null ? roles : List.of();
+        return new UserInfo(userId, userId, tenantId);
     }
 }

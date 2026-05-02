@@ -4,8 +4,6 @@ import com.agenthub.application.service.AuthApplicationService;
 import com.agenthub.application.port.out.CredentialVerifier;
 import com.agenthub.application.port.out.repositories.RefreshTokenRepository;
 import com.agenthub.infrastructure.persistence.mapper.AppUserMapper;
-import com.agenthub.infrastructure.persistence.mapper.RoleBindingMapper;
-import com.agenthub.infrastructure.persistence.mapper.RoleDefMapper;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -55,8 +53,6 @@ public class AuthConfiguration {
      *
      * @param jwtTokenProvider         JWT令牌提供者
      * @param appUserMapper            用户数据映射器
-     * @param roleBindingMapper        角色绑定数据映射器
-     * @param roleDefMapper            角色定义数据映射器
      * @param refreshTokenRepository   刷新令牌仓储
      * @param credentialVerifierProvider 可选的凭据验证器Bean
      * @return 认证应用服务实例
@@ -65,8 +61,6 @@ public class AuthConfiguration {
     public AuthApplicationService authApplicationService(
             JwtTokenProvider jwtTokenProvider,
             AppUserMapper appUserMapper,
-            RoleBindingMapper roleBindingMapper,
-            RoleDefMapper roleDefMapper,
             RefreshTokenRepository refreshTokenRepository,
             ObjectProvider<CredentialVerifier> credentialVerifierProvider) {
         // 优先使用容器中的 CredentialVerifier Bean（测试时注入 StaticCredentialVerifier）
@@ -74,7 +68,7 @@ public class AuthConfiguration {
                 () -> new DatabaseCredentialVerifier(appUserMapper));
         // 创建访问令牌服务
         SimpleAccessTokenService tokenService =
-                new SimpleAccessTokenService(jwtTokenProvider, appUserMapper, roleBindingMapper, roleDefMapper);
+                new SimpleAccessTokenService(jwtTokenProvider, appUserMapper);
         // 组装认证应用服务及其依赖
         return new AuthApplicationService(
                 credentialVerifier,

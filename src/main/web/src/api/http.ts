@@ -18,45 +18,13 @@ function ensureValidBaseUrl(baseUrl: string): string {
   return getDefaultBaseUrl()
 }
 
-export async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {
-  const headers = buildHeaders(options)
-  injectAuthToken(headers)
-  const validBaseUrl = ensureValidBaseUrl(options.baseUrl)
-  const response = await fetch(new URL(path, validBaseUrl), {
-    ...options,
-    headers,
-    body: buildBody(options.bodyJson),
-  })
-  if (!response.ok) {
-    throw new Error(await readError(response))
-  }
-  if (response.status === 204) {
-    return undefined as T
-  }
-  return response.json() as Promise<T>
-}
-
-export function buildSseUrl(path: string, baseUrl: string, params?: Record<string, string>): string {
+function buildUrl(baseUrl: string, path: string, params?: Record<string, string>) {
   const validBaseUrl = ensureValidBaseUrl(baseUrl)
   const url = new URL(path, validBaseUrl)
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       url.searchParams.set(key, value)
     }
-  }
-  try {
-    // Try tenant token first, then user token
-    const tenantToken = localStorage.getItem('tenant_console_access_token')
-    if (tenantToken) {
-      url.searchParams.set('token', tenantToken)
-      return url.toString()
-    }
-    const userToken = localStorage.getItem('user_console_access_token')
-    if (userToken) {
-      url.searchParams.set('token', userToken)
-    }
-  } catch {
-    // localStorage unavailable
   }
   return url.toString()
 }
@@ -75,15 +43,9 @@ function buildBody(bodyJson?: unknown) {
 
 function injectAuthToken(headers: Headers) {
   try {
-    // Try tenant token first, then user token
-    const tenantToken = localStorage.getItem('tenant_console_access_token')
-    if (tenantToken) {
-      headers.set('Authorization', `Bearer ${tenantToken}`)
-      return
-    }
-    const userToken = localStorage.getItem('user_console_access_token')
-    if (userToken) {
-      headers.set('Authorization', `Bearer ${userToken}`)
+    const token = localStorage.getItem('agenthub_access_token')
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`)
     }
   } catch {
     // localStorage unavailable
@@ -111,4 +73,27 @@ export async function del<T>(path: string, headers?: Record<string, string>): Pr
 
 export async function patch<T>(path: string, bodyJson?: unknown, headers?: Record<string, string>): Promise<T> {
   return requestJson<T>(path, { baseUrl: BASE_URL, method: 'PATCH', bodyJson, headers })
+}
+
+export async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {
+  const url = buildUrl(options.baseUrl, path)
+  const headers = buildHeaders(options)
+  injectAuthToken(headers)
+  const body = buildBody(options.bodyJson)
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    body,
+  })
+
+  if (!response.ok) {
+    throw new Error(await readError(response))
+  }
+
+  const text = await response.text()
+  if (!text) {
+    return {} as T
+  }
+  return JSON.parse(text) as T
 }

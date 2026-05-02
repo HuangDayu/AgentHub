@@ -9,7 +9,7 @@ export function scopedHeaders(selection: SelectionState) {
     headers['X-Workspace-Id'] = selection.workspaceId
   }
   try {
-    const token = localStorage.getItem('tenant_console_access_token')
+    const token = localStorage.getItem('agenthub_access_token')
     if (token) headers['Authorization'] = `Bearer ${token}`
   } catch { /* no-op */ }
   return headers
