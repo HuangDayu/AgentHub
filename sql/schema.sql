@@ -1,6 +1,6 @@
 -- =========================================================
 -- Things Knowledge Platform - Auto-generated Schema
--- Generated: 2026-04-29T08:39:38.908944600Z
+-- Generated: 2026-05-03T15:56:16.510071Z
 -- Source: MyBatis-Plus Entity Classes
 -- =========================================================
 
@@ -11,25 +11,17 @@ SET search_path TO app, public;
 -- =========================================================
 -- Drop existing tables (dependency order)
 -- =========================================================
-DROP TABLE IF EXISTS app.workspace_member CASCADE;
 DROP TABLE IF EXISTS app.workspace CASCADE;
 DROP TABLE IF EXISTS app.workflow CASCADE;
 DROP TABLE IF EXISTS app.vector_store_config CASCADE;
-DROP TABLE IF EXISTS app.usage_meter CASCADE;
-DROP TABLE IF EXISTS app.tool_registry CASCADE;
 DROP TABLE IF EXISTS app.tool_policy_binding CASCADE;
 DROP TABLE IF EXISTS app.tool_policy CASCADE;
 DROP TABLE IF EXISTS app.tenant CASCADE;
 DROP TABLE IF EXISTS app.skill CASCADE;
 DROP TABLE IF EXISTS app.session CASCADE;
 DROP TABLE IF EXISTS app.security_policy CASCADE;
-DROP TABLE IF EXISTS app.role_def CASCADE;
-DROP TABLE IF EXISTS app.role_binding CASCADE;
 DROP TABLE IF EXISTS app.retrieval_policy CASCADE;
 DROP TABLE IF EXISTS app.prompt_template CASCADE;
-DROP TABLE IF EXISTS app.policy_rule CASCADE;
-DROP TABLE IF EXISTS app.policy CASCADE;
-DROP TABLE IF EXISTS app.notification_message CASCADE;
 DROP TABLE IF EXISTS app.model_policy CASCADE;
 DROP TABLE IF EXISTS app.model_config CASCADE;
 DROP TABLE IF EXISTS app.memory CASCADE;
@@ -38,14 +30,11 @@ DROP TABLE IF EXISTS app.knowledge_base CASCADE;
 DROP TABLE IF EXISTS app.ingestion_job CASCADE;
 DROP TABLE IF EXISTS app.ingestion_document CASCADE;
 DROP TABLE IF EXISTS app.iam_refresh_token_session CASCADE;
+DROP TABLE IF EXISTS app.http_tools CASCADE;
 DROP TABLE IF EXISTS app.guardrail_policy CASCADE;
+DROP TABLE IF EXISTS app.function_tools CASCADE;
 DROP TABLE IF EXISTS app.document_chunk CASCADE;
-DROP TABLE IF EXISTS app.connector_sync_job CASCADE;
-DROP TABLE IF EXISTS app.connector CASCADE;
 DROP TABLE IF EXISTS app.chat_message CASCADE;
-DROP TABLE IF EXISTS app.billing_invoice CASCADE;
-DROP TABLE IF EXISTS app.audit_log CASCADE;
-DROP TABLE IF EXISTS app.audit_export_job CASCADE;
 DROP TABLE IF EXISTS app.app_user CASCADE;
 DROP TABLE IF EXISTS app.agent_team CASCADE;
 DROP TABLE IF EXISTS app.agent_config CASCADE;
@@ -122,57 +111,6 @@ CREATE TABLE IF NOT EXISTS app.app_user
     PRIMARY KEY (id)
 );
 
--- Table: app.audit_export_job
-CREATE TABLE IF NOT EXISTS app.audit_export_job
-(
-    id            varchar(64) NOT NULL,
-    tenant_id     varchar(255),
-    from_time     timestamptz,
-    to_time       timestamptz,
-    export_format varchar(255),
-    status        varchar(255),
-    file_uri      text,
-    created_at    timestamptz,
-    finished_at   timestamptz,
-    PRIMARY KEY (id)
-);
-
--- Table: app.audit_log
-CREATE TABLE IF NOT EXISTS app.audit_log
-(
-    id            varchar(64) NOT NULL,
-    tenant_id     varchar(255),
-    workspace_id  varchar(255),
-    actor_type    varchar(255),
-    actor_id      varchar(255),
-    action        varchar(255),
-    resource_type varchar(255),
-    resource_id   varchar(255),
-    decision      varchar(255),
-    detail        varchar(255),
-    trace_id      varchar(255),
-    created_at    timestamptz,
-    PRIMARY KEY (id)
-);
-
--- Table: app.billing_invoice
-CREATE TABLE IF NOT EXISTS app.billing_invoice
-(
-    id              varchar(64) NOT NULL,
-    tenant_id       varchar(255),
-    period_month    varchar(255),
-    status          varchar(255),
-    subtotal_amount numeric(19, 2),
-    tax_amount      numeric(19, 2),
-    total_amount    numeric(19, 2),
-    currency        varchar(255),
-    invoice_payload varchar(255),
-    issued_at       timestamptz,
-    paid_at         timestamptz,
-    created_at      timestamptz,
-    PRIMARY KEY (id)
-);
-
 -- Table: app.chat_message
 CREATE TABLE IF NOT EXISTS app.chat_message
 (
@@ -181,30 +119,6 @@ CREATE TABLE IF NOT EXISTS app.chat_message
     role       varchar(255),
     content    text,
     created_at timestamptz,
-    PRIMARY KEY (id)
-);
-
--- Table: app.connector
-CREATE TABLE IF NOT EXISTS app.connector
-(
-    id             varchar(64) NOT NULL,
-    name           varchar(255),
-    connector_type varchar(255),
-    enabled        boolean,
-    created_at     timestamptz,
-    updated_at     timestamptz,
-    last_synced_at timestamptz,
-    PRIMARY KEY (id)
-);
-
--- Table: app.connector_sync_job
-CREATE TABLE IF NOT EXISTS app.connector_sync_job
-(
-    id           varchar(64) NOT NULL,
-    connector_id varchar(255),
-    status       varchar(255),
-    requested_at timestamptz,
-    finished_at  timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -217,6 +131,24 @@ CREATE TABLE IF NOT EXISTS app.document_chunk
     kb_id       varchar(255),
     chunk_index integer,
     token_count integer,
+    PRIMARY KEY (id)
+);
+
+-- Table: app.function_tools
+CREATE TABLE IF NOT EXISTS app.function_tools
+(
+    id              varchar(64) NOT NULL,
+    tenant_id       varchar(255),
+    workspace_id    varchar(255),
+    tool_class_name varchar(255),
+    tool_name       varchar(255),
+    description     text,
+    category        varchar(255),
+    method_count    integer,
+    enabled         boolean,
+    system_tool     boolean,
+    created_at      timestamptz,
+    updated_at      timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -237,6 +169,23 @@ CREATE TABLE IF NOT EXISTS app.guardrail_policy
     max_output_length          integer,
     created_at                 timestamptz,
     updated_at                 timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: app.http_tools
+CREATE TABLE IF NOT EXISTS app.http_tools
+(
+    id           varchar(64) NOT NULL,
+    tenant_id    varchar(255),
+    workspace_id varchar(255),
+    name         varchar(255),
+    description  text,
+    enabled      boolean,
+    endpoint     varchar(255),
+    auth_type    varchar(255),
+    input_schema varchar(255),
+    timeout_ms   integer,
+    created_at   timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -380,48 +329,6 @@ CREATE TABLE IF NOT EXISTS app.model_policy
     PRIMARY KEY (id)
 );
 
--- Table: app.notification_message
-CREATE TABLE IF NOT EXISTS app.notification_message
-(
-    id         varchar(64) NOT NULL,
-    channel    varchar(255),
-    recipient  varchar(255),
-    content    text,
-    status     varchar(255),
-    created_at timestamptz,
-    PRIMARY KEY (id)
-);
-
--- Table: app.policy
-CREATE TABLE IF NOT EXISTS app.policy
-(
-    id         varchar(64) NOT NULL,
-    effect     varchar(255),
-    conditions varchar(255),
-    created_at timestamptz,
-    updated_at timestamptz,
-    PRIMARY KEY (id)
-);
-
--- Table: app.policy_rule
-CREATE TABLE IF NOT EXISTS app.policy_rule
-(
-    id               varchar(64) NOT NULL,
-    tenant_id        varchar(255),
-    scope_type       varchar(255),
-    name             varchar(255),
-    description      text,
-    effect           varchar(255),
-    action_pattern   varchar(255),
-    resource_pattern varchar(255),
-    condition_expr   varchar(255),
-    priority         integer,
-    enabled          boolean,
-    created_at       timestamptz,
-    updated_at       timestamptz,
-    PRIMARY KEY (id)
-);
-
 -- Table: app.prompt_template
 CREATE TABLE IF NOT EXISTS app.prompt_template
 (
@@ -459,28 +366,6 @@ CREATE TABLE IF NOT EXISTS app.retrieval_policy
     keyword_weight       double precision,
     created_at           timestamptz,
     updated_at           timestamptz,
-    PRIMARY KEY (id)
-);
-
--- Table: app.role_binding
-CREATE TABLE IF NOT EXISTS app.role_binding
-(
-    id         varchar(64) NOT NULL,
-    user_id    varchar(255),
-    role_id    varchar(255),
-    created_at timestamptz,
-    PRIMARY KEY (id)
-);
-
--- Table: app.role_def
-CREATE TABLE IF NOT EXISTS app.role_def
-(
-    id          varchar(64) NOT NULL,
-    role_code   varchar(255),
-    role_name   varchar(255),
-    role_type   varchar(255),
-    description text,
-    created_at  timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -578,39 +463,6 @@ CREATE TABLE IF NOT EXISTS app.tool_policy_binding
     PRIMARY KEY (id)
 );
 
--- Table: app.tool_registry
-CREATE TABLE IF NOT EXISTS app.tool_registry
-(
-    id           varchar(64) NOT NULL,
-    name         varchar(255),
-    description  text,
-    enabled      boolean,
-    endpoint     varchar(255),
-    auth_type    varchar(255),
-    input_schema varchar(255),
-    timeout_ms   integer,
-    created_at   timestamptz,
-    PRIMARY KEY (id)
-);
-
--- Table: app.usage_meter
-CREATE TABLE IF NOT EXISTS app.usage_meter
-(
-    id             varchar(64) NOT NULL,
-    tenant_id      varchar(255),
-    workspace_id   varchar(255),
-    metric_type    varchar(255),
-    quantity       numeric(19, 2),
-    unit_price     numeric(19, 2),
-    amount         numeric(19, 2),
-    source_service varchar(255),
-    source_ref_id  varchar(255),
-    trace_id       varchar(255),
-    occurred_at    timestamptz,
-    created_at     timestamptz,
-    PRIMARY KEY (id)
-);
-
 -- Table: app.vector_store_config
 CREATE TABLE IF NOT EXISTS app.vector_store_config
 (
@@ -660,22 +512,6 @@ CREATE TABLE IF NOT EXISTS app.workspace
     PRIMARY KEY (id)
 );
 
--- Table: app.workspace_member
-CREATE TABLE IF NOT EXISTS app.workspace_member
-(
-    id           varchar(64) NOT NULL,
-    tenant_id    varchar(255),
-    workspace_id varchar(255),
-    user_id      varchar(255),
-    role_id      varchar(255),
-    scope_type   varchar(255),
-    created_at   timestamptz,
-    role_code    varchar(255),
-    username     varchar(255),
-    display_name varchar(255),
-    PRIMARY KEY (id)
-);
-
 -- =========================================================
 -- Create indexes
 -- =========================================================
@@ -691,26 +527,20 @@ CREATE INDEX IF NOT EXISTS idx_agent_team_workspace_id ON app.agent_team (worksp
 
 CREATE INDEX IF NOT EXISTS idx_app_user_tenant_id ON app.app_user (tenant_id);
 
-CREATE INDEX IF NOT EXISTS idx_audit_export_job_tenant_id ON app.audit_export_job (tenant_id);
-
-CREATE INDEX IF NOT EXISTS idx_audit_log_tenant_id ON app.audit_log (tenant_id);
-CREATE INDEX IF NOT EXISTS idx_audit_log_workspace_id ON app.audit_log (workspace_id);
-CREATE INDEX IF NOT EXISTS idx_audit_log_actor_id ON app.audit_log (actor_id);
-CREATE INDEX IF NOT EXISTS idx_audit_log_resource_id ON app.audit_log (resource_id);
-CREATE INDEX IF NOT EXISTS idx_audit_log_trace_id ON app.audit_log (trace_id);
-
-CREATE INDEX IF NOT EXISTS idx_billing_invoice_tenant_id ON app.billing_invoice (tenant_id);
-
 CREATE INDEX IF NOT EXISTS idx_chat_message_session_id ON app.chat_message (session_id);
-
-CREATE INDEX IF NOT EXISTS idx_connector_sync_job_connector_id ON app.connector_sync_job (connector_id);
 
 CREATE INDEX IF NOT EXISTS idx_document_chunk_chunk_id ON app.document_chunk (chunk_id);
 CREATE INDEX IF NOT EXISTS idx_document_chunk_document_id ON app.document_chunk (document_id);
 CREATE INDEX IF NOT EXISTS idx_document_chunk_kb_id ON app.document_chunk (kb_id);
 
+CREATE INDEX IF NOT EXISTS idx_function_tools_tenant_id ON app.function_tools (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_function_tools_workspace_id ON app.function_tools (workspace_id);
+
 CREATE INDEX IF NOT EXISTS idx_guardrail_policy_tenant_id ON app.guardrail_policy (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_guardrail_policy_workspace_id ON app.guardrail_policy (workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_http_tools_tenant_id ON app.http_tools (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_http_tools_workspace_id ON app.http_tools (workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_ingestion_document_kb_id ON app.ingestion_document (kb_id);
 CREATE INDEX IF NOT EXISTS idx_ingestion_document_job_id ON app.ingestion_document (job_id);
@@ -739,16 +569,11 @@ CREATE INDEX IF NOT EXISTS idx_model_config_workspace_id ON app.model_config (wo
 CREATE INDEX IF NOT EXISTS idx_model_policy_tenant_id ON app.model_policy (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_model_policy_workspace_id ON app.model_policy (workspace_id);
 
-CREATE INDEX IF NOT EXISTS idx_policy_rule_tenant_id ON app.policy_rule (tenant_id);
-
 CREATE INDEX IF NOT EXISTS idx_prompt_template_tenant_id ON app.prompt_template (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_prompt_template_workspace_id ON app.prompt_template (workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_retrieval_policy_tenant_id ON app.retrieval_policy (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_retrieval_policy_workspace_id ON app.retrieval_policy (workspace_id);
-
-CREATE INDEX IF NOT EXISTS idx_role_binding_user_id ON app.role_binding (user_id);
-CREATE INDEX IF NOT EXISTS idx_role_binding_role_id ON app.role_binding (role_id);
 
 CREATE INDEX IF NOT EXISTS idx_security_policy_tenant_id ON app.security_policy (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_security_policy_workspace_id ON app.security_policy (workspace_id);
@@ -766,11 +591,6 @@ CREATE INDEX IF NOT EXISTS idx_tool_policy_workspace_id ON app.tool_policy (work
 CREATE INDEX IF NOT EXISTS idx_tool_policy_binding_tool_policy_id ON app.tool_policy_binding (tool_policy_id);
 CREATE INDEX IF NOT EXISTS idx_tool_policy_binding_tool_id ON app.tool_policy_binding (tool_id);
 
-CREATE INDEX IF NOT EXISTS idx_usage_meter_tenant_id ON app.usage_meter (tenant_id);
-CREATE INDEX IF NOT EXISTS idx_usage_meter_workspace_id ON app.usage_meter (workspace_id);
-CREATE INDEX IF NOT EXISTS idx_usage_meter_source_ref_id ON app.usage_meter (source_ref_id);
-CREATE INDEX IF NOT EXISTS idx_usage_meter_trace_id ON app.usage_meter (trace_id);
-
 CREATE INDEX IF NOT EXISTS idx_vector_store_config_tenant_id ON app.vector_store_config (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_vector_store_config_workspace_id ON app.vector_store_config (workspace_id);
 
@@ -778,9 +598,4 @@ CREATE INDEX IF NOT EXISTS idx_workflow_tenant_id ON app.workflow (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_workflow_workspace_id ON app.workflow (workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_workspace_tenant_id ON app.workspace (tenant_id);
-
-CREATE INDEX IF NOT EXISTS idx_workspace_member_tenant_id ON app.workspace_member (tenant_id);
-CREATE INDEX IF NOT EXISTS idx_workspace_member_workspace_id ON app.workspace_member (workspace_id);
-CREATE INDEX IF NOT EXISTS idx_workspace_member_user_id ON app.workspace_member (user_id);
-CREATE INDEX IF NOT EXISTS idx_workspace_member_role_id ON app.workspace_member (role_id);
 

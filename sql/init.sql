@@ -173,11 +173,16 @@ ON CONFLICT (id) DO NOTHING;
 -- Policy and Policy Rule for governance-domain tests
 INSERT INTO app.policy (id, effect, conditions, created_at, updated_at)
 VALUES ('test-policy-allow', 'ALLOW', '{"role": "admin"}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
-ON CONFLICT (id) DO UPDATE SET effect = 'ALLOW', conditions = '{"role": "admin"}';
+ON CONFLICT (id) DO UPDATE SET effect     = 'ALLOW',
+                               conditions = '{"role": "admin"}';
 
-INSERT INTO app.policy_rule (id, tenant_id, scope_type, name, description, effect, action_pattern, resource_pattern, condition_expr, enabled, created_at, updated_at)
-VALUES ('test-rule-1', '100000002', 'GLOBAL', 'Test Rule', 'Test policy rule for integration tests', 'ALLOW', '*', '*', '{}', true, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
-ON CONFLICT (id) DO UPDATE SET name = 'Test Rule', effect = 'ALLOW', enabled = true;
+INSERT INTO app.policy_rule (id, tenant_id, scope_type, name, description, effect, action_pattern, resource_pattern,
+                             condition_expr, enabled, created_at, updated_at)
+VALUES ('test-rule-1', '100000002', 'GLOBAL', 'Test Rule', 'Test policy rule for integration tests', 'ALLOW', '*', '*',
+        '{}', true, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
+ON CONFLICT (id) DO UPDATE SET name    = 'Test Rule',
+                               effect  = 'ALLOW',
+                               enabled = true;
 
 -- Billing data for billing-domain tests
 -- INSERT INTO app.usage_meter (id, tenant_id, workspace_id, metric_type, quantity, unit_price, amount, source_service, source_ref_id, recorded_at, created_at)
@@ -189,19 +194,26 @@ ON CONFLICT (id) DO UPDATE SET name = 'Test Rule', effect = 'ALLOW', enabled = t
 -- ON CONFLICT (id) DO UPDATE SET status = 'PAID', total_amount = 110.00;
 
 -- Vector Store Config for agenthub tests
-INSERT INTO app.vector_store_config (id, tenant_id, workspace_id, name, type, host, port, api_key, collection_name, created_at, updated_at)
-VALUES ('vsc-chroma-test', '100000002', '100000002', 'Chroma Init Test', 'CHROMA', 'localhost', 8000, null, 'test-collection', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
-ON CONFLICT (id) DO UPDATE SET name = 'Chroma Init Test', type = 'CHROMA';
+INSERT INTO app.vector_store_config (id, tenant_id, workspace_id, name, type, host, port, api_key, collection_name,
+                                     created_at, updated_at)
+VALUES ('vsc-chroma-test', '100000002', '100000002', 'Chroma Init Test', 'CHROMA', 'localhost', 8000, null,
+        'test-collection', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
+ON CONFLICT (id) DO UPDATE SET name = 'Chroma Init Test',
+                               type = 'CHROMA';
 
 -- Knowledge Base for agenthub tests (Note: This might cause conflict, so we use DO NOTHING)
-INSERT INTO app.knowledge_base (id, tenant_id, workspace_id, kb_code, name, description, status, created_at, created_by, updated_at)
-VALUES ('kb-test-001', '100000002', '100000002', 'kb-init-test', 'Create Test KB', 'Test knowledge base', 'ACTIVE', '2026-01-01T00:00:00Z', 'lisi', '2026-01-01T00:00:00Z')
+INSERT INTO app.knowledge_base (id, tenant_id, workspace_id, kb_code, name, description, status, created_at, created_by,
+                                updated_at)
+VALUES ('kb-test-001', '100000002', '100000002', 'kb-init-test', 'Create Test KB', 'Test knowledge base', 'ACTIVE',
+        '2026-01-01T00:00:00Z', 'lisi', '2026-01-01T00:00:00Z')
 ON CONFLICT (id) DO NOTHING;
 
 -- Workspace and Workspace Member for tenant-domain tests
 INSERT INTO app.workspace (id, tenant_id, workspace_code, name, status, created_at, updated_at)
-VALUES ('100000002', '100000002', 'ws-acme-dev', 'Acme Development',  'ACTIVE', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
-ON CONFLICT (id) DO UPDATE SET name = 'Acme Development', status = 'ACTIVE';
+VALUES ('100000002', '100000002', 'ws-acme-dev', 'Acme Development', 'ACTIVE', '2026-01-01T00:00:00Z',
+        '2026-01-01T00:00:00Z')
+ON CONFLICT (id) DO UPDATE SET name   = 'Acme Development',
+                               status = 'ACTIVE';
 
 -- INSERT INTO app.workspace_member (id, workspace_id, user_id, role, joined_at, created_at)
 -- SELECT 'wm-001', '100000002', u.id, 'MEMBER', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z'
