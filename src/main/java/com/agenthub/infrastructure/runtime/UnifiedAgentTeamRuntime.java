@@ -1,9 +1,9 @@
 package com.agenthub.infrastructure.runtime;
 
 import com.agenthub.domain.model.AgentTeam;
-import com.agenthub.domain.port.runtime.AgentRuntime;
-import com.agenthub.domain.port.runtime.AgentTeamRuntime;
-import com.agenthub.domain.port.runtime.RuntimeStatus;
+import com.agenthub.application.port.out.AgentRuntime;
+import com.agenthub.application.port.out.AgentTeamRuntime;
+import com.agenthub.application.port.out.RuntimeStatus;
 import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.concurrent.*;

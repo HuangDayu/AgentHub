@@ -1,6 +1,6 @@
 package com.agenthub.test.integration;
 
-import com.agenthub.infrastructure.persistence.mapper.TenantMapper;
+import com.agenthub.infrastructure.persistence.db.mapper.TenantMapper;
 import com.agenthub.test.TestAgentHubApplication;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;

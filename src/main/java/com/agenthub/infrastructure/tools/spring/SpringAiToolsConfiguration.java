@@ -36,6 +36,9 @@ public class SpringAiToolsConfiguration {
     }
 
     private boolean hasTools(Class<?> clazz) {
+        if (!clazz.getAnnotation(AgentTools.class).defaultEnable()) {
+            return false;
+        }
         List<Method> methods = new ArrayList<>();
         methods.addAll(List.of(clazz.getMethods()));
         methods.addAll(List.of(clazz.getDeclaredMethods()));

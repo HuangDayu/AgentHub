@@ -12,4 +12,7 @@ import java.lang.annotation.*;
 @Documented
 @Component
 public @interface AgentTools {
+
+    boolean defaultEnable() default true;
+
 }

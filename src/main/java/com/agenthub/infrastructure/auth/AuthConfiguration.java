@@ -3,7 +3,7 @@ package com.agenthub.infrastructure.auth;
 import com.agenthub.application.service.AuthApplicationService;
 import com.agenthub.application.port.out.CredentialVerifier;
 import com.agenthub.application.port.out.repositories.RefreshTokenRepository;
-import com.agenthub.infrastructure.persistence.mapper.AppUserMapper;
+import com.agenthub.infrastructure.persistence.db.mapper.AppUserMapper;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

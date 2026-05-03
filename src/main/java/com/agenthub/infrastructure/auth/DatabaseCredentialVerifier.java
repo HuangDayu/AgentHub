@@ -2,8 +2,8 @@ package com.agenthub.infrastructure.auth;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.CredentialVerifier;
-import com.agenthub.infrastructure.persistence.entity.AppUserEntity;
-import com.agenthub.infrastructure.persistence.mapper.AppUserMapper;
+import com.agenthub.infrastructure.persistence.db.entity.AppUserEntity;
+import com.agenthub.infrastructure.persistence.db.mapper.AppUserMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 

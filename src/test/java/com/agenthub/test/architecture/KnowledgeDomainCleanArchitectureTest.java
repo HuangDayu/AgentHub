@@ -135,7 +135,7 @@ public class KnowledgeDomainCleanArchitectureTest {
     void repository_implementations_should_be_in_infrastructure() {
         classes()
                 .that().haveSimpleNameStartingWith("Mybatis").and().haveSimpleNameEndingWith("Repository")
-                .should().resideInAPackage("..infrastructure.persistence.repository..")
+                .should().resideInAPackage("..infrastructure.persistence.db.repository..")
                 .because("仓储实现应该在基础设施层的persistence.repository包中")
                 .allowEmptyShould(true)
                 .check(classes);

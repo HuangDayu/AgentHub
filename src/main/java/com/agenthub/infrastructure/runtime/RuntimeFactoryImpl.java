@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.runtime;
 
-import com.agenthub.domain.port.runtime.AgentRuntime;
-import com.agenthub.domain.port.runtime.AgentTeamRuntime;
-import com.agenthub.domain.port.runtime.RuntimeFactory;
+import com.agenthub.application.port.out.AgentRuntime;
+import com.agenthub.application.port.out.AgentTeamRuntime;
+import com.agenthub.application.port.out.RuntimeFactory;
 import com.agenthub.infrastructure.runtime.google.GoogleAdkAgentRuntime;
 import com.agenthub.infrastructure.runtime.langchain4j.Langchain4jAgentRuntime;
 import com.agenthub.infrastructure.runtime.embabel.EmbabelAgentRuntime;
