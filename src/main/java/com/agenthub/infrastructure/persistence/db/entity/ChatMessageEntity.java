@@ -1,4 +1,5 @@
 package com.agenthub.infrastructure.persistence.db.entity;
+import lombok.Data;
 
 import com.baomidou.mybatisplus.annotation.*;
 
@@ -7,6 +8,7 @@ import java.time.Instant;
 /**
  * 聊天消息持久化对象。
  */
+@Data
 @TableName("app.chat_message")
 public class ChatMessageEntity {
     @TableId(type = IdType.ASSIGN_ID)

@@ -1,9 +1,12 @@
 package com.agenthub.infrastructure.persistence.db.entity;
+import lombok.Data;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.time.Instant;
 
+@Data
 @TableName("app.agent")
 public class AgentEntity {
     @TableId(type = IdType.ASSIGN_ID)
@@ -25,35 +28,4 @@ public class AgentEntity {
     private String createdBy;
     @TableField(value = "updated_by", fill = FieldFill.INSERT)
     private String updatedBy;
-
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public String getTenantId() { return tenantId; }
-    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
-    public String getWorkspaceId() { return workspaceId; }
-    public void setWorkspaceId(String workspaceId) { this.workspaceId = workspaceId; }
-    public String getAgentCode() { return agentCode; }
-    public void setAgentCode(String agentCode) { this.agentCode = agentCode; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
-    public String getCreatedBy() { return createdBy; }
-    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
-    public String getUpdatedBy() { return updatedBy; }
-    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
 }

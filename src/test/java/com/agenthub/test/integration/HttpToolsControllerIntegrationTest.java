@@ -44,7 +44,7 @@ class HttpToolsControllerIntegrationTest {
 
     @Test
     void postAndGetTools() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/tools", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/http-tools", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name":"weather","description":"Weather API","enabled":true}
@@ -52,7 +52,7 @@ class HttpToolsControllerIntegrationTest {
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.name", is("weather")));
 
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/tools", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/http-tools", workspaceId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name", is("weather")))
                 .andExpect(jsonPath("$[0].description", is("Weather API")));
@@ -60,7 +60,7 @@ class HttpToolsControllerIntegrationTest {
 
     @Test
     void getToolById() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/tools", workspaceId)
+        MvcResult result = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/http-tools", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name":"search","description":"Search API","enabled":true}
@@ -68,7 +68,7 @@ class HttpToolsControllerIntegrationTest {
                 .andExpect(status().is2xxSuccessful())
                 .andReturn();
         String toolId = extractJsonStringValue(result.getResponse().getContentAsString(), "id");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/tools/{toolId}", workspaceId, toolId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/http-tools/{toolId}", workspaceId, toolId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(toolId)))
                 .andExpect(jsonPath("$.name", is("search")));
@@ -77,7 +77,7 @@ class HttpToolsControllerIntegrationTest {
     @Test
     void patchToolById() throws Exception {
         // First create a tool to patch
-        MvcResult result = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/tools", workspaceId)
+        MvcResult result = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/http-tools", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name":"translate","description":"Translation API","enabled":true}
@@ -85,7 +85,7 @@ class HttpToolsControllerIntegrationTest {
                 .andExpect(status().is2xxSuccessful())
                 .andReturn();
         String toolId = extractJsonStringValue(result.getResponse().getContentAsString(), "id");
-        mockMvc.perform(patch("/api/v1/workspaces/{workspaceId}/tools/{toolId}", workspaceId, toolId)
+        mockMvc.perform(patch("/api/v1/workspaces/{workspaceId}/http-tools/{toolId}", workspaceId, toolId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"description":"Updated","enabled":false}
@@ -99,7 +99,7 @@ class HttpToolsControllerIntegrationTest {
 
     @Test
     void getToolByIdReturns404WhenMissing() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/tools/{toolId}", workspaceId, "missing"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/http-tools/{toolId}", workspaceId, "missing"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("tool not found: missing"));
     }

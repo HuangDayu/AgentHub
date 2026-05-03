@@ -1,5 +1,7 @@
 package com.agenthub.domain.model;
 
+import lombok.Data;
+
 import java.time.Instant;
 
 import static com.agenthub.common.utils.RandomUtils.randomId;
@@ -7,6 +9,7 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
 /**
  * 模型策略聚合根。
  */
+@Data
 public class ModelStrategy {
     private final String id;
     private final String tenantId;
@@ -17,6 +20,7 @@ public class ModelStrategy {
     private int maxTokens = 9899;
     private int maxMessages = 100;
     private double topP;
+    private int topK;
     private double frequencyPenalty;
     private double presencePenalty;
     private final Instant createdAt;
@@ -80,93 +84,5 @@ public class ModelStrategy {
         this.updatedAt = Instant.now();
     }
 
-    public String getId() {
-        return id;
-    }
 
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public String getWorkspaceId() {
-        return workspaceId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-
-
-    public double getTemperature() {
-        return temperature;
-    }
-
-    public int getMaxTokens() {
-        return maxTokens;
-    }
-
-    public double getTopP() {
-        return topP;
-    }
-
-    public double getFrequencyPenalty() {
-        return frequencyPenalty;
-    }
-
-    public double getPresencePenalty() {
-        return presencePenalty;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setTemperature(double temperature) {
-        this.temperature = temperature;
-    }
-
-    public void setMaxTokens(int maxTokens) {
-        this.maxTokens = maxTokens;
-    }
-
-    public int getMaxMessages() {
-        return maxMessages;
-    }
-
-    public void setMaxMessages(int maxMessages) {
-        this.maxMessages = maxMessages;
-    }
-
-    public void setTopP(double topP) {
-        this.topP = topP;
-    }
-
-    public void setFrequencyPenalty(double frequencyPenalty) {
-        this.frequencyPenalty = frequencyPenalty;
-    }
-
-    public void setPresencePenalty(double presencePenalty) {
-        this.presencePenalty = presencePenalty;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

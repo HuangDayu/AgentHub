@@ -16,7 +16,7 @@ import static com.agenthub.api.mapper.HttpToolViewMapper.toResponse;
  * 工具 API 控制器。
  */
 @RestController
-@RequestMapping("/api/v1/workspaces/{workspaceId}/http_tools")
+@RequestMapping("/api/v1/workspaces/{workspaceId}/http-tools")
 public class HttpToolsController {
     private final HttpToolsUseCase service;
 

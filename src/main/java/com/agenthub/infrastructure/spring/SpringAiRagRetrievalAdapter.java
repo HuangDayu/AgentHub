@@ -3,12 +3,17 @@ package com.agenthub.infrastructure.spring;
 import com.agenthub.application.command.RagCommand;
 import com.agenthub.application.port.out.rag.RetrievalAugmentedGenerationPort;
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
+import com.agenthub.application.port.out.repositories.FunctionToolsRepository;
+import com.agenthub.domain.model.FunctionTool;
+import com.agenthub.domain.model.ModelStrategy;
+import com.agenthub.infrastructure.tools.spring.AgentToolsFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.prompt.AssistantPromptTemplate;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.model.tool.DefaultToolCallingChatOptions;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 import org.springframework.ai.rag.preretrieval.query.transformation.CompressionQueryTransformer;
@@ -18,6 +23,7 @@ import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQ
 import org.springframework.ai.rag.retrieval.join.ConcatenationDocumentJoiner;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -25,6 +31,9 @@ import reactor.core.publisher.Flux;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.agenthub.domain.model.AgentConfig.Category.MODEL;
 import static com.agenthub.domain.model.AgentConfig.Type.CHAT_MODEL;
@@ -41,12 +50,15 @@ public class SpringAiRagRetrievalAdapter implements RetrievalAugmentedGeneration
 
     private final SpringAiObjectPoolManager springAiObjectPoolManager;
     private final AgentConfigRepository agentConfigRepository;
+    private final FunctionToolsRepository functionToolsRepository;
+    private final AgentToolsFactory agentToolsFactory;
 
 
     @Override
     public String ragChat(RagCommand ragCommand) {
         return ChatClient.builder(getAgentChatModel(ragCommand.agentId())).build()
                 .prompt(ragCommand.prompt())
+                .options(getToolChatOptions(ragCommand))
                 .advisors(buildAdvisor(ragCommand))
                 .call()
                 .content();
@@ -56,9 +68,31 @@ public class SpringAiRagRetrievalAdapter implements RetrievalAugmentedGeneration
     public Flux<String> ragStream(RagCommand ragCommand) {
         return ChatClient.builder(getAgentChatModel(ragCommand.agentId())).build()
                 .prompt(ragCommand.prompt())
+                .options(getToolChatOptions(ragCommand))
                 .advisors(buildAdvisor(ragCommand))
                 .stream()
                 .content();
+    }
+
+    private ChatOptions getToolChatOptions(RagCommand ragCommand) {
+        ModelStrategy modelStrategy = ragCommand.modelStrategy();
+        DefaultToolCallingChatOptions options = new DefaultToolCallingChatOptions();
+        options.setTemperature(modelStrategy.getTemperature());
+        options.setTopK(modelStrategy.getTopK());
+        options.setTopP(modelStrategy.getTopP());
+        options.setMaxTokens(modelStrategy.getMaxTokens());
+        options.setInternalToolExecutionEnabled(true);
+        options.setToolCallbacks(getFunctionTools());
+        options.setToolContext(Map.of(ragCommand.agentId(), ragCommand));
+        return options;
+    }
+
+    private List<ToolCallback> getFunctionTools() {
+        Set<String> functionSet = functionToolsRepository.findByEnabled(true).stream()
+                .map(FunctionTool::getToolClassName).collect(Collectors.toSet());
+        return agentToolsFactory.getToolCallbacks().stream()
+                .filter(toolCallback -> functionSet.contains(toolCallback.getClass().getName()))
+                .collect(Collectors.toList());
     }
 
     private ChatModel getAgentChatModel(String agentId) {

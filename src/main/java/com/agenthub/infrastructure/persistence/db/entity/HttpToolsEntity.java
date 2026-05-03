@@ -1,4 +1,5 @@
 package com.agenthub.infrastructure.persistence.db.entity;
+import lombok.Data;
 
 import com.agenthub.domain.model.HttpTool;
 import com.baomidou.mybatisplus.annotation.*;
@@ -13,10 +14,15 @@ import java.time.Instant;
  *
  * @since 1.0.0
  */
+@Data
 @TableName("app.http_tools")
 public class HttpToolsEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
+    @TableField(value = "tenant_id", fill = FieldFill.INSERT)
+    private String tenantId;
+    @TableField(value = "workspace_id", fill = FieldFill.INSERT)
+    private String workspaceId;
     private String name;
     private String description;
     private boolean enabled;
@@ -68,77 +74,4 @@ public class HttpToolsEntity {
         );
     }
 
-    // ==================== Getter / Setter ====================
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public String getEndpoint() {
-        return endpoint;
-    }
-
-    public void setEndpoint(String endpoint) {
-        this.endpoint = endpoint;
-    }
-
-    public String getAuthType() {
-        return authType;
-    }
-
-    public void setAuthType(String authType) {
-        this.authType = authType;
-    }
-
-    public String getInputSchema() {
-        return inputSchema;
-    }
-
-    public void setInputSchema(String inputSchema) {
-        this.inputSchema = inputSchema;
-    }
-
-    public int getTimeoutMs() {
-        return timeoutMs;
-    }
-
-    public void setTimeoutMs(int timeoutMs) {
-        this.timeoutMs = timeoutMs;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
 }
