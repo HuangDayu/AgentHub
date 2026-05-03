@@ -67,23 +67,23 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="tool in tools" :key="tool.id">
+            <tr v-for="httpTool in tools" :key="httpTool.id">
               <td>
-                <strong>{{ tool.name }}</strong>
-                <div class="muted">{{ tool.id }}</div>
+                <strong>{{ httpTool.name }}</strong>
+                <div class="muted">{{ httpTool.id }}</div>
               </td>
-              <td><span class="tag">{{ tool.serverType }}</span></td>
-              <td>{{ tool.serverUrl }}</td>
+              <td><span class="tag">{{ httpTool.serverType }}</span></td>
+              <td>{{ httpTool.serverUrl }}</td>
               <td>
-                <span :class="['tag', tool.enabled ? 'tag-success' : 'tag-error']">
-                  {{ tool.enabled ? '启用' : '禁用' }}
+                <span :class="['tag', httpTool.enabled ? 'tag-success' : 'tag-error']">
+                  {{ httpTool.enabled ? '启用' : '禁用' }}
                 </span>
               </td>
-              <td>{{ formatDateTime(tool.createdAt) }}</td>
+              <td>{{ formatDateTime(httpTool.createdAt) }}</td>
               <td>
                 <div class="chip-row">
-                  <button class="ghost" type="button" @click="startEdit(tool)">编辑</button>
-                  <button class="ghost" type="button" @click="handleDelete(tool.id)">删除</button>
+                  <button class="ghost" type="button" @click="startEdit(httpTool)">编辑</button>
+                  <button class="ghost" type="button" @click="handleDelete(httpTool.id)">删除</button>
                 </div>
               </td>
             </tr>
@@ -124,14 +124,14 @@ async function loadTools() {
   await execute(async () => { tools.value = await listMcpTools({ tenantId: store.tenantId, workspaceId: store.workspaceId }) })
 }
 
-function startEdit(tool: McpTool) {
-  editingId.value = tool.id
-  form.name = tool.name
-  form.description = tool.description || ''
-  form.serverUrl = tool.serverUrl
-  form.serverType = tool.serverType
-  form.command = tool.command || ''
-  form.enabled = tool.enabled
+function startEdit(httpTool: McpTool) {
+  editingId.value = httpTool.id
+  form.name = httpTool.name
+  form.description = httpTool.description || ''
+  form.serverUrl = httpTool.serverUrl
+  form.serverType = httpTool.serverType
+  form.command = httpTool.command || ''
+  form.enabled = httpTool.enabled
 }
 
 function cancelForm() {

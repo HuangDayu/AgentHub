@@ -1,0 +1,197 @@
+<template>
+  <section class="grid">
+    <div class="page-header">
+      <div>
+        <h2>Function Tools 管理</h2>
+        <p class="muted">管理系统工具函数，支持启用/禁用控制</p>
+      </div>
+      <button class="primary" type="button" :disabled="syncing || !selectionReady" @click="syncTools">
+        {{ syncing ? '同步中...' : '同步工具' }}
+      </button>
+    </div>
+
+    <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
+    <article v-else-if="loading" class="empty-state">加载中...</article>
+
+    <template v-else>
+      <article class="panel stack">
+        <div class="page-header">
+          <h3 style="margin: 0">工具列表</h3>
+          <div class="chip-row">
+            <select v-model="filterCategory" class="filter-select">
+              <option value="">所有分类</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+            <select v-model="filterEnabled" class="filter-select">
+              <option value="">全部状态</option>
+              <option value="true">已启用</option>
+              <option value="false">已禁用</option>
+            </select>
+          </div>
+        </div>
+
+        <div v-if="filteredTools.length === 0" class="empty-state">暂无工具数据</div>
+
+        <table v-else>
+          <thead>
+            <tr>
+              <th>工具名称</th>
+              <th>分类</th>
+              <th>方法数</th>
+              <th>状态</th>
+              <th>创建时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="tool in filteredTools" :key="tool.id">
+              <td>
+                <strong>{{ tool.toolName }}</strong>
+                <div class="muted">{{ tool.description }}</div>
+              </td>
+              <td><span class="tag">{{ tool.category }}</span></td>
+              <td>{{ tool.methodCount }}</td>
+              <td>
+                <span :class="['tag', tool.enabled ? 'tag-success' : 'tag-error']">
+                  {{ tool.enabled ? '启用' : '禁用' }}
+                </span>
+              </td>
+              <td>{{ formatDateTime(tool.createdAt) }}</td>
+              <td>
+                <div class="chip-row">
+                  <button 
+                    :class="['ghost', tool.enabled ? 'danger' : 'success']" 
+                    type="button" 
+                    @click="toggleEnabled(tool)"
+                  >
+                    {{ tool.enabled ? '禁用' : '启用' }}
+                  </button>
+                  <button class="ghost" type="button" @click="handleDelete(tool)">删除</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+    </template>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { formatDateTime } from '@/common/format'
+import { useWorkspaceStore } from '@/stores/workspace-store'
+import { 
+  listFunctionTools, 
+  syncFunctionTools, 
+  enableFunctionTool, 
+  disableFunctionTool, 
+  deleteFunctionTool,
+  type FunctionTool 
+} from '@/api/function-tools-api'
+
+const store = useWorkspaceStore()
+const tools = ref<FunctionTool[]>([])
+const loading = ref(false)
+const syncing = ref(false)
+const filterCategory = ref('')
+const filterEnabled = ref('')
+
+const selectionReady = computed(() => !!store.tenantId && !!store.workspaceId)
+
+const categories = computed(() => {
+  return [...new Set(tools.value.map(t => t.category))]
+})
+
+const filteredTools = computed(() => {
+  return tools.value.filter(tool => {
+    if (filterCategory.value && tool.category !== filterCategory.value) return false
+    if (filterEnabled.value === 'true' && !tool.enabled) return false
+    if (filterEnabled.value === 'false' && tool.enabled) return false
+    return true
+  })
+})
+
+const loadTools = async () => {
+  if (!selectionReady.value) return
+  loading.value = true
+  try {
+    tools.value = await listFunctionTools(store.selection)
+  } catch (error) {
+    console.error('Failed to load tools:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const syncTools = async () => {
+  if (!selectionReady.value) return
+  syncing.value = true
+  try {
+    await syncFunctionTools(store.selection)
+    await loadTools()
+  } catch (error) {
+    console.error('Failed to sync tools:', error)
+  } finally {
+    syncing.value = false
+  }
+}
+
+const toggleEnabled = async (tool: FunctionTool) => {
+  if (!selectionReady.value) return
+  try {
+    if (tool.enabled) {
+      await disableFunctionTool(store.selection, tool.id)
+    } else {
+      await enableFunctionTool(store.selection, tool.id)
+    }
+    tool.enabled = !tool.enabled
+  } catch (error) {
+    console.error('Failed to toggle:', error)
+  }
+}
+
+const handleDelete = async (tool: FunctionTool) => {
+  if (!selectionReady.value) return
+  if (!confirm(`确定删除 ${tool.toolName}?`)) return
+  try {
+    await deleteFunctionTool(store.selection, tool.id)
+    tools.value = tools.value.filter(t => t.id !== tool.id)
+  } catch (error) {
+    console.error('Failed to delete:', error)
+  }
+}
+
+watch(() => store.workspaceId, () => {
+  loadTools()
+})
+
+onMounted(() => {
+  loadTools()
+})
+</script>
+
+<style scoped>
+.filter-select {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  background: var(--bg-color, white);
+  font-size: 0.875rem;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--primary-color, #4CAF50);
+}
+
+.success {
+  color: var(--success-color, #4CAF50);
+  border-color: var(--success-color, #4CAF50);
+}
+
+.danger {
+  color: var(--danger-color, #f44336);
+  border-color: var(--danger-color, #f44336);
+}
+</style>

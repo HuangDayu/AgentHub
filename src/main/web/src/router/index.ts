@@ -24,6 +24,7 @@ const agentHubRoutes = {
     { path: 'workflows', component: () => import('@/views/tenant/WorkflowManagementView.vue') },
     { path: 'teams', component: () => import('@/views/tenant/AgentTeamManagementView.vue') },
     { path: 'security-policies', component: () => import('@/views/tenant/SecurityPolicyManagementView.vue') },
+    { path: 'function-tools', component: () => import('@/views/FunctionToolsView.vue') },
   ],
 }
 
