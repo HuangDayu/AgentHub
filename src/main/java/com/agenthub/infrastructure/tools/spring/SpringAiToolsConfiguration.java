@@ -27,7 +27,7 @@ public class SpringAiToolsConfiguration {
      * @return
      */
     @Bean
-    public ToolCallbackProvider thingsToolCallbackProvider(ApplicationContext applicationContext, AgentToolsFactory agentToolsFactory) {
+    public ToolCallbackProvider toolCallbackProvider(ApplicationContext applicationContext, AgentToolsFactory agentToolsFactory) {
         Map<String, Object> beansWithAnnotation = applicationContext.getBeansWithAnnotation(AgentTools.class);
         Object[] array = beansWithAnnotation.values().stream().filter(v -> hasTools(v.getClass())).toArray();
         MethodToolCallbackProvider callbackProvider = MethodToolCallbackProvider.builder().toolObjects(array).build();
