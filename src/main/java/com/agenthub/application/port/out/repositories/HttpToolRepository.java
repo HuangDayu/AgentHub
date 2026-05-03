@@ -1,7 +1,7 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.Tool;
-import com.agenthub.domain.model.ToolId;
+import com.agenthub.domain.model.HttpTool;
+import com.agenthub.domain.model.HttpToolId;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,15 +11,15 @@ import java.util.Optional;
  * <p>
  * 实现类负责工具的增删改查。
  */
-public interface ToolRepository {
+public interface HttpToolRepository {
 
     /**
      * 保存工具。
      *
-     * @param tool 工具领域对象
+     * @param httpTool 工具领域对象
      * @return 保存后的工具
      */
-    Tool save(Tool tool);
+    HttpTool save(HttpTool httpTool);
 
     /**
      * 根据 ID 查找工具。
@@ -27,12 +27,12 @@ public interface ToolRepository {
      * @param id 工具标识
      * @return 工具（可能为空）
      */
-    Optional<Tool> findById(ToolId id);
+    Optional<HttpTool> findById(HttpToolId id);
 
     /**
      * 查询所有工具。
      *
      * @return 工具列表
      */
-    List<Tool> findAll();
+    List<HttpTool> findAll();
 }

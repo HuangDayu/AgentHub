@@ -11,7 +11,7 @@ import java.util.Map;
  * @param status 调用状态
  * @param output 调用输出数据
  */
-public record ToolInvokeView(
+public record HttpToolInvokeView(
         /** 工具唯一标识 */
         String toolId,
         /** 调用状态 */

@@ -2,12 +2,12 @@ package com.agenthub.infrastructure.tools;
 
 import com.agenthub.application.command.InvokeToolCommand;
 import com.agenthub.application.port.out.HttpToolInvoker;
-import com.agenthub.application.port.out.repositories.ToolRepository;
+import com.agenthub.application.port.out.repositories.HttpToolRepository;
+import com.agenthub.domain.model.HttpTool;
 import com.agenthub.infrastructure.tools.annotations.AgentTools;
 import com.agenthub.common.exception.ToolNotFoundException;
-import com.agenthub.domain.model.Tool;
-import com.agenthub.domain.model.ToolId;
-import com.agenthub.domain.model.ToolInvocationResult;
+import com.agenthub.domain.model.HttpToolId;
+import com.agenthub.domain.model.HttpToolInvocationResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -54,14 +54,14 @@ public class HttpInvokerTools implements HttpToolInvoker {
     private final RestTemplate restTemplate;
     private final RetryTemplate retryTemplate;
     private final ObjectMapper objectMapper;
-    private final ToolRepository repository;
+    private final HttpToolRepository repository;
 
     /**
      * 构造函数，注入基础设施组件。
      */
     public HttpInvokerTools(@Qualifier("tool.restTemplate") RestTemplate restTemplate,
                             @Qualifier("tool.retryTemplate") RetryTemplate retryTemplate,
-                            ObjectMapper objectMapper, ToolRepository repository) {
+                            ObjectMapper objectMapper, HttpToolRepository repository) {
         this.restTemplate = restTemplate;
         this.retryTemplate = retryTemplate;
         this.objectMapper = objectMapper;
@@ -71,93 +71,93 @@ public class HttpInvokerTools implements HttpToolInvoker {
 
     @org.springframework.ai.tool.annotation.Tool(description = "调用http端点")
     @Override
-    public ToolInvocationResult invoke(String toolId, InvokeToolCommand command) {
-        Tool tool = requireTool(toolId);
+    public HttpToolInvocationResult invoke(String toolId, InvokeToolCommand command) {
+        HttpTool httpTool = requireTool(toolId);
         Map<String, Object> payload = command.payload() == null ? Map.of() : command.payload();
-        return invoke(tool, payload);
+        return invoke(httpTool, payload);
     }
 
-    private Tool requireTool(String toolId) {
-        return repository.findById(ToolId.of(toolId)).orElseThrow(() -> new ToolNotFoundException(toolId));
+    private HttpTool requireTool(String toolId) {
+        return repository.findById(HttpToolId.of(toolId)).orElseThrow(() -> new ToolNotFoundException(toolId));
     }
 
     /**
      * 调用外部工具。
      */
     @Override
-    public ToolInvocationResult invoke(Tool tool, Map<String, Object> payload) {
-        log.info("调用外部工具: toolId={}, endpoint={}, method={}", tool.id().value(), tool.endpoint(), tool.httpMethod());
+    public HttpToolInvocationResult invoke(HttpTool httpTool, Map<String, Object> payload) {
+        log.info("调用外部工具: toolId={}, endpoint={}, method={}", httpTool.id().value(), httpTool.endpoint(), httpTool.httpMethod());
         try {
-            return doInvoke(tool, payload);
+            return doInvoke(httpTool, payload);
         } catch (HttpClientErrorException e) {
-            return handleClientError(tool, e);
+            return handleClientError(httpTool, e);
         } catch (HttpServerErrorException e) {
-            return handleServerError(tool, e);
+            return handleServerError(httpTool, e);
         } catch (ResourceAccessException e) {
-            return handleTimeout(tool, e);
+            return handleTimeout(httpTool, e);
         } catch (Exception e) {
-            return handleGeneralError(tool, e);
+            return handleGeneralError(httpTool, e);
         }
     }
 
     /**
      * 执行调用逻辑。
      */
-    private ToolInvocationResult doInvoke(Tool tool, Map<String, Object> payload) {
-        Map<String, Object> filteredPayload = validateAndFilter(tool, payload);
-        String resolvedUrl = resolveUrlVariables(tool.endpoint(), filteredPayload);
+    private HttpToolInvocationResult doInvoke(HttpTool httpTool, Map<String, Object> payload) {
+        Map<String, Object> filteredPayload = validateAndFilter(httpTool, payload);
+        String resolvedUrl = resolveUrlVariables(httpTool.endpoint(), filteredPayload);
         ResponseEntity<String> response = retryTemplate.execute(
-                context -> doHttpRequest(resolvedUrl, tool.httpMethod(), filteredPayload)
+                context -> doHttpRequest(resolvedUrl, httpTool.httpMethod(), filteredPayload)
         );
-        log.info("外部工具调用成功: toolId={}, status={}", tool.id().value(), response.getStatusCode());
-        return new ToolInvocationResult(tool.id().value(), "SUCCESS", parseResponse(response.getBody()));
+        log.info("外部工具调用成功: toolId={}, status={}", httpTool.id().value(), response.getStatusCode());
+        return new HttpToolInvocationResult(httpTool.id().value(), "SUCCESS", parseResponse(response.getBody()));
     }
 
     /**
      * 处理客户端错误。
      */
-    private ToolInvocationResult handleClientError(Tool tool, HttpClientErrorException e) {
-        log.warn("外部工具返回客户端错误: toolId={}, status={}", tool.id().value(), e.getStatusCode());
-        return new ToolInvocationResult(tool.id().value(), "FAILURE",
+    private HttpToolInvocationResult handleClientError(HttpTool httpTool, HttpClientErrorException e) {
+        log.warn("外部工具返回客户端错误: toolId={}, status={}", httpTool.id().value(), e.getStatusCode());
+        return new HttpToolInvocationResult(httpTool.id().value(), "FAILURE",
                 Map.of("error", "CLIENT_ERROR:" + e.getStatusCode() + ":" + e.getResponseBodyAsString()));
     }
 
     /**
      * 处理服务端错误。
      */
-    private ToolInvocationResult handleServerError(Tool tool, HttpServerErrorException e) {
-        log.error("外部工具返回服务端错误: toolId={}, status={}", tool.id().value(), e.getStatusCode());
-        return new ToolInvocationResult(tool.id().value(), "FAILURE",
+    private HttpToolInvocationResult handleServerError(HttpTool httpTool, HttpServerErrorException e) {
+        log.error("外部工具返回服务端错误: toolId={}, status={}", httpTool.id().value(), e.getStatusCode());
+        return new HttpToolInvocationResult(httpTool.id().value(), "FAILURE",
                 Map.of("error", "SERVER_ERROR:" + e.getStatusCode() + ":" + e.getResponseBodyAsString()));
     }
 
     /**
      * 处理超时错误。
      */
-    private ToolInvocationResult handleTimeout(Tool tool, ResourceAccessException e) {
-        log.error("外部工具连接超时: toolId={}", tool.id().value(), e);
-        return new ToolInvocationResult(tool.id().value(), "FAILURE", Map.of("error", "TIMEOUT:" + e.getMessage()));
+    private HttpToolInvocationResult handleTimeout(HttpTool httpTool, ResourceAccessException e) {
+        log.error("外部工具连接超时: toolId={}", httpTool.id().value(), e);
+        return new HttpToolInvocationResult(httpTool.id().value(), "FAILURE", Map.of("error", "TIMEOUT:" + e.getMessage()));
     }
 
     /**
      * 处理一般错误。
      */
-    private ToolInvocationResult handleGeneralError(Tool tool, Exception e) {
-        log.error("外部工具调用异常: toolId={}", tool.id().value(), e);
-        return new ToolInvocationResult(tool.id().value(), "FAILURE", Map.of("error", "ERROR:" + e.getMessage()));
+    private HttpToolInvocationResult handleGeneralError(HttpTool httpTool, Exception e) {
+        log.error("外部工具调用异常: toolId={}", httpTool.id().value(), e);
+        return new HttpToolInvocationResult(httpTool.id().value(), "FAILURE", Map.of("error", "ERROR:" + e.getMessage()));
     }
 
     /**
      * 参数白名单校验：仅允许 inputSchema 中定义的属性通过。
      */
-    private Map<String, Object> validateAndFilter(Tool tool, Map<String, Object> payload) {
-        if (tool.inputSchemaJson() == null || tool.inputSchemaJson().isBlank()) {
+    private Map<String, Object> validateAndFilter(HttpTool httpTool, Map<String, Object> payload) {
+        if (httpTool.inputSchemaJson() == null || httpTool.inputSchemaJson().isBlank()) {
             return payload;
         }
         try {
-            return filterBySchema(tool, payload);
+            return filterBySchema(httpTool, payload);
         } catch (JsonProcessingException e) {
-            log.error("解析 inputSchema 失败: toolId={}", tool.id().value(), e);
+            log.error("解析 inputSchema 失败: toolId={}", httpTool.id().value(), e);
             throw new IllegalArgumentException("inputSchema JSON 格式无效: " + e.getMessage());
         }
     }
@@ -165,11 +165,11 @@ public class HttpInvokerTools implements HttpToolInvoker {
     /**
      * 根据 schema 过滤参数。
      */
-    private Map<String, Object> filterBySchema(Tool tool, Map<String, Object> payload) throws JsonProcessingException {
-        JsonNode schemaNode = objectMapper.readTree(tool.inputSchemaJson());
+    private Map<String, Object> filterBySchema(HttpTool httpTool, Map<String, Object> payload) throws JsonProcessingException {
+        JsonNode schemaNode = objectMapper.readTree(httpTool.inputSchemaJson());
         JsonNode propertiesNode = schemaNode.get("properties");
         if (propertiesNode == null || !propertiesNode.isObject()) {
-            log.warn("inputSchema 缺少 properties 定义，跳过校验: toolId={}", tool.id().value());
+            log.warn("inputSchema 缺少 properties 定义，跳过校验: toolId={}", httpTool.id().value());
             return payload;
         }
         Set<String> allowedKeys = getAllowedKeys(propertiesNode);

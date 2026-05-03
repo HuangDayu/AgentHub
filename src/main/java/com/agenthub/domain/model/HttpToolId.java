@@ -5,21 +5,21 @@ import java.util.Objects;
 import static com.agenthub.common.utils.RandomUtils.randomId;
 
 /** 工具唯一标识值对象。 */
-public record ToolId(
+public record HttpToolId(
         /** 标识值 */
         String value) {
-    public ToolId {
+    public HttpToolId {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("tool id must not be blank");
         }
     }
 
-    public static ToolId newId() {
-        return new ToolId(randomId());
+    public static HttpToolId newId() {
+        return new HttpToolId(randomId());
     }
 
-    public static ToolId of(String value) {
-        return new ToolId(value);
+    public static HttpToolId of(String value) {
+        return new HttpToolId(value);
     }
 
     @Override

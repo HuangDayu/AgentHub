@@ -1,9 +1,7 @@
-package com.agenthub.domain.model;
+package com.agenthub.application.command;
 
-/** 工具视图对象，用于 API 响应。 */
-public record ToolView(
-        /** 工具唯一标识 */
-        String id,
+/** 创建工具命令对象。 */
+public record CreateHttpToolCommand(
         /** 工具名称 */
         String name,
         /** 工具描述 */

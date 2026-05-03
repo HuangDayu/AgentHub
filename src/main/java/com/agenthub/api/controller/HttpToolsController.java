@@ -1,39 +1,38 @@
 package com.agenthub.api.controller;
 
 import com.agenthub.api.dto.*;
-import com.agenthub.api.dto.*;
-import com.agenthub.api.mapper.ToolViewMapper;
-import com.agenthub.application.command.CreateToolCommand;
+import com.agenthub.api.mapper.HttpToolViewMapper;
+import com.agenthub.application.command.CreateHttpToolCommand;
 import com.agenthub.application.command.InvokeToolCommand;
 import com.agenthub.application.command.UpdateToolCommand;
-import com.agenthub.application.usecase.ToolsUseCase;
+import com.agenthub.application.usecase.HttpToolsUseCase;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.agenthub.api.mapper.ToolViewMapper.toResponse;
+import static com.agenthub.api.mapper.HttpToolViewMapper.toResponse;
 
 /**
  * 工具 API 控制器。
  */
 @RestController
-@RequestMapping("/api/v1/workspaces/{workspaceId}/tools")
-public class ToolController {
-    private final ToolsUseCase service;
+@RequestMapping("/api/v1/workspaces/{workspaceId}/http_tools")
+public class HttpToolsController {
+    private final HttpToolsUseCase service;
 
-    public ToolController(ToolsUseCase service) {
+    public HttpToolsController(HttpToolsUseCase service) {
         this.service = service;
     }
 
     @GetMapping
-    public List<ToolViewResponse> listTools() {
+    public List<HttpToolViewResponse> listTools() {
         return service.listTools().stream()
-                .map(ToolViewMapper::toResponse)
+                .map(HttpToolViewMapper::toResponse)
                 .toList();
     }
 
     @PostMapping
-    public ToolViewResponse createTool(@RequestBody CreateToolRequest request) {
+    public HttpToolViewResponse createTool(@RequestBody CreateToolRequest request) {
         boolean enabled = resolveEnabled(request);
         return toResponse(service.createTool(buildCreateCommand(request, enabled)));
     }
@@ -42,17 +41,17 @@ public class ToolController {
         return request.enabled() == null || request.enabled();
     }
 
-    private CreateToolCommand buildCreateCommand(CreateToolRequest request, boolean enabled) {
-        return new CreateToolCommand(request.name(), request.description(), enabled);
+    private CreateHttpToolCommand buildCreateCommand(CreateToolRequest request, boolean enabled) {
+        return new CreateHttpToolCommand(request.name(), request.description(), enabled);
     }
 
     @GetMapping("/{toolId}")
-    public ToolViewResponse getTool(@PathVariable String toolId) {
+    public HttpToolViewResponse getTool(@PathVariable String toolId) {
         return toResponse(service.getTool(toolId));
     }
 
     @PatchMapping("/{toolId}")
-    public ToolViewResponse updateTool(@PathVariable String toolId, @RequestBody UpdateToolRequest request) {
+    public HttpToolViewResponse updateTool(@PathVariable String toolId, @RequestBody UpdateToolRequest request) {
         return toResponse(service.updateTool(toolId, buildUpdateCommand(request)));
     }
 
@@ -61,7 +60,7 @@ public class ToolController {
     }
 
     @PostMapping("/{toolId}/invoke")
-    public ToolInvokeViewResponse invokeTool(
+    public HttpToolInvokeViewResponse invokeTool(
             @PathVariable String toolId,
             @RequestBody(required = false) InvokeToolRequest request,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKeyHeader) {

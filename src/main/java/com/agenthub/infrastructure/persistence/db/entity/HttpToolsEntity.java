@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.persistence.db.entity;
 
+import com.agenthub.domain.model.HttpTool;
 import com.baomidou.mybatisplus.annotation.*;
-import com.agenthub.domain.model.Tool;
-import com.agenthub.domain.model.ToolId;
+import com.agenthub.domain.model.HttpToolId;
 
 import java.time.Instant;
 
@@ -13,8 +13,8 @@ import java.time.Instant;
  *
  * @since 1.0.0
  */
-@TableName("app.tool_registry")
-public class ToolEntity {
+@TableName("app.http_tools")
+public class HttpToolsEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
     private String name;
@@ -27,25 +27,25 @@ public class ToolEntity {
     @TableField(value = "created_at",fill = FieldFill.INSERT)
     private Instant createdAt;
 
-    public ToolEntity() {
+    public HttpToolsEntity() {
     }
 
     /**
      * 将领域对象转换为 MyBatis 实体。
      *
-     * @param tool 领域对象
+     * @param httpTool 领域对象
      * @return MyBatis 实体
      */
-    public static ToolEntity fromDomain(Tool tool) {
-        ToolEntity entity = new ToolEntity();
-        entity.setId(tool.id().value());
-        entity.setName(tool.name());
-        entity.setDescription(tool.description());
-        entity.setEnabled(tool.enabled());
-        entity.setEndpoint(tool.endpoint());
-        entity.setInputSchema(tool.inputSchemaJson());
-        entity.setTimeoutMs(tool.timeoutMs());
-        entity.setCreatedAt(tool.createdAt());
+    public static HttpToolsEntity fromDomain(HttpTool httpTool) {
+        HttpToolsEntity entity = new HttpToolsEntity();
+        entity.setId(httpTool.id().value());
+        entity.setName(httpTool.name());
+        entity.setDescription(httpTool.description());
+        entity.setEnabled(httpTool.enabled());
+        entity.setEndpoint(httpTool.endpoint());
+        entity.setInputSchema(httpTool.inputSchemaJson());
+        entity.setTimeoutMs(httpTool.timeoutMs());
+        entity.setCreatedAt(httpTool.createdAt());
         return entity;
     }
 
@@ -54,9 +54,9 @@ public class ToolEntity {
      *
      * @return 领域对象
      */
-    public Tool toDomain() {
-        return new Tool(
-                ToolId.of(this.id),
+    public HttpTool toDomain() {
+        return new HttpTool(
+                HttpToolId.of(this.id),
                 this.name,
                 this.description,
                 this.enabled,

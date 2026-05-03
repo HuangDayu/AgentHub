@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.persistence.db.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.agenthub.infrastructure.persistence.db.entity.ToolEntity;
+import com.agenthub.infrastructure.persistence.db.entity.HttpToolsEntity;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -10,5 +10,5 @@ import org.apache.ibatis.annotations.Mapper;
  * 基于 MyBatis-Plus BaseMapper，提供工具实体的数据库 CRUD 操作。
  */
 @Mapper
-public interface ToolMybatisMapper extends BaseMapper<ToolEntity> {
+public interface HttpToolMybatisMapper extends BaseMapper<HttpToolsEntity> {
 }

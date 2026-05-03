@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         useMainMethod = SpringBootTest.UseMainMethod.ALWAYS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ToolControllerIntegrationTest {
+class HttpToolsControllerIntegrationTest {
 
     private final String workspaceId = "100000002";
 

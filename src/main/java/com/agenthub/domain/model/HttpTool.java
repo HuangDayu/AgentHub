@@ -9,9 +9,9 @@ import java.time.Instant;
  *
  * @since 1.0.0
  */
-public record Tool(
+public record HttpTool(
         /** 工具唯一标识 */
-        ToolId id,
+        HttpToolId id,
         /** 工具名称 */
         String name,
         /** 工具描述 */
@@ -34,7 +34,7 @@ public record Tool(
     /**
      * 紧凑构造函数，执行验证和规范化。
      */
-    public Tool {
+    public HttpTool {
         validateRequiredFields(id, name, createdAt);
         validateTimeout(timeoutMs);
         httpMethod = normalizeHttpMethod(httpMethod);
@@ -44,7 +44,7 @@ public record Tool(
     /**
      * 验证必填字段。
      */
-    private static void validateRequiredFields(ToolId id, String name, Instant createdAt) {
+    private static void validateRequiredFields(HttpToolId id, String name, Instant createdAt) {
         if (id == null) throw new IllegalArgumentException("id must not be null");
         if (name == null || name.isBlank()) throw new IllegalArgumentException("name must not be blank");
         if (createdAt == null) throw new IllegalArgumentException("createdAt must not be null");
@@ -74,16 +74,16 @@ public record Tool(
     /**
      * 创建新工具（向后兼容重载）。
      */
-    public static Tool create(ToolId id, String name, String description, boolean enabled) {
+    public static HttpTool create(HttpToolId id, String name, String description, boolean enabled) {
         return create(id, name, description, enabled, null, null, null, 0);
     }
 
     /**
      * 创建新工具（含 HTTP 调用元数据）。
      */
-    public static Tool create(ToolId id, String name, String description, boolean enabled,
-                              String endpoint, String httpMethod, String inputSchemaJson, int timeoutMs) {
-        return new Tool(id, name.trim(), sanitizeDescription(description), enabled,
+    public static HttpTool create(HttpToolId id, String name, String description, boolean enabled,
+                                  String endpoint, String httpMethod, String inputSchemaJson, int timeoutMs) {
+        return new HttpTool(id, name.trim(), sanitizeDescription(description), enabled,
                 endpoint, httpMethod, inputSchemaJson, timeoutMs, Instant.now());
     }
 
@@ -97,9 +97,9 @@ public record Tool(
     /**
      * 部分更新工具信息。
      */
-    public Tool patch(String name, String description, Boolean enabled,
-                      String endpoint, String httpMethod, String inputSchemaJson, Integer timeoutMs) {
-        return new Tool(this.id,
+    public HttpTool patch(String name, String description, Boolean enabled,
+                          String endpoint, String httpMethod, String inputSchemaJson, Integer timeoutMs) {
+        return new HttpTool(this.id,
                 resolveName(name),
                 resolveDescription(description),
                 resolveEnabled(enabled),
@@ -121,7 +121,7 @@ public record Tool(
     /**
      * 向后兼容的 patch。
      */
-    public Tool patch(String name, String description, Boolean enabled) {
+    public HttpTool patch(String name, String description, Boolean enabled) {
         return patch(name, description, enabled, null, null, null, null);
     }
 
