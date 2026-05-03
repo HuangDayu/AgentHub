@@ -1,5 +1,6 @@
 package com.agenthub.application.port.out;
 
+import com.agenthub.application.command.InvokeToolCommand;
 import com.agenthub.domain.model.Tool;
 import com.agenthub.domain.model.ToolInvocationResult;
 
@@ -10,7 +11,9 @@ import java.util.Map;
  * <p>
  * 实现类负责根据工具配置调用外部服务并返回结果。
  */
-public interface ToolInvoker {
+public interface HttpToolInvoker {
+
+    ToolInvocationResult invoke(String toolId, InvokeToolCommand command);
 
     /**
      * 调用工具执行。

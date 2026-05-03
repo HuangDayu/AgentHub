@@ -1,4 +1,4 @@
-package com.agenthub.infrastructure.tool;
+package com.agenthub.infrastructure.tools;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,14 +9,11 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * HTTP 工具调用器基础设施配置。
- * <p>
- * 注册 {@link RestTemplate}（含超时配置）和 {@link RetryTemplate}（含重试策略）。
- *
- * @since 1.0.0
+ * @author huangdayu
  */
 @Configuration
-public class HttpInvokerConfiguration {
+public class AgentToolsConfiguration {
+
     private static final int DEFAULT_CONNECT_TIMEOUT_MS = 5_000;
     private static final int DEFAULT_READ_TIMEOUT_MS = 30_000;
     private static final int DEFAULT_MAX_RETRIES = 3;
@@ -58,4 +55,6 @@ public class HttpInvokerConfiguration {
         retryTemplate.setBackOffPolicy(backOffPolicy);
         return retryTemplate;
     }
+
+
 }

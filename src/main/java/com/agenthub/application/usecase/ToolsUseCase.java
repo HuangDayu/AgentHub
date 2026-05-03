@@ -1,23 +1,18 @@
 package com.agenthub.application.usecase;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.agenthub.domain.model.ToolInvokeView;
-import com.agenthub.domain.model.ToolView;
 import com.agenthub.application.command.CreateToolCommand;
 import com.agenthub.application.command.InvokeToolCommand;
 import com.agenthub.application.command.UpdateToolCommand;
-import com.agenthub.application.port.out.repositories.ToolRepository;
-import com.agenthub.domain.model.Tool;
-import com.agenthub.domain.model.ToolId;
-import com.agenthub.domain.model.ToolInvocationResult;
-import com.agenthub.application.port.out.ToolInvoker;
+import com.agenthub.application.port.out.HttpToolInvoker;
 import com.agenthub.application.port.out.IdempotencyCachePort;
+import com.agenthub.application.port.out.repositories.ToolRepository;
 import com.agenthub.common.exception.ToolNotFoundException;
+import com.agenthub.domain.model.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 工具管理用例服务。
@@ -27,7 +22,7 @@ import java.util.Map;
 public class ToolsUseCase {
     private static final int IDEMPOTENCY_TTL_SECONDS = 3600;
     private final ToolRepository repository;
-    private final ToolInvoker toolInvoker;
+    private final HttpToolInvoker httpToolInvoker;
     private final IdempotencyCachePort idempotencyCache;
     private final ObjectMapper objectMapper;
 
@@ -89,9 +84,7 @@ public class ToolsUseCase {
     }
 
     private ToolInvokeView doInvoke(String toolId, InvokeToolCommand command) {
-        Tool tool = requireTool(toolId);
-        Map<String, Object> payload = command.payload() == null ? Map.of() : command.payload();
-        ToolInvocationResult result = toolInvoker.invoke(tool, payload);
+        ToolInvocationResult result = httpToolInvoker.invoke(toolId, command);
         return new ToolInvokeView(result.toolId(), result.status(), result.output());
     }
 

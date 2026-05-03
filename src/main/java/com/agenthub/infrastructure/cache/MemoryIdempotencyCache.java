@@ -1,4 +1,4 @@
-package com.agenthub.infrastructure.tool;
+package com.agenthub.infrastructure.cache;
 
 import com.agenthub.application.port.out.IdempotencyCachePort;
 import org.springframework.stereotype.Component;

@@ -1,12 +1,17 @@
-package com.agenthub.infrastructure.tool;
+package com.agenthub.infrastructure.tools;
 
+import com.agenthub.application.command.InvokeToolCommand;
+import com.agenthub.application.port.out.HttpToolInvoker;
+import com.agenthub.application.port.out.repositories.ToolRepository;
+import com.agenthub.infrastructure.tools.annotations.AgentTools;
+import com.agenthub.common.exception.ToolNotFoundException;
+import com.agenthub.domain.model.Tool;
+import com.agenthub.domain.model.ToolId;
+import com.agenthub.domain.model.ToolInvocationResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.agenthub.domain.model.Tool;
-import com.agenthub.domain.model.ToolInvocationResult;
-import com.agenthub.application.port.out.ToolInvoker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,29 +37,48 @@ import java.util.regex.Pattern;
  * <p>
  * 通过 HTTP 协议调用外部工具服务，支持重试和超时配置。
  */
+@AgentTools
 @Primary
 @Component
-public class HttpToolInvokerAdapter implements ToolInvoker {
-    private static final Logger log = LoggerFactory.getLogger(HttpToolInvokerAdapter.class);
+public class HttpInvokerTools implements HttpToolInvoker {
+    private static final Logger log = LoggerFactory.getLogger(HttpInvokerTools.class);
 
-    /** URL 路径变量模式，如 {symbol}、{id}。 */
+    /**
+     * URL 路径变量模式，如 {symbol}、{id}。
+     */
     private static final Pattern URL_VARIABLE_PATTERN = Pattern.compile("\\{([^}]+)}");
 
-    private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {};
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
+    };
 
     private final RestTemplate restTemplate;
     private final RetryTemplate retryTemplate;
     private final ObjectMapper objectMapper;
+    private final ToolRepository repository;
 
     /**
      * 构造函数，注入基础设施组件。
      */
-    public HttpToolInvokerAdapter(@Qualifier("tool.restTemplate") RestTemplate restTemplate,
-                                  @Qualifier("tool.retryTemplate") RetryTemplate retryTemplate,
-                                  ObjectMapper objectMapper) {
+    public HttpInvokerTools(@Qualifier("tool.restTemplate") RestTemplate restTemplate,
+                            @Qualifier("tool.retryTemplate") RetryTemplate retryTemplate,
+                            ObjectMapper objectMapper, ToolRepository repository) {
         this.restTemplate = restTemplate;
         this.retryTemplate = retryTemplate;
         this.objectMapper = objectMapper;
+        this.repository = repository;
+    }
+
+
+    @org.springframework.ai.tool.annotation.Tool(description = "调用http端点")
+    @Override
+    public ToolInvocationResult invoke(String toolId, InvokeToolCommand command) {
+        Tool tool = requireTool(toolId);
+        Map<String, Object> payload = command.payload() == null ? Map.of() : command.payload();
+        return invoke(tool, payload);
+    }
+
+    private Tool requireTool(String toolId) {
+        return repository.findById(ToolId.of(toolId)).orElseThrow(() -> new ToolNotFoundException(toolId));
     }
 
     /**
