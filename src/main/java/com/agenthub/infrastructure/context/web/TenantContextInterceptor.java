@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.context.web;
 
-import com.agenthub.infrastructure.context.annotations.IgnoreTenantContext;
+import com.agenthub.common.annotations.IgnoreTenantContext;
 import com.agenthub.infrastructure.context.TenantContextHeaders;
 import com.agenthub.infrastructure.context.TenantContextHolder;
 import com.agenthub.infrastructure.context.TenantMdcContext;

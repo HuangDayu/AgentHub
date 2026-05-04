@@ -5,7 +5,7 @@ import com.agenthub.api.mapper.AuthResponseMapper;
 import com.agenthub.application.service.AuthApplicationService;
 import com.agenthub.application.usecase.GetCurrentUserUseCase;
 import com.agenthub.application.usecase.VerifyTokenUseCase;
-import com.agenthub.infrastructure.context.annotations.IgnoreTenantContext;
+import com.agenthub.common.annotations.IgnoreTenantContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
