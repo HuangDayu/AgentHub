@@ -80,7 +80,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { formatDateTime } from '@/common/format'
-import { useWorkspaceStore } from '@/stores/workspace-store'
+import { useWorkspaceStore } from '@/store/workspace-store'
 import { 
   listFunctionTools, 
   syncFunctionTools, 
