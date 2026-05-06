@@ -3,6 +3,7 @@ package com.agenthub.infrastructure.agents.ali;
 import com.alibaba.cloud.ai.graph.agent.hook.Hook;
 import com.alibaba.cloud.ai.graph.agent.interceptor.Interceptor;
 import com.alibaba.cloud.ai.graph.checkpoint.BaseCheckpointSaver;
+import com.alibaba.cloud.ai.graph.store.stores.BaseStore;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallback;
 
@@ -18,6 +19,7 @@ public record AliReActAgentConfig(
         List<ToolCallback> tools,
         List<Hook> hooks,
         List<Interceptor> interceptors,
-        BaseCheckpointSaver saver
+        BaseCheckpointSaver saver,
+        BaseStore store
 ) {
 }

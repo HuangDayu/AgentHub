@@ -1,4 +1,4 @@
-package com.agenthub.infrastructure.pool;
+package com.agenthub.infrastructure.factory;
 
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.dto.VectorStoreTestOutput;
@@ -26,9 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * </p>
  */
 @Service
-public class SpringVectorStorePooling implements VectorPoolManagerPort {
+public class SpringVectorStoreFactory implements VectorPoolManagerPort {
 
-    private static final Logger log = LoggerFactory.getLogger(SpringVectorStorePooling.class);
+    private static final Logger log = LoggerFactory.getLogger(SpringVectorStoreFactory.class);
 
     private final VectorStoreFactoryRegistry vectorStoreFactoryRegistry;
     private final VectorStoreConfigRepository vectorStoreConfigRepository;
@@ -37,7 +37,7 @@ public class SpringVectorStorePooling implements VectorPoolManagerPort {
     /**
      * 构造动态向量存储管理器。
      */
-    public SpringVectorStorePooling(VectorStoreFactoryRegistry vectorStoreFactoryRegistry, VectorStoreConfigRepository vectorStoreConfigRepository) {
+    public SpringVectorStoreFactory(VectorStoreFactoryRegistry vectorStoreFactoryRegistry, VectorStoreConfigRepository vectorStoreConfigRepository) {
         this.vectorStoreFactoryRegistry = vectorStoreFactoryRegistry;
         this.vectorStoreConfigRepository = vectorStoreConfigRepository;
     }

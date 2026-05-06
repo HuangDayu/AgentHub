@@ -1,6 +1,6 @@
 -- =========================================================
 -- Things Knowledge Platform - Auto-generated Schema
--- Generated: 2026-05-03T15:56:16.510071Z
+-- Generated: 2026-05-06T11:21:11.187934100Z
 -- Source: MyBatis-Plus Entity Classes
 -- =========================================================
 
@@ -269,6 +269,7 @@ CREATE TABLE IF NOT EXISTS app.mcp_tool
     command      varchar(255),
     args         varchar(255),
     env          varchar(255),
+    async        boolean,
     enabled      boolean,
     created_at   timestamptz,
     updated_at   timestamptz,

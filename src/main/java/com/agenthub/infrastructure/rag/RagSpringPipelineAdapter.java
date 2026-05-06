@@ -6,7 +6,7 @@ import com.agenthub.application.port.out.repositories.AgentConfigRepository;
 import com.agenthub.application.port.out.repositories.FunctionToolsRepository;
 import com.agenthub.domain.model.FunctionTool;
 import com.agenthub.domain.model.ModelStrategy;
-import com.agenthub.infrastructure.pool.SpringShareObjectPooling;
+import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import com.agenthub.infrastructure.tools.function_tools.FunctionToolsFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
@@ -49,7 +49,7 @@ import static com.agenthub.infrastructure.rag.RagPromptTemplate.*;
 @ConditionalOnProperty(name = "agenthub.rag.impl-type", havingValue = "spring", matchIfMissing = true)
 public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPort {
 
-    private final SpringShareObjectPooling springShareObjectPooling;
+    private final SpringShareObjectFactory springShareObjectFactory;
     private final AgentConfigRepository agentConfigRepository;
     private final FunctionToolsRepository functionToolsRepository;
     private final FunctionToolsFactory functionToolsFactory;
@@ -98,14 +98,14 @@ public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPor
 
     private ChatModel getAgentChatModel(String agentId) {
         String modelId = agentConfigRepository.getConfigId(agentId, MODEL, CHAT_MODEL);
-        return springShareObjectPooling.getChatModelByConfigId(modelId);
+        return springShareObjectFactory.getChatModelByConfigId(modelId);
     }
 
     private List<Advisor> buildAdvisor(RagCommand ragCommand) {
         List<Advisor> advisors = new LinkedList<>();
         for (String kbId : ragCommand.kbIds()) {
-            ChatModel chatModel = springShareObjectPooling.getChatModelByKbId(kbId);
-            VectorStore vectorStore = springShareObjectPooling.getVectorStoreByKbId(kbId);
+            ChatModel chatModel = springShareObjectFactory.getChatModelByKbId(kbId);
+            VectorStore vectorStore = springShareObjectFactory.getVectorStoreByKbId(kbId);
             RetrievalAugmentationAdvisor advisor = RetrievalAugmentationAdvisor.builder()
                     .queryTransformers(buildQueryTransformers(ragCommand, chatModel)) // 创建查询转换器,用于查询的压缩、重写、翻译
                     .documentRetriever(buildDocumentRetriever(vectorStore, ragCommand)) // 创建向量存储文档检索器

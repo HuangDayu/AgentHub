@@ -1,4 +1,4 @@
-package com.agenthub.infrastructure.pool;
+package com.agenthub.infrastructure.factory;
 
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.port.out.repositories.KnowledgeBaseRepository;
@@ -20,9 +20,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
-public class SpringShareObjectPooling {
-    private final SpringVectorStorePooling springVectorStorePooling;
-    private final SpringChatModelPooling springChatModelPooling;
+public class SpringShareObjectFactory {
+    private final SpringVectorStoreFactory springVectorStoreFactory;
+    private final SpringChatModelFactory springChatModelFactory;
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final ModelStrategyRepository modelStrategyRepository;
     private final JdbcChatMemoryRepository jdbcChatMemoryRepository;
@@ -33,12 +33,12 @@ public class SpringShareObjectPooling {
     }
 
     public VectorStore getVectorStoreByKb(KnowledgeBase knowledgeBase) {
-        EmbeddingModel embeddingModel = springChatModelPooling.getOrCreateEmbeddingModel(knowledgeBase.embeddingModelConfigId());
+        EmbeddingModel embeddingModel = springChatModelFactory.getOrCreateEmbeddingModel(knowledgeBase.embeddingModelConfigId());
         return getVectorStoreByConfigId(knowledgeBase.vectorStoreConfigId(), embeddingModel);
     }
 
     public VectorStore getVectorStoreByConfigId(String vectorStoreConfigId, EmbeddingModel embeddingModel) {
-        VectorStore vectorStore = springVectorStorePooling.getOrCreate(vectorStoreConfigId, embeddingModel);
+        VectorStore vectorStore = springVectorStoreFactory.getOrCreate(vectorStoreConfigId, embeddingModel);
         if (vectorStore == null) throw new NotFoundException("VectorStore not found");
         return vectorStore;
     }
@@ -63,7 +63,7 @@ public class SpringShareObjectPooling {
     }
 
     public ChatModel getChatModelByConfigId(String chatModelConfigId) {
-        ChatModel chatModel = springChatModelPooling.getOrCreateChatModel(chatModelConfigId);
+        ChatModel chatModel = springChatModelFactory.getOrCreateChatModel(chatModelConfigId);
         if (chatModel == null) throw new NotFoundException("ChatModel not found");
         return chatModel;
     }
@@ -77,7 +77,7 @@ public class SpringShareObjectPooling {
     }
 
     public EmbeddingModel getEmbeddingModelByConfigId(String embeddingModelConfigId) {
-        EmbeddingModel embeddingModel = springChatModelPooling.getOrCreateEmbeddingModel(embeddingModelConfigId);
+        EmbeddingModel embeddingModel = springChatModelFactory.getOrCreateEmbeddingModel(embeddingModelConfigId);
         if (embeddingModel == null) throw new NotFoundException("EmbeddingModel not found");
         return embeddingModel;
     }

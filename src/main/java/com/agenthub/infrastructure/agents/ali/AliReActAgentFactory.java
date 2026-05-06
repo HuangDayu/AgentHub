@@ -7,11 +7,13 @@ import com.agenthub.infrastructure.agents.ReActAgentFactory;
 import com.agenthub.infrastructure.agents.ali.hook.AgentHookFactory;
 import com.agenthub.infrastructure.agents.ali.interceptor.InterceptorFactory;
 import com.agenthub.infrastructure.agents.ali.saver.SaverFactory;
-import com.agenthub.infrastructure.pool.SpringShareObjectPooling;
+import com.agenthub.infrastructure.agents.ali.store.StoreFactory;
+import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import com.agenthub.infrastructure.tools.AgentToolsFactory;
 import com.alibaba.cloud.ai.graph.agent.Builder;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.checkpoint.BaseCheckpointSaver;
+import com.alibaba.cloud.ai.graph.store.stores.DatabaseStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallback;
@@ -33,7 +35,8 @@ public class AliReActAgentFactory implements ReActAgentFactory {
     private final SaverFactory saverFactory;
     private final InterceptorFactory interceptorFactory;
     private final AgentHookFactory agentHookFactory;
-    private final SpringShareObjectPooling springShareObjectPooling;
+    private final StoreFactory storeFactory;
+    private final SpringShareObjectFactory springShareObjectFactory;
     private final AgentToolsFactory agentToolsFactory;
 
 
@@ -52,14 +55,15 @@ public class AliReActAgentFactory implements ReActAgentFactory {
                 resolveTools(context),
                 resolveHooks(),
                 resolveInterceptors(),
-                resolveSaver()
+                resolveSaver(),
+                resolveStore()
         );
     }
 
     private ChatModel resolveChatModel(ReActAgentContext context) {
         String chatModelId = context.getChatModelId();
         if (chatModelId == null) return null;
-        return springShareObjectPooling.getChatModelByConfigId(chatModelId);
+        return springShareObjectFactory.getChatModelByConfigId(chatModelId);
     }
 
     private List<ToolCallback> resolveTools(ReActAgentContext context) {
@@ -138,6 +142,10 @@ public class AliReActAgentFactory implements ReActAgentFactory {
 
     private BaseCheckpointSaver resolveSaver() {
         return saverFactory.postgresSaver();
+    }
+
+    private DatabaseStore resolveStore() {
+        return storeFactory.databaseStore();
     }
 
 

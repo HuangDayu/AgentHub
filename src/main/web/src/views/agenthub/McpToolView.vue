@@ -17,11 +17,11 @@
         <form class="field-grid" @submit.prevent="submitConfig">
           <label class="field">
             <span>名称 *</span>
-            <input v-model="form.name" required placeholder="filesystem-mcp" />
+            <input v-model="form.name" required placeholder="工具名称" />
           </label>
           <label class="field">
-            <span>服务器类型</span>
-            <select v-model="form.serverType">
+            <span>服务器类型 *</span>
+            <select v-model="form.serverType" required>
               <option value="STDIO">STDIO</option>
               <option value="HTTP">HTTP</option>
               <option value="SSE">SSE</option>
@@ -36,8 +36,23 @@
             <input v-model="form.command" placeholder="node" />
           </label>
           <label class="field">
+            <span>命令参数</span>
+            <input v-model="form.argsInput" placeholder="参数用逗号分隔，如: --port,8080,--debug" />
+          </label>
+          <label class="field">
+            <span>环境变量</span>
+            <textarea v-model="form.envInput" placeholder="每行一个环境变量，格式: KEY=value"></textarea>
+          </label>
+          <label class="field">
             <span>描述</span>
             <textarea v-model="form.description" placeholder="工具描述"></textarea>
+          </label>
+          <label class="field">
+            <span>异步模式</span>
+            <select v-model="form.async">
+              <option :value="true">异步</option>
+              <option :value="false">同步</option>
+            </select>
           </label>
           <label class="field">
             <span>启用状态</span>
@@ -47,8 +62,7 @@
             </select>
           </label>
           <button class="primary" type="submit">{{ editingId ? '更新' : '创建' }}</button>
-        </form>
-      </article>
+        </form>      </article>
 
       <article class="table-card">
         <div class="page-header">
@@ -111,6 +125,9 @@ const form = reactive({
   serverUrl: '',
   serverType: 'STDIO' as 'STDIO' | 'HTTP' | 'SSE',
   command: '',
+  argsInput: '',
+  envInput: '',
+  async: false,
   enabled: true,
 })
 
@@ -131,6 +148,9 @@ function startEdit(httpTool: McpTool) {
   form.serverUrl = httpTool.serverUrl
   form.serverType = httpTool.serverType
   form.command = httpTool.command || ''
+  form.argsInput = httpTool.args?.join(',') || ''
+  form.envInput = httpTool.env ? Object.entries(httpTool.env).map(([k, v]) => `${k}=${v}`).join('\n') : ''
+  form.async = httpTool.async
   form.enabled = httpTool.enabled
 }
 
@@ -142,20 +162,55 @@ function cancelForm() {
   form.serverUrl = ''
   form.serverType = 'STDIO'
   form.command = ''
+  form.argsInput = ''
+  form.envInput = ''
+  form.async = false
   form.enabled = true
 }
 
 async function submitConfig() {
   if (!selectionReady.value) return
   await execute(async () => {
+    const data = {
+      name: form.name,
+      description: form.description,
+      serverUrl: form.serverUrl,
+      serverType: form.serverType,
+      command: form.command,
+      args: parseArgs(form.argsInput),
+      env: parseEnv(form.envInput),
+      async: form.async,
+      enabled: form.enabled,
+    }
     if (editingId.value) {
-      await updateMcpTool({ tenantId: store.tenantId, workspaceId: store.workspaceId }, editingId.value, form)
+      await updateMcpTool({ tenantId: store.tenantId, workspaceId: store.workspaceId }, editingId.value, data)
     } else {
-      await createMcpTool({ tenantId: store.tenantId, workspaceId: store.workspaceId }, form)
+      await createMcpTool({ tenantId: store.tenantId, workspaceId: store.workspaceId }, data)
     }
     cancelForm()
     await loadTools()
   })
+}
+
+function parseArgs(input: string): string[] | undefined {
+  if (!input.trim()) return undefined
+  return input.split(',').map(s => s.trim()).filter(s => s)
+}
+
+function parseEnv(input: string): Record<string, string> | undefined {
+  if (!input.trim()) return undefined
+  const env: Record<string, string> = {}
+  for (const line of input.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed) continue
+    const idx = trimmed.indexOf('=')
+    if (idx > 0) {
+      const key = trimmed.slice(0, idx).trim()
+      const value = trimmed.slice(idx + 1).trim()
+      if (key) env[key] = value
+    }
+  }
+  return Object.keys(env).length > 0 ? env : undefined
 }
 
 async function handleDelete(toolId: string) {

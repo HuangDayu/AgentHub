@@ -23,9 +23,10 @@ import static com.agenthub.domain.model.AgentConfig.Category.KNOWLEDGE;
 import static com.agenthub.domain.model.AgentConfig.Category.STRATEGY;
 import static com.agenthub.domain.model.AgentConfig.Type.*;
 
+
 @Component
 @RequiredArgsConstructor
-public class ChatUseCase {
+public class RagChatUseCase {
     private final AgentUseCase agentUseCase;
     private final StrategyUseCase strategyUseCase;
     private final AgentConfigRepository agentConfigRepository;

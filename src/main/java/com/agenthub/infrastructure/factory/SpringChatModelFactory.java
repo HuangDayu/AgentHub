@@ -1,4 +1,4 @@
-package com.agenthub.infrastructure.pool;
+package com.agenthub.infrastructure.factory;
 
 import com.agenthub.application.dto.ModelTestOutput;
 import com.agenthub.application.port.out.ModelPoolManagerPort;
@@ -20,13 +20,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * 负责创建和缓存模型实例。
  */
 @Component
-public class SpringChatModelPooling implements ModelPoolManagerPort {
-    private static final Logger log = LoggerFactory.getLogger(SpringChatModelPooling.class);
+public class SpringChatModelFactory implements ModelPoolManagerPort {
+    private static final Logger log = LoggerFactory.getLogger(SpringChatModelFactory.class);
     private final Map<String, Object> modelInstanceCache = new ConcurrentHashMap<>();
     private final ModelConfigRepository modelConfigRepository;
     private final ModelFactoryRegistry modelFactoryRegistry;
 
-    public SpringChatModelPooling(ModelConfigRepository modelConfigRepository, ModelFactoryRegistry modelFactoryRegistry) {
+    public SpringChatModelFactory(ModelConfigRepository modelConfigRepository, ModelFactoryRegistry modelFactoryRegistry) {
         this.modelConfigRepository = modelConfigRepository;
         this.modelFactoryRegistry = modelFactoryRegistry;
     }

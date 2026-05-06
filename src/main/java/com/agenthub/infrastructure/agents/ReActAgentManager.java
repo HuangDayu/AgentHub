@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 @RequiredArgsConstructor
-public class ReActAgentPooling {
+public class ReActAgentManager {
 
     public static final Map<String, AbstractReActAgent> AGENT_POOL = new ConcurrentHashMap<>();
     private final ReActAgentFactory agentFactory;

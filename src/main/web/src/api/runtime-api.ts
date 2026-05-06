@@ -67,18 +67,22 @@ export function listMessages(selection: SelectionState, agentId: string, session
  * Backend endpoint: POST /api/v1/workspaces/${selection.workspaceId}/agents/{agentId}/sessions/{sessionId}/messages
  */
 export function sendMessage(selection: SelectionState, agentId: string, sessionId: string, content: string) {
-  return requestJson<ChatMessage>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/messages`, {
+  return requestJson<any>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/messages`, {
     baseUrl: runtimeConfig.runtimeApiBase,
     method: 'POST',
     headers: scopedHeaders(selection),
     bodyJson: { content },
-  }).then((raw: any) => ({
-    messageId: raw.id ?? raw.messageId,
-    sessionId: raw.sessionId,
-    role: raw.role as 'user' | 'assistant' | 'system',
-    content: raw.content,
-    createdAt: raw.createdAt,
-  }))
+  }).then((raw: any) => {
+    // 适配AssistantMessage对象
+    const message: ChatMessage = {
+      messageId: raw.id ?? `msg-${Date.now()}`,
+      sessionId: sessionId,
+      role: 'assistant',
+      content: raw.text || raw.content || '',
+      createdAt: new Date().toISOString(),
+    }
+    return message
+  })
 }
 
 // ── SSE Streaming ────────────────────────────────────────
@@ -156,7 +160,11 @@ export async function sendMessageStream(
             callbacks.onDone()
             return
           }
-          callbacks.onToken(data)
+          // 解析Message对象并提取内容
+          const messageContent = parseMessageContent(data)
+          if (messageContent) {
+            callbacks.onToken(messageContent)
+          }
         } else if (trimmed.startsWith('event: done')) {
           callbacks.onDone()
           return
@@ -167,5 +175,25 @@ export async function sendMessageStream(
     callbacks.onDone()
   } catch (error) {
     callbacks.onError(error instanceof Error ? error : new Error(String(error)))
+  }
+}
+
+/**
+ * 解析Message对象并提取内容
+ */
+function parseMessageContent(data: string): string | null {
+  try {
+    const message = JSON.parse(data)
+    // 根据messageType提取内容
+    if (message.messageType === 'ASSISTANT' || message.messageType === 'USER') {
+      return message.text || message.content || ''
+    }
+    // 兼容其他格式
+    if (message.text) return message.text
+    if (message.content) return message.content
+    return data
+  } catch {
+    // 如果不是JSON，直接返回原始数据
+    return data
   }
 }

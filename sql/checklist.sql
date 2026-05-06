@@ -1,6 +1,6 @@
 -- =========================================================
 -- Schema Change Checklist
--- Generated: 2026-05-03T15:56:16.554705500Z
+-- Generated: 2026-05-06T11:19:50.711859Z
 -- Description: Incremental changes from previous schema
 -- =========================================================
 
@@ -174,6 +174,7 @@ CREATE TABLE IF NOT EXISTS app.mcp_tool
     command      varchar(255),
     args         varchar(255),
     env          varchar(255),
+    async        boolean,
     enabled      boolean,
     created_at   timestamptz,
     updated_at   timestamptz,

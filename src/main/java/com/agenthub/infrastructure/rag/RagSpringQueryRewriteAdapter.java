@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.rag;
 
 import com.agenthub.application.port.out.rag.RagQueryRewritePort;
-import com.agenthub.infrastructure.pool.SpringShareObjectPooling;
+import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ChatModel;
@@ -33,10 +33,10 @@ public class RagSpringQueryRewriteAdapter implements RagQueryRewritePort {
     private static final Logger log = LoggerFactory.getLogger(RagSpringQueryRewriteAdapter.class);
 
 
-    private final SpringShareObjectPooling springShareObjectPooling;
+    private final SpringShareObjectFactory springShareObjectFactory;
 
-    public RagSpringQueryRewriteAdapter(SpringShareObjectPooling springShareObjectPooling) {
-        this.springShareObjectPooling = springShareObjectPooling;
+    public RagSpringQueryRewriteAdapter(SpringShareObjectFactory springShareObjectFactory) {
+        this.springShareObjectFactory = springShareObjectFactory;
     }
 
     /**
@@ -51,7 +51,7 @@ public class RagSpringQueryRewriteAdapter implements RagQueryRewritePort {
             return queryText;
         }
         try {
-            ChatModel chatModel = springShareObjectPooling.getChatModelByKbId(kbId);
+            ChatModel chatModel = springShareObjectFactory.getChatModelByKbId(kbId);
             return callLlmForRewrite(chatModel, queryText);
         } catch (Exception e) {
             log.error("LLM prompt rewrite failed, falling back to original prompt: {}", e.getMessage(), e);

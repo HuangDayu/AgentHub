@@ -12,6 +12,7 @@ export interface McpTool {
   command?: string
   args?: string[]
   env?: Record<string, string>
+  async: boolean
   enabled: boolean
   createdAt?: string
   updatedAt?: string

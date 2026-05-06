@@ -3,7 +3,7 @@ package com.agenthub.infrastructure.etl;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.port.out.etl.EtlDocumentChunkStorePort;
 import com.agenthub.domain.model.DocumentChunk;
-import com.agenthub.infrastructure.pool.SpringShareObjectPooling;
+import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
@@ -19,10 +19,10 @@ import java.util.Map;
 @Component
 public class EtlDocumentChunkStoreAdapter implements EtlDocumentChunkStorePort {
     private static final Logger log = LoggerFactory.getLogger(EtlDocumentChunkStoreAdapter.class);
-    private final SpringShareObjectPooling springShareObjectPooling;
+    private final SpringShareObjectFactory springShareObjectFactory;
 
-    public EtlDocumentChunkStoreAdapter(SpringShareObjectPooling springShareObjectPooling) {
-        this.springShareObjectPooling = springShareObjectPooling;
+    public EtlDocumentChunkStoreAdapter(SpringShareObjectFactory springShareObjectFactory) {
+        this.springShareObjectFactory = springShareObjectFactory;
     }
 
     /**
@@ -42,7 +42,7 @@ public class EtlDocumentChunkStoreAdapter implements EtlDocumentChunkStorePort {
     @Override
     public void deleteAll(String kbId, List<String> documentChunkIds) {
         if (documentChunkIds == null || documentChunkIds.isEmpty()) return;
-        VectorStore vectorStore = springShareObjectPooling.getVectorStoreByKbId(kbId);
+        VectorStore vectorStore = springShareObjectFactory.getVectorStoreByKbId(kbId);
         if (vectorStore == null) {
             throw new NotFoundException("VectorStore not found");
         }
@@ -54,7 +54,7 @@ public class EtlDocumentChunkStoreAdapter implements EtlDocumentChunkStorePort {
      * 获取向量存储。
      */
     private VectorStore getVectorStore(List<DocumentChunk> chunks) {
-        VectorStore vectorStore = springShareObjectPooling.getVectorStoreByKbId(chunks.getFirst().getKbId());
+        VectorStore vectorStore = springShareObjectFactory.getVectorStoreByKbId(chunks.getFirst().getKbId());
         if (vectorStore == null) {
             throw new NotFoundException("VectorStore not found");
         }

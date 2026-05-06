@@ -6,9 +6,11 @@ import com.agenthub.api.dto.SessionResponse;
 import com.agenthub.application.dto.MessageOutput;
 import com.agenthub.application.dto.SessionOutput;
 import com.agenthub.api.mapper.MessageResponseMapper;
-import com.agenthub.application.usecase.ChatUseCase;
+import com.agenthub.application.usecase.AgentChatUseCase;
 import com.agenthub.application.usecase.SessionUseCase;
 import com.agenthub.domain.model.ChatMessage;
+import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,20 +18,15 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
-
 /**
  * 会话 API 控制器。
  */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/workspaces/{workspaceId}/agents/{agentId}/sessions")
 public class SessionController {
     private final SessionUseCase sessionUseCase;
-    private final ChatUseCase agentChatUseCase;
-
-    public SessionController(SessionUseCase sessionUseCase, ChatUseCase agentChatUseCase) {
-        this.sessionUseCase = sessionUseCase;
-        this.agentChatUseCase = agentChatUseCase;
-    }
+    private final AgentChatUseCase agentChatUseCase;
 
 
     /**
@@ -97,14 +94,14 @@ public class SessionController {
      * @return 回复消息响应
      */
     @PostMapping("/{sessionId}/messages")
-    public ResponseEntity<MessageResponse> sendMessage(
+    public ResponseEntity<org.springframework.ai.chat.messages.AssistantMessage> sendMessage(
             @PathVariable String agentId,
             @PathVariable String sessionId,
             @RequestBody SendMessageRequest request
     ) {
-        MessageOutput output = agentChatUseCase.sendChat(agentId, sessionId, request.content());
+        String response = agentChatUseCase.chat(agentId, sessionId, request.content());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(toResponse(output));
+                .body(new org.springframework.ai.chat.messages.AssistantMessage(response));
     }
 
     /**
@@ -134,7 +131,7 @@ public class SessionController {
      * @return SSE发射器
      */
     @PostMapping(value = "/{sessionId}/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> sendMessageStream(
+    public Flux<Message> sendMessageStream(
             @PathVariable String agentId,
             @PathVariable String sessionId,
             @RequestBody SendMessageRequest request
@@ -142,7 +139,4 @@ public class SessionController {
         return agentChatUseCase.streamChat(agentId, sessionId, request.content());
     }
 
-    /**
-     * 将ChatMessage转换为MessageResponse。
-     */
 }
