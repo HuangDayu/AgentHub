@@ -27,7 +27,7 @@ public class McpToolController {
                                   @RequestBody CreateMcpToolRequest request) {
         McpToolOutput result = useCase.create(workspaceId, tenantId, request.name(), request.description(),
                 request.serverUrl(), request.serverType(), request.command(),
-                request.args(), request.env(), request.enabled());
+                request.args(), request.env(),request.async(), request.enabled());
         return toResponse(result);
     }
 
@@ -45,7 +45,7 @@ public class McpToolController {
     public McpToolResponse update(@PathVariable String workspaceId, @PathVariable String id,
                                   @RequestBody UpdateMcpToolRequest request) {
         McpToolOutput result = useCase.update(id, request.name(), request.description(), request.serverUrl(),
-                request.serverType(), request.command(), request.args(), request.env(), request.enabled());
+                request.serverType(), request.command(), request.args(), request.env(),request.async(), request.enabled());
         return toResponse(result);
     }
 

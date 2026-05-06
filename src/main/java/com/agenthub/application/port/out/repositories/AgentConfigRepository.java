@@ -12,6 +12,8 @@ public interface AgentConfigRepository {
 
     List<AgentConfig> findByAgentId(String agentId);
 
+    List<AgentConfig> findByAgentIdAndEnabled(String agentId);
+
     List<AgentConfig> findByAgentIdAndCategory(String agentId, AgentConfig.Category category);
 
     List<AgentConfig> findEnabledAgentConfigs(String agentId, AgentConfig.Category category, AgentConfig.Type type);

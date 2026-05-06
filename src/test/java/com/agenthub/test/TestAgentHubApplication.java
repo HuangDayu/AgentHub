@@ -9,7 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
  * 测试用 Spring Boot 启动类。
  */
 @SpringBootApplication(scanBasePackages = {"com.agenthub",})
-@MapperScan("com.agenthub.infrastructure.persistence")
+@MapperScan("com.agenthub.infrastructure.store")
 @ActiveProfiles("test")
 public class TestAgentHubApplication {
 

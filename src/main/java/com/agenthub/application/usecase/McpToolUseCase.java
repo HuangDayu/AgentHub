@@ -1,12 +1,11 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.application.port.out.repositories.McpToolRepository;
 import com.agenthub.application.dto.McpToolOutput;
-import com.agenthub.domain.model.McpTool;
+import com.agenthub.application.port.out.repositories.McpToolRepository;
 import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.model.McpTool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -18,9 +17,9 @@ public class McpToolUseCase {
 
     public McpToolOutput create(String workspaceId, String tenantId, String name, String description,
                                 String serverUrl, String serverType, String command,
-                                List<String> args, Map<String, String> env, Boolean enabled) {
+                                List<String> args, Map<String, String> env, Boolean async, Boolean enabled) {
         McpTool tool = McpTool.create(null, tenantId, workspaceId, name, description,
-                serverUrl, parseServerType(serverType), command, args, env,
+                serverUrl, parseServerType(serverType), command, args, env, async != null ? async : true,
                 enabled != null ? enabled : true);
         return toResult(repository.save(tool));
     }
@@ -36,11 +35,11 @@ public class McpToolUseCase {
 
     public McpToolOutput update(String id, String name, String description, String serverUrl,
                                 String serverType, String command,
-                                List<String> args, Map<String, String> env, Boolean enabled) {
+                                List<String> args, Map<String, String> env, Boolean async, Boolean enabled) {
         McpTool existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("MCP Tool not found: " + id));
         McpTool updated = existing.patch(name, description, serverUrl,
-                parseServerType(serverType), command, args, env, enabled);
+                parseServerType(serverType), command, args, env, async, enabled);
         return toResult(repository.update(updated));
     }
 

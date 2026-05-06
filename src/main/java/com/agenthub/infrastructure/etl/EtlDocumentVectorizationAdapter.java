@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.etl;
 
 import com.agenthub.application.port.out.etl.EtlDocumentVectorizationPort;
 import com.agenthub.domain.model.DocumentChunk;
-import com.agenthub.infrastructure.pool.SpringAiObjectPoolManager;
+import com.agenthub.infrastructure.pool.SpringShareObjectPooling;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -38,10 +38,10 @@ public class EtlDocumentVectorizationAdapter implements EtlDocumentVectorization
             "[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|(?<![\\uD800-\\uDBFF])[\\uDC00-\\uDFFF]|[\uFFFD]"
     );
 
-    private final SpringAiObjectPoolManager springAiObjectPoolManager;
+    private final SpringShareObjectPooling springShareObjectPooling;
 
-    public EtlDocumentVectorizationAdapter(SpringAiObjectPoolManager springAiObjectPoolManager) {
-        this.springAiObjectPoolManager = springAiObjectPoolManager;
+    public EtlDocumentVectorizationAdapter(SpringShareObjectPooling springShareObjectPooling) {
+        this.springShareObjectPooling = springShareObjectPooling;
     }
 
     /**
@@ -55,7 +55,7 @@ public class EtlDocumentVectorizationAdapter implements EtlDocumentVectorization
         if (chunks == null || chunks.isEmpty()) return chunks;
         List<DocumentChunk> result = new ArrayList<>(chunks.size());
         int totalBatches = calculateTotalBatches(chunks.size());
-        EmbeddingModel embeddingModel = springAiObjectPoolManager.getEmbeddingModelByConfigId(embeddingModelConfigId);
+        EmbeddingModel embeddingModel = springShareObjectPooling.getEmbeddingModelByConfigId(embeddingModelConfigId);
         processBatches(embeddingModel, chunks, result, totalBatches);
         logVectorizationResult(result);
         return result;

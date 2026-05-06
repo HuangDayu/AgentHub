@@ -33,6 +33,7 @@
 - 所有的方法必须不能超过10行
 - 每次开发完成，都必须用Gradle Test进行测试并确保ArchUnit测试和集成测试都全部通过
 - 所需要的外部组件和中间件通过WSL Docker部署，通常情况下已经搭建部署好了
+- 禁止写伪代码，sleep等伪代码
 
 ---
 
@@ -50,7 +51,7 @@ infrastructure/   → 数据库、缓存、消息、外部 API、模型 SDK 适�
 ### 领域模块标准结构
 
 ```
-domain/xxx-domain/src/main/java/com/thingsknowledge/xxx/
+domain/xxx-domain/src/main/java/com/agenthub/xxx/
 ├── api/
 │   ├── controller/         # REST控制器
 │   ├── dto/                # 请求/响应DTO
@@ -58,7 +59,7 @@ domain/xxx-domain/src/main/java/com/thingsknowledge/xxx/
 │   └── exception/          # API异常处理
 ├── application/
 │   ├── usecase/            # 用例
-│   ├── command/            # 命令对象
+│   ├── retrievalCommand/            # 命令对象
 │   ├── query/              # 查询对象
 │   ├── service/            # 应用服务
 │   └── port/               # 端口接口
@@ -73,7 +74,7 @@ domain/xxx-domain/src/main/java/com/thingsknowledge/xxx/
 │   ├── port/               # 领域端口
 │   └── exception/          # 领域异常
 └── infrastructure/
-    ├── persistence/        # 持久化
+    ├── store/        # 持久化
     │   ├── entity/         # 数据库实体
     │   ├── mapper/         # MyBatis Mapper
     │   └── repository/     # 仓储实现
@@ -103,11 +104,11 @@ api → application → domain ← infrastructure
 | Controller | `*Controller` | `api/controller/` |
 | UseCase | `*UseCase` | `application/usecase/` |
 | Repository接口 | `*Repository` | `domain/` 或 `application/port/out/repositories/` |
-| Repository实现 | `Mybatis*Repository` | `infrastructure/persistence/repository/` |
-| Entity | `*Entity` | `infrastructure/persistence/entity/` |
-| Mapper | `*Mapper` | `infrastructure/persistence/mapper/` |
+| Repository实现 | `Mybatis*Repository` | `infrastructure/store/repository/` |
+| Entity | `*Entity` | `infrastructure/store/entity/` |
+| Mapper | `*Mapper` | `infrastructure/store/mapper/` |
 | Request DTO | `*Request` | `api/dto/` |
 | Response DTO | `*Response` | `api/dto/` |
 | 领域模型 | 领域名词 | `domain/model/` |
-| 命令对象 | `*Command` | `application/command/` |
+| 命令对象 | `*Command` | `application/retrievalCommand/` |
 | 查询对象 | `*Query` | `application/query/` |

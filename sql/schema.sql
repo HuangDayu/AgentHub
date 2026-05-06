@@ -11,34 +11,34 @@ SET search_path TO app, public;
 -- =========================================================
 -- Drop existing tables (dependency order)
 -- =========================================================
-DROP TABLE IF EXISTS app.workspace CASCADE;
-DROP TABLE IF EXISTS app.workflow CASCADE;
-DROP TABLE IF EXISTS app.vector_store_config CASCADE;
-DROP TABLE IF EXISTS app.tool_policy_binding CASCADE;
-DROP TABLE IF EXISTS app.tool_policy CASCADE;
-DROP TABLE IF EXISTS app.tenant CASCADE;
-DROP TABLE IF EXISTS app.skill CASCADE;
-DROP TABLE IF EXISTS app.session CASCADE;
-DROP TABLE IF EXISTS app.security_policy CASCADE;
-DROP TABLE IF EXISTS app.retrieval_policy CASCADE;
-DROP TABLE IF EXISTS app.prompt_template CASCADE;
-DROP TABLE IF EXISTS app.model_policy CASCADE;
-DROP TABLE IF EXISTS app.model_config CASCADE;
-DROP TABLE IF EXISTS app.memory CASCADE;
-DROP TABLE IF EXISTS app.mcp_tool CASCADE;
-DROP TABLE IF EXISTS app.knowledge_base CASCADE;
-DROP TABLE IF EXISTS app.ingestion_job CASCADE;
-DROP TABLE IF EXISTS app.ingestion_document CASCADE;
-DROP TABLE IF EXISTS app.iam_refresh_token_session CASCADE;
-DROP TABLE IF EXISTS app.http_tools CASCADE;
-DROP TABLE IF EXISTS app.guardrail_policy CASCADE;
-DROP TABLE IF EXISTS app.function_tools CASCADE;
-DROP TABLE IF EXISTS app.document_chunk CASCADE;
-DROP TABLE IF EXISTS app.chat_message CASCADE;
-DROP TABLE IF EXISTS app.app_user CASCADE;
-DROP TABLE IF EXISTS app.agent_team CASCADE;
-DROP TABLE IF EXISTS app.agent_config CASCADE;
-DROP TABLE IF EXISTS app.agent CASCADE;
+-- DROP TABLE IF EXISTS app.workspace CASCADE;
+-- DROP TABLE IF EXISTS app.workflow CASCADE;
+-- DROP TABLE IF EXISTS app.vector_store_config CASCADE;
+-- DROP TABLE IF EXISTS app.tool_policy_binding CASCADE;
+-- DROP TABLE IF EXISTS app.tool_policy CASCADE;
+-- DROP TABLE IF EXISTS app.tenant CASCADE;
+-- DROP TABLE IF EXISTS app.skill CASCADE;
+-- DROP TABLE IF EXISTS app.session CASCADE;
+-- DROP TABLE IF EXISTS app.security_policy CASCADE;
+-- DROP TABLE IF EXISTS app.retrieval_policy CASCADE;
+-- DROP TABLE IF EXISTS app.prompt_template CASCADE;
+-- DROP TABLE IF EXISTS app.model_policy CASCADE;
+-- DROP TABLE IF EXISTS app.model_config CASCADE;
+-- DROP TABLE IF EXISTS app.memory CASCADE;
+-- DROP TABLE IF EXISTS app.mcp_tool CASCADE;
+-- DROP TABLE IF EXISTS app.knowledge_base CASCADE;
+-- DROP TABLE IF EXISTS app.ingestion_job CASCADE;
+-- DROP TABLE IF EXISTS app.ingestion_document CASCADE;
+-- DROP TABLE IF EXISTS app.iam_refresh_token_session CASCADE;
+-- DROP TABLE IF EXISTS app.http_tools CASCADE;
+-- DROP TABLE IF EXISTS app.guardrail_policy CASCADE;
+-- DROP TABLE IF EXISTS app.function_tools CASCADE;
+-- DROP TABLE IF EXISTS app.document_chunk CASCADE;
+-- DROP TABLE IF EXISTS app.chat_message CASCADE;
+-- DROP TABLE IF EXISTS app.app_user CASCADE;
+-- DROP TABLE IF EXISTS app.agent_team CASCADE;
+-- DROP TABLE IF EXISTS app.agent_config CASCADE;
+-- DROP TABLE IF EXISTS app.agent CASCADE;
 
 -- =========================================================
 -- Create tables

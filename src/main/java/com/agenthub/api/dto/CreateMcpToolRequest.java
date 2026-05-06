@@ -14,5 +14,6 @@ public record CreateMcpToolRequest(
         String command,
         List<String> args,
         Map<String, String> env,
+        Boolean async,
         Boolean enabled
 ) {}

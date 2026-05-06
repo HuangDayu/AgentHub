@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.rag;
 
 import com.agenthub.application.port.out.rag.RagVectorSearchPort;
 import com.agenthub.domain.model.RetrievalResult;
-import com.agenthub.infrastructure.pool.SpringAiObjectPoolManager;
+import com.agenthub.infrastructure.pool.SpringShareObjectPooling;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
@@ -22,15 +22,15 @@ import java.util.Map;
 @Component
 public class RagCustomizeVectorSearchAdapter implements RagVectorSearchPort {
     private static final Logger log = LoggerFactory.getLogger(RagCustomizeVectorSearchAdapter.class);
-    private final SpringAiObjectPoolManager springAiObjectPoolManager;
+    private final SpringShareObjectPooling springShareObjectPooling;
 
     /**
      * 构造适配器。
      *
-     * @param springAiObjectPoolManager Spring AI 框架适配器
+     * @param springShareObjectPooling Spring AI 框架适配器
      */
-    public RagCustomizeVectorSearchAdapter(SpringAiObjectPoolManager springAiObjectPoolManager) {
-        this.springAiObjectPoolManager = springAiObjectPoolManager;
+    public RagCustomizeVectorSearchAdapter(SpringShareObjectPooling springShareObjectPooling) {
+        this.springShareObjectPooling = springShareObjectPooling;
     }
 
     /**
@@ -43,7 +43,7 @@ public class RagCustomizeVectorSearchAdapter implements RagVectorSearchPort {
      */
     @Override
     public List<RetrievalResult> search(String kbId, String queryText, int topK) {
-        VectorStore vectorStore = springAiObjectPoolManager.getVectorStoreByKbId(kbId);
+        VectorStore vectorStore = springShareObjectPooling.getVectorStoreByKbId(kbId);
         if (vectorStore == null) {
             log.debug("VectorStore not available, returning empty results");
             return Collections.emptyList();

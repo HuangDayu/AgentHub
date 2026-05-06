@@ -10,8 +10,14 @@ import java.util.Optional;
  */
 public interface McpToolRepository {
     McpTool save(McpTool tool);
+
     Optional<McpTool> findById(String id);
+
+    List<McpTool> findList();
+
     List<McpTool> findByWorkspaceId(String workspaceId);
+
     void deleteById(String id);
+
     McpTool update(McpTool tool);
 }

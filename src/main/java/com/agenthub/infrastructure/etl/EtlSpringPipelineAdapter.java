@@ -4,7 +4,7 @@ import com.agenthub.application.command.EtlCommand;
 import com.agenthub.application.port.out.etl.ExtractTransformLoadPort;
 import com.agenthub.domain.model.DocumentChunk;
 import com.agenthub.domain.model.DocumentContent;
-import com.agenthub.infrastructure.pool.SpringAiObjectPoolManager;
+import com.agenthub.infrastructure.pool.SpringShareObjectPooling;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
@@ -33,12 +33,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "agenthub.etl.impl-type", havingValue = "spring", matchIfMissing = true)
 public class EtlSpringPipelineAdapter implements ExtractTransformLoadPort {
-    private final SpringAiObjectPoolManager springAiObjectPoolManager;
+    private final SpringShareObjectPooling springShareObjectPooling;
 
     @Override
     public List<DocumentChunk> etl(EtlCommand etlCommand) {
-        ChatModel chatModel = springAiObjectPoolManager.getChatModelByKbId(etlCommand.getKbId());
-        VectorStore vectorStore = springAiObjectPoolManager.getVectorStoreByKbId(etlCommand.getKbId());
+        ChatModel chatModel = springShareObjectPooling.getChatModelByKbId(etlCommand.getKbId());
+        VectorStore vectorStore = springShareObjectPooling.getVectorStoreByKbId(etlCommand.getKbId());
         List<Document> documents = loadDocument(etlCommand);
         documents = splitterDocuments(documents);
         documents = enrichDocuments(chatModel, documents);
@@ -52,7 +52,7 @@ public class EtlSpringPipelineAdapter implements ExtractTransformLoadPort {
     @Override
     public boolean delete(List<DocumentChunk> documentChunks) {
         String kbId = documentChunks.getFirst().getKbId();
-        VectorStore vectorStore = springAiObjectPoolManager.getVectorStoreByKbId(kbId);
+        VectorStore vectorStore = springShareObjectPooling.getVectorStoreByKbId(kbId);
         List<String> collect = documentChunks.stream().map(DocumentChunk::getChunkId).collect(Collectors.toList());
         vectorStore.delete(collect);
         return true;

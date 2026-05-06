@@ -31,10 +31,13 @@ public record AgentConfig(
         MODEL_STRATEGY, // 模型策略
         GUARDRAIL_STRATEGY,      // 护栏策略
         SYSTEM_PROMPT,  // 系统提示词
-        MCP_TOOL,        // MCP工具
         CHAT_MODEL, // 聊天模型
         EMBEDDING_MODEL, // 嵌入模型
         KNOWLEDGE_BASE,   // 知识库
+        MCP_TOOL,        // MCP工具
+        SKILL_TOOL,        // Skill工具
+        FUNCTION_TOOL,        // Function工具
+        HTTP_TOOL,        // HTTP工具
     }
 
     public static AgentConfig create(String agentId, Category category, Type type,

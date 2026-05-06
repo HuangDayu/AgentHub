@@ -3,7 +3,7 @@ package com.agenthub.infrastructure.rag;
 import com.agenthub.application.port.out.rag.RagModelChatPort;
 import com.agenthub.domain.model.ChatMessage;
 import com.agenthub.domain.model.SessionMessage;
-import com.agenthub.infrastructure.pool.SpringAiObjectPoolManager;
+import com.agenthub.infrastructure.pool.SpringShareObjectPooling;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -20,10 +20,10 @@ import java.util.List;
 @Component
 public class RagSpringModelChatAdapter implements RagModelChatPort {
     private static final Logger log = LoggerFactory.getLogger(RagSpringModelChatAdapter.class);
-    private final SpringAiObjectPoolManager springAiObjectPoolManager;
+    private final SpringShareObjectPooling springShareObjectPooling;
 
-    public RagSpringModelChatAdapter(SpringAiObjectPoolManager springAiObjectPoolManager) {
-        this.springAiObjectPoolManager = springAiObjectPoolManager;
+    public RagSpringModelChatAdapter(SpringShareObjectPooling springShareObjectPooling) {
+        this.springShareObjectPooling = springShareObjectPooling;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class RagSpringModelChatAdapter implements RagModelChatPort {
     }
 
     private ChatClient getChatClient(SessionMessage sessionMessage) {
-        return springAiObjectPoolManager.getChatClientBySessionId(sessionMessage);
+        return springShareObjectPooling.getChatClientBySessionId(sessionMessage);
     }
 
     private List<Message> buildPromptMessages(String systemPrompt, List<ChatMessage> messages) {

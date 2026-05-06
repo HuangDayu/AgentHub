@@ -71,7 +71,7 @@ spring:
       read-timeout: 300000
 
 mybatis-plus:
-  type-handlers-package: com.agenthub.infrastructure.persistence.handler
+  type-handlers-package: com.agenthub.infrastructure.store.db.handler
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
