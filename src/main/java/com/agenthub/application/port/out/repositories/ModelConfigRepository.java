@@ -44,5 +44,5 @@ public interface ModelConfigRepository {
 
     List<ModelConfig> findEnabledAll(Boolean enabled);
 
-    List<ModelConfig> findByWorkspace(String workspaceId);
+    List<ModelConfig> findByWorkspace(String workspaceId, String type);
 }

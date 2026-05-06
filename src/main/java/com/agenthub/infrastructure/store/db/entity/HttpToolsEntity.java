@@ -1,9 +1,8 @@
 package com.agenthub.infrastructure.store.db.entity;
-import lombok.Data;
 
 import com.agenthub.domain.model.HttpTool;
 import com.baomidou.mybatisplus.annotation.*;
-import com.agenthub.domain.model.HttpToolId;
+import lombok.Data;
 
 import java.time.Instant;
 
@@ -18,19 +17,19 @@ import java.time.Instant;
 @TableName("app.http_tools")
 public class HttpToolsEntity {
     @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+    private java.lang.String id;
     @TableField(value = "tenant_id", fill = FieldFill.INSERT)
-    private String tenantId;
+    private java.lang.String tenantId;
     @TableField(value = "workspace_id", fill = FieldFill.INSERT)
-    private String workspaceId;
-    private String name;
-    private String description;
+    private java.lang.String workspaceId;
+    private java.lang.String name;
+    private java.lang.String description;
     private boolean enabled;
-    private String endpoint;
-    private String authType;
-    private String inputSchema;
+    private java.lang.String endpoint;
+    private java.lang.String authType;
+    private java.lang.String inputSchema;
     private int timeoutMs;
-    @TableField(value = "created_at",fill = FieldFill.INSERT)
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
 
     public HttpToolsEntity() {
@@ -44,7 +43,7 @@ public class HttpToolsEntity {
      */
     public static HttpToolsEntity fromDomain(HttpTool httpTool) {
         HttpToolsEntity entity = new HttpToolsEntity();
-        entity.setId(httpTool.id().value());
+        entity.setId(httpTool.id());
         entity.setName(httpTool.name());
         entity.setDescription(httpTool.description());
         entity.setEnabled(httpTool.enabled());
@@ -62,7 +61,7 @@ public class HttpToolsEntity {
      */
     public HttpTool toDomain() {
         return new HttpTool(
-                HttpToolId.of(this.id),
+                this.id,
                 this.name,
                 this.description,
                 this.enabled,

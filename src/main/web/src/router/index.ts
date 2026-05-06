@@ -12,6 +12,7 @@ const agentHubRoutes = {
     { path: '', component: () => import('@/views/agenthub/WorkspaceOverviewView.vue') },
     { path: 'knowledge', component: () => import('@/views/agenthub/KnowledgeWorkbenchView.vue') },
     { path: 'agents', component: () => import('@/views/agenthub/AgentStudioView.vue') },
+    { path: 'agent-configs', component: () => import('@/views/agenthub/AgentConfigView.vue') },
     { path: 'retrieval', component: () => import('@/views/agenthub/RetrievalView.vue') },
     { path: 'chat', component: () => import('@/views/agenthub/RuntimeChatView.vue') },
     { path: 'vector-stores', component: () => import('@/views/agenthub/VectorStoreConfigView.vue') },

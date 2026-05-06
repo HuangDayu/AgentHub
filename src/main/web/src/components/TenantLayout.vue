@@ -12,13 +12,14 @@
     <nav class="nav">
       <RouterLink to="/agenthub">工作区</RouterLink>
       <RouterLink to="/agenthub/knowledge">知识库</RouterLink>
-      <RouterLink to="/agenthub/retrieval">知识检索</RouterLink>
-      <RouterLink to="/agenthub/agents">Agent Studio</RouterLink>
-      <RouterLink to="/agenthub/chat">Agent 对话</RouterLink>
-      <RouterLink to="/agenthub/vector-stores">向量数据库</RouterLink>
-      <RouterLink to="/agenthub/models">大模型配置</RouterLink>
-      <RouterLink to="/agenthub/strategies">策略管理</RouterLink>
-      <RouterLink to="/agenthub/mcp-tools">MCP工具</RouterLink>
+      <RouterLink to="/agenthub/retrieval">检索</RouterLink>
+      <RouterLink to="/agenthub/agents">Agent管理</RouterLink>
+      <RouterLink to="/agenthub/agent-configs">Agent配置</RouterLink>
+      <RouterLink to="/agenthub/chat">Agent对话</RouterLink>
+      <RouterLink to="/agenthub/vector-stores">向量库</RouterLink>
+      <RouterLink to="/agenthub/models">大模型</RouterLink>
+      <RouterLink to="/agenthub/strategies">策略</RouterLink>
+      <RouterLink to="/agenthub/mcp-tools">MCP</RouterLink>
       <RouterLink to="/agenthub/prompt-templates">提示词</RouterLink>
     </nav>
     <main class="content">

@@ -1,7 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
 import com.agenthub.domain.model.HttpTool;
-import com.agenthub.domain.model.HttpToolId;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +26,7 @@ public interface HttpToolRepository {
      * @param id 工具标识
      * @return 工具（可能为空）
      */
-    Optional<HttpTool> findById(HttpToolId id);
+    Optional<HttpTool> findById(String id);
 
     /**
      * 查询所有工具。
@@ -35,4 +34,6 @@ public interface HttpToolRepository {
      * @return 工具列表
      */
     List<HttpTool> findAll();
+
+    List<HttpTool> findByWorkspaceId(java.lang.String workspaceId);
 }

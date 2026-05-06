@@ -2,6 +2,7 @@ package com.agenthub.application.port.out.repositories;
 
 import com.agenthub.domain.model.FunctionTool;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,4 +21,7 @@ public interface FunctionToolsRepository {
     void deleteById(String id);
 
     void updateEnabled(String id, boolean enabled);
+
+    List<FunctionTool> findByWorkspaceId(String workspaceId);
+
 }

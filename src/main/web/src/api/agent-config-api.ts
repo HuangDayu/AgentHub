@@ -35,6 +35,13 @@ export function setAgentConfig(selection: SelectionState, agentId: string, data:
   )
 }
 
+export function updateAgentConfig(selection: SelectionState, agentId: string, id: string, data: Partial<AgentConfig>) {
+  return requestJson<AgentConfig>(
+    `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/configs/${id}`,
+    { baseUrl: runtimeConfig.agentApiBase, method: 'PUT', headers: scopedHeaders(selection), bodyJson: data }
+  )
+}
+
 export function getAgentConfig(selection: SelectionState, agentId: string, id: string) {
   return requestJson<AgentConfig>(
     `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/configs/${id}`,

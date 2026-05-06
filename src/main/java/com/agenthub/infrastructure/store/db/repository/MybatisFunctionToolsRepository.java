@@ -56,6 +56,13 @@ public class MybatisFunctionToolsRepository implements FunctionToolsRepository {
     @Override
     public void updateEnabled(String id, boolean enabled) { mapper.updateEnabled(id, enabled); }
 
+    @Override
+    public List<FunctionTool> findByWorkspaceId(String workspaceId) {
+        LambdaQueryWrapper<FunctionToolsEntity> w = new LambdaQueryWrapper<>();
+        w.eq(FunctionToolsEntity::getWorkspaceId, workspaceId);
+        return mapper.selectList(w).stream().map(this::toDomain).toList();
+    }
+
     private FunctionToolsEntity toEntity(FunctionTool tool) {
         FunctionToolsEntity e = new FunctionToolsEntity();
         e.setId(tool.getId());

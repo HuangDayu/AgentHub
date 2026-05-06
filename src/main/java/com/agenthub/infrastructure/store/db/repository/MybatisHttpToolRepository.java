@@ -1,11 +1,10 @@
 package com.agenthub.infrastructure.store.db.repository;
 
-import com.agenthub.domain.model.HttpTool;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.agenthub.domain.model.HttpToolId;
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
+import com.agenthub.domain.model.HttpTool;
 import com.agenthub.infrastructure.store.db.entity.HttpToolsEntity;
 import com.agenthub.infrastructure.store.db.mapper.HttpToolMybatisMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
@@ -40,8 +39,8 @@ public class MybatisHttpToolRepository implements HttpToolRepository {
     }
 
     @Override
-    public Optional<HttpTool> findById(HttpToolId id) {
-        HttpToolsEntity entity = mapper.selectById(id.value());
+    public Optional<HttpTool> findById(String id) {
+        HttpToolsEntity entity = mapper.selectById(id);
         return Optional.ofNullable(entity).map(this::toDomain);
     }
 
@@ -52,9 +51,16 @@ public class MybatisHttpToolRepository implements HttpToolRepository {
         return mapper.selectList(query).stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public List<HttpTool> findByWorkspaceId(java.lang.String workspaceId) {
+        LambdaQueryWrapper<HttpToolsEntity> query = new LambdaQueryWrapper<>();
+        query.eq(HttpToolsEntity::getWorkspaceId, workspaceId);
+        return mapper.selectList(query).stream().map(this::toDomain).toList();
+    }
+
     private HttpTool toDomain(HttpToolsEntity entity) {
         return new HttpTool(
-                HttpToolId.of(entity.getId()),
+                entity.getId(),
                 entity.getName(),
                 entity.getDescription(),
                 Boolean.TRUE.equals(entity.isEnabled()),
@@ -68,7 +74,7 @@ public class MybatisHttpToolRepository implements HttpToolRepository {
 
     private HttpToolsEntity toEntity(HttpTool httpTool) {
         HttpToolsEntity entity = new HttpToolsEntity();
-        entity.setId(httpTool.id().value());
+        entity.setId(httpTool.id());
         entity.setName(httpTool.name());
         entity.setDescription(httpTool.description());
         entity.setEnabled(httpTool.enabled());

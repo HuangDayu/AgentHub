@@ -55,10 +55,8 @@
                 </span>
               </td>
               <td>
-                <button class="secondary" type="button" @click="openConfigPanel(agent)">配置关联</button>
-              </td>
-              <td>
                 <div class="toolbar">
+                  <button class="secondary" type="button" @click="handleEdit(agent)">编辑</button>
                   <button v-if="agent.status !== 'PUBLISHED'" class="secondary" type="button" @click="handlePublish(agent)">发布</button>
                   <button v-else class="secondary" type="button" @click="handleUnpublish(agent)">取消发布</button>
                   <button class="ghost" type="button" @click="handleDelete(agent)">删除</button>
@@ -69,35 +67,22 @@
         </table>
         <article v-if="!agents.length" class="empty-state">暂无 Agent，点击上方按钮创建。</article>
       </article>
-
-      <!-- 配置关联面板 -->
-      <article v-if="selectedAgent" class="panel stack">
-        <div class="page-header">
-          <h3 style="margin: 0">{{ selectedAgent.name }} - 配置关联</h3>
-          <button class="ghost" type="button" @click="selectedAgent = null">关闭</button>
-        </div>
-        <AgentConfigPanel
-          :selection="{ tenantId: store.tenantId, workspaceId: store.workspaceId }"
-          :agentId="selectedAgent.id"
-          :workspaceId="store.workspaceId"
-        />
-      </article>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listAgents, createAgent, deleteAgent, publishAgent, unpublishAgent } from '@/api/agent-api'
-import AgentConfigPanel from '@/domain/agent/components/AgentConfigPanel.vue'
 import type { Agent } from '@/types/agent'
 
 const store = useWorkspaceStore()
+const router = useRouter()
 const agents = ref<Agent[]>([])
 const error = ref('')
 const showCreateForm = ref(false)
-const selectedAgent = ref<Agent | null>(null)
 const agentName = ref('')
 const agentDescription = ref('')
 
@@ -134,6 +119,14 @@ async function submitAgent() {
   } catch (e: any) {
     error.value = e.message
   }
+}
+
+function handleEdit(agent: Agent) {
+  // 跳转到Agent配置页面并选中该Agent
+  router.push({
+    path: '/agenthub/agent-configs',
+    query: { agentId: agent.id }
+  })
 }
 
 async function handlePublish(agent: Agent) {

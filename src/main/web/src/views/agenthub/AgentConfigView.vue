@@ -1,46 +1,25 @@
 <template>
   <section class="agent-config-page">
-    <div class="page-header">
-      <div>
-        <h2>Agent配置管理</h2>
-        <p class="muted">管理Agent的配置关联关系</p>
-      </div>
-      <p class="status">{{ error }}</p>
-    </div>
-    
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     
     <template v-else>
       <!-- Agent选择 -->
-      <article class="panel">
-        <div class="panel-header">
-          <h3>选择Agent</h3>
-        </div>
-        <div class="agent-grid">
-          <div 
-            v-for="agent in agents" 
-            :key="agent.id" 
-            :class="['agent-card', { active: selectedAgentId === agent.id }]"
-            @click="selectAgent(agent.id)"
-          >
-            <div class="agent-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2a3 3 0 00-3 3v4a3 3 0 006 0V5a3 3 0 00-3-3z"/>
-                <path d="M19 10v2a7 7 0 01-14 0v-2"/>
-                <line x1="12" y1="19" x2="12" y2="22"/>
-              </svg>
-            </div>
-            <div class="agent-info">
-              <div class="agent-name">{{ agent.name }}</div>
-              <div class="agent-id muted">{{ agent.id }}</div>
-            </div>
-            <div class="agent-status">
-              <span :class="['status-badge', agent.published ? 'published' : 'unpublished']">
-                {{ agent.published ? '已发布' : '未发布' }}
-              </span>
-            </div>
+      <article class="panel header-panel">
+        <div class="header-row">
+          <div class="header-left">
+            <h2>Agent配置管理</h2>
+            <p class="muted">管理Agent的配置关联关系</p>
+          </div>
+          <div class="header-right">
+            <select v-model="selectedAgentId" @change="onAgentChange" class="agent-select">
+              <option value="">请选择Agent</option>
+              <option v-for="agent in agents" :key="agent.id" :value="agent.id">
+                {{ agent.name }}
+              </option>
+            </select>
           </div>
         </div>
+        <p v-if="error" class="status">{{ error }}</p>
       </article>
 
       <!-- 配置列表 -->
@@ -68,7 +47,6 @@
             </div>
             <div class="config-body">
               <div class="config-type">{{ getTypeLabel(config.category, config.type) }}</div>
-              <div class="config-name">{{ getConfigName(config) }}</div>
               <div class="config-desc">{{ config.description || '无描述' }}</div>
             </div>
             <div class="config-footer">
@@ -155,12 +133,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listAgents, type Agent } from '@/api/agent-api'
 import { listAgentConfigs, setAgentConfig, updateAgentConfig, deleteAgentConfig, type AgentConfig } from '@/api/agent-config-api'
 import { getConfigTypes, getAvailableConfigs, type ConfigTypeDefinition, type AvailableConfig } from '@/api/agent-config-type-api'
 
 const store = useWorkspaceStore()
+const route = useRoute()
 const error = ref('')
 const loading = ref(false)
 const agents = ref<Agent[]>([])
@@ -204,6 +184,11 @@ onMounted(() => {
     loadAgents()
     loadConfigTypes()
   }
+  // 从URL参数读取agentId
+  const agentIdFromQuery = route.query.agentId as string
+  if (agentIdFromQuery) {
+    selectedAgentId.value = agentIdFromQuery
+  }
 })
 
 watch(() => [store.tenantId, store.workspaceId], () => {
@@ -225,9 +210,21 @@ watch(() => form.value.type, (newType) => {
   }
 })
 
-function selectAgent(agentId: string) {
-  selectedAgentId.value = agentId
+// 监听配置项选择，自动填充描述
+watch(() => form.value.configId, (newConfigId) => {
+  if (newConfigId) {
+    const config = availableConfigsForType.value.find(c => c.id === newConfigId)
+    if (config) {
+      form.value.description = config.name
+    }
+  }
+})
+
+function onAgentChange() {
   showAddForm.value = false
+  if (selectedAgentId.value) {
+    loadConfigs()
+  }
 }
 
 function getCategoryLabel(category: string): string {
@@ -239,12 +236,6 @@ function getTypeLabel(category: string, type: string): string {
   const ct = configTypes.value.find(c => c.category === category)
   const t = ct?.types.find(t => t.type === type)
   return t?.displayName || type
-}
-
-function getConfigName(config: AgentConfig): string {
-  const configsList = availableConfigs.value.get(config.type)
-  const found = configsList?.find(c => c.id === config.configId)
-  return found?.name || config.configId
 }
 
 function onCategoryChange() {
@@ -276,6 +267,11 @@ async function loadAgents() {
   try {
     const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
     agents.value = await listAgents(selection)
+    // 默认选择第一个Agent（如果URL没有指定agentId）
+    if (agents.value.length > 0 && !selectedAgentId.value) {
+      selectedAgentId.value = agents.value[0].id
+      loadConfigs()
+    }
   } catch (e: any) {
     error.value = e.message
   }
@@ -383,19 +379,7 @@ async function handleDelete(configId: string) {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #1f2937;
+  gap: 1rem;
 }
 
 .muted {
@@ -406,6 +390,7 @@ async function handleDelete(configId: string) {
 .status {
   color: #dc2626;
   font-size: 0.875rem;
+  margin-top: 0.5rem;
 }
 
 .empty-state {
@@ -418,137 +403,95 @@ async function handleDelete(configId: string) {
   background: white;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
-  padding: 1.5rem;
+  padding: 1rem;
+}
+
+.header-panel {
+  padding: 1.25rem;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.header-left h2 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.25rem;
+  color: #1f2937;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.agent-select {
+  min-width: 200px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.agent-select:focus {
+  outline: none;
+  border-color: #3b82f6;
 }
 
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .panel-header h3 {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1rem;
   color: #374151;
 }
 
-/* Agent Grid */
-.agent-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.agent-card {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.agent-card:hover {
-  border-color: #3b82f6;
-  background: #f8fafc;
-}
-
-.agent-card.active {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.agent-icon {
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-  border-radius: 0.5rem;
-}
-
-.agent-icon svg {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: #6b7280;
-}
-
-.agent-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.agent-name {
-  font-weight: 600;
-  color: #1f2937;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.agent-id {
-  font-size: 0.75rem;
-}
-
-.status-badge {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-}
-
-.status-badge.published {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.status-badge.unpublished {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-/* Config Grid */
+/* Config Grid - 更小的卡片 */
 .config-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
 }
 
 .config-card {
   border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   overflow: hidden;
   transition: box-shadow 0.2s;
 }
 
 .config-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
 .config-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .config-category {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: #6b7280;
   text-transform: uppercase;
 }
 
 .config-status {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+  font-size: 0.7rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.125rem;
 }
 
 .config-status.enabled {
@@ -562,51 +505,45 @@ async function handleDelete(configId: string) {
 }
 
 .config-body {
-  padding: 1rem;
+  padding: 0.625rem 0.75rem;
 }
 
 .config-type {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #374151;
-  margin-bottom: 0.5rem;
-}
-
-.config-name {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #1f2937;
   margin-bottom: 0.25rem;
 }
 
 .config-desc {
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 0.8rem;
+  color: #1f2937;
+  line-height: 1.3;
 }
 
 .config-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   background: #f9fafb;
   border-top: 1px solid #e5e7eb;
 }
 
 .config-meta {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #6b7280;
 }
 
 .config-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .btn-toggle, .btn-delete {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+  font-size: 0.7rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.125rem;
   border: none;
   cursor: pointer;
   transition: all 0.2s;
@@ -647,23 +584,23 @@ async function handleDelete(configId: string) {
 .config-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .form-field span {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: #374151;
 }
@@ -736,13 +673,13 @@ button.ghost:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1.5rem;
   color: #6b7280;
   gap: 0.5rem;
 }
 
 .empty-hint .icon {
-  width: 2rem;
-  height: 2rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 </style>

@@ -1,12 +1,12 @@
 package com.agenthub.infrastructure.store.db.repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.agenthub.application.port.out.repositories.ModelConfigRepository;
 import com.agenthub.domain.model.ModelConfig;
 import com.agenthub.domain.model.ModelSupplier;
 import com.agenthub.domain.model.ModelType;
-import com.agenthub.application.port.out.repositories.ModelConfigRepository;
 import com.agenthub.infrastructure.store.db.entity.ModelConfigEntity;
 import com.agenthub.infrastructure.store.db.mapper.ModelConfigMybatisMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -116,9 +116,10 @@ public class MybatisModelConfigRepository implements ModelConfigRepository {
     }
 
     @Override
-    public List<ModelConfig> findByWorkspace(String workspaceId) {
+    public List<ModelConfig> findByWorkspace(String workspaceId, String type) {
         LambdaQueryWrapper<ModelConfigEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ModelConfigEntity::getWorkspaceId, workspaceId);
+        queryWrapper.eq(ModelConfigEntity::getType, type);
         return mapper.selectList(queryWrapper).stream()
                 .map(PO_TO_DOMAIN)
                 .collect(Collectors.toList());

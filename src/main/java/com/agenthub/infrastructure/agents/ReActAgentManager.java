@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class ReActAgentManager {
 
-    public static final Map<String, AbstractReActAgent> AGENT_POOL = new ConcurrentHashMap<>();
+    public static final Map<java.lang.String, AbstractReActAgent> AGENT_POOL = new ConcurrentHashMap<>();
     private final ReActAgentFactory agentFactory;
     private final AgentRepository agentRepository;
     private final AgentConfigRepository agentConfigRepository;
@@ -31,11 +31,11 @@ public class ReActAgentManager {
     private final ToolStrategyRepository toolStrategyRepository;
     private final GuardrailStrategyRepository guardrailStrategyRepository;
 
-    public AbstractReActAgent getAgent(String agentId) {
+    public AbstractReActAgent getAgent(java.lang.String agentId) {
         return AGENT_POOL.computeIfAbsent(agentId, id -> agentFactory.create(createContext(agentId)));
     }
 
-    private ReActAgentContext createContext(String agentId) {
+    private ReActAgentContext createContext(java.lang.String agentId) {
         Agent agent = agentRepository.findById(agentId).orElse(null);
         if (agent == null) return null;
 
@@ -43,7 +43,7 @@ public class ReActAgentManager {
         return buildContext(agentId, agent, configs);
     }
 
-    private ReActAgentContext buildContext(String agentId, Agent agent, List<AgentConfig> configs) {
+    private ReActAgentContext buildContext(java.lang.String agentId, Agent agent, List<AgentConfig> configs) {
         return ReActAgentContext.builder()
                 .agentId(agentId)
                 .agentName(agent.getName())
@@ -60,12 +60,12 @@ public class ReActAgentManager {
     }
 
 
-    private String resolveChatModelId(List<AgentConfig> configs) {
+    private java.lang.String resolveChatModelId(List<AgentConfig> configs) {
         return findConfigId(configs, AgentConfig.Category.MODEL, AgentConfig.Type.CHAT_MODEL);
     }
 
-    private String resolveSystemPrompt(List<AgentConfig> configs) {
-        String promptId = findConfigId(configs, AgentConfig.Category.PROMPT, AgentConfig.Type.SYSTEM_PROMPT);
+    private java.lang.String resolveSystemPrompt(List<AgentConfig> configs) {
+        java.lang.String promptId = findConfigId(configs, AgentConfig.Category.PROMPT, AgentConfig.Type.SYSTEM_PROMPT);
         if (promptId == null) return null;
         return promptTemplateRepository.findById(promptId).map(PromptTemplateInfo::content).orElse(null);
     }
@@ -102,8 +102,8 @@ public class ReActAgentManager {
     }
 
     private AgentToolInfo toHttpToolInfo(AgentConfig config) {
-        return httpToolRepository.findById(new HttpToolId(config.configId()))
-                .map(tool -> buildToolInfo(AgentToolType.HTTP_TOOLS, tool.id().value(), tool.name(), tool.description()))
+        return httpToolRepository.findById(new String(config.configId()))
+                .map(tool -> buildToolInfo(AgentToolType.HTTP_TOOLS, tool.id(), tool.name(), tool.description()))
                 .orElse(null);
     }
 
@@ -136,7 +136,7 @@ public class ReActAgentManager {
                 .orElse(null);
     }
 
-    private AgentToolInfo buildToolInfo(AgentToolType type, String id, String name, String description) {
+    private AgentToolInfo buildToolInfo(AgentToolType type, java.lang.String id, java.lang.String name, java.lang.String description) {
         return AgentToolInfo.builder()
                 .type(type)
                 .id(id)
@@ -147,14 +147,14 @@ public class ReActAgentManager {
     }
 
 
-    private List<String> resolveToolIds(List<AgentConfig> configs) {
+    private List<java.lang.String> resolveToolIds(List<AgentConfig> configs) {
         return configs.stream()
                 .filter(c -> c.category() == AgentConfig.Category.TOOL)
                 .map(AgentConfig::configId)
                 .toList();
     }
 
-    private List<String> resolveKnowledgeIds(List<AgentConfig> configs) {
+    private List<java.lang.String> resolveKnowledgeIds(List<AgentConfig> configs) {
         return configs.stream()
                 .filter(c -> c.type() == AgentConfig.Type.KNOWLEDGE_BASE)
                 .map(AgentConfig::configId)
@@ -162,30 +162,30 @@ public class ReActAgentManager {
     }
 
     private ModelStrategy resolveModelStrategy(List<AgentConfig> configs) {
-        String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.MODEL_STRATEGY);
+        java.lang.String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.MODEL_STRATEGY);
         if (id == null) return null;
         return modelStrategyRepository.findById(id).orElse(null);
     }
 
     private ToolStrategy resolveToolStrategy(List<AgentConfig> configs) {
-        String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.TOOL_STRATEGY);
+        java.lang.String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.TOOL_STRATEGY);
         if (id == null) return null;
         return toolStrategyRepository.findById(id).orElse(null);
     }
 
     private GuardrailStrategy resolveGuardrailStrategy(List<AgentConfig> configs) {
-        String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.GUARDRAIL_STRATEGY);
+        java.lang.String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.GUARDRAIL_STRATEGY);
         if (id == null) return null;
         return guardrailStrategyRepository.findById(id).orElse(null);
     }
 
     private RetrievalStrategy resolveRetrievalStrategy(List<AgentConfig> configs) {
-        String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.RETRIEVAL_STRATEGY);
+        java.lang.String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.RETRIEVAL_STRATEGY);
         if (id == null) return null;
         return retrievalStrategyRepository.findById(id).orElse(null);
     }
 
-    private String findConfigId(List<AgentConfig> configs, AgentConfig.Category category, AgentConfig.Type type) {
+    private java.lang.String findConfigId(List<AgentConfig> configs, AgentConfig.Category category, AgentConfig.Type type) {
         return configs.stream()
                 .filter(c -> c.category() == category && c.type() == type)
                 .findFirst()

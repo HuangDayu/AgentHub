@@ -1,6 +1,10 @@
 package com.agenthub.domain.model;
 
+import lombok.Getter;
+
 import java.time.Instant;
+
+import static com.agenthub.domain.model.AgentConfig.Type.*;
 
 /**
  * Agent配置关联 - 纵向表，管理Agent与各种配置的关联关系
@@ -17,27 +21,50 @@ public record AgentConfig(
         Instant createdAt,
         Instant updatedAt
 ) {
+    @Getter
     public enum Category {
-        STRATEGY,   // 策略
-        TOOL,       // 工具
-        PROMPT,     // 提示词
-        MODEL,       // 模型
-        KNOWLEDGE,   // 知识库
+        STRATEGY("策略配置", "Agent的策略相关配置", RETRIEVAL_STRATEGY, TOOL_STRATEGY, MODEL_STRATEGY, GUARDRAIL_STRATEGY),   // 策略
+        TOOL("工具配置", "Agent的工具相关配置", MCP_TOOL, SKILL_TOOL, FUNCTION_TOOL, HTTP_TOOL),       // 工具
+        PROMPT("提示词配置", "Agent的提示词相关配置", SYSTEM_PROMPT, ASSISTANT_PROMPT),     // 提示词
+        MODEL("模型配置", "Agent的模型相关配置", CHAT_MODEL, EMBEDDING_MODEL),       // 模型
+        KNOWLEDGE("知识库", "Agent的知识库相关配置", KNOWLEDGE_BASE);   // 知识库
+
+        private final String displayName;
+        private final String description;
+        private final Type[] types;
+
+        Category(String displayName, String description, Type... types) {
+            this.displayName = displayName;
+            this.description = description;
+            this.types = types;
+        }
+
     }
 
+    @Getter
     public enum Type {
-        RETRIEVAL_STRATEGY,      // 检索策略
-        TOOL_STRATEGY,  // 工具策略
-        MODEL_STRATEGY, // 模型策略
-        GUARDRAIL_STRATEGY,      // 护栏策略
-        SYSTEM_PROMPT,  // 系统提示词
-        CHAT_MODEL, // 聊天模型
-        EMBEDDING_MODEL, // 嵌入模型
-        KNOWLEDGE_BASE,   // 知识库
-        MCP_TOOL,        // MCP工具
-        SKILL_TOOL,        // Skill工具
-        FUNCTION_TOOL,        // Function工具
-        HTTP_TOOL,        // HTTP工具
+        RETRIEVAL_STRATEGY("检索策略", "知识检索策略配置"),      // 检索策略
+        TOOL_STRATEGY("工具策略", "工具调用策略配置"),  // 工具策略
+        MODEL_STRATEGY("模型策略", "模型调用策略配置"), // 模型策略
+        GUARDRAIL_STRATEGY("护栏策略", "输入输出护栏策略"),      // 护栏策略
+        SYSTEM_PROMPT("系统提示词", "Agent系统提示词模板"),  // 系统提示词
+        ASSISTANT_PROMPT("助理提示词", "Agent助理提示词模板"), // 助手提示词
+        CHAT_MODEL("聊天模型", "对话模型配置"), // 聊天模型
+        EMBEDDING_MODEL("嵌入模型", "向量嵌入模型配置"), // 嵌入模型
+        KNOWLEDGE_BASE("知识库", "知识库配置"),   // 知识库
+        MCP_TOOL("MCP工具", "MCP协议工具配置"),        // MCP工具
+        SKILL_TOOL("技能工具", "Skill技能配置"),        // Skill工具
+        FUNCTION_TOOL("函数工具", "Function工具配置"),        // Function工具
+        HTTP_TOOL("Http工具", "Http工具配置");       // HTTP工具
+
+        private final String displayName;
+        private final String description;
+
+        Type(String displayName, String description) {
+            this.displayName = displayName;
+            this.description = description;
+        }
+
     }
 
     public static AgentConfig create(String agentId, Category category, Type type,

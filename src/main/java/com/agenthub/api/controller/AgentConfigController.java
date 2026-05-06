@@ -28,6 +28,14 @@ public class AgentConfigController {
         return toResponse(result);
     }
 
+    @PutMapping("/{id}")
+    public AgentConfigResponse updateConfig(@PathVariable String agentId, @PathVariable String id,
+                                            @RequestBody SetAgentConfigRequest request) {
+        AgentConfigOutput result = useCase.updateConfig(id, agentId, request.category(), request.type(),
+                request.configId(), request.description(), request.priority(), request.enabled());
+        return toResponse(result);
+    }
+
     @GetMapping
     public List<AgentConfigResponse> listConfigs(@PathVariable String agentId,
                                                   @RequestParam(required = false) String category) {

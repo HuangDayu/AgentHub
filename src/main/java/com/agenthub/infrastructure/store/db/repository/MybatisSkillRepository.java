@@ -1,10 +1,10 @@
 package com.agenthub.infrastructure.store.db.repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.SkillRepository;
 import com.agenthub.domain.model.Skill;
 import com.agenthub.infrastructure.store.db.entity.SkillEntity;
 import com.agenthub.infrastructure.store.db.mapper.SkillMybatisMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -41,13 +41,20 @@ public class MybatisSkillRepository implements SkillRepository {
     public List<Skill> findByTenantIdAndWorkspaceId(String tenantId, String workspaceId) {
         LambdaQueryWrapper<SkillEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SkillEntity::getTenantId, tenantId)
-               .eq(SkillEntity::getWorkspaceId, workspaceId);
+                .eq(SkillEntity::getWorkspaceId, workspaceId);
         return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
     }
 
     @Override
     public void deleteById(String skillId) {
         mapper.deleteById(skillId);
+    }
+
+    @Override
+    public List<Skill> findByWorkspaceId(String workspaceId) {
+        LambdaQueryWrapper<SkillEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SkillEntity::getWorkspaceId, workspaceId);
+        return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
     }
 
     private SkillEntity toEntity(Skill skill) {

@@ -2,6 +2,7 @@ package com.agenthub.application.port.out.repositories;
 
 import com.agenthub.domain.model.Skill;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +20,6 @@ public interface SkillRepository {
     List<Skill> findByTenantIdAndWorkspaceId(String tenantId, String workspaceId);
 
     void deleteById(String skillId);
+
+    List<Skill> findByWorkspaceId(String workspaceId);
 }

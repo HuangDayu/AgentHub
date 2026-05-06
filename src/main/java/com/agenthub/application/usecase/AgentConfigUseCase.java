@@ -28,6 +28,13 @@ public class AgentConfigUseCase {
         return createNew(agentId, category, type, configId, description, priority);
     }
 
+    public AgentConfigOutput updateConfig(String id, String agentId, String category, String type,
+                                          String configId, String description, Integer priority, Boolean enabled) {
+        AgentConfig existing = repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Agent config not found: " + id));
+        return updateExisting(existing, configId, description, priority, enabled);
+    }
+
     public List<AgentConfigOutput> listConfigs(String agentId) {
         return repository.findByAgentId(agentId).stream().map(this::toResult).toList();
     }
