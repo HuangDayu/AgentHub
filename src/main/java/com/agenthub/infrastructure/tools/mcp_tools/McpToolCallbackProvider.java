@@ -22,14 +22,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class McpToolCallbackProvider {
 
-    private final McpToolRepository mcpToolRepository;
+
     private final McpClientManager mcpClientManager;
 
     /**
      * 根据workspaceId获取所有MCP工具的ToolCallback。
      */
-    public Set<ToolCallback> getToolCallbacks() {
-        List<McpTool> mcpTools = mcpToolRepository.findList();
+    public Set<ToolCallback> getToolCallbacks(List<McpTool> mcpTools) {
         return convertToToolCallbacks(mcpTools);
     }
 

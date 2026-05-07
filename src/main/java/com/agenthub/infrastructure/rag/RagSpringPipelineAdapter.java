@@ -3,11 +3,11 @@ package com.agenthub.infrastructure.rag;
 import com.agenthub.application.command.RagCommand;
 import com.agenthub.application.port.out.rag.RetrievalAugmentedGenerationPort;
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
-import com.agenthub.application.port.out.repositories.FunctionToolsRepository;
-import com.agenthub.domain.model.FunctionTool;
+import com.agenthub.application.port.out.repositories.SystemToolsRepository;
+import com.agenthub.domain.model.SystemTool;
 import com.agenthub.domain.model.ModelStrategy;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
-import com.agenthub.infrastructure.tools.function_tools.FunctionToolsFactory;
+import com.agenthub.infrastructure.tools.system_tools.SystemToolsFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
@@ -51,8 +51,8 @@ public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPor
 
     private final SpringShareObjectFactory springShareObjectFactory;
     private final AgentConfigRepository agentConfigRepository;
-    private final FunctionToolsRepository functionToolsRepository;
-    private final FunctionToolsFactory functionToolsFactory;
+    private final SystemToolsRepository systemToolsRepository;
+    private final SystemToolsFactory systemToolsFactory;
 
 
     @Override
@@ -83,15 +83,15 @@ public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPor
         options.setTopP(modelStrategy.getTopP());
         options.setMaxTokens(modelStrategy.getMaxTokens());
         options.setInternalToolExecutionEnabled(true);
-        options.setToolCallbacks(getFunctionTools());
+        options.setToolCallbacks(getSystemTools());
         options.setToolContext(Map.of(ragCommand.agentId(), ragCommand));
         return options;
     }
 
-    private List<ToolCallback> getFunctionTools() {
-        Set<String> functionSet = functionToolsRepository.findByEnabled(true).stream()
-                .map(FunctionTool::getToolClassName).collect(Collectors.toSet());
-        return functionToolsFactory.getToolCallbacks().stream()
+    private List<ToolCallback> getSystemTools() {
+        Set<String> functionSet = systemToolsRepository.findByEnabled(true).stream()
+                .map(SystemTool::getToolClassName).collect(Collectors.toSet());
+        return systemToolsFactory.getAllToolCallbacks().stream()
                 .filter(toolCallback -> functionSet.contains(toolCallback.getClass().getName()))
                 .collect(Collectors.toList());
     }

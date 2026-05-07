@@ -7,7 +7,7 @@ public record CreateSkillRequest(
         String name,
         String description,
         String skillType,
-        String definition,
-        String parameters
+        String skillPath,
+        String skillFilesTree
 ) {
 }

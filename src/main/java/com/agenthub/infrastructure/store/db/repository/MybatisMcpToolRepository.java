@@ -58,6 +58,15 @@ public class MybatisMcpToolRepository implements McpToolRepository {
         return toDomain(entity);
     }
 
+    @Override
+    public List<McpTool> findByIds(List<String> toolIds) {
+        if (toolIds == null || toolIds.isEmpty()) {
+            return List.of();
+        }
+        List<McpToolEntity> mcpToolEntities = mapper.selectByIds(toolIds);
+        return mcpToolEntities.stream().map(this::toDomain).toList();
+    }
+
     private McpToolEntity toEntity(McpTool tool) {
         McpToolEntity entity = new McpToolEntity();
         entity.setId(tool.id());

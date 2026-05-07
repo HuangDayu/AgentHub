@@ -36,4 +36,7 @@ public interface HttpToolRepository {
     List<HttpTool> findAll();
 
     List<HttpTool> findByWorkspaceId(java.lang.String workspaceId);
+
+    List<HttpTool> findByIds(List<String> toolIds);
+
 }

@@ -22,4 +22,7 @@ public interface SkillRepository {
     void deleteById(String skillId);
 
     List<Skill> findByWorkspaceId(String workspaceId);
+
+    List<Skill> findByIds(List<String> toolIds);
+
 }

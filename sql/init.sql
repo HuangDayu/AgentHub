@@ -1,5 +1,5 @@
 -- =========================================================
--- Things Knowledge Platform - Seed Data
+-- AgentHub Test Data - Seed Data
 -- Purpose: Initialize admin, tenants, users, and role bindings
 -- Passwords: admin=admin123, others=user123 (BCrypt)
 -- Idempotent: Safe to run multiple times

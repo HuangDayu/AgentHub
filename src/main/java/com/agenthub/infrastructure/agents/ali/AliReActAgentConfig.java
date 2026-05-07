@@ -8,6 +8,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallback;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Agent运行时配置值对象。
@@ -20,6 +21,7 @@ public record AliReActAgentConfig(
         List<Hook> hooks,
         List<Interceptor> interceptors,
         BaseCheckpointSaver saver,
-        BaseStore store
+        BaseStore store,
+        Map<String, Object> toolContext
 ) {
 }

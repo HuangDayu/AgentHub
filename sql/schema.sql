@@ -1,5 +1,5 @@
 -- =========================================================
--- Things Knowledge Platform - Auto-generated Schema
+-- AgentHub - Auto-generated Schema
 -- Generated: 2026-05-06T11:21:11.187934100Z
 -- Source: MyBatis-Plus Entity Classes
 -- =========================================================
@@ -32,7 +32,7 @@ SET search_path TO app, public;
 -- DROP TABLE IF EXISTS app.iam_refresh_token_session CASCADE;
 -- DROP TABLE IF EXISTS app.http_tools CASCADE;
 -- DROP TABLE IF EXISTS app.guardrail_policy CASCADE;
--- DROP TABLE IF EXISTS app.function_tools CASCADE;
+-- DROP TABLE IF EXISTS app.system_tools CASCADE;
 -- DROP TABLE IF EXISTS app.document_chunk CASCADE;
 -- DROP TABLE IF EXISTS app.chat_message CASCADE;
 -- DROP TABLE IF EXISTS app.app_user CASCADE;
@@ -134,8 +134,8 @@ CREATE TABLE IF NOT EXISTS app.document_chunk
     PRIMARY KEY (id)
 );
 
--- Table: app.function_tools
-CREATE TABLE IF NOT EXISTS app.function_tools
+-- Table: app.system_tools
+CREATE TABLE IF NOT EXISTS app.system_tools
 (
     id              varchar(64) NOT NULL,
     tenant_id       varchar(255),
@@ -534,8 +534,8 @@ CREATE INDEX IF NOT EXISTS idx_document_chunk_chunk_id ON app.document_chunk (ch
 CREATE INDEX IF NOT EXISTS idx_document_chunk_document_id ON app.document_chunk (document_id);
 CREATE INDEX IF NOT EXISTS idx_document_chunk_kb_id ON app.document_chunk (kb_id);
 
-CREATE INDEX IF NOT EXISTS idx_function_tools_tenant_id ON app.function_tools (tenant_id);
-CREATE INDEX IF NOT EXISTS idx_function_tools_workspace_id ON app.function_tools (workspace_id);
+CREATE INDEX IF NOT EXISTS idx_system_tools_tenant_id ON app.system_tools (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_system_tools_workspace_id ON app.system_tools (workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_guardrail_policy_tenant_id ON app.guardrail_policy (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_guardrail_policy_workspace_id ON app.guardrail_policy (workspace_id);

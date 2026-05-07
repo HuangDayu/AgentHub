@@ -1,7 +1,7 @@
 package com.agenthub.test.integration;
 
 import cn.hutool.core.io.FileUtil;
-import com.agenthub.infrastructure.tools.function_tools.FunctionToolsFactory;
+import com.agenthub.infrastructure.tools.system_tools.SystemToolsFactory;
 import com.agenthub.test.TestAgentHubApplication;
 import com.agenthub.infrastructure.agents.ali.saver.PostgresSaver;
 import com.alibaba.cloud.ai.graph.OverAllState;
@@ -55,7 +55,7 @@ public class SpringAiAlibabaReActAgentIntegrationTest {
     private DataSource dataSource;
 
     @Resource
-    private FunctionToolsFactory functionToolsFactory;
+    private SystemToolsFactory systemToolsFactory;
 
     @SneakyThrows
     @Test
@@ -68,7 +68,7 @@ public class SpringAiAlibabaReActAgentIntegrationTest {
                 .name("my_agent")
                 .model(chatModel)
 //                .outputType(StreamingOutput.class)
-                .tools(new ArrayList<>(functionToolsFactory.getToolCallbacks()))
+                .tools(new ArrayList<>(systemToolsFactory.getAllToolCallbacks()))
                 .systemPrompt(systemPrompt)
                 .saver(PostgresSaver.builder().datasource(dataSource).createTables(false).dropTablesFirst(false).build())
                 .hooks(new LoggingHook())

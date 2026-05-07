@@ -18,15 +18,24 @@ public class AgentToolsFactory {
 
     private final List<AbstractToolsFactory> abstractToolsFactory;
 
-    public Set<ToolCallback> getToolCallbacks(AgentToolType toolType) {
+    public Set<ToolCallback> getToolCallback(AgentToolType toolType, String toolName) {
         return abstractToolsFactory.stream()
                 .filter(toolCallback -> toolType.equals(toolCallback.getToolInfo().getType()))
-                .findFirst().orElseThrow().getToolCallbacks();
+                .findFirst().orElseThrow().getToolCallbacks(toolName);
+    }
+
+    public Set<ToolCallback> getToolCallbacks(AgentToolType toolType, List<String> toolIds) {
+        if (toolIds == null || toolIds.isEmpty()) {
+            return Set.of();
+        }
+        return abstractToolsFactory.stream()
+                .filter(toolCallback -> toolType.equals(toolCallback.getToolInfo().getType()))
+                .findFirst().orElseThrow().getToolCallbacks(toolIds);
     }
 
     public Set<ToolCallback> getToolCallbacks() {
         return abstractToolsFactory.stream()
-                .map(AbstractToolsFactory::getToolCallbacks)
+                .map(AbstractToolsFactory::getAllToolCallbacks)
                 .flatMap(Set::stream)
                 .collect(Collectors.toSet());
     }

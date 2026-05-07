@@ -10,8 +10,8 @@ public record SkillResponse(
         String name,
         String description,
         String skillType,
-        String definition,
-        String parameters,
+        String skillPath,
+        String skillFilesTree,
         boolean enabled,
         Instant createdAt,
         Instant updatedAt

@@ -57,6 +57,14 @@ public class MybatisSkillRepository implements SkillRepository {
         return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public List<Skill> findByIds(List<String> toolIds) {
+        if (toolIds == null || toolIds.isEmpty()) {
+            return List.of();
+        }
+        return mapper.selectByIds(toolIds).stream().map(this::toDomain).toList();
+    }
+
     private SkillEntity toEntity(Skill skill) {
         SkillEntity entity = new SkillEntity();
         entity.setId(skill.getId());
@@ -66,8 +74,8 @@ public class MybatisSkillRepository implements SkillRepository {
         entity.setName(skill.getName());
         entity.setDescription(skill.getDescription());
         entity.setSkillType(skill.getSkillType());
-        entity.setDefinition(skill.getDefinition());
-        entity.setParameters(skill.getParameters());
+        entity.setSkillFilesTree(skill.getSkillFilesTree());
+        entity.setSkillPath(skill.getSkillPath());
         entity.setEnabled(skill.isEnabled());
         entity.setCreatedAt(skill.getCreatedAt());
         entity.setUpdatedAt(skill.getUpdatedAt());
@@ -83,8 +91,8 @@ public class MybatisSkillRepository implements SkillRepository {
         skill.setName(entity.getName());
         skill.setDescription(entity.getDescription());
         skill.setSkillType(entity.getSkillType());
-        skill.setDefinition(entity.getDefinition());
-        skill.setParameters(entity.getParameters());
+        skill.setSkillFilesTree(entity.getSkillFilesTree());
+        skill.setSkillPath(entity.getSkillPath());
         skill.setEnabled(entity.isEnabled());
         skill.setCreatedAt(entity.getCreatedAt());
         skill.setUpdatedAt(entity.getUpdatedAt());

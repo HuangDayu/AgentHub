@@ -1,327 +1,209 @@
 package com.agenthub.infrastructure.tools.skills_tools;
 
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
+import com.agenthub.application.port.out.tools.SkillToolScannerPort;
+import com.agenthub.domain.model.Skill;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import static com.agenthub.common.utils.RandomUtils.randomId;
 
 /**
- * 技能文件管理器，提供技能文件系统的统一管理接口。
+ * 技能文件管理器，负责技能路径下的文件扫描、网络压缩包的下载解压。
  *
  * @author huangdayu
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class SkillFileManager {
+public class SkillFileManager implements SkillToolScannerPort {
 
-    private final SkillValidator skillValidator;
-    private final SkillInstaller skillInstaller;
-    private final Path skillsRootPath;
 
-    @Value("${agenthub.skills.auto-register:true}")
-    private boolean autoRegisterSkills;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Getter
+    private final Map<String, Skill> allSkills = new ConcurrentHashMap<>();
 
-    private final Map<String, SkillPackage> skillCache = new HashMap<>();
-    private volatile boolean initialized = false;
-
-    @PostConstruct
-    public void init() {
-        if (autoRegisterSkills) {
-            this.initialize();
-        }
+    @Override
+    public List<Skill> scanSkills(String skillsPath) {
+        return scanSkills(Path.of(skillsPath)).values().stream().toList();
     }
 
-    /**
-     * 初始化技能管理器。
-     */
-    public synchronized void initialize() {
-        if (initialized) {
-            log.info("SkillFileManager already initialized");
-            return;
-        }
-
-        log.info("Initializing SkillFileManager with root path: {}", skillsRootPath);
-
-        if (!ensureRootDirectory()) return;
-
-        scanSkills();
-        initialized = true;
-        log.info("SkillFileManager initialized with {} skills", skillCache.size());
-    }
-
-    /**
-     * 确保根目录存在。
-     */
-    private boolean ensureRootDirectory() {
-        if (Files.exists(skillsRootPath)) return true;
-
-        try {
-            Files.createDirectories(skillsRootPath);
-            log.info("Created skills root directory: {}", skillsRootPath);
-            return true;
-        } catch (IOException e) {
-            log.error("Failed to create skills root directory", e);
-            return false;
-        }
-    }
-
-    /**
-     * 扫描技能目录。
-     */
-    public void scanSkills() {
+    public Map<String, Skill> scanSkills(Path skillsRootPath) {
         log.info("Scanning skills in: {}", skillsRootPath);
-
         try (Stream<Path> stream = Files.list(skillsRootPath)) {
-            List<Path> skillPaths = stream.filter(Files::isDirectory).collect(Collectors.toList());
-            Map<String, SkillPackage> newCache = loadSkills(skillPaths);
-            updateCache(newCache);
-            log.info("Scanned {} skills", skillCache.size());
+            Map<String, Skill> skillMap = loadAllSkills(stream);
+            allSkills.putAll(skillMap);
+            log.info("Scanned {} skills , sum {} skills", skillMap.size(), allSkills.size());
+            return skillMap;
         } catch (IOException e) {
             log.error("Failed to scan skills", e);
         }
+        return Map.of();
     }
 
-    /**
-     * 加载所有技能。
-     */
-    private Map<String, SkillPackage> loadSkills(List<Path> skillPaths) {
-        Map<String, SkillPackage> newCache = new HashMap<>();
-
-        for (Path skillPath : skillPaths) {
-            loadSkillSafely(skillPath, newCache);
-        }
-
-        return newCache;
+    private Map<String, Skill> loadAllSkills(Stream<Path> stream) {
+        Map<String, Skill> cache = new HashMap<>();
+        stream.filter(Files::isDirectory).forEach(p -> loadSkillFromPath(p).ifPresent(s -> cache.put(s.getSkillCode(), s)));
+        return cache;
     }
 
-    /**
-     * 安全加载技能。
-     */
-    private void loadSkillSafely(Path skillPath, Map<String, SkillPackage> newCache) {
+    private Optional<Skill> loadSkillFromPath(Path skillPath) {
+        Path skillMdPath = skillPath.resolve("SKILL.md");
+        if (!Files.exists(skillMdPath)) return Optional.empty();
         try {
-            SkillPackage skillPackage = loadSkillPackage(skillPath);
-            if (skillPackage != null) {
-                newCache.put(skillPackage.getManifest().getCode(), skillPackage);
+            return parseSkillMd(skillPath, skillMdPath);
+        } catch (IOException e) {
+            log.error("Failed to read SKILL.md in: {}", skillPath, e);
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Skill> parseSkillMd(Path skillPath, Path skillMdPath) throws IOException {
+        List<String> lines = Files.readAllLines(skillMdPath);
+        if (lines.size() < 4) return Optional.empty();
+        String skillCode = skillPath.getFileName().toString();
+        String name = lines.get(1).trim();
+        String description = lines.get(2).trim();
+        String path = skillPath.toString();
+        String skillFilesTree = buildFilesTreeJson(skillPath);
+        return Optional.of(createSkill(skillCode, name, description, path, skillFilesTree));
+    }
+
+    private Skill createSkill(String skillCode, String name, String description, String path, String skillFilesTree) {
+        Skill skill = new Skill();
+        skill.setId(randomId());
+        skill.setSkillCode(skillCode);
+        skill.setName(name);
+        skill.setDescription(description);
+        skill.setSkillType("FILE");
+        skill.setSkillPath(path);
+        skill.setSkillFilesTree(skillFilesTree);
+        skill.setEnabled(true);
+        skill.setCreatedAt(Instant.now());
+        skill.setUpdatedAt(Instant.now());
+        return skill;
+    }
+
+    private String buildFilesTreeJson(Path skillPath) {
+        try {
+            Map<String, Object> tree = buildDirectoryTree(skillPath, skillPath);
+            return objectMapper.writeValueAsString(tree);
+        } catch (Exception e) {
+            log.error("Failed to build files tree for: {}", skillPath, e);
+            return "{}";
+        }
+    }
+
+    private Map<String, Object> buildDirectoryTree(Path rootPath, Path currentPath) throws IOException {
+        Map<String, Object> node = new LinkedHashMap<>();
+        node.put("name", currentPath.getFileName().toString());
+        node.put("path", rootPath.relativize(currentPath).toString().replace("\\", "/"));
+        BasicFileAttributes attrs = Files.readAttributes(currentPath, BasicFileAttributes.class);
+        node.put("isDirectory", attrs.isDirectory());
+        node.put("size", attrs.size());
+        node.put("lastModified", attrs.lastModifiedTime().toInstant().toString());
+        if (attrs.isDirectory()) addChildren(rootPath, currentPath, node);
+        return node;
+    }
+
+    private void addChildren(Path rootPath, Path currentPath, Map<String, Object> node) throws IOException {
+        List<Map<String, Object>> children = new ArrayList<>();
+        try (Stream<Path> stream = Files.list(currentPath)) {
+            stream.sorted(Comparator.comparing(Path::getFileName))
+                    .forEach(p -> addChild(rootPath, p, children));
+        }
+        node.put("children", children);
+    }
+
+    private void addChild(Path rootPath, Path p, List<Map<String, Object>> children) {
+        try {
+            children.add(buildDirectoryTree(rootPath, p));
+        } catch (IOException e) {
+            log.warn("Failed to process: {}", p, e);
+        }
+    }
+
+    public Skill downloadAndExtract(Path skillsRootPath, String url, String skillCode) throws IOException {
+        log.info("Downloading skill from: {}", url);
+        Path targetPath = skillsRootPath.resolve(skillCode);
+        if (Files.exists(targetPath)) deleteDirectory(targetPath);
+        Files.createDirectories(targetPath);
+        extractZip(url, targetPath);
+        log.info("Extracted skill to: {}", targetPath);
+        return loadExtractedSkill(skillCode, targetPath);
+    }
+
+    private void extractZip(String url, Path targetPath) throws IOException {
+        try (ZipInputStream zis = new ZipInputStream(new URL(url).openStream())) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                extractEntry(targetPath, zis, entry);
+                zis.closeEntry();
             }
-        } catch (Exception e) {
-            log.warn("Failed to load skill from: {}", skillPath, e);
         }
     }
 
-    /**
-     * 更新缓存。
-     */
-    private synchronized void updateCache(Map<String, SkillPackage> newCache) {
-        skillCache.clear();
-        skillCache.putAll(newCache);
-    }
-
-    /**
-     * 加载技能包。
-     */
-    private SkillPackage loadSkillPackage(Path skillPath) {
-        SkillValidator.ValidationResult validation = skillValidator.validate(skillPath);
-        SkillPackage skillPackage = SkillPackage.of(skillPath, validation.getManifest());
-        skillPackage.setInstalledAt(Instant.now());
-
-        if (validation.isValid()) {
-            skillPackage.setStatus(SkillPackage.InstallStatus.INSTALLED);
-            skillPackage.setValidationStatus(SkillPackage.ValidationStatus.VALID);
+    private void extractEntry(Path targetPath, ZipInputStream zis, ZipEntry entry) throws IOException {
+        Path entryPath = targetPath.resolve(entry.getName());
+        if (entry.isDirectory()) {
+            Files.createDirectories(entryPath);
         } else {
-            skillPackage.setStatus(SkillPackage.InstallStatus.INSTALL_FAILED);
-            skillPackage.setValidationStatus(SkillPackage.ValidationStatus.INVALID);
-            skillPackage.setValidationMessage(validation.getErrorMessage());
-        }
-
-        return skillPackage;
-    }
-
-    /**
-     * 获取所有已安装的技能。
-     */
-    public List<SkillPackage> getAllSkills() {
-        ensureInitialized();
-        return new ArrayList<>(skillCache.values());
-    }
-
-    /**
-     * 获取所有有效的技能。
-     */
-    public List<SkillPackage> getValidSkills() {
-        ensureInitialized();
-        return skillCache.values().stream()
-                .filter(SkillPackage::isValid)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 根据技能代码获取技能。
-     */
-    public Optional<SkillPackage> getSkill(String skillCode) {
-        ensureInitialized();
-        return Optional.ofNullable(skillCache.get(skillCode));
-    }
-
-    /**
-     * 检查技能是否已安装。
-     */
-    public boolean isInstalled(String skillCode) {
-        ensureInitialized();
-        return skillCache.containsKey(skillCode);
-    }
-
-    /**
-     * 安装技能。
-     */
-    public SkillPackage install(Path sourcePath) {
-        log.info("Installing skill from: {}", sourcePath);
-
-        SkillInstaller.InstallResult result = skillInstaller.install(sourcePath);
-
-        if (result.isSuccess()) {
-            return handleInstallSuccess(result);
-        }
-        throw new SkillManagementException("Installation failed: " + result.getErrorMessage());
-    }
-
-    /**
-     * 处理安装成功。
-     */
-    private SkillPackage handleInstallSuccess(SkillInstaller.InstallResult result) {
-        SkillPackage skillPackage = loadSkillPackage(result.getInstalledPath());
-        skillCache.put(skillPackage.getManifest().getCode(), skillPackage);
-        return skillPackage;
-    }
-
-    /**
-     * 卸载技能。
-     */
-    public void uninstall(String skillCode) {
-        log.info("Uninstalling skill: {}", skillCode);
-
-        if (!skillCache.containsKey(skillCode)) {
-            throw new SkillManagementException("Skill not found: " + skillCode);
-        }
-
-        SkillInstaller.UninstallResult result = skillInstaller.uninstall(skillCode);
-
-        if (result.isSuccess()) {
-            skillCache.remove(skillCode);
-        } else {
-            throw new SkillManagementException("Uninstallation failed: " + result.getErrorMessage());
+            Files.createDirectories(entryPath.getParent());
+            Files.copy(zis, entryPath, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
-    /**
-     * 更新技能。
-     */
-    public SkillPackage update(String skillCode, Path sourcePath) {
-        log.info("Updating skill: {}", skillCode);
-
-        SkillInstaller.UpdateResult result = skillInstaller.update(skillCode, sourcePath);
-
-        if (result.isSuccess()) {
-            return handleUpdateSuccess(skillCode, result);
+    private Skill loadExtractedSkill(String skillCode, Path targetPath) throws IOException {
+        Optional<Skill> skill = loadSkillFromPath(targetPath);
+        if (skill.isPresent()) {
+            return skill.get();
         }
-        throw new SkillManagementException("Update failed: " + result.getErrorMessage());
+        throw new IOException("Failed to load skill after extraction: " + skillCode);
     }
 
-    /**
-     * 处理更新成功。
-     */
-    private SkillPackage handleUpdateSuccess(String skillCode, SkillInstaller.UpdateResult result) {
-        SkillPackage skillPackage = loadSkillPackage(result.getUpdatedPath());
-        skillCache.put(skillCode, skillPackage);
-        return skillPackage;
-    }
-
-    /**
-     * 校验技能。
-     */
-    public SkillPackage validate(String skillCode) {
-        Optional<SkillPackage> skillOpt = getSkill(skillCode);
-
-        if (skillOpt.isEmpty()) {
-            throw new SkillManagementException("Skill not found: " + skillCode);
+    private void deleteDirectory(Path path) throws IOException {
+        if (!Files.exists(path)) return;
+        try (Stream<Path> stream = Files.walk(path)) {
+            stream.sorted(Comparator.reverseOrder()).forEach(this::deletePath);
         }
-
-        return performValidation(skillOpt.get());
     }
 
-    /**
-     * 执行校验。
-     */
-    private SkillPackage performValidation(SkillPackage skillPackage) {
-        SkillValidator.ValidationResult validation = skillValidator.validate(skillPackage.getPath());
-
-        if (validation.isValid()) {
-            skillPackage.setValidationStatus(SkillPackage.ValidationStatus.VALID);
-            skillPackage.setValidationMessage(null);
-        } else {
-            skillPackage.setValidationStatus(SkillPackage.ValidationStatus.INVALID);
-            skillPackage.setValidationMessage(validation.getErrorMessage());
-        }
-
-        return skillPackage;
-    }
-
-    /**
-     * 校验所有技能。
-     */
-    public List<SkillPackage> validateAll() {
-        ensureInitialized();
-
-        List<SkillPackage> results = new ArrayList<>();
-        for (SkillPackage skillPackage : skillCache.values()) {
-            validateSkillSafely(skillPackage, results);
-        }
-
-        return results;
-    }
-
-    /**
-     * 安全校验技能。
-     */
-    private void validateSkillSafely(SkillPackage skillPackage, List<SkillPackage> results) {
+    private void deletePath(Path p) {
         try {
-            SkillPackage validated = validate(skillPackage.getManifest().getCode());
-            results.add(validated);
-        } catch (Exception e) {
-            log.warn("Failed to validate skill: {}", skillPackage.getName(), e);
+            Files.delete(p);
+        } catch (IOException e) {
+            log.warn("Failed to delete: {}", p, e);
         }
     }
 
-    /**
-     * 获取技能数量。
-     */
-    public int getSkillCount() {
-        return skillCache.size();
+    public Path getSkillPath(Path skillsRootPath, String skillCode) {
+        return skillsRootPath.resolve(skillCode);
     }
 
-    /**
-     * 刷新技能缓存。
-     */
-    public void refresh() {
-        scanSkills();
+
+    public void refresh(Path skillsRootPath) {
+        scanSkills(skillsRootPath);
         log.info("Skill cache refreshed");
     }
 
-    /**
-     * 确保已初始化。
-     */
-    private void ensureInitialized() {
-        if (!initialized) {
-            initialize();
-        }
+    public void deleteSkill(Path skillsRootPath, String skillCode) throws IOException {
+        Path skillPath = skillsRootPath.resolve(skillCode);
+        deleteDirectory(skillPath);
+        log.info("Deleted skill: {}", skillCode);
     }
+
+
 }

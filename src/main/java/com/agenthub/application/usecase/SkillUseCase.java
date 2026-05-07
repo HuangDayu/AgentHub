@@ -16,9 +16,9 @@ public class SkillUseCase {
 
     public SkillOutput create(String tenantId, String workspaceId, String skillCode,
                               String name, String description, String skillType,
-                              String definition, String parameters) {
+                              String skillPath, String skillFilesTree) {
         Skill skill = Skill.create(tenantId, workspaceId, skillCode,
-                name, description, skillType, definition, parameters);
+                name, description, skillType, skillPath, skillFilesTree);
         return toOutput(repository.save(skill));
     }
 
@@ -36,9 +36,9 @@ public class SkillUseCase {
     }
 
     public SkillOutput update(String skillId, String name, String description,
-                              String definition, String parameters) {
+                              String skillFilesTree) {
         Skill skill = findById(skillId);
-        skill.update(name, description, definition, parameters);
+        skill.update(name, description, skillFilesTree);
         return toOutput(repository.save(skill));
     }
 
@@ -67,7 +67,7 @@ public class SkillUseCase {
     private SkillOutput toOutput(Skill skill) {
         return new SkillOutput(skill.getId(), skill.getTenantId(), skill.getWorkspaceId(),
                 skill.getSkillCode(), skill.getName(), skill.getDescription(),
-                skill.getSkillType(), skill.getDefinition(), skill.getParameters(),
+                skill.getSkillType(), skill.getSkillPath(), skill.getSkillFilesTree(),
                 skill.isEnabled(), skill.getCreatedAt(), skill.getUpdatedAt());
     }
 }

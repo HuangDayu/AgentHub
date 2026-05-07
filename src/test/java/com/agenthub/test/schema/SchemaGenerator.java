@@ -28,7 +28,7 @@ public class SchemaGenerator {
     /** Schema文件头部模板 */
     private static final String SCHEMA_HEADER = """
             -- =========================================================
-            -- Things Knowledge Platform - Auto-generated Schema
+            -- AgentHub - Auto-generated Schema
             -- Generated: %s
             -- Source: MyBatis-Plus Entity Classes
             -- =========================================================

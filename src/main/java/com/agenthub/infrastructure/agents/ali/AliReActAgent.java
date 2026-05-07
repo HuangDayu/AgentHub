@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.agents.ali;
 
 import com.agenthub.infrastructure.agents.AbstractReActAgent;
-import com.agenthub.infrastructure.agents.ReActAgentContext;
+import com.agenthub.domain.model.ReActAgentContext;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import lombok.SneakyThrows;

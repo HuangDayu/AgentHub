@@ -84,7 +84,7 @@ async function handleLogin() {
     const tokenKey = 'agenthub_access_token'
     localStorage.setItem(tokenKey, tokens.accessToken)
     localStorage.setItem('agenthub_refresh_token', tokens.refreshToken)
-    localStorage.setItem('things_knowledge_username', username.value)
+    localStorage.setItem('agenthub_username', username.value)
 
     // Step 3: Navigate to AgentHub console
     router.push('/agenthub')

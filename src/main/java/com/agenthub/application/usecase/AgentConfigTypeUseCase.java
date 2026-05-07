@@ -23,7 +23,7 @@ public class AgentConfigTypeUseCase {
     private final McpToolRepository mcpToolRepository;
     private final PromptTemplateRepository templateRepository;
     private final SkillRepository skillRepository;
-    private final FunctionToolsRepository functionToolsRepository;
+    private final SystemToolsRepository systemToolsRepository;
     private final HttpToolRepository httpToolRepository;
 
     public List<AvailableConfigOutput> getAvailableConfigs(String category, String type, String workspaceId) {
@@ -40,7 +40,7 @@ public class AgentConfigTypeUseCase {
             case TOOL -> switch (value) {
                 case MCP_TOOL -> getMcpTools(workspaceId);
                 case SKILL_TOOL -> getSkillTools(workspaceId);
-                case FUNCTION_TOOL -> getFunctionTools(workspaceId);
+                case SYSTEM_TOOL -> getSystemTools(workspaceId);
                 case HTTP_TOOL -> getHttpTools(workspaceId);
                 default -> List.of();
             };
@@ -64,8 +64,8 @@ public class AgentConfigTypeUseCase {
                 .map(v -> new AvailableConfigOutput(v.id(), v.name(), v.description())).toList();
     }
 
-    private List<AvailableConfigOutput> getFunctionTools(String workspaceId) {
-        return functionToolsRepository.findByWorkspaceId(workspaceId).stream()
+    private List<AvailableConfigOutput> getSystemTools(String workspaceId) {
+        return systemToolsRepository.findByWorkspaceId(workspaceId).stream()
                 .map(v -> new AvailableConfigOutput(v.getId(), v.getToolName(), v.getDescription())).toList();
     }
 

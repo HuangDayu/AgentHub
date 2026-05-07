@@ -23,21 +23,22 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
 
     @Override
     public AgentConfig save(AgentConfig config) {
-        AgentConfigEntity entity = toEntity(config);
-        if (exists(entity)) {
-            throw new IllegalArgumentException("AgentConfig already exists.");
+        AgentConfigEntity newEntity = toEntity(config);
+        AgentConfigEntity oldEntity = exists(newEntity);
+        if (oldEntity != null) {
+            newEntity.setId(oldEntity.getId());
         }
-        mapper.insert(entity);
-        return toDomain(entity);
+        mapper.insertOrUpdate(newEntity);
+        return toDomain(newEntity);
     }
 
-    private boolean exists(AgentConfigEntity entity) {
+    private AgentConfigEntity exists(AgentConfigEntity entity) {
         LambdaQueryWrapper<AgentConfigEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(AgentConfigEntity::getAgentId, entity.getAgentId());
         queryWrapper.eq(AgentConfigEntity::getCategory, entity.getCategory());
         queryWrapper.eq(AgentConfigEntity::getType, entity.getType());
         queryWrapper.eq(AgentConfigEntity::getConfigId, entity.getConfigId());
-        return mapper.selectOne(queryWrapper) != null;
+        return mapper.selectOne(queryWrapper);
     }
 
     @Override

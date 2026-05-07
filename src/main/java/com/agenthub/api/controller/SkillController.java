@@ -23,7 +23,7 @@ public class SkillController {
     public SkillResponse create(@RequestBody CreateSkillRequest request) {
         SkillOutput result = useCase.create(request.tenantId(), request.workspaceId(),
                 request.skillCode(), request.name(), request.description(),
-                request.skillType(), request.definition(), request.parameters());
+                request.skillType(), request.skillPath(), request.skillFilesTree());
         return toResponse(result);
     }
 
@@ -41,7 +41,7 @@ public class SkillController {
     public SkillResponse update(@PathVariable String skillId,
                                 @RequestBody CreateSkillRequest request) {
         SkillOutput result = useCase.update(skillId, request.name(), request.description(),
-                request.definition(), request.parameters());
+                request.skillFilesTree());
         return toResponse(result);
     }
 
@@ -64,7 +64,7 @@ public class SkillController {
     private SkillResponse toResponse(SkillOutput result) {
         return new SkillResponse(result.id(), result.tenantId(), result.workspaceId(),
                 result.skillCode(), result.name(), result.description(),
-                result.skillType(), result.definition(), result.parameters(),
+                result.skillType(), result.skillPath(), result.skillFilesTree(),
                 result.enabled(), result.createdAt(), result.updatedAt());
     }
 }

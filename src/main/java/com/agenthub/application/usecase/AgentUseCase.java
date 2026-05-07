@@ -1,13 +1,21 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.common.exception.NotFoundException;
-import com.agenthub.application.port.out.repositories.AgentRepository;
 import com.agenthub.application.dto.AgentOutput;
+import com.agenthub.application.port.out.repositories.AgentConfigRepository;
+import com.agenthub.application.port.out.repositories.AgentRepository;
+import com.agenthub.application.port.out.repositories.SystemToolsRepository;
+import com.agenthub.application.port.out.tools.SystemToolScannerPort;
+import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.Agent;
+import com.agenthub.domain.model.AgentConfig;
+import com.agenthub.domain.model.SystemTool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+
+import static com.agenthub.domain.model.AgentConfig.Category.TOOL;
+import static com.agenthub.domain.model.AgentConfig.Type.SYSTEM_TOOL;
 
 @Component
 @RequiredArgsConstructor
@@ -17,7 +25,8 @@ public class AgentUseCase {
     public AgentOutput create(String tenantId, String workspaceId, String agentCode,
                               String name, String description) {
         Agent agent = Agent.create(tenantId, workspaceId, agentCode, name, description);
-        return toResult(repository.save(agent));
+        Agent save = repository.save(agent);
+        return toResult(save);
     }
 
     public AgentOutput get(String agentId) {

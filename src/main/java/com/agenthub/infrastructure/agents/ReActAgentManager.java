@@ -1,12 +1,20 @@
 package com.agenthub.infrastructure.agents;
 
 import com.agenthub.application.port.out.repositories.*;
+import com.agenthub.application.port.out.tools.SystemToolScannerPort;
+import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.*;
+import com.agenthub.infrastructure.tools.system_tools.SystemToolsFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,7 +30,7 @@ public class ReActAgentManager {
     private final AgentConfigRepository agentConfigRepository;
     private final McpToolRepository mcpToolRepository;
     private final HttpToolRepository httpToolRepository;
-    private final FunctionToolsRepository functionToolsRepository;
+    private final SystemToolsRepository systemToolsRepository;
     private final SkillRepository skillRepository;
     private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final PromptTemplateRepository promptTemplateRepository;
@@ -30,6 +38,8 @@ public class ReActAgentManager {
     private final RetrievalStrategyRepository retrievalStrategyRepository;
     private final ToolStrategyRepository toolStrategyRepository;
     private final GuardrailStrategyRepository guardrailStrategyRepository;
+    private final WorkspaceRepository workspaceRepository;
+    private final SystemToolsFactory systemToolsFactory;
 
     public AbstractReActAgent getAgent(java.lang.String agentId) {
         return AGENT_POOL.computeIfAbsent(agentId, id -> agentFactory.create(createContext(agentId)));
@@ -40,10 +50,10 @@ public class ReActAgentManager {
         if (agent == null) return null;
 
         List<AgentConfig> configs = agentConfigRepository.findByAgentIdAndEnabled(agentId);
-        return buildContext(agentId, agent, configs);
+        return buildContext(agentId, agent, configs, agent.getWorkspaceId());
     }
 
-    private ReActAgentContext buildContext(java.lang.String agentId, Agent agent, List<AgentConfig> configs) {
+    private ReActAgentContext buildContext(java.lang.String agentId, Agent agent, List<AgentConfig> configs, String workspaceId) {
         return ReActAgentContext.builder()
                 .agentId(agentId)
                 .agentName(agent.getName())
@@ -55,8 +65,39 @@ public class ReActAgentManager {
                 .toolStrategy(resolveToolStrategy(configs))
                 .guardrailStrategy(resolveGuardrailStrategy(configs))
                 .retrievalStrategy(resolveRetrievalStrategy(configs))
+                .workspace(resolveReActAgentWorkspace(workspaceId))
                 .agentConfigs(configs)
                 .build();
+    }
+
+    private ReActAgentWorkspace resolveReActAgentWorkspace(String workspaceId) {
+        Optional<Workspace> optional = workspaceRepository.findById(workspaceId);
+        if (optional.isEmpty()) {
+            throw new NotFoundException("Workspace not found: " + workspaceId);
+        }
+        Workspace workspace = optional.get();
+        return ReActAgentWorkspace.builder()
+                .workspace(workspace)
+                .rootPath(resolvePath(workspace, ""))
+                .agentsPath(resolvePath(workspace, "agents"))
+                .cronPath(resolvePath(workspace, "cron"))
+                .logsPath(resolvePath(workspace, "logs"))
+                .configsPath(resolvePath(workspace, "configs"))
+                .sessionsPath(resolvePath(workspace, "sessions"))
+                .skillsPath(resolvePath(workspace, "skills"))
+                .shareSkillsPath(defaultShareSkillPath())
+                .build();
+    }
+
+    private Path defaultShareSkillPath() {
+        return Paths.get(System.getProperty("user.home"), ".agents", "skills");
+    }
+
+    @SneakyThrows
+    private Path resolvePath(Workspace workspace, String subPath) {
+        Path path = Paths.get(System.getProperty("user.home"), ".agenthub", workspace.workspaceCode(), subPath);
+        Files.createDirectories(path);
+        return path;
     }
 
 
@@ -74,7 +115,7 @@ public class ReActAgentManager {
         List<AgentToolInfo> tools = new java.util.ArrayList<>();
         tools.addAll(resolveMcpTools(configs));
         tools.addAll(resolveHttpTools(configs));
-        tools.addAll(resolveFunctionTools(configs));
+        tools.addAll(resolveSystemTools(configs));
         tools.addAll(resolveSkillTools(configs));
         return tools;
     }
@@ -107,9 +148,9 @@ public class ReActAgentManager {
                 .orElse(null);
     }
 
-    private List<AgentToolInfo> resolveFunctionTools(List<AgentConfig> configs) {
+    private List<AgentToolInfo> resolveSystemTools(List<AgentConfig> configs) {
         return configs.stream()
-                .filter(c -> c.type() == AgentConfig.Type.FUNCTION_TOOL)
+                .filter(c -> c.type() == AgentConfig.Type.SYSTEM_TOOL)
                 .map(this::toFunctionToolInfo)
                 .filter(java.util.Objects::nonNull)
                 .toList();
@@ -117,8 +158,8 @@ public class ReActAgentManager {
 
 
     private AgentToolInfo toFunctionToolInfo(AgentConfig config) {
-        return functionToolsRepository.findById(config.configId())
-                .map(tool -> buildToolInfo(AgentToolType.FUNCTION_TOOLS, tool.getId(), tool.getToolClassName(), tool.getDescription()))
+        return systemToolsRepository.findById(config.configId())
+                .map(tool -> buildToolInfo(AgentToolType.SYSTEM_TOOLS, tool.getId(), tool.getToolClassName(), tool.getDescription()))
                 .orElse(null);
     }
 

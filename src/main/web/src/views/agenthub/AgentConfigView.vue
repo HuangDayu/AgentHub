@@ -26,19 +26,35 @@
       <article v-if="selectedAgentId" class="panel">
         <div class="panel-header">
           <h3>{{ selectedAgentName }} - 配置列表</h3>
-          <button class="primary" @click="showAddForm = true">添加配置</button>
+          <div class="header-controls">
+            <select v-model="selectedCategory" class="filter-select">
+              <option value="">全部类别</option>
+              <option v-for="ct in configTypes" :key="ct.category" :value="ct.category">
+                {{ ct.displayName }}
+              </option>
+            </select>
+            <select v-model="cardSize" class="size-select">
+              <option :value="1">大小: 1级</option>
+              <option :value="2">大小: 2级</option>
+              <option :value="3">大小: 3级</option>
+              <option :value="4">大小: 4级</option>
+              <option :value="5">大小: 5级</option>
+            </select>
+            <button class="secondary" @click="handleSync" :disabled="loading || !selectedAgentId">同步配置</button>
+            <button class="primary" @click="showAddForm = true">添加配置</button>
+          </div>
         </div>
         
         <!-- 配置方块网格 -->
-        <div v-if="configs.length === 0" class="empty-hint">
+        <div v-if="filteredConfigs.length === 0" class="empty-hint">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
           </svg>
           <span>暂无配置，请点击"添加配置"按钮</span>
         </div>
         
-        <div v-else class="config-grid">
-          <div v-for="config in configs" :key="config.id" class="config-card">
+        <div v-else class="config-grid" :class="`size-${cardSize}`">
+          <div v-for="config in filteredConfigs" :key="config.id" class="config-card" :class="`category-${config.category.toLowerCase()}`">
             <div class="config-header">
               <span class="config-category">{{ getCategoryLabel(config.category) }}</span>
               <span :class="['config-status', config.enabled ? 'enabled' : 'disabled']">
@@ -136,7 +152,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listAgents, type Agent } from '@/api/agent-api'
-import { listAgentConfigs, setAgentConfig, updateAgentConfig, deleteAgentConfig, type AgentConfig } from '@/api/agent-config-api'
+import { listAgentConfigs, setAgentConfig, updateAgentConfig, deleteAgentConfig, syncAgentConfigs, type AgentConfig } from '@/api/agent-config-api'
 import { getConfigTypes, getAvailableConfigs, type ConfigTypeDefinition, type AvailableConfig } from '@/api/agent-config-type-api'
 
 const store = useWorkspaceStore()
@@ -149,6 +165,8 @@ const configs = ref<AgentConfig[]>([])
 const configTypes = ref<ConfigTypeDefinition[]>([])
 const availableConfigs = ref<Map<string, AvailableConfig[]>>(new Map())
 const showAddForm = ref(false)
+const selectedCategory = ref('')
+const cardSize = ref(3)
 
 const form = ref({
   category: '',
@@ -177,6 +195,13 @@ const availableConfigsForType = computed(() => {
 
 const isFormValid = computed(() => {
   return form.value.category && form.value.type && form.value.configId
+})
+
+const filteredConfigs = computed(() => {
+  if (!selectedCategory.value) {
+    return configs.value
+  }
+  return configs.value.filter(c => c.category === selectedCategory.value)
 })
 
 onMounted(() => {
@@ -372,6 +397,21 @@ async function handleDelete(configId: string) {
     loading.value = false
   }
 }
+
+async function handleSync() {
+  if (!selectedAgentId.value) return
+  loading.value = true
+  error.value = ''
+  try {
+    const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
+    await syncAgentConfigs(selection, selectedAgentId.value)
+    await loadConfigs()
+  } catch (e: any) {
+    error.value = e.message
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -454,11 +494,49 @@ async function handleDelete(configId: string) {
   color: #374151;
 }
 
-/* Config Grid - 更小的卡片 */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-select, .size-select {
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  background: white;
+}
+
+.filter-select:focus, .size-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* Config Grid - 大小调整 */
 .config-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.75rem;
+}
+
+.config-grid.size-1 {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.config-grid.size-2 {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.config-grid.size-3 {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.config-grid.size-4 {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
+.config-grid.size-5 {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 }
 
 .config-card {
@@ -470,6 +548,35 @@ async function handleDelete(configId: string) {
 
 .config-card:hover {
   box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 类别背景色 - 浅色系 */
+.config-card.category-model {
+  background: #fef9c3;
+}
+
+.config-card.category-knowledge {
+  background: #dbeafe;
+}
+
+.config-card.category-tool {
+  background: #dcfce7;
+}
+
+.config-card.category-memory {
+  background: #f3e8ff;
+}
+
+.config-card.category-prompt {
+  background: #fce7f3;
+}
+
+.config-card.category-strategy {
+  background: #fed7aa;
+}
+
+.config-card.category-workflow {
+  background: #e0e7ff;
 }
 
 .config-header {
@@ -650,6 +757,26 @@ button.primary:hover {
 }
 
 button.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+button.secondary:hover {
+  background: #e5e7eb;
+}
+
+button.secondary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

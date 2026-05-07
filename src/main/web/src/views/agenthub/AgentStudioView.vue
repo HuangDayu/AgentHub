@@ -12,8 +12,8 @@
       <!-- 创建 Agent -->
       <article v-show="showCreateForm" class="panel stack">
         <div class="page-header">
-          <h3 style="margin: 0">创建 Agent</h3>
-          <button class="ghost" type="button" @click="showCreateForm = false">取消</button>
+          <h3 style="margin: 0">{{ editingAgent ? '编辑 Agent' : '创建 Agent' }}</h3>
+          <button class="ghost" type="button" @click="cancelForm">取消</button>
         </div>
         <form class="field-grid" @submit.prevent="submitAgent">
           <label class="field">
@@ -24,7 +24,7 @@
             <span>描述</span>
             <input v-model="agentDescription" placeholder="Agent 的目标与交互风格" />
           </label>
-          <button class="primary" type="submit">创建 Agent</button>
+          <button class="primary" type="submit">{{ editingAgent ? '更新 Agent' : '创建 Agent' }}</button>
         </form>
       </article>
 
@@ -75,7 +75,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
-import { listAgents, createAgent, deleteAgent, publishAgent, unpublishAgent } from '@/api/agent-api'
+import { listAgents, createAgent, updateAgent, deleteAgent, publishAgent, unpublishAgent } from '@/api/agent-api'
 import type { Agent } from '@/types/agent'
 
 const store = useWorkspaceStore()
@@ -85,6 +85,7 @@ const error = ref('')
 const showCreateForm = ref(false)
 const agentName = ref('')
 const agentDescription = ref('')
+const editingAgent = ref<Agent | null>(null)
 
 const selectionReady = computed(() => store.tenantId && store.workspaceId)
 
@@ -111,22 +112,30 @@ async function submitAgent() {
   if (!selectionReady.value || !agentName.value.trim()) return
   try {
     const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
-    await createAgent(selection, agentName.value.trim(), agentDescription.value.trim())
-    agentName.value = ''
-    agentDescription.value = ''
-    showCreateForm.value = false
+    if (editingAgent.value) {
+      await updateAgent(selection, editingAgent.value.id, agentName.value.trim(), agentDescription.value.trim())
+    } else {
+      await createAgent(selection, agentName.value.trim(), agentDescription.value.trim())
+    }
+    cancelForm()
     await loadAgents()
   } catch (e: any) {
     error.value = e.message
   }
 }
 
+function cancelForm() {
+  agentName.value = ''
+  agentDescription.value = ''
+  showCreateForm.value = false
+  editingAgent.value = null
+}
+
 function handleEdit(agent: Agent) {
-  // 跳转到Agent配置页面并选中该Agent
-  router.push({
-    path: '/agenthub/agent-configs',
-    query: { agentId: agent.id }
-  })
+  editingAgent.value = agent
+  agentName.value = agent.name
+  agentDescription.value = agent.description || ''
+  showCreateForm.value = true
 }
 
 async function handlePublish(agent: Agent) {

@@ -20,4 +20,6 @@ public interface McpToolRepository {
     void deleteById(String id);
 
     McpTool update(McpTool tool);
+
+    List<McpTool> findByIds(List<String> toolIds);
 }

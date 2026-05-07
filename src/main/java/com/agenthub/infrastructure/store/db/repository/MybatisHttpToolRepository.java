@@ -58,6 +58,14 @@ public class MybatisHttpToolRepository implements HttpToolRepository {
         return mapper.selectList(query).stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public List<HttpTool> findByIds(List<String> toolIds) {
+        if (toolIds == null || toolIds.isEmpty()) {
+            return List.of();
+        }
+        return mapper.selectByIds(toolIds).stream().map(this::toDomain).toList();
+    }
+
     private HttpTool toDomain(HttpToolsEntity entity) {
         return new HttpTool(
                 entity.getId(),

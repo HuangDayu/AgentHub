@@ -1,15 +1,18 @@
 package com.agenthub.infrastructure.agents.ali;
 
 import com.agenthub.domain.model.AgentToolInfo;
+import com.agenthub.domain.model.AgentToolType;
+import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.infrastructure.agents.AbstractReActAgent;
-import com.agenthub.infrastructure.agents.ReActAgentContext;
 import com.agenthub.infrastructure.agents.ReActAgentFactory;
 import com.agenthub.infrastructure.agents.ali.hook.AgentHookFactory;
 import com.agenthub.infrastructure.agents.ali.interceptor.InterceptorFactory;
 import com.agenthub.infrastructure.agents.ali.saver.SaverFactory;
 import com.agenthub.infrastructure.agents.ali.store.StoreFactory;
+import com.agenthub.infrastructure.agents.ali.tools.GraphToolsFactory;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import com.agenthub.infrastructure.tools.AgentToolsFactory;
+import com.agenthub.infrastructure.tools.system_tools.SystemToolScanner;
 import com.alibaba.cloud.ai.graph.agent.Builder;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.checkpoint.BaseCheckpointSaver;
@@ -21,8 +24,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
 import static com.agenthub.domain.model.AgentToolType.*;
 
 /**
@@ -38,6 +43,7 @@ public class AliReActAgentFactory implements ReActAgentFactory {
     private final StoreFactory storeFactory;
     private final SpringShareObjectFactory springShareObjectFactory;
     private final AgentToolsFactory agentToolsFactory;
+    private final GraphToolsFactory graphToolsFactory;
 
 
     @Override
@@ -53,10 +59,11 @@ public class AliReActAgentFactory implements ReActAgentFactory {
                 resolveChatModel(context),
                 context.getSystemPrompt(),
                 resolveTools(context),
-                resolveHooks(),
+                resolveHooks(context),
                 resolveInterceptors(),
                 resolveSaver(),
-                resolveStore()
+                resolveStore(),
+                Map.of(AGENT_CONTEXT_KEY, context)
         );
     }
 
@@ -67,62 +74,59 @@ public class AliReActAgentFactory implements ReActAgentFactory {
     }
 
     private List<ToolCallback> resolveTools(ReActAgentContext context) {
-        List<AgentToolInfo> toolInfos = context.getTools();
-        if (toolInfos == null || toolInfos.isEmpty()) return new ArrayList<>();
-
-        Set<String> uniqueNames = new java.util.HashSet<>();
         List<ToolCallback> tools = new ArrayList<>();
-
-        for (AgentToolInfo toolInfo : toolInfos) {
-            processToolInfo(toolInfo, uniqueNames, tools);
+        for (AgentToolType toolType : values()) {
+            List<String> toolIds = processToolInfo(context, toolType);
+            if (!toolIds.isEmpty()) {
+                List<ToolCallback> toolCallbacks = resolveToolCallbacks(new AgentToolInfo(toolType), toolIds);
+                if (!toolCallbacks.isEmpty()) {
+                    tools.addAll(toolCallbacks);
+                }
+            }
         }
+        tools.addAll(graphToolsFactory.getToolCallbacks(context.getWorkspace()));
         return tools;
     }
 
-    private void processToolInfo(AgentToolInfo toolInfo, Set<String> uniqueNames, List<ToolCallback> tools) {
-        if (!toolInfo.isEnabled()) return;
-        if (uniqueNames.contains(toolInfo.getName())) return;
-
-        List<ToolCallback> callbacks = resolveToolCallbacks(toolInfo);
-        if (!callbacks.isEmpty()) {
-            uniqueNames.add(toolInfo.getName());
-            tools.addAll(callbacks);
-        }
+    private List<String> processToolInfo(ReActAgentContext context, AgentToolType toolType) {
+        return context.getTools().stream()
+                .filter(t -> t.getType().equals(toolType))
+                .map(AgentToolInfo::getId).toList();
     }
 
-    private List<ToolCallback> resolveToolCallbacks(AgentToolInfo toolInfo) {
+    private List<ToolCallback> resolveToolCallbacks(AgentToolInfo toolInfo, List<String> toolIds) {
         return switch (toolInfo.getType()) {
-            case FUNCTION_TOOLS -> resolveFunctionTools(toolInfo);
-            case MCP_TOOLS -> resolveMcpTools(toolInfo);
-            case SKILL_TOOLS -> resolveSkillTools(toolInfo);
-            case HTTP_TOOLS -> resolveHttpTools(toolInfo);
+            case SYSTEM_TOOLS -> resolveSystemTools(toolInfo, toolIds);
+            case MCP_TOOLS -> resolveMcpTools(toolInfo, toolIds);
+            case SKILL_TOOLS -> resolveSkillTools(toolInfo, toolIds);
+            case HTTP_TOOLS -> resolveHttpTools(toolInfo, toolIds);
         };
     }
 
     /**
-     * 注意：FunctionTools 是类级别的启用停用控制，所以这里需要根据 class name 进行过滤
+     * 注意：SystemTools 是类级别的启用停用控制，所以这里需要根据 class name 进行过滤
      *
      * @param toolInfo
      * @return
-     * @see com.agenthub.infrastructure.tools.function_tools.FunctionToolScanner
+     * @see SystemToolScanner
      */
-    private List<ToolCallback> resolveFunctionTools(AgentToolInfo toolInfo) {
-        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(FUNCTION_TOOLS);
+    private List<ToolCallback> resolveSystemTools(AgentToolInfo toolInfo, List<String> toolIds) {
+        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(SYSTEM_TOOLS, toolIds);
         return callbacks.stream().filter(callback -> callback.getClass().getName().equals(toolInfo.getName())).toList();
     }
 
-    private List<ToolCallback> resolveMcpTools(AgentToolInfo toolInfo) {
-        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(MCP_TOOLS);
+    private List<ToolCallback> resolveMcpTools(AgentToolInfo toolInfo, List<String> toolIds) {
+        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(MCP_TOOLS, toolIds);
         return filterByName(callbacks, toolInfo.getName());
     }
 
-    private List<ToolCallback> resolveSkillTools(AgentToolInfo toolInfo) {
-        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(SKILL_TOOLS);
+    private List<ToolCallback> resolveSkillTools(AgentToolInfo toolInfo, List<String> toolIds) {
+        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(SKILL_TOOLS, toolIds);
         return filterByName(callbacks, toolInfo.getName());
     }
 
-    private List<ToolCallback> resolveHttpTools(AgentToolInfo toolInfo) {
-        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(HTTP_TOOLS);
+    private List<ToolCallback> resolveHttpTools(AgentToolInfo toolInfo, List<String> toolIds) {
+        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(HTTP_TOOLS, toolIds);
         return filterByName(callbacks, toolInfo.getName());
     }
 
@@ -132,8 +136,10 @@ public class AliReActAgentFactory implements ReActAgentFactory {
                 .toList();
     }
 
-    private List<com.alibaba.cloud.ai.graph.agent.hook.Hook> resolveHooks() {
-        return List.of(agentHookFactory.loggingHook());
+    private List<com.alibaba.cloud.ai.graph.agent.hook.Hook> resolveHooks(ReActAgentContext context) {
+        return List.of(agentHookFactory.loggingHook(),
+                agentHookFactory.skillsAgentHook(context.getWorkspace()),
+                agentHookFactory.shellToolAgentHook(context.getWorkspace()));
     }
 
     private List<com.alibaba.cloud.ai.graph.agent.interceptor.Interceptor> resolveInterceptors() {
@@ -153,7 +159,8 @@ public class AliReActAgentFactory implements ReActAgentFactory {
         Builder builder = ReactAgent.builder()
                 .name(config.name())
                 .model(config.chatModel())
-                .tools(new ArrayList<>(config.tools()));
+                .toolContext(config.toolContext())
+                .tools(config.tools());
         applySystemPrompt(builder, config);
         applySaver(builder, config);
         applyHooks(builder, config);

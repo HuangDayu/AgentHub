@@ -180,8 +180,8 @@ CREATE TABLE IF NOT EXISTS app.mcp_tool
     updated_at   timestamptz,
     PRIMARY KEY (id)
 );
--- New table: app.function_tools
-CREATE TABLE IF NOT EXISTS app.function_tools
+-- New table: app.system_tools
+CREATE TABLE IF NOT EXISTS app.system_tools
 (
     id              varchar(64) NOT NULL,
     tenant_id       varchar(255),

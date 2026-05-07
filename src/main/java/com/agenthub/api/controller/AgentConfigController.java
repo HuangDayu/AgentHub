@@ -2,7 +2,6 @@ package com.agenthub.api.controller;
 
 import com.agenthub.api.dto.AgentConfigResponse;
 import com.agenthub.api.dto.SetAgentConfigRequest;
-import com.agenthub.api.dto.*;
 import com.agenthub.application.dto.AgentConfigOutput;
 import com.agenthub.application.usecase.AgentConfigUseCase;
 import org.springframework.http.HttpStatus;
@@ -36,9 +35,14 @@ public class AgentConfigController {
         return toResponse(result);
     }
 
+    @PostMapping("/sync")
+    public void syncConfig(@PathVariable String agentId) {
+        useCase.syncConfig(agentId);
+    }
+
     @GetMapping
     public List<AgentConfigResponse> listConfigs(@PathVariable String agentId,
-                                                  @RequestParam(required = false) String category) {
+                                                 @RequestParam(required = false) String category) {
         List<AgentConfigOutput> results = category != null
                 ? useCase.listConfigsByCategory(agentId, category)
                 : useCase.listConfigs(agentId);

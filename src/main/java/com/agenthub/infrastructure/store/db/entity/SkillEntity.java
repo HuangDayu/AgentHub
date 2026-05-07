@@ -20,12 +20,13 @@ public class SkillEntity {
     private String description;
     @TableField(value = "skill_type")
     private String skillType;
-    private String definition;
-    private String parameters;
+    @TableField(value = "skill_path")
+    private String skillPath;
+    @TableField(value = "skill_files_tree")
+    private String skillFilesTree;
     private boolean enabled;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
     @TableField(value = "updated_at", fill = FieldFill.INSERT)
     private Instant updatedAt;
-
 }

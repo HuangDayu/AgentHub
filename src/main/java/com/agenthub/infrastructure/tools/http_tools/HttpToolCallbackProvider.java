@@ -24,7 +24,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class HttpToolCallbackProvider {
     
-    private final HttpToolRepository httpToolRepository;
+
+
     private final ObjectMapper objectMapper;
     
     @Qualifier("tool.restTemplate")
@@ -33,8 +34,7 @@ public class HttpToolCallbackProvider {
     /**
      * 获取所有HTTP工具的ToolCallback。
      */
-    public Set<ToolCallback> getToolCallbacks() {
-        List<HttpTool> httpTools = httpToolRepository.findAll();
+    public Set<ToolCallback> getToolCallbacks(List<HttpTool> httpTools) {
         return convertToToolCallbacks(httpTools);
     }
     

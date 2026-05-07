@@ -19,6 +19,8 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Duration;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -47,15 +49,20 @@ public class McpClientManager {
         McpClientTransport mcpClientTransport = createMcpClientTransport(mcpTool);
         if (mcpTool.async()) {
             McpAsyncClient mcpAsyncClient = McpClient.async(mcpClientTransport).requestTimeout(Duration.ofSeconds(10)).build();
+            if (!mcpAsyncClient.isInitialized()) {
+                mcpAsyncClient.initialize();
+            }
             return AsyncMcpToolCallbackProvider.builder().mcpClients(mcpAsyncClient).build();
         }
         McpSyncClient mcpSyncClient = McpClient.sync(mcpClientTransport).requestTimeout(Duration.ofSeconds(10)).build();
+        if (!mcpSyncClient.isInitialized()) {
+            mcpSyncClient.initialize();
+        }
         return SyncMcpToolCallbackProvider.builder().mcpClients(mcpSyncClient).build();
     }
 
     private McpClientTransport createMcpClientTransport(McpTool mcpTool) {
-        ServerParameters stdioParams = ServerParameters.builder(mcpTool.command())
-                .args(mcpTool.args()).env(mcpTool.env()).build();
+        ServerParameters stdioParams = createStdioParams(mcpTool);
         return switch (mcpTool.serverType()) {
             case STDIO -> new StdioClientTransport(stdioParams, jacksonMcpJsonMapper);
             case HTTP ->
@@ -63,6 +70,21 @@ public class McpClientManager {
             case SSE ->
                     HttpClientSseClientTransport.builder(mcpTool.serverUrl()).jsonMapper(jacksonMcpJsonMapper).build();
         };
+    }
+
+    private ServerParameters createStdioParams(McpTool mcpTool) {
+        if (isWindows()) {
+            List<String> ars = new LinkedList<>();
+            ars.add("/c");
+            ars.add(mcpTool.command());
+            ars.addAll(mcpTool.args());
+            return ServerParameters.builder("cmd.exe").args(ars).env(mcpTool.env()).build();
+        }
+        return ServerParameters.builder(mcpTool.command()).args(mcpTool.args()).env(mcpTool.env()).build();
+    }
+
+    private static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("win");
     }
 
     /**

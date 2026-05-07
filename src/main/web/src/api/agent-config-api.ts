@@ -62,3 +62,10 @@ export function deleteAllAgentConfigs(selection: SelectionState, agentId: string
     { baseUrl: runtimeConfig.agentApiBase, method: 'DELETE', headers: scopedHeaders(selection) }
   )
 }
+
+export function syncAgentConfigs(selection: SelectionState, agentId: string) {
+  return requestJson<void>(
+    `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/configs/sync`,
+    { baseUrl: runtimeConfig.agentApiBase, method: 'POST', headers: scopedHeaders(selection) }
+  )
+}
