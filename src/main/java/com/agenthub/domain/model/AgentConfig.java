@@ -15,6 +15,7 @@ public record AgentConfig(
         Category category,
         Type type,
         String configId,
+        String name,
         String description,
         int priority,
         boolean enabled,
@@ -23,10 +24,10 @@ public record AgentConfig(
 ) {
     @Getter
     public enum Category {
-        STRATEGY("策略配置", "Agent的策略相关配置", RETRIEVAL_STRATEGY, TOOL_STRATEGY, MODEL_STRATEGY, GUARDRAIL_STRATEGY),   // 策略
-        TOOL("工具配置", "Agent的工具相关配置", MCP_TOOL, SKILL_TOOL, SYSTEM_TOOL, HTTP_TOOL),       // 工具
-        PROMPT("提示词配置", "Agent的提示词相关配置", SYSTEM_PROMPT, ASSISTANT_PROMPT),     // 提示词
-        MODEL("模型配置", "Agent的模型相关配置", CHAT_MODEL, EMBEDDING_MODEL),       // 模型
+        STRATEGY("策略", "Agent的策略相关配置", RETRIEVAL_STRATEGY, TOOL_STRATEGY, MODEL_STRATEGY, GUARDRAIL_STRATEGY),   // 策略
+        TOOL("工具", "Agent的工具相关配置", MCP_TOOL, SKILL_TOOL, SYSTEM_TOOL, HTTP_TOOL),       // 工具
+        PROMPT("提示词", "Agent的提示词相关配置", SYSTEM_PROMPT, ASSISTANT_PROMPT),     // 提示词
+        MODEL("模型", "Agent的模型相关配置", CHAT_MODEL, EMBEDDING_MODEL),       // 模型
         KNOWLEDGE("知识库", "Agent的知识库相关配置", KNOWLEDGE_BASE);   // 知识库
 
         private final String displayName;
@@ -52,10 +53,10 @@ public record AgentConfig(
         CHAT_MODEL("聊天模型", "对话模型配置"), // 聊天模型
         EMBEDDING_MODEL("嵌入模型", "向量嵌入模型配置"), // 嵌入模型
         KNOWLEDGE_BASE("知识库", "知识库配置"),   // 知识库
-        MCP_TOOL("MCP工具", "MCP协议工具配置"),        // MCP工具
-        SKILL_TOOL("技能工具", "Skill技能配置"),        // Skill工具
-        SYSTEM_TOOL("系统工具", "System工具配置"),        // Function工具
-        HTTP_TOOL("Http工具", "Http工具配置");       // HTTP工具
+        MCP_TOOL("MCP", "MCP协议工具配置"),        // MCP工具
+        SKILL_TOOL("Skill", "Skill技能配置"),        // Skill工具
+        SYSTEM_TOOL("System", "System工具配置"),        // Function工具
+        HTTP_TOOL("Http", "Http工具配置");       // HTTP工具
 
         private final String displayName;
         private final String description;
@@ -68,15 +69,17 @@ public record AgentConfig(
     }
 
     public static AgentConfig create(String agentId, Category category, Type type,
-                                     String configId, String description, int priority,boolean enabled) {
+                                     String configId, String name, String description,
+                                     int priority, boolean enabled) {
         Instant now = Instant.now();
-        return new AgentConfig(null, agentId, category, type, configId, description, priority, enabled, now, now);
+        return new AgentConfig(null, agentId, category, type, configId, name, description, priority, enabled, now, now);
     }
 
-    public AgentConfig update(String configId, String description, Integer priority, Boolean enabled) {
+    public AgentConfig update(String configId, String name, String description, Integer priority, Boolean enabled) {
         return new AgentConfig(
                 this.id, this.agentId, this.category, this.type,
                 configId != null ? configId : this.configId,
+                name != null ? name : this.name,
                 description != null ? description : this.description,
                 priority != null ? priority : this.priority,
                 enabled != null ? enabled : this.enabled,

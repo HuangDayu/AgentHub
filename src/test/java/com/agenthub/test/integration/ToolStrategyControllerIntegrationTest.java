@@ -43,7 +43,7 @@ class ToolStrategyControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateToolStrategy() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/httpTool-strategies", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/tool-strategies", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -66,7 +66,7 @@ class ToolStrategyControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListToolStrategies() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/httpTool-strategies", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/tool-strategies", workspaceId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -76,7 +76,7 @@ class ToolStrategyControllerIntegrationTest {
     void shouldGetToolStrategyById() throws Exception {
         Assertions.assertNotNull(createdStrategyId);
 
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/httpTool-strategies/{id}", workspaceId, createdStrategyId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/tool-strategies/{id}", workspaceId, createdStrategyId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdStrategyId));
     }
@@ -86,7 +86,7 @@ class ToolStrategyControllerIntegrationTest {
     void shouldUpdateToolStrategy() throws Exception {
         Assertions.assertNotNull(createdStrategyId);
 
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/httpTool-strategies/{id}", workspaceId, createdStrategyId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/tool-strategies/{id}", workspaceId, createdStrategyId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -101,7 +101,7 @@ class ToolStrategyControllerIntegrationTest {
     @Test
     @Order(5)
     void shouldReturnNotFoundForUnknownId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/httpTool-strategies/{id}", workspaceId, "00000000-0000-0000-0000-000000000001"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/tool-strategies/{id}", workspaceId, "00000000-0000-0000-0000-000000000001"))
                 .andExpect(status().isNotFound());
     }
 
@@ -110,7 +110,7 @@ class ToolStrategyControllerIntegrationTest {
     void shouldDeleteToolStrategy() throws Exception {
         Assertions.assertNotNull(createdStrategyId);
 
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/httpTool-strategies/{id}", workspaceId, createdStrategyId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/tool-strategies/{id}", workspaceId, createdStrategyId))
                 .andExpect(status().isNoContent());
     }
 }

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.agenthub.domain.model.AgentToolType.MCP_TOOLS;
+import static com.agenthub.domain.model.AgentToolType.MCP_TOOL;
 
 /**
  * MCP工具工厂，负责提供MCP工具的ToolCallback。
@@ -28,7 +28,7 @@ public class McpToolsFactory implements AbstractToolsFactory {
 
     @Override
     public AgentToolInfo getToolInfo() {
-        return new AgentToolInfo(MCP_TOOLS);
+        return new AgentToolInfo(MCP_TOOL);
     }
 
     @Override
@@ -44,8 +44,9 @@ public class McpToolsFactory implements AbstractToolsFactory {
     }
 
     @Override
-    public Set<ToolCallback> getToolCallbacks(List<String> toolIds) {
-        List<McpTool> mcpTools = mcpToolRepository.findByIds(toolIds);
+    public Set<ToolCallback> getToolCallbacks(List<AgentToolInfo> toolIds) {
+        List<String> list = toolIds.parallelStream().map(AgentToolInfo::getId).toList();
+        List<McpTool> mcpTools = mcpToolRepository.findByIds(list);
         return mcpToolCallbackProvider.getToolCallbacks(mcpTools);
     }
 

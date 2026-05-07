@@ -16,6 +16,7 @@ import java.util.List;
  *
  * @author huangdayu
  */
+@Deprecated
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -30,7 +31,7 @@ public class SkillToolCallbackProvider implements ToolCallbackProvider {
     }
 
     public ToolCallback[] getToolCallbacks(Collection<Skill> skills) {
-        List<ToolCallback> callbacks = skills.stream()
+        List<ToolCallback> callbacks = skills.parallelStream()
                 .map(this::createToolCallback)
                 .toList();
         log.info("Registered {} skill tools", callbacks.size());

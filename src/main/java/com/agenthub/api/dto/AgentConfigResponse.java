@@ -8,6 +8,7 @@ public record AgentConfigResponse(
         String category,
         String type,
         String configId,
+        String name,
         String description,
         int priority,
         boolean enabled,

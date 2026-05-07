@@ -252,7 +252,7 @@ async function handleSend() {
       // 30秒超时兜底
       await Promise.race([
         streamPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('流式响应超时')), 30_000)),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('流式响应超时')), 300_000)),
       ])
     } else {
       const reply = await sendMessage(

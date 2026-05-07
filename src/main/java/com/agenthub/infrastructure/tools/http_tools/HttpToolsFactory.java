@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.agenthub.domain.model.AgentToolType.HTTP_TOOLS;
+import static com.agenthub.domain.model.AgentToolType.HTTP_TOOL;
 
 /**
  * HTTP工具工厂，负责提供HTTP工具的ToolCallback。
@@ -28,7 +28,7 @@ public class HttpToolsFactory implements AbstractToolsFactory {
 
     @Override
     public AgentToolInfo getToolInfo() {
-        return new AgentToolInfo(HTTP_TOOLS);
+        return new AgentToolInfo(HTTP_TOOL);
     }
 
     @Override
@@ -44,8 +44,9 @@ public class HttpToolsFactory implements AbstractToolsFactory {
     }
 
     @Override
-    public Set<ToolCallback> getToolCallbacks(List<String> toolIds) {
-        List<HttpTool> httpTools = httpToolRepository.findByIds(toolIds);
+    public Set<ToolCallback> getToolCallbacks(List<AgentToolInfo> toolIds) {
+        List<String> list = toolIds.stream().map(AgentToolInfo::getId).toList();
+        List<HttpTool> httpTools = httpToolRepository.findByIds(list);
         return httpToolCallbackProvider.getToolCallbacks(httpTools);
     }
 }

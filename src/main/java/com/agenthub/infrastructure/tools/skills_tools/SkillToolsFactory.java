@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.agenthub.domain.model.AgentToolType.SKILL_TOOLS;
+import static com.agenthub.domain.model.AgentToolType.SKILL_TOOL;
 
 /**
  * @author huangdayu
@@ -23,10 +23,11 @@ public class SkillToolsFactory implements AbstractToolsFactory {
 
     private final SkillToolCallbackProvider skillToolCallbackProvider;
     private final SkillRepository skillRepository;
+    private final SkillFileManager skillFileManager;
 
     @Override
     public AgentToolInfo getToolInfo() {
-        return new AgentToolInfo(SKILL_TOOLS);
+        return new AgentToolInfo(SKILL_TOOL);
     }
 
     @Override
@@ -42,8 +43,9 @@ public class SkillToolsFactory implements AbstractToolsFactory {
     }
 
     @Override
-    public Set<ToolCallback> getToolCallbacks(List<String> toolIds) {
-        List<Skill> skills = skillRepository.findByIds(toolIds);
-        return Set.of(skillToolCallbackProvider.getToolCallbacks(skills));
+    public Set<ToolCallback> getToolCallbacks(List<AgentToolInfo> toolIds) {
+        Set<String> collect = toolIds.parallelStream().map(AgentToolInfo::getName).collect(Collectors.toSet());
+        Set<Skill> collect1 = skillFileManager.getAllSkills().values().parallelStream().filter(skill -> collect.contains(skill.getName())).collect(Collectors.toSet());
+        return Set.of(skillToolCallbackProvider.getToolCallbacks(collect1));
     }
 }

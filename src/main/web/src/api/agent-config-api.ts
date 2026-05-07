@@ -9,6 +9,7 @@ export interface AgentConfig {
   category: string
   type: string
   configId: string
+  name?: string
   description?: string
   priority: number
   enabled: boolean

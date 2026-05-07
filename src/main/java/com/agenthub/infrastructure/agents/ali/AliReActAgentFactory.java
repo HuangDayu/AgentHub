@@ -12,7 +12,6 @@ import com.agenthub.infrastructure.agents.ali.store.StoreFactory;
 import com.agenthub.infrastructure.agents.ali.tools.GraphToolsFactory;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import com.agenthub.infrastructure.tools.AgentToolsFactory;
-import com.agenthub.infrastructure.tools.system_tools.SystemToolScanner;
 import com.alibaba.cloud.ai.graph.agent.Builder;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.checkpoint.BaseCheckpointSaver;
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
 import static com.agenthub.domain.model.AgentToolType.*;
@@ -75,59 +75,51 @@ public class AliReActAgentFactory implements ReActAgentFactory {
 
     private List<ToolCallback> resolveTools(ReActAgentContext context) {
         List<ToolCallback> tools = new ArrayList<>();
-        for (AgentToolType toolType : values()) {
-            List<String> toolIds = processToolInfo(context, toolType);
-            if (!toolIds.isEmpty()) {
-                List<ToolCallback> toolCallbacks = resolveToolCallbacks(new AgentToolInfo(toolType), toolIds);
+        Map<AgentToolType, List<AgentToolInfo>> collect = context.getTools().stream().collect(Collectors.groupingBy(
+                AgentToolInfo::getType,
+                Collectors.mapping(v -> v, Collectors.toList())
+        ));
+        collect.forEach((key, value) -> {
+            if (!value.isEmpty()) {
+                Set<ToolCallback> toolCallbacks = resolveToolCallbacks(key, value);
                 if (!toolCallbacks.isEmpty()) {
                     tools.addAll(toolCallbacks);
                 }
             }
-        }
+        });
         tools.addAll(graphToolsFactory.getToolCallbacks(context.getWorkspace()));
         return tools;
     }
 
-    private List<String> processToolInfo(ReActAgentContext context, AgentToolType toolType) {
-        return context.getTools().stream()
-                .filter(t -> t.getType().equals(toolType))
-                .map(AgentToolInfo::getId).toList();
-    }
 
-    private List<ToolCallback> resolveToolCallbacks(AgentToolInfo toolInfo, List<String> toolIds) {
-        return switch (toolInfo.getType()) {
-            case SYSTEM_TOOLS -> resolveSystemTools(toolInfo, toolIds);
-            case MCP_TOOLS -> resolveMcpTools(toolInfo, toolIds);
-            case SKILL_TOOLS -> resolveSkillTools(toolInfo, toolIds);
-            case HTTP_TOOLS -> resolveHttpTools(toolInfo, toolIds);
+    private Set<ToolCallback> resolveToolCallbacks(AgentToolType toolInfo, List<AgentToolInfo> toolIds) {
+        return switch (toolInfo) {
+            case SYSTEM_TOOL -> resolveSystemTools(toolIds);
+            case MCP_TOOL -> resolveMcpTools(toolIds);
+            case SKILL_TOOL -> resolveSkillTools(toolIds);
+            case HTTP_TOOL -> resolveHttpTools(toolIds);
         };
     }
 
     /**
      * 注意：SystemTools 是类级别的启用停用控制，所以这里需要根据 class name 进行过滤
      *
-     * @param toolInfo
      * @return
-     * @see SystemToolScanner
      */
-    private List<ToolCallback> resolveSystemTools(AgentToolInfo toolInfo, List<String> toolIds) {
-        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(SYSTEM_TOOLS, toolIds);
-        return callbacks.stream().filter(callback -> callback.getClass().getName().equals(toolInfo.getName())).toList();
+    private Set<ToolCallback> resolveSystemTools(List<AgentToolInfo> toolIds) {
+        return agentToolsFactory.getToolCallbacks(SYSTEM_TOOL, toolIds);
     }
 
-    private List<ToolCallback> resolveMcpTools(AgentToolInfo toolInfo, List<String> toolIds) {
-        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(MCP_TOOLS, toolIds);
-        return filterByName(callbacks, toolInfo.getName());
+    private Set<ToolCallback> resolveMcpTools(List<AgentToolInfo> toolIds) {
+        return agentToolsFactory.getToolCallbacks(MCP_TOOL, toolIds);
     }
 
-    private List<ToolCallback> resolveSkillTools(AgentToolInfo toolInfo, List<String> toolIds) {
-        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(SKILL_TOOLS, toolIds);
-        return filterByName(callbacks, toolInfo.getName());
+    private Set<ToolCallback> resolveSkillTools(List<AgentToolInfo> toolIds) {
+        return agentToolsFactory.getToolCallbacks(SKILL_TOOL, toolIds);
     }
 
-    private List<ToolCallback> resolveHttpTools(AgentToolInfo toolInfo, List<String> toolIds) {
-        Set<ToolCallback> callbacks = agentToolsFactory.getToolCallbacks(HTTP_TOOLS, toolIds);
-        return filterByName(callbacks, toolInfo.getName());
+    private Set<ToolCallback> resolveHttpTools(List<AgentToolInfo> toolIds) {
+        return agentToolsFactory.getToolCallbacks(HTTP_TOOL, toolIds);
     }
 
     private List<ToolCallback> filterByName(Set<ToolCallback> callbacks, String name) {

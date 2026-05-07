@@ -10,6 +10,7 @@ import io.modelcontextprotocol.client.transport.ServerParameters;
 import io.modelcontextprotocol.client.transport.StdioClientTransport;
 import io.modelcontextprotocol.json.jackson3.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.spec.McpClientTransport;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.mcp.AsyncMcpToolCallbackProvider;
@@ -34,31 +35,45 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class McpClientManager {
 
-    private final Map<String, ToolCallbackProvider> clients = new ConcurrentHashMap<>();
+    @Getter
+    private final Map<String, ToolCallbackProvider> mcpClients = new ConcurrentHashMap<>();
     private final JacksonMcpJsonMapper jacksonMcpJsonMapper = new JacksonMcpJsonMapper(new JsonMapper());
 
     /**
      * 获取或创建MCP客户端。
      */
     public ToolCallbackProvider getMcpToolCallback(McpTool mcpTool) {
-        return clients.computeIfAbsent(mcpTool.id(), id -> createToolCallbackProvider(mcpTool));
+        return mcpClients.computeIfAbsent(mcpTool.id(), id -> createToolCallbackProvider(mcpTool));
     }
 
 
     private ToolCallbackProvider createToolCallbackProvider(McpTool mcpTool) {
         McpClientTransport mcpClientTransport = createMcpClientTransport(mcpTool);
         if (mcpTool.async()) {
-            McpAsyncClient mcpAsyncClient = McpClient.async(mcpClientTransport).requestTimeout(Duration.ofSeconds(10)).build();
-            if (!mcpAsyncClient.isInitialized()) {
-                mcpAsyncClient.initialize();
-            }
-            return AsyncMcpToolCallbackProvider.builder().mcpClients(mcpAsyncClient).build();
+            return createAsyncMcpToolCallbackProvider(mcpClientTransport, mcpTool);
         }
-        McpSyncClient mcpSyncClient = McpClient.sync(mcpClientTransport).requestTimeout(Duration.ofSeconds(10)).build();
+        Duration timeout = Duration.ofMinutes(5);
+        McpSyncClient mcpSyncClient = McpClient.sync(mcpClientTransport)
+                .requestTimeout(timeout)
+                .initializationTimeout(timeout)
+                .build();
         if (!mcpSyncClient.isInitialized()) {
             mcpSyncClient.initialize();
         }
         return SyncMcpToolCallbackProvider.builder().mcpClients(mcpSyncClient).build();
+    }
+
+    private AsyncMcpToolCallbackProvider createAsyncMcpToolCallbackProvider(McpClientTransport mcpClientTransport, McpTool mcpTool) {
+        Duration timeout = Duration.ofMinutes(5);
+        McpAsyncClient mcpAsyncClient = McpClient.async(mcpClientTransport)
+                .requestTimeout(timeout)
+                .initializationTimeout(timeout)
+                .build();
+        if (!mcpAsyncClient.isInitialized()) {
+            mcpAsyncClient.initialize();
+        }
+        return AsyncMcpToolCallbackProvider.builder().mcpClients(mcpAsyncClient).build();
+
     }
 
     private McpClientTransport createMcpClientTransport(McpTool mcpTool) {
@@ -91,13 +106,13 @@ public class McpClientManager {
      * 移除客户端。
      */
     public void removeClient(String mcpToolId) {
-        clients.remove(mcpToolId);
+        mcpClients.remove(mcpToolId);
     }
 
     /**
      * 清理所有客户端。
      */
     public void clearAll() {
-        clients.clear();
+        mcpClients.clear();
     }
 }

@@ -5,9 +5,9 @@ package com.agenthub.domain.model;
  */
 public enum AgentToolType {
 
-    SKILL_TOOLS,
-    SYSTEM_TOOLS,
-    MCP_TOOLS,
-    HTTP_TOOLS
+    SKILL_TOOL,
+    SYSTEM_TOOL,
+    MCP_TOOL,
+    HTTP_TOOL
 
 }

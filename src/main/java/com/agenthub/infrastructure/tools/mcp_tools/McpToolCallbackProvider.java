@@ -36,7 +36,7 @@ public class McpToolCallbackProvider {
      * 将McpTool列表转换为ToolCallback集合。
      */
     private Set<ToolCallback> convertToToolCallbacks(List<McpTool> mcpTools) {
-        return mcpTools.stream()
+        return mcpTools.parallelStream()
                 .filter(this::isEnabled)
                 .map(v -> createToolCallback(v).getToolCallbacks())
                 .flatMap(v -> Set.of(v).stream())

@@ -14,6 +14,7 @@ public class AgentConfigEntity {
     private String category;
     private String type;
     private String configId;
+    private String name;
     private String description;
     private Integer priority;
     private boolean enabled;

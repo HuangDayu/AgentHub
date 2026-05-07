@@ -1,7 +1,6 @@
 package com.agenthub.infrastructure.agents;
 
 import com.agenthub.application.port.out.repositories.*;
-import com.agenthub.application.port.out.tools.SystemToolScannerPort;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.*;
 import com.agenthub.infrastructure.tools.system_tools.SystemToolsFactory;
@@ -112,79 +111,9 @@ public class ReActAgentManager {
     }
 
     private List<AgentToolInfo> resolveTools(List<AgentConfig> configs) {
-        List<AgentToolInfo> tools = new java.util.ArrayList<>();
-        tools.addAll(resolveMcpTools(configs));
-        tools.addAll(resolveHttpTools(configs));
-        tools.addAll(resolveSystemTools(configs));
-        tools.addAll(resolveSkillTools(configs));
-        return tools;
-    }
-
-    private List<AgentToolInfo> resolveMcpTools(List<AgentConfig> configs) {
-        return configs.stream()
-                .filter(c -> c.type() == AgentConfig.Type.MCP_TOOL)
-                .map(this::toMcpToolInfo)
-                .filter(java.util.Objects::nonNull)
+        return configs.parallelStream().filter(c -> c.category() == AgentConfig.Category.TOOL)
+                .map(v -> new AgentToolInfo(AgentToolType.valueOf(v.type().name()), v.configId(), v.name(), v.description(), v.enabled()))
                 .toList();
-    }
-
-    private AgentToolInfo toMcpToolInfo(AgentConfig config) {
-        return mcpToolRepository.findById(config.configId())
-                .map(tool -> buildToolInfo(AgentToolType.MCP_TOOLS, tool.id(), tool.name(), tool.description()))
-                .orElse(null);
-    }
-
-    private List<AgentToolInfo> resolveHttpTools(List<AgentConfig> configs) {
-        return configs.stream()
-                .filter(c -> c.category() == AgentConfig.Category.TOOL && c.type() != AgentConfig.Type.MCP_TOOL)
-                .map(this::toHttpToolInfo)
-                .filter(java.util.Objects::nonNull)
-                .toList();
-    }
-
-    private AgentToolInfo toHttpToolInfo(AgentConfig config) {
-        return httpToolRepository.findById(new String(config.configId()))
-                .map(tool -> buildToolInfo(AgentToolType.HTTP_TOOLS, tool.id(), tool.name(), tool.description()))
-                .orElse(null);
-    }
-
-    private List<AgentToolInfo> resolveSystemTools(List<AgentConfig> configs) {
-        return configs.stream()
-                .filter(c -> c.type() == AgentConfig.Type.SYSTEM_TOOL)
-                .map(this::toFunctionToolInfo)
-                .filter(java.util.Objects::nonNull)
-                .toList();
-    }
-
-
-    private AgentToolInfo toFunctionToolInfo(AgentConfig config) {
-        return systemToolsRepository.findById(config.configId())
-                .map(tool -> buildToolInfo(AgentToolType.SYSTEM_TOOLS, tool.getId(), tool.getToolClassName(), tool.getDescription()))
-                .orElse(null);
-    }
-
-    private List<AgentToolInfo> resolveSkillTools(List<AgentConfig> configs) {
-        return configs.stream()
-                .filter(c -> c.type() == AgentConfig.Type.SKILL_TOOL)
-                .map(this::toSkillToolInfo)
-                .filter(java.util.Objects::nonNull)
-                .toList();
-    }
-
-    private AgentToolInfo toSkillToolInfo(AgentConfig config) {
-        return skillRepository.findById(config.configId())
-                .map(skill -> buildToolInfo(AgentToolType.SKILL_TOOLS, skill.getId(), skill.getName(), skill.getDescription()))
-                .orElse(null);
-    }
-
-    private AgentToolInfo buildToolInfo(AgentToolType type, java.lang.String id, java.lang.String name, java.lang.String description) {
-        return AgentToolInfo.builder()
-                .type(type)
-                .id(id)
-                .name(name)
-                .description(description)
-                .enabled(true)
-                .build();
     }
 
 

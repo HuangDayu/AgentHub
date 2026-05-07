@@ -23,7 +23,7 @@ public class AgentConfigController {
     public AgentConfigResponse setConfig(@PathVariable String agentId,
                                          @RequestBody SetAgentConfigRequest request) {
         AgentConfigOutput result = useCase.setConfig(agentId, request.category(), request.type(),
-                request.configId(), request.description(), request.priority(), request.enabled());
+                request.configId(), request.name(), request.description(), request.priority(), request.enabled());
         return toResponse(result);
     }
 
@@ -31,7 +31,7 @@ public class AgentConfigController {
     public AgentConfigResponse updateConfig(@PathVariable String agentId, @PathVariable String id,
                                             @RequestBody SetAgentConfigRequest request) {
         AgentConfigOutput result = useCase.updateConfig(id, agentId, request.category(), request.type(),
-                request.configId(), request.description(), request.priority(), request.enabled());
+                request.configId(), request.name(), request.description(), request.priority(), request.enabled());
         return toResponse(result);
     }
 
@@ -68,7 +68,7 @@ public class AgentConfigController {
 
     private AgentConfigResponse toResponse(AgentConfigOutput result) {
         return new AgentConfigResponse(result.id(), result.agentId(), result.category(), result.type(),
-                result.configId(), result.description(), result.priority(), result.enabled(),
+                result.configId(), result.name(), result.description(), result.priority(), result.enabled(),
                 result.createdAt(), result.updatedAt());
     }
 }

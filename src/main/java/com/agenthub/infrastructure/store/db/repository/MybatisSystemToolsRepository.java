@@ -102,6 +102,7 @@ public class MybatisSystemToolsRepository implements SystemToolsRepository {
         e.setDescription(tool.getDescription());
         e.setCategory(tool.getCategory());
         e.setMethodCount(tool.getMethodCount());
+        e.setDescription(tool.getDescription());
         e.setEnabled(tool.isEnabled());
         e.setSystemTool(tool.isSystemTool());
         e.setCreatedAt(tool.getCreatedAt());
@@ -118,6 +119,7 @@ public class MybatisSystemToolsRepository implements SystemToolsRepository {
         t.setDescription(e.getDescription());
         t.setCategory(e.getCategory());
         t.setMethodCount(e.getMethodCount());
+        t.setDescription(e.getDescription());
         t.setEnabled(e.isEnabled());
         t.setSystemTool(e.isSystemTool());
         t.setCreatedAt(e.getCreatedAt());

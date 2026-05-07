@@ -124,11 +124,18 @@ export async function sendMessageStream(
   )
 
   try {
+    // 创建AbortController用于超时控制
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 600000) // 10分钟超时
+
     const response = await fetch(url, {
       method: 'POST',
       headers,
       body: JSON.stringify({ content: content }),
+      signal: controller.signal,
     })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       const text = await response.text()
@@ -174,7 +181,11 @@ export async function sendMessageStream(
 
     callbacks.onDone()
   } catch (error) {
-    callbacks.onError(error instanceof Error ? error : new Error(String(error)))
+    if (error instanceof Error && error.name === 'AbortError') {
+      callbacks.onError(new Error('请求超时，请稍后重试'))
+    } else {
+      callbacks.onError(error instanceof Error ? error : new Error(String(error)))
+    }
   }
 }
 

@@ -75,8 +75,8 @@ public class SkillFileManager implements SkillToolScannerPort {
         List<String> lines = Files.readAllLines(skillMdPath);
         if (lines.size() < 4) return Optional.empty();
         String skillCode = skillPath.getFileName().toString();
-        String name = lines.get(1).trim();
-        String description = lines.get(2).trim();
+        String name = lines.get(1).trim().replace("name:", "");
+        String description = lines.get(2).trim().replace("description:", "");
         String path = skillPath.toString();
         String skillFilesTree = buildFilesTreeJson(skillPath);
         return Optional.of(createSkill(skillCode, name, description, path, skillFilesTree));

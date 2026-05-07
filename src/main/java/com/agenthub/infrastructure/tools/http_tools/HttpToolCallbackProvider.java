@@ -42,7 +42,7 @@ public class HttpToolCallbackProvider {
      * 将HttpTool列表转换为ToolCallback集合。
      */
     private Set<ToolCallback> convertToToolCallbacks(List<HttpTool> httpTools) {
-        return httpTools.stream()
+        return httpTools.parallelStream()
                 .filter(this::isEnabled)
                 .map(this::createToolCallback)
                 .collect(Collectors.toSet());

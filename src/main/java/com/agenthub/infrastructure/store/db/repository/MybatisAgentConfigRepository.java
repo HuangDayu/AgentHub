@@ -116,6 +116,7 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
         entity.setCategory(config.category().name());
         entity.setType(config.type().name());
         entity.setConfigId(config.configId());
+        entity.setName(config.name());
         entity.setDescription(config.description());
         entity.setPriority(config.priority());
         entity.setEnabled(config.enabled());
@@ -132,7 +133,7 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
                 entity.getId(), entity.getAgentId(),
                 AgentConfig.Category.valueOf(entity.getCategory()),
                 AgentConfig.Type.valueOf(entity.getType()),
-                entity.getConfigId(), entity.getDescription(),
+                entity.getConfigId(), entity.getName(), entity.getDescription(),
                 entity.getPriority() != null ? entity.getPriority() : 0,
                 entity.isEnabled(), entity.getCreatedAt(), entity.getUpdatedAt()
         );

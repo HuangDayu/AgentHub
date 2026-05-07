@@ -50,7 +50,7 @@ public class ContextAutoConfiguration {
 
     @Bean("ttlExecutorService")
     public ExecutorService ttlExecutorService(){
-        return TenantContextHolder.getExecutorService();
+        return TenantContextHolder.getTtlExecutorService();
     }
 
     @Bean

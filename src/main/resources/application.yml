@@ -67,8 +67,8 @@ spring:
             initialize-schema: always
   http:
     clients:
-      connect-timeout: 60000
-      read-timeout: 300000
+      connect-timeout: 120000
+      read-timeout: 600000
 
 mybatis-plus:
   type-handlers-package: com.agenthub.infrastructure.store.db.handler

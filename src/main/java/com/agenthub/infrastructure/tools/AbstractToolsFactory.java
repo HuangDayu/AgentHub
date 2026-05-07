@@ -18,5 +18,5 @@ public interface AbstractToolsFactory {
 
     Set<ToolCallback> getToolCallbacks(String name);
 
-    Set<ToolCallback> getToolCallbacks(List<String> toolIds);
+    Set<ToolCallback> getToolCallbacks(List<AgentToolInfo> toolIds);
 }

@@ -38,7 +38,7 @@ public class TestCommonTools {
 
     public static RequestBuilder getRequestBuilder() {
         return MockMvcRequestBuilders.get("/")
-                .header("Authorization", "Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJsaXNpIiwidGVuYW50SWQiOiIxMDAwMDAwMDIiLCJyb2xlcyI6WyJST0xFX0FETUlOIl0sImlhdCI6MTc3NzI2MTA3NSwiZXhwIjoxNzc3OTgxMDc1fQ.-_HFZ686n5MR8MrNdyYcooMBDquJPzalmv9r79vRl3HhIzP5c1LadB-gl6V6m-Vn")
+                .header("Authorization", "Bearer Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJsaXNpIiwidGVuYW50SWQiOiIxMDAwMDAwMDIiLCJpYXQiOjE3NzgxNDkxNjYsImV4cCI6MTc3ODE1Mjc2Nn0.7hzbOrlkNEx6KZYl2yc63IkPRU6KVGXBxSIN2p-NrKD0kFZEws3L0c3SMS2FU_TM")
                 .header(CONTEXT_TENANT_ID, "100000002")
                 .header(CONTEXT_WORKSPACE_ID, "100000002")
                 .header(CONTEXT_REQUEST_ID, randomId());

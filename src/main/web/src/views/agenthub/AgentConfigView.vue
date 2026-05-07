@@ -33,6 +33,12 @@
                 {{ ct.displayName }}
               </option>
             </select>
+            <select v-model="selectedType" class="filter-select">
+              <option value="">全部类型</option>
+              <option v-for="t in typesForFilter" :key="t.type" :value="t.type">
+                {{ t.displayName }}
+              </option>
+            </select>
             <select v-model="cardSize" class="size-select">
               <option :value="1">大小: 1级</option>
               <option :value="2">大小: 2级</option>
@@ -56,20 +62,23 @@
         <div v-else class="config-grid" :class="`size-${cardSize}`">
           <div v-for="config in filteredConfigs" :key="config.id" class="config-card" :class="`category-${config.category.toLowerCase()}`">
             <div class="config-header">
-              <span class="config-category">{{ getCategoryLabel(config.category) }}</span>
+              <span class="config-category">{{ getCategoryLabel(config.category) }}/{{ getTypeLabel(config.category, config.type) }}</span>
               <span :class="['config-status', config.enabled ? 'enabled' : 'disabled']">
                 {{ config.enabled ? '启用' : '禁用' }}
               </span>
             </div>
             <div class="config-body">
-              <div class="config-type">{{ getTypeLabel(config.category, config.type) }}</div>
-              <div class="config-desc">{{ config.description || '无描述' }}</div>
+              <div class="config-name">{{ config.name || '无名称' }}</div>
+              <div class="config-desc">
+                <span class="desc-text">{{ truncateText(config.description, 30) }}</span>
+              </div>
             </div>
             <div class="config-footer">
               <div class="config-meta">
                 <span>优先级: {{ config.priority }}</span>
               </div>
               <div class="config-actions">
+                <button class="btn-detail" @click="showDetail(config)">详情</button>
                 <button 
                   :class="['btn-toggle', config.enabled ? 'btn-disable' : 'btn-enable']"
                   @click="toggleEnabled(config)"
@@ -85,6 +94,42 @@
           </div>
         </div>
       </article>
+
+      <!-- 详情弹窗 -->
+      <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetail">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>配置详情</h3>
+            <button class="modal-close" @click="closeDetail">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="detail-row">
+              <span class="detail-label">类别/类型:</span>
+              <span class="detail-value">{{ getCategoryLabel(detailConfig?.category || '') }}/{{ getTypeLabel(detailConfig?.category || '', detailConfig?.type || '') }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">名称:</span>
+              <span class="detail-value">{{ detailConfig?.name || '无名称' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">描述:</span>
+              <span class="detail-value">{{ detailConfig?.description || '无描述' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">优先级:</span>
+              <span class="detail-value">{{ detailConfig?.priority }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">状态:</span>
+              <span class="detail-value">{{ detailConfig?.enabled ? '启用' : '禁用' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">配置ID:</span>
+              <span class="detail-value">{{ detailConfig?.configId }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- 添加配置表单 -->
       <article v-if="showAddForm" class="panel form-panel">
@@ -129,6 +174,10 @@
             </label>
           </div>
           <label class="form-field full-width">
+            <span>名称</span>
+            <input v-model="form.name" type="text" placeholder="输入配置名称..." />
+          </label>
+          <label class="form-field full-width">
             <span>描述</span>
             <input v-model="form.description" type="text" placeholder="输入配置描述..." />
           </label>
@@ -166,12 +215,16 @@ const configTypes = ref<ConfigTypeDefinition[]>([])
 const availableConfigs = ref<Map<string, AvailableConfig[]>>(new Map())
 const showAddForm = ref(false)
 const selectedCategory = ref('')
+const selectedType = ref('')
 const cardSize = ref(3)
+const showDetailModal = ref(false)
+const detailConfig = ref<AgentConfig | null>(null)
 
 const form = ref({
   category: '',
   type: '',
   configId: '',
+  name: '',
   description: '',
   priority: 1,
   enabled: true,
@@ -189,6 +242,23 @@ const typesForCategory = computed(() => {
   return ct?.types || []
 })
 
+const typesForFilter = computed(() => {
+  if (!selectedCategory.value) {
+    // 返回所有类型
+    const allTypes: { type: string; displayName: string }[] = []
+    for (const ct of configTypes.value) {
+      for (const t of ct.types) {
+        if (!allTypes.some(at => at.type === t.type)) {
+          allTypes.push({ type: t.type, displayName: t.displayName })
+        }
+      }
+    }
+    return allTypes
+  }
+  const ct = configTypes.value.find(c => c.category === selectedCategory.value)
+  return ct?.types || []
+})
+
 const availableConfigsForType = computed(() => {
   return availableConfigs.value.get(form.value.type) || []
 })
@@ -198,10 +268,14 @@ const isFormValid = computed(() => {
 })
 
 const filteredConfigs = computed(() => {
-  if (!selectedCategory.value) {
-    return configs.value
+  let result = configs.value
+  if (selectedCategory.value) {
+    result = result.filter(c => c.category === selectedCategory.value)
   }
-  return configs.value.filter(c => c.category === selectedCategory.value)
+  if (selectedType.value) {
+    result = result.filter(c => c.type === selectedType.value)
+  }
+  return result
 })
 
 onMounted(() => {
@@ -227,6 +301,11 @@ watch(selectedAgentId, () => {
   if (selectedAgentId.value) {
     loadConfigs()
   }
+})
+
+// 当类别变化时重置类型筛选
+watch(selectedCategory, () => {
+  selectedType.value = ''
 })
 
 watch(() => form.value.type, (newType) => {
@@ -263,6 +342,22 @@ function getTypeLabel(category: string, type: string): string {
   return t?.displayName || type
 }
 
+function truncateText(text: string | undefined, maxLength: number): string {
+  if (!text) return '无描述'
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
+
+function showDetail(config: AgentConfig) {
+  detailConfig.value = config
+  showDetailModal.value = true
+}
+
+function closeDetail() {
+  showDetailModal.value = false
+  detailConfig.value = null
+}
+
 function onCategoryChange() {
   form.value.type = ''
   form.value.configId = ''
@@ -282,6 +377,7 @@ function resetForm() {
     category: '',
     type: '',
     configId: '',
+    name: '',
     description: '',
     priority: 1,
     enabled: true,
@@ -337,14 +433,16 @@ async function handleAdd() {
   error.value = ''
   try {
     const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
-    // 获取配置名称作为描述
+    // 获取配置名称
     const configName = getConfigNameFromSelection()
+    const name = form.value.name || configName
     const description = form.value.description || configName
     
     await setAgentConfig(selection, selectedAgentId.value, {
       category: form.value.category,
       type: form.value.type,
       configId: form.value.configId,
+      name: name,
       description: description,
       priority: form.value.priority,
       enabled: form.value.enabled,
@@ -615,19 +713,104 @@ async function handleSync() {
   padding: 0.625rem 0.75rem;
 }
 
-.config-type {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #374151;
+.config-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1f2937;
   margin-bottom: 0.25rem;
 }
 
 .config-desc {
-  font-size: 0.8rem;
-  color: #1f2937;
+  font-size: 0.75rem;
+  color: #6b7280;
   line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
+.desc-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #374151;
+}
+
+.modal-body {
+  padding: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  width: 100px;
+  font-weight: 500;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  flex: 1;
+  color: #1f2937;
+  word-break: break-all;
+}
 .config-footer {
   display: flex;
   justify-content: space-between;
@@ -647,7 +830,7 @@ async function handleSync() {
   gap: 0.375rem;
 }
 
-.btn-toggle, .btn-delete {
+.btn-toggle, .btn-delete, .btn-detail {
   font-size: 0.7rem;
   padding: 0.125rem 0.375rem;
   border-radius: 0.125rem;
@@ -681,6 +864,15 @@ async function handleSync() {
 
 .btn-delete:hover {
   background: #e5e7eb;
+}
+
+.btn-detail {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.btn-detail:hover {
+  background: #bae6fd;
 }
 
 /* Form */

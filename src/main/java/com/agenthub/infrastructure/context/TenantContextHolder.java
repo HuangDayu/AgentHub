@@ -3,9 +3,13 @@ package com.agenthub.infrastructure.context;
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.alibaba.ttl.threadpool.TtlExecutors;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 租户上下文持有者。
@@ -26,8 +30,19 @@ public final class TenantContextHolder {
      */
     private static final ExecutorService executorService = TtlExecutors.getTtlExecutorService(Executors.newVirtualThreadPerTaskExecutor());
 
-    public static ExecutorService getExecutorService() {
+    public static ExecutorService getTtlExecutorService() {
         return executorService;
+    }
+
+    public static <T, R> List<R> parallelStreamWithTtl(int parallelism, List<T> list, Function<T, R> mapper) {
+        ExecutorService pool = TtlExecutors.getTtlExecutorService(new ForkJoinPool(parallelism));
+        try {
+            return pool.submit(() -> list.parallelStream().map(mapper).collect(Collectors.toList())).get();
+        } catch (Exception e) {
+            throw new RuntimeException("Parallel stream execution failed", e);
+        } finally {
+            pool.shutdown();
+        }
     }
 
     /**
