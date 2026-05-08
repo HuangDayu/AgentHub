@@ -16,10 +16,10 @@
     <template v-else>
       <article class="panel stack">
         <div class="page-header">
-          <h3 style="margin: 0">工具列表</h3>
-          <div class="chip-row">
+          <h3>工具列表</h3>
+          <div class="filter-row">
             <select v-model="filterCategory" class="filter-select">
-              <option value="">所有分类</option>
+              <option value="">全部分类</option>
               <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
             </select>
             <select v-model="filterEnabled" class="filter-select">
@@ -99,24 +99,36 @@ const filterEnabled = ref('')
 
 const selectionReady = computed(() => !!store.tenantId && !!store.workspaceId)
 
+// Get selection object
+function getSelection() {
+  return {
+    tenantId: store.tenantId!,
+    workspaceId: store.workspaceId!
+  }
+}
+
 const categories = computed(() => {
-  return [...new Set(tools.value.map(t => t.category))]
+  const cats = new Set(tools.value.map(t => t.category))
+  return Array.from(cats).sort()
 })
 
 const filteredTools = computed(() => {
-  return tools.value.filter(tool => {
-    if (filterCategory.value && tool.category !== filterCategory.value) return false
-    if (filterEnabled.value === 'true' && !tool.enabled) return false
-    if (filterEnabled.value === 'false' && tool.enabled) return false
-    return true
-  })
+  let result = tools.value
+  if (filterCategory.value) {
+    result = result.filter(t => t.category === filterCategory.value)
+  }
+  if (filterEnabled.value) {
+    const enabled = filterEnabled.value === 'true'
+    result = result.filter(t => t.enabled === enabled)
+  }
+  return result
 })
 
 const loadTools = async () => {
   if (!selectionReady.value) return
   loading.value = true
   try {
-    tools.value = await listSystemTools(store.selection)
+    tools.value = await listSystemTools(getSelection())
   } catch (error) {
     console.error('Failed to load tools:', error)
   } finally {
@@ -128,7 +140,7 @@ const syncTools = async () => {
   if (!selectionReady.value) return
   syncing.value = true
   try {
-    await syncSystemTools(store.selection)
+    await syncSystemTools(getSelection())
     await loadTools()
   } catch (error) {
     console.error('Failed to sync tools:', error)
@@ -141,9 +153,9 @@ const toggleEnabled = async (tool: FunctionTool) => {
   if (!selectionReady.value) return
   try {
     if (tool.enabled) {
-      await disableSystemTool(store.selection, tool.id)
+      await disableSystemTool(getSelection(), tool.id)
     } else {
-      await enableSystemTool(store.selection, tool.id)
+      await enableSystemTool(getSelection(), tool.id)
     }
     tool.enabled = !tool.enabled
   } catch (error) {
@@ -155,7 +167,7 @@ const handleDelete = async (tool: FunctionTool) => {
   if (!selectionReady.value) return
   if (!confirm(`确定删除 ${tool.toolName}?`)) return
   try {
-    await deleteSystemTool(store.selection, tool.id)
+    await deleteSystemTool(getSelection(), tool.id)
     tools.value = tools.value.filter(t => t.id !== tool.id)
   } catch (error) {
     console.error('Failed to delete:', error)
@@ -172,12 +184,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.filter-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .filter-select {
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   border: 1px solid var(--border-color, #ddd);
-  border-radius: 4px;
+  border-radius: 8px;
   background: var(--bg-color, white);
   font-size: 0.875rem;
+  min-width: 150px;
 }
 
 .filter-select:focus {

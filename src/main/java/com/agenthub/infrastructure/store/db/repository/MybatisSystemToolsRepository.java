@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import com.agenthub.application.port.out.repositories.SystemToolsRepository;
 import com.agenthub.domain.model.SystemTool;
-import com.agenthub.infrastructure.store.db.entity.SystemEntity;
+import com.agenthub.infrastructure.store.db.entity.SystemToolsEntity;
 import com.agenthub.infrastructure.store.db.mapper.SystemToolsMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.annotation.Primary;
@@ -32,11 +32,11 @@ public class MybatisSystemToolsRepository implements SystemToolsRepository {
         return tools.stream().map(tool -> toDomain(syncTool(tool))).collect(Collectors.toList());
     }
 
-    private SystemEntity syncTool(SystemTool tool) {
-        SystemEntity newEntity = toEntity(tool);
-        LambdaQueryWrapper<SystemEntity> w = new LambdaQueryWrapper<>();
-        w.eq(SystemEntity::getToolClassName, tool.getToolClassName());
-        SystemEntity oldEntity = mapper.selectOne(w);
+    private SystemToolsEntity syncTool(SystemTool tool) {
+        SystemToolsEntity newEntity = toEntity(tool);
+        LambdaQueryWrapper<SystemToolsEntity> w = new LambdaQueryWrapper<>();
+        w.eq(SystemToolsEntity::getToolClassName, tool.getToolClassName());
+        SystemToolsEntity oldEntity = mapper.selectOne(w);
         if (oldEntity != null) {
             newEntity.setId(oldEntity.getId());
         }
@@ -56,15 +56,15 @@ public class MybatisSystemToolsRepository implements SystemToolsRepository {
 
     @Override
     public List<SystemTool> findByEnabled(boolean enabled) {
-        LambdaQueryWrapper<SystemEntity> w = new LambdaQueryWrapper<>();
-        w.eq(SystemEntity::isEnabled, enabled);
+        LambdaQueryWrapper<SystemToolsEntity> w = new LambdaQueryWrapper<>();
+        w.eq(SystemToolsEntity::isEnabled, enabled);
         return mapper.selectList(w).stream().map(this::toDomain).toList();
     }
 
     @Override
     public Optional<SystemTool> findByToolClassName(String name) {
-        LambdaQueryWrapper<SystemEntity> w = new LambdaQueryWrapper<>();
-        w.eq(SystemEntity::getToolClassName, name);
+        LambdaQueryWrapper<SystemToolsEntity> w = new LambdaQueryWrapper<>();
+        w.eq(SystemToolsEntity::getToolClassName, name);
         return Optional.ofNullable(mapper.selectOne(w)).map(this::toDomain);
     }
 
@@ -80,8 +80,8 @@ public class MybatisSystemToolsRepository implements SystemToolsRepository {
 
     @Override
     public List<SystemTool> findByWorkspaceId(String workspaceId) {
-        LambdaQueryWrapper<SystemEntity> w = new LambdaQueryWrapper<>();
-        w.eq(SystemEntity::getWorkspaceId, workspaceId);
+        LambdaQueryWrapper<SystemToolsEntity> w = new LambdaQueryWrapper<>();
+        w.eq(SystemToolsEntity::getWorkspaceId, workspaceId);
         return mapper.selectList(w).stream().map(this::toDomain).toList();
     }
 
@@ -93,8 +93,8 @@ public class MybatisSystemToolsRepository implements SystemToolsRepository {
         return mapper.selectByIds(toolIds).stream().map(this::toDomain).toList();
     }
 
-    private SystemEntity toEntity(SystemTool tool) {
-        SystemEntity e = new SystemEntity();
+    private SystemToolsEntity toEntity(SystemTool tool) {
+        SystemToolsEntity e = new SystemToolsEntity();
         e.setId(tool.getId());
         e.setTenantId(tool.getTenantId());
         e.setToolClassName(tool.getToolClassName());
@@ -110,7 +110,7 @@ public class MybatisSystemToolsRepository implements SystemToolsRepository {
         return e;
     }
 
-    private SystemTool toDomain(SystemEntity e) {
+    private SystemTool toDomain(SystemToolsEntity e) {
         SystemTool t = new SystemTool();
         t.setId(e.getId());
         t.setTenantId(e.getTenantId());

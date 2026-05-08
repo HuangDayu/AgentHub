@@ -9,7 +9,12 @@ const agentHubRoutes = {
   component: () => import('@/components/TenantLayout.vue'),
   meta: { requiresAuth: true },
   children: [
-    { path: '', component: () => import('@/views/agenthub/WorkspaceOverviewView.vue') },
+    // 首页改为Agent对话
+    { path: '', component: () => import('@/views/agenthub/RuntimeChatView.vue') },
+    // 设置页面
+    { path: 'settings', component: () => import('@/views/agenthub/SettingsView.vue') },
+    // 其他功能页面（保留但不在导航显示）
+    { path: 'workspace', component: () => import('@/views/agenthub/WorkspaceOverviewView.vue') },
     { path: 'knowledge', component: () => import('@/views/agenthub/KnowledgeWorkbenchView.vue') },
     { path: 'agents', component: () => import('@/views/agenthub/AgentStudioView.vue') },
     { path: 'agent-configs', component: () => import('@/views/agenthub/AgentConfigView.vue') },
@@ -26,6 +31,7 @@ const agentHubRoutes = {
     { path: 'teams', component: () => import('@/views/agenthub/AgentTeamManagementView.vue') },
     { path: 'security-policies', component: () => import('@/views/agenthub/SecurityPolicyManagementView.vue') },
     { path: 'system-tools', component: () => import('@/views/agenthub/SystemToolsView.vue') },
+    { path: 'scheduled-tasks', component: () => import('@/views/agenthub/ScheduledTaskView.vue') },
   ],
 }
 

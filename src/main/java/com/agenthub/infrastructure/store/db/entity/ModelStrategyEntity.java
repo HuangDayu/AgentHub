@@ -1,12 +1,18 @@
 package com.agenthub.infrastructure.store.db.entity;
+import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import lombok.Data;
 
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.time.Instant;
 
+import static com.agenthub.domain.model.AgentConfigCategory.STRATEGY;
+import static com.agenthub.domain.model.AgentConfigType.GUARDRAIL_STRATEGY;
+import static com.agenthub.domain.model.AgentConfigType.MODEL_STRATEGY;
+
 @Data
 @TableName("app.model_policy")
+@ConfigChangeListenerEntity(category = STRATEGY, type = MODEL_STRATEGY)
 public class ModelStrategyEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

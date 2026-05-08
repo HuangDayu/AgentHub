@@ -208,3 +208,15 @@ function parseMessageContent(data: string): string | null {
     return data
   }
 }
+
+/**
+ * Delete a session.
+ * Backend endpoint: DELETE /api/v1/workspaces/${selection.workspaceId}/agents/{agentId}/sessions/{sessionId}
+ */
+export function deleteSession(selection: SelectionState, agentId: string, sessionId: string) {
+  return requestJson<void>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}`, {
+    baseUrl: runtimeConfig.runtimeApiBase,
+    method: 'DELETE',
+    headers: scopedHeaders(selection),
+  })
+}

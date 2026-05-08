@@ -1,15 +1,22 @@
 package com.agenthub.infrastructure.store.db.entity;
+import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import lombok.Data;
 
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.time.Instant;
 
+import static com.agenthub.domain.model.AgentConfigCategory.MODEL;
+import static com.agenthub.domain.model.AgentConfigCategory.PROMPT;
+import static com.agenthub.domain.model.AgentConfigType.CHAT_MODEL;
+import static com.agenthub.domain.model.AgentConfigType.SYSTEM_PROMPT;
+
 /**
  * 模型配置持久化对象（PO），映射 model_config 表。
  */
 @Data
 @TableName("app.model_config")
+@ConfigChangeListenerEntity(category = MODEL, type = CHAT_MODEL)
 public class ModelConfigEntity {
 
     @TableId(type = IdType.ASSIGN_ID)

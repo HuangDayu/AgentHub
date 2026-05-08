@@ -1,13 +1,18 @@
 package com.agenthub.infrastructure.store.db.entity;
+import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import lombok.Data;
 
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.time.Instant;
 
+import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.model.AgentConfigType.SYSTEM_TOOL;
+
 @Data
 @TableName("app.system_tools")
-public class SystemEntity {
+@ConfigChangeListenerEntity(category = TOOL, type = SYSTEM_TOOL)
+public class SystemToolsEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
     @TableField(value = "tenant_id", fill = FieldFill.INSERT)

@@ -1,10 +1,15 @@
 package com.agenthub.infrastructure.store.db.entity;
 
+import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import com.agenthub.domain.model.HttpTool;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.time.Instant;
+
+import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.model.AgentConfigType.HTTP_TOOL;
+import static com.agenthub.domain.model.AgentConfigType.MCP_TOOL;
 
 /**
  * 工具注册表 MyBatis 实体。
@@ -15,6 +20,7 @@ import java.time.Instant;
  */
 @Data
 @TableName("app.http_tools")
+@ConfigChangeListenerEntity(category = TOOL, type = HTTP_TOOL)
 public class HttpToolsEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private java.lang.String id;

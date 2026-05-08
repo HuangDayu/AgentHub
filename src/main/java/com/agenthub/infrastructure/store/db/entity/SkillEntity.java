@@ -1,12 +1,18 @@
 package com.agenthub.infrastructure.store.db.entity;
+import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import lombok.Data;
 
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.time.Instant;
 
+import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.model.AgentConfigType.HTTP_TOOL;
+import static com.agenthub.domain.model.AgentConfigType.SKILL_TOOL;
+
 @Data
 @TableName("app.skill")
+@ConfigChangeListenerEntity(category = TOOL, type = SKILL_TOOL)
 public class SkillEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

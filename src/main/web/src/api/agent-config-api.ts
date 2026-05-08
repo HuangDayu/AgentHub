@@ -70,3 +70,20 @@ export function syncAgentConfigs(selection: SelectionState, agentId: string) {
     { baseUrl: runtimeConfig.agentApiBase, method: 'POST', headers: scopedHeaders(selection) }
   )
 }
+
+// Alias for compatibility
+export const createAgentConfig = setAgentConfig
+
+export function enableAgentConfig(selection: SelectionState, agentId: string, id: string) {
+  return requestJson<AgentConfig>(
+    `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/configs/${id}/enable`,
+    { baseUrl: runtimeConfig.agentApiBase, method: 'POST', headers: scopedHeaders(selection) }
+  )
+}
+
+export function disableAgentConfig(selection: SelectionState, agentId: string, id: string) {
+  return requestJson<AgentConfig>(
+    `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/configs/${id}/disable`,
+    { baseUrl: runtimeConfig.agentApiBase, method: 'POST', headers: scopedHeaders(selection) }
+  )
+}

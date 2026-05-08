@@ -19,9 +19,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.utils.RandomUtils.randomId;
-import static com.agenthub.domain.model.AgentConfig.Category.KNOWLEDGE;
-import static com.agenthub.domain.model.AgentConfig.Category.STRATEGY;
-import static com.agenthub.domain.model.AgentConfig.Type.*;
+import static com.agenthub.domain.model.AgentConfigCategory.KNOWLEDGE;
+import static com.agenthub.domain.model.AgentConfigCategory.STRATEGY;
+import static com.agenthub.domain.model.AgentConfigType.*;
 
 
 @Component
@@ -81,7 +81,7 @@ public class RagChatUseCase {
     }
 
     private String getPromptTemplate(String agentId) {
-        String configId = agentConfigRepository.getConfigId(agentId, AgentConfig.Category.PROMPT, SYSTEM_PROMPT);
+        String configId = agentConfigRepository.getConfigId(agentId, AgentConfigCategory.PROMPT, SYSTEM_PROMPT);
         Optional<PromptTemplateInfo> optional = promptTemplateRepository.findById(configId);
         return optional.isPresent() ? optional.get().content() : " ";
     }

@@ -1,39 +1,47 @@
 <template>
-  <div class="shell">
-    <header class="console-header">
+  <div class="app-shell">
+    <!-- 顶部栏 -->
+    <header class="app-header">
       <div class="header-left">
-        <h1>AgentHub 控制台</h1>
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h1>AgentHub</h1>
       </div>
       <div class="header-right">
         <WorkspaceSelector />
-        <button class="ghost" type="button" @click="logout">退出登录</button>
+        <button class="logout-btn" @click="logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          退出
+        </button>
       </div>
     </header>
-    <nav class="nav">
-      <RouterLink to="/agenthub">工作区</RouterLink>
-      <RouterLink to="/agenthub/knowledge">知识库</RouterLink>
-      <RouterLink to="/agenthub/retrieval">检索</RouterLink>
-      <RouterLink to="/agenthub/agents">Agent管理</RouterLink>
-      <RouterLink to="/agenthub/agent-configs">Agent配置</RouterLink>
-      <RouterLink to="/agenthub/chat">Agent对话</RouterLink>
-      <RouterLink to="/agenthub/vector-stores">向量库</RouterLink>
-      <RouterLink to="/agenthub/models">大模型</RouterLink>
-      <RouterLink to="/agenthub/strategies">策略</RouterLink>
-      <RouterLink to="/agenthub/mcp-tools">MCP</RouterLink>
-      <RouterLink to="/agenthub/prompt-templates">提示词</RouterLink>
-    </nav>
-    <main class="content">
+
+    <!-- 主内容区 -->
+    <main class="app-content">
       <RouterView />
     </main>
+
+    <!-- 悬浮设置按钮 -->
+    <FloatingSettingsButton />
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { getCurrentUser } from '@/api/tenant-api'
 import WorkspaceSelector from './WorkspaceSelector.vue'
+import FloatingSettingsButton from './FloatingSettingsButton.vue'
 
 const store = useWorkspaceStore()
 const router = useRouter()
@@ -58,30 +66,118 @@ function logout() {
 </script>
 
 <style scoped>
-.console-header {
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(26, 30, 41, 0.08);
-  box-shadow: 0 4px 12px rgba(32, 44, 68, 0.06);
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(22, 33, 50, 0.08);
+  box-shadow: 0 2px 8px rgba(32, 44, 68, 0.04);
   backdrop-filter: blur(12px);
-  border-radius: 10px;
 }
-.header-left h1 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1a1e29;
-}
-.header-right {
+
+.header-left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.tenant-badge {
-  font-size: 0.8rem;
-  color: #5d6678;
+
+.logo {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  background: linear-gradient(135deg, #264266, #3a8ad6);
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(58, 138, 214, 0.3);
+}
+
+.logo svg {
+  width: 100%;
+  height: 100%;
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #264266, #3a8ad6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid rgba(38, 66, 102, 0.14);
+  background: white;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #264266;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.logout-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.logout-btn:hover {
+  border-color: #c94a35;
+  color: #c94a35;
+  background: rgba(201, 74, 53, 0.05);
+}
+
+.app-content {
+  flex: 1;
+  padding: 24px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 12px 16px;
+  }
+  
+  .header-left h1 {
+    font-size: 1rem;
+  }
+  
+  .app-content {
+    padding: 16px;
+  }
+  
+  .logout-btn span {
+    display: none;
+  }
+  
+  .logout-btn {
+    padding: 8px;
+  }
 }
 </style>

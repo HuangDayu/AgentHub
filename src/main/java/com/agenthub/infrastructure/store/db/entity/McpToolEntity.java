@@ -1,12 +1,17 @@
 package com.agenthub.infrastructure.store.db.entity;
 
+import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.time.Instant;
 
+import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.model.AgentConfigType.MCP_TOOL;
+
 @Data
 @TableName(value = "app.mcp_tool", autoResultMap = true)
+@ConfigChangeListenerEntity(category = TOOL, type = MCP_TOOL)
 public class McpToolEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

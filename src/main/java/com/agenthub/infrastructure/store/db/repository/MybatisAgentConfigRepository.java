@@ -2,6 +2,8 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
 import com.agenthub.domain.model.AgentConfig;
+import com.agenthub.domain.model.AgentConfigCategory;
+import com.agenthub.domain.model.AgentConfigType;
 import com.agenthub.infrastructure.store.db.entity.AgentConfigEntity;
 import com.agenthub.infrastructure.store.db.mapper.AgentConfigMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -60,12 +62,12 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
     }
 
     @Override
-    public List<AgentConfig> findByAgentIdAndCategory(String agentId, AgentConfig.Category category) {
+    public List<AgentConfig> findByAgentIdAndCategory(String agentId, AgentConfigCategory category) {
         return mapper.selectByAgentIdAndCategory(agentId, category.name()).stream().map(this::toDomain).toList();
     }
 
     @Override
-    public List<AgentConfig> findEnabledAgentConfigs(String agentId, AgentConfig.Category category, AgentConfig.Type type) {
+    public List<AgentConfig> findEnabledAgentConfigs(String agentId, AgentConfigCategory category, AgentConfigType type) {
         LambdaQueryWrapper<AgentConfigEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(AgentConfigEntity::getAgentId, agentId);
         queryWrapper.eq(AgentConfigEntity::getCategory, category.name());
@@ -75,7 +77,7 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
     }
 
     @Override
-    public AgentConfig findOneAgentConfig(String agentId, AgentConfig.Category category, AgentConfig.Type type) {
+    public AgentConfig findOneAgentConfig(String agentId, AgentConfigCategory category, AgentConfigType type) {
         LambdaQueryWrapper<AgentConfigEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(AgentConfigEntity::getAgentId, agentId);
         queryWrapper.eq(AgentConfigEntity::getCategory, category.name());
@@ -101,7 +103,7 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
     }
 
     @Override
-    public String getConfigId(String agentId, AgentConfig.Category category, AgentConfig.Type type) {
+    public String getConfigId(String agentId, AgentConfigCategory category, AgentConfigType type) {
         AgentConfig config = findOneAgentConfig(agentId, category, type);
         if (config == null) {
             throw new IllegalStateException("未找到对应的配置");
@@ -131,8 +133,8 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
         }
         return new AgentConfig(
                 entity.getId(), entity.getAgentId(),
-                AgentConfig.Category.valueOf(entity.getCategory()),
-                AgentConfig.Type.valueOf(entity.getType()),
+                AgentConfigCategory.valueOf(entity.getCategory()),
+                AgentConfigType.valueOf(entity.getType()),
                 entity.getConfigId(), entity.getName(), entity.getDescription(),
                 entity.getPriority() != null ? entity.getPriority() : 0,
                 entity.isEnabled(), entity.getCreatedAt(), entity.getUpdatedAt()

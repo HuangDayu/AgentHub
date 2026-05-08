@@ -49,9 +49,7 @@ export const useUserAuthStore = defineStore('user-auth', () => {
   return { accessToken, refreshToken, isAuthenticated, setTokens, clearTokens }
 })
 
-==============================
 // Backward-compatible alias (used by layouts and views)
 // IMPORTANT: User Console uses useUserAuthStore, Tenant uses useTenantAuthStore
 // Do NOT alias both to the same store!
-==============================
 export const useAuthStore = useTenantAuthStore

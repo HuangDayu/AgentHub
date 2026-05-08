@@ -3,10 +3,12 @@ package com.agenthub.infrastructure.context;
 import com.agenthub.application.port.out.IdGenerator;
 import com.agenthub.application.port.out.TimeProvider;
 import com.agenthub.common.utils.RandomUtils;
+import com.agenthub.common.utils.TtlUtils;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import com.agenthub.infrastructure.context.handler.TenantContextLineHandler;
 import com.agenthub.infrastructure.context.handler.WorkspacesContextLineHandler;
+import com.agenthub.infrastructure.context.listener.AgentConfigChangeInterceptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -50,7 +52,7 @@ public class ContextAutoConfiguration {
 
     @Bean("ttlExecutorService")
     public ExecutorService ttlExecutorService(){
-        return TenantContextHolder.getTtlExecutorService();
+        return TtlUtils.getTtlExecutorService();
     }
 
     @Bean
@@ -89,10 +91,14 @@ public class ContextAutoConfiguration {
      * 创建MyBatis-Plus拦截器，包含租户隔离。
      */
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor(TenantContextLineHandler tenantContextLineHandler, WorkspacesContextLineHandler workspacesContextLineHandler) {
+    public MybatisPlusInterceptor mybatisPlusInterceptor(
+            TenantContextLineHandler tenantContextLineHandler, 
+            WorkspacesContextLineHandler workspacesContextLineHandler,
+            AgentConfigChangeInterceptor agentConfigChangeInterceptor) {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new TenantLineInnerInterceptor(tenantContextLineHandler));
         interceptor.addInnerInterceptor(new TenantLineInnerInterceptor(workspacesContextLineHandler));
+        interceptor.addInnerInterceptor(agentConfigChangeInterceptor);
         return interceptor;
     }
 

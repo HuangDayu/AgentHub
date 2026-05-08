@@ -101,17 +101,17 @@ public class ReActAgentManager {
 
 
     private java.lang.String resolveChatModelId(List<AgentConfig> configs) {
-        return findConfigId(configs, AgentConfig.Category.MODEL, AgentConfig.Type.CHAT_MODEL);
+        return findConfigId(configs, AgentConfigCategory.MODEL, AgentConfigType.CHAT_MODEL);
     }
 
     private java.lang.String resolveSystemPrompt(List<AgentConfig> configs) {
-        java.lang.String promptId = findConfigId(configs, AgentConfig.Category.PROMPT, AgentConfig.Type.SYSTEM_PROMPT);
+        java.lang.String promptId = findConfigId(configs, AgentConfigCategory.PROMPT, AgentConfigType.SYSTEM_PROMPT);
         if (promptId == null) return null;
         return promptTemplateRepository.findById(promptId).map(PromptTemplateInfo::content).orElse(null);
     }
 
     private List<AgentToolInfo> resolveTools(List<AgentConfig> configs) {
-        return configs.parallelStream().filter(c -> c.category() == AgentConfig.Category.TOOL)
+        return configs.parallelStream().filter(c -> c.category() == AgentConfigCategory.TOOL)
                 .map(v -> new AgentToolInfo(AgentToolType.valueOf(v.type().name()), v.configId(), v.name(), v.description(), v.enabled()))
                 .toList();
     }
@@ -119,43 +119,43 @@ public class ReActAgentManager {
 
     private List<java.lang.String> resolveToolIds(List<AgentConfig> configs) {
         return configs.stream()
-                .filter(c -> c.category() == AgentConfig.Category.TOOL)
+                .filter(c -> c.category() == AgentConfigCategory.TOOL)
                 .map(AgentConfig::configId)
                 .toList();
     }
 
     private List<java.lang.String> resolveKnowledgeIds(List<AgentConfig> configs) {
         return configs.stream()
-                .filter(c -> c.type() == AgentConfig.Type.KNOWLEDGE_BASE)
+                .filter(c -> c.type() == AgentConfigType.KNOWLEDGE_BASE)
                 .map(AgentConfig::configId)
                 .toList();
     }
 
     private ModelStrategy resolveModelStrategy(List<AgentConfig> configs) {
-        java.lang.String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.MODEL_STRATEGY);
+        java.lang.String id = findConfigId(configs, AgentConfigCategory.STRATEGY, AgentConfigType.MODEL_STRATEGY);
         if (id == null) return null;
         return modelStrategyRepository.findById(id).orElse(null);
     }
 
     private ToolStrategy resolveToolStrategy(List<AgentConfig> configs) {
-        java.lang.String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.TOOL_STRATEGY);
+        java.lang.String id = findConfigId(configs, AgentConfigCategory.STRATEGY, AgentConfigType.TOOL_STRATEGY);
         if (id == null) return null;
         return toolStrategyRepository.findById(id).orElse(null);
     }
 
     private GuardrailStrategy resolveGuardrailStrategy(List<AgentConfig> configs) {
-        java.lang.String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.GUARDRAIL_STRATEGY);
+        java.lang.String id = findConfigId(configs, AgentConfigCategory.STRATEGY, AgentConfigType.GUARDRAIL_STRATEGY);
         if (id == null) return null;
         return guardrailStrategyRepository.findById(id).orElse(null);
     }
 
     private RetrievalStrategy resolveRetrievalStrategy(List<AgentConfig> configs) {
-        java.lang.String id = findConfigId(configs, AgentConfig.Category.STRATEGY, AgentConfig.Type.RETRIEVAL_STRATEGY);
+        java.lang.String id = findConfigId(configs, AgentConfigCategory.STRATEGY, AgentConfigType.RETRIEVAL_STRATEGY);
         if (id == null) return null;
         return retrievalStrategyRepository.findById(id).orElse(null);
     }
 
-    private java.lang.String findConfigId(List<AgentConfig> configs, AgentConfig.Category category, AgentConfig.Type type) {
+    private java.lang.String findConfigId(List<AgentConfig> configs, AgentConfigCategory category, AgentConfigType type) {
         return configs.stream()
                 .filter(c -> c.category() == category && c.type() == type)
                 .findFirst()

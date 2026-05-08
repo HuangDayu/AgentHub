@@ -7,22 +7,16 @@ import com.agenthub.application.port.out.repositories.SystemToolsRepository;
 import com.agenthub.application.port.out.tools.SkillToolScannerPort;
 import com.agenthub.application.port.out.tools.SystemToolScannerPort;
 import com.agenthub.common.exception.NotFoundException;
-import com.agenthub.domain.model.AgentConfig;
-import com.agenthub.domain.model.McpTool;
-import com.agenthub.domain.model.Skill;
-import com.agenthub.domain.model.SystemTool;
-import jakarta.annotation.Resource;
+import com.agenthub.domain.model.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
-import static com.agenthub.domain.model.AgentConfig.Category.TOOL;
-import static com.agenthub.domain.model.AgentConfig.Type.*;
-import static com.agenthub.infrastructure.context.TenantContextHolder.parallelStreamWithTtl;
+import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.model.AgentConfigType.*;
+import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
 
 @Component
 @RequiredArgsConstructor
@@ -45,7 +39,7 @@ public class AgentConfigUseCase {
     private void syncSkillTool(String agentId) {
         List<Skill> skills = skillToolScannerPort.scanSkills(skillSharePath);
         parallelStreamWithTtl(4, skills, skill -> {
-            agentConfigRepository.save(AgentConfig.create(agentId, TOOL, SKILL_TOOL, skill.getId(), skill.getName(), skill.getDescription(), 1, skill.isEnabled()));
+            agentConfigRepository.save(AgentConfig.create(agentId, TOOL, SKILL_TOOL, skill.getSkillCode(), skill.getName(), skill.getDescription(), 1, skill.isEnabled()));
             return null;
         });
     }
@@ -70,10 +64,10 @@ public class AgentConfigUseCase {
     public AgentConfigOutput setConfig(String agentId, String category, String type,
                                        String configId, String name, String description,
                                        Integer priority, Boolean enabled) {
-        AgentConfig.Type t = AgentConfig.Type.valueOf(type);
-        AgentConfig.Category c = AgentConfig.Category.valueOf(category);
+        AgentConfigType t = AgentConfigType.valueOf(type);
+        AgentConfigCategory c = AgentConfigCategory.valueOf(category);
         // 工具类别和知识库类别可以关联多个
-        if (!AgentConfig.Category.TOOL.equals(c) && !AgentConfig.Category.KNOWLEDGE.equals(c)) {
+        if (!AgentConfigCategory.TOOL.equals(c) && !AgentConfigCategory.KNOWLEDGE.equals(c)) {
             AgentConfig existing = agentConfigRepository.findOneAgentConfig(agentId, c, t);
             if (existing != null) return updateExisting(existing, configId, name, description, priority, enabled);
         }
@@ -93,7 +87,7 @@ public class AgentConfigUseCase {
     }
 
     public List<AgentConfigOutput> listConfigsByCategory(String agentId, String category) {
-        AgentConfig.Category cat = AgentConfig.Category.valueOf(category);
+        AgentConfigCategory cat = AgentConfigCategory.valueOf(category);
         return agentConfigRepository.findByAgentIdAndCategory(agentId, cat).stream().map(this::toResult).toList();
     }
 
@@ -119,8 +113,8 @@ public class AgentConfigUseCase {
 
     private AgentConfigOutput createNew(String agentId, String category, String type,
                                         String configId, String name, String description, Integer priority) {
-        AgentConfig.Category cat = AgentConfig.Category.valueOf(category);
-        AgentConfig.Type t = AgentConfig.Type.valueOf(type);
+        AgentConfigCategory cat = AgentConfigCategory.valueOf(category);
+        AgentConfigType t = AgentConfigType.valueOf(type);
         int prio = priority != null ? priority : 0;
         AgentConfig config = AgentConfig.create(agentId, cat, t, configId, name, description, prio, true);
         return toResult(agentConfigRepository.save(config));

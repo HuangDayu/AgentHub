@@ -1,12 +1,17 @@
 package com.agenthub.infrastructure.store.db.entity;
-import lombok.Data;
 
+import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.time.Instant;
 
+import static com.agenthub.domain.model.AgentConfigCategory.PROMPT;
+import static com.agenthub.domain.model.AgentConfigType.SYSTEM_PROMPT;
+
 @Data
 @TableName(value = "app.prompt_template", autoResultMap = true)
+@ConfigChangeListenerEntity(category = PROMPT, type = SYSTEM_PROMPT)
 public class PromptTemplateEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

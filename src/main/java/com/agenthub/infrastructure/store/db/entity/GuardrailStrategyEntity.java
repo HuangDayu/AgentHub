@@ -1,18 +1,23 @@
 package com.agenthub.infrastructure.store.db.entity;
-import lombok.Data;
 
+import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.time.Instant;
 
+import static com.agenthub.domain.model.AgentConfigCategory.STRATEGY;
+import static com.agenthub.domain.model.AgentConfigType.GUARDRAIL_STRATEGY;
+
 @Data
 @TableName("app.guardrail_policy")
+@ConfigChangeListenerEntity(category = STRATEGY, type = GUARDRAIL_STRATEGY)
 public class GuardrailStrategyEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
-    @TableField(value = "tenant_id",fill = FieldFill.INSERT)
+    @TableField(value = "tenant_id", fill = FieldFill.INSERT)
     private String tenantId;
-    @TableField(value = "workspace_id",fill = FieldFill.INSERT)
+    @TableField(value = "workspace_id", fill = FieldFill.INSERT)
     private String workspaceId;
     private String name;
     private String description;

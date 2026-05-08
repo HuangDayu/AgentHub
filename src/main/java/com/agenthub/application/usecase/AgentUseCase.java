@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-import static com.agenthub.domain.model.AgentConfig.Category.TOOL;
-import static com.agenthub.domain.model.AgentConfig.Type.SYSTEM_TOOL;
+import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.model.AgentConfigType.SYSTEM_TOOL;
 
 @Component
 @RequiredArgsConstructor

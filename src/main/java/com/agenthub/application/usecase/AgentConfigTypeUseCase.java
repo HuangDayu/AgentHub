@@ -4,6 +4,8 @@ import com.agenthub.application.dto.AgentConfigTypeOutput;
 import com.agenthub.application.dto.AvailableConfigOutput;
 import com.agenthub.application.port.out.repositories.*;
 import com.agenthub.domain.model.AgentConfig;
+import com.agenthub.domain.model.AgentConfigCategory;
+import com.agenthub.domain.model.AgentConfigType;
 import com.agenthub.domain.model.ModelType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -28,8 +30,8 @@ public class AgentConfigTypeUseCase {
 
     public List<AvailableConfigOutput> getAvailableConfigs(String category, String type, String workspaceId) {
         if (workspaceId == null) return List.of();
-        AgentConfig.Type value = AgentConfig.Type.valueOf(type);
-        return switch (AgentConfig.Category.valueOf(category)) {
+        AgentConfigType value = AgentConfigType.valueOf(type);
+        return switch (AgentConfigCategory.valueOf(category)) {
             case STRATEGY -> switch (value) {
                 case RETRIEVAL_STRATEGY -> getRetrievalStrategies(workspaceId);
                 case MODEL_STRATEGY -> getModelStrategies(workspaceId);
@@ -115,7 +117,7 @@ public class AgentConfigTypeUseCase {
     }
 
     public List<AgentConfigTypeOutput> getConfigTypes() {
-        return Arrays.stream(AgentConfig.Category.values()).map(v -> {
+        return Arrays.stream(AgentConfigCategory.values()).map(v -> {
             List<AgentConfigTypeOutput.TypeInfo> list = Arrays.stream(v.getTypes())
                     .map(t -> new AgentConfigTypeOutput.TypeInfo(t.name(), t.getDisplayName(), t.getDescription())).toList();
             return new AgentConfigTypeOutput(v.name(), v.getDisplayName(), v.getDescription(), list);

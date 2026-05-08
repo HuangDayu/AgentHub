@@ -21,14 +21,15 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
 import static com.agenthub.domain.model.AgentToolType.*;
+import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
 
 /**
  * Agent运行时工厂，根据配置创建AgentRuntime。
@@ -74,18 +75,19 @@ public class AliReActAgentFactory implements ReActAgentFactory {
     }
 
     private List<ToolCallback> resolveTools(ReActAgentContext context) {
-        List<ToolCallback> tools = new ArrayList<>();
+        List<ToolCallback> tools = new CopyOnWriteArrayList<>();
         Map<AgentToolType, List<AgentToolInfo>> collect = context.getTools().stream().collect(Collectors.groupingBy(
                 AgentToolInfo::getType,
                 Collectors.mapping(v -> v, Collectors.toList())
         ));
-        collect.forEach((key, value) -> {
-            if (!value.isEmpty()) {
-                Set<ToolCallback> toolCallbacks = resolveToolCallbacks(key, value);
+        parallelStreamWithTtl(4, collect.entrySet(), entry -> {
+            if (!entry.getValue().isEmpty()) {
+                Set<ToolCallback> toolCallbacks = resolveToolCallbacks(entry.getKey(), entry.getValue());
                 if (!toolCallbacks.isEmpty()) {
                     tools.addAll(toolCallbacks);
                 }
             }
+            return null;
         });
         tools.addAll(graphToolsFactory.getToolCallbacks(context.getWorkspace()));
         return tools;

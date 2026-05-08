@@ -46,8 +46,8 @@
               <option :value="4">大小: 4级</option>
               <option :value="5">大小: 5级</option>
             </select>
-            <button class="secondary" @click="handleSync" :disabled="loading || !selectedAgentId">同步配置</button>
-            <button class="primary" @click="showAddForm = true">添加配置</button>
+            <button class="secondary" @click="handleSync" :disabled="loading || !selectedAgentId">同步</button>
+            <button class="primary" @click="showAddForm = true">添加</button>
           </div>
         </div>
         

@@ -36,8 +36,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.agenthub.domain.model.AgentConfig.Category.MODEL;
-import static com.agenthub.domain.model.AgentConfig.Type.CHAT_MODEL;
+import static com.agenthub.domain.model.AgentConfigCategory.MODEL;
+import static com.agenthub.domain.model.AgentConfigType.CHAT_MODEL;
 import static com.agenthub.infrastructure.rag.RagPromptTemplate.*;
 
 /**

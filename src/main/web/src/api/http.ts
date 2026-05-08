@@ -67,6 +67,10 @@ export async function post<T>(path: string, bodyJson?: unknown, headers?: Record
   return requestJson<T>(path, { baseUrl: BASE_URL, method: 'POST', bodyJson, headers })
 }
 
+export async function put<T>(path: string, bodyJson?: unknown, headers?: Record<string, string>): Promise<T> {
+  return requestJson<T>(path, { baseUrl: BASE_URL, method: 'PUT', bodyJson, headers })
+}
+
 export async function del<T>(path: string, headers?: Record<string, string>): Promise<T> {
   return requestJson<T>(path, { baseUrl: BASE_URL, method: 'DELETE', headers })
 }
