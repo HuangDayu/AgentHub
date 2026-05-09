@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.agents.ali;
 
-import com.agenthub.infrastructure.agents.AbstractReActAgent;
 import com.agenthub.domain.model.ReActAgentContext;
+import com.agenthub.infrastructure.agents.AbstractReActAgent;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import lombok.SneakyThrows;
@@ -24,6 +24,11 @@ public class AliReActAgent extends AbstractReActAgent {
 
     public String getName() {
         return context.getAgentName();
+    }
+
+    @Override
+    public ReActAgentContext getContext() {
+        return context;
     }
 
     @SneakyThrows

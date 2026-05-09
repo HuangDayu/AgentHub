@@ -1,23 +1,23 @@
 <template>
-  <section class="scheduled-task-page">
+  <section class="scheduled-task-page glass-float">
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     
     <template v-else>
       <!-- Header -->
-      <article class="panel header-panel">
+      <article class="panel glass-effect header-panel">
         <div class="header-row">
           <div class="header-left">
             <h2>定时任务管理</h2>
             <p class="muted">管理定时执行的任务调度</p>
           </div>
           <div class="header-right">
-            <button class="primary" @click="showCreateDialog = true">新建任务</button>
+            <CustomButton type="primary" @click="showCreateDialog = true">新建任务</CustomButton>
           </div>
         </div>
       </article>
 
       <!-- Task List -->
-      <article class="panel">
+      <article class="panel glass-effect">
         <div v-if="loading" class="loading">加载中...</div>
         
         <div v-else-if="tasks.length === 0" class="empty-state">
@@ -135,6 +135,9 @@ import {
   executeScheduledTask
 } from '@/api/scheduled-task-api'
 import type { ScheduledTask } from '@/types/scheduled-task'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const tasks = ref<ScheduledTask[]>([])
@@ -285,6 +288,11 @@ function formatDateTime(date: string) {
 }
 
 onMounted(loadTasks)
+
+  // 监听全局新增事件
+  window.addEventListener('global-add', () => {
+    showCreateForm.value = true
+  })
 watch(() => [store.tenantId, store.workspaceId], loadTasks)
 </script>
 

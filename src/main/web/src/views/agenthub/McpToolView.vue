@@ -1,5 +1,5 @@
 <template>
-  <section class="grid">
+  <section class="grid glass-float">
     <div class="page-header">
       <div>
         <h2>MCP工具管理</h2>
@@ -12,7 +12,7 @@
       <article v-show="showCreateForm || editingId" class="panel stack">
         <div class="page-header">
           <h3 style="margin: 0">{{ editingId ? '编辑MCP工具' : '创建MCP工具' }}</h3>
-          <button class="ghost" type="button" @click="cancelForm">取消</button>
+          <CustomButton type="ghost" @click="cancelForm">取消</CustomButton>
         </div>
         <form class="field-grid" @submit.prevent="submitConfig">
           <label class="field">
@@ -61,13 +61,13 @@
               <option :value="false">禁用</option>
             </select>
           </label>
-          <button class="primary" type="submit">{{ editingId ? '更新' : '创建' }}</button>
+          <CustomButton type="primary" native-type="submit">{{ editingId ? '更新' : '创建' }}</CustomButton>
         </form>      </article>
 
       <article class="table-card">
         <div class="page-header">
           <h3 style="margin: 0">工具列表</h3>
-          <button class="primary" type="button" @click="showCreateForm = true">新建工具</button>
+          <CustomButton type="primary" @click="showCreateForm = true">新建工具</CustomButton>
         </div>
         <table>
           <thead>
@@ -96,8 +96,8 @@
               <td>{{ formatDateTime(httpTool.createdAt) }}</td>
               <td>
                 <div class="chip-row">
-                  <button class="ghost" type="button" @click="startEdit(httpTool)">编辑</button>
-                  <button class="ghost" type="button" @click="handleDelete(httpTool.id)">删除</button>
+                  <CustomButton type="ghost" @click="startEdit(httpTool)">编辑</CustomButton>
+                  <CustomButton type="ghost" @click="handleDelete(httpTool.id)">删除</CustomButton>
                 </div>
               </td>
             </tr>
@@ -113,6 +113,9 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { formatDateTime } from '@/common/format'
 import { listMcpTools, createMcpTool, updateMcpTool, deleteMcpTool, type McpTool } from '@/api/mcp-api'
 import { useWorkspaceStore } from '@/store/workspace-store'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const error = ref('')
@@ -134,6 +137,11 @@ const form = reactive({
 const selectionReady = computed(() => Boolean(store.tenantId && store.workspaceId))
 
 onMounted(loadTools)
+
+  // 监听全局新增事件
+  window.addEventListener('global-add', () => {
+    showCreateForm.value = true
+  })
 watch(() => [store.tenantId, store.workspaceId], loadTools)
 
 async function loadTools() {

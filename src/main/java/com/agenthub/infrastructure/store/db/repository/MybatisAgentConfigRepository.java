@@ -86,6 +86,16 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
     }
 
     @Override
+    public List<AgentConfig> findAgentConfigs(AgentConfigCategory category, AgentConfigType type, String configId) {
+        LambdaQueryWrapper<AgentConfigEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AgentConfigEntity::getConfigId, configId);
+        queryWrapper.eq(AgentConfigEntity::getCategory, category.name());
+        queryWrapper.eq(AgentConfigEntity::getType, type.name());
+        List<AgentConfigEntity> entities = mapper.selectList(queryWrapper);
+        return entities.stream().map(this::toDomain).toList();
+    }
+
+    @Override
     public void deleteById(String id) {
         mapper.deleteById(id);
     }

@@ -1,5 +1,5 @@
 <template>
-  <section class="strategy-management">
+  <section class="strategy-management glass-float">
     <div class="page-header">
       <h2>策略配置管理</h2>
       <p class="muted">管理检索策略、工具策略、模型策略和护栏策略</p>
@@ -34,12 +34,25 @@ import RetrievalStrategyPanel from '@/components/strategy/RetrievalStrategyPanel
 import ToolStrategyPanel from '@/components/strategy/ToolStrategyPanel.vue'
 import ModelStrategyPanel from '@/components/strategy/ModelStrategyPanel.vue'
 import GuardrailStrategyPanel from '@/components/strategy/GuardrailStrategyPanel.vue'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const activeTab = ref<'retrieval' | 'tool' | 'model' | 'guardrail'>('retrieval')
 
 // 使用workspaceId作为key，当workspaceId变化时强制重新渲染子组件
 const componentKey = computed(() => store.workspaceId)
+
+// 监听全局新增事件，根据当前标签页触发对应的子组件新增
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  window.addEventListener('global-add', () => {
+    // 根据当前标签页触发对应的子组件新增事件
+    window.dispatchEvent(new CustomEvent(`strategy-${activeTab.value}-add`))
+  })
+})
 </script>
 
 <style scoped>

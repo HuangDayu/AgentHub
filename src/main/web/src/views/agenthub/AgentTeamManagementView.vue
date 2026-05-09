@@ -1,5 +1,5 @@
 <template>
-  <section class="team-management">
+  <section class="team-management glass-float">
     <div class="page-header">
       <h2>Agent团队管理</h2>
       <p class="muted">管理多Agent协作团队</p>
@@ -90,6 +90,9 @@ import { ref, onMounted } from 'vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listTeams, createTeam, updateTeam, activateTeam, deactivateTeam, deleteTeam } from '@/api/team-api'
 import type { AgentTeam } from '@/types/memory'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const teams = ref<AgentTeam[]>([])
@@ -111,6 +114,13 @@ const selection = () => ({
 })
 
 onMounted(async () => {
+
+// 监听全局新增事件
+onMounted(() => {
+  window.addEventListener('global-add', () => {
+    showCreateForm.value = true
+  })
+})
   await loadTeams()
 })
 

@@ -1,5 +1,5 @@
 <template>
-  <section class="memory-management">
+  <section class="memory-management glass-float">
     <div class="page-header">
       <h2>记忆管理</h2>
       <p class="muted">管理Agent的长期记忆存储</p>
@@ -84,6 +84,9 @@ import { listMemoriesByAgent, createMemory, updateMemory, deleteMemory } from '@
 import { listAgents } from '@/api/agent-api'
 import type { Memory } from '@/types/memory'
 import type { Agent } from '@/types/agent'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const agents = ref<Agent[]>([])
@@ -105,6 +108,13 @@ const selection = () => ({
 })
 
 onMounted(async () => {
+
+// 监听全局新增事件
+onMounted(() => {
+  window.addEventListener('global-add', () => {
+    showCreateForm.value = true
+  })
+})
   try {
     agents.value = await listAgents(selection())
   } catch (e) {

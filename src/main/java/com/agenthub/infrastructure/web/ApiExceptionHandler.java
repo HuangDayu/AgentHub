@@ -1,6 +1,7 @@
-package com.agenthub.common.exception;
+package com.agenthub.infrastructure.web;
 
 import com.agenthub.api.dto.ErrorResponse;
+import com.agenthub.common.exception.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpStatus;
@@ -112,11 +113,13 @@ public class ApiExceptionHandler {
      * @return 错误响应
      */
     @ExceptionHandler(Exception.class)
-    public ErrorResponse handleRuntime(Exception exception) {
+    public ResponseEntity<ErrorResponse> handleRuntime(Exception exception) {
         if (exception.getClass().getName().startsWith("io.jsonwebtoken")) {
-            return handlerException(exception, HttpStatus.UNAUTHORIZED.value());
+            ErrorResponse errorResponse = handlerException(exception, HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
-        return handlerException(exception, HttpStatus.INTERNAL_SERVER_ERROR.value());
+        ErrorResponse errorResponse = handlerException(exception, HttpStatus.INTERNAL_SERVER_ERROR.value());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
     /**

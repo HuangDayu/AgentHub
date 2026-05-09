@@ -7,7 +7,15 @@ package com.agenthub.application.command;
  * @param description 策略描述
  */
 public record UpdateGuardrailStrategyCommand(
-    String name,
-    String description
+        String workspaceId,
+        String name,
+        String description,
+        boolean inputValidationEnabled,
+        boolean outputValidationEnabled,
+        boolean piiDetectionEnabled,
+        boolean piiMaskingEnabled,
+        boolean promptInjectionDetection,
+        int maxInputLength,
+        int maxOutputLength
 ) {
 }

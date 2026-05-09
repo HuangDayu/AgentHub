@@ -11,7 +11,7 @@
         </div>
         <p class="eyebrow">Tenant Console</p>
         <h1>登录</h1>
-        <p class="muted">请输入凭据以访问多租户知识库工作台。</p>
+        <p class="muted">请输入凭据以访问工作台。</p>
       </div>
       <form class="login-form" @submit.prevent="submitLogin">
         <label class="field">

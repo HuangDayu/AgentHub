@@ -1,5 +1,5 @@
 <template>
-  <section class="grid">
+  <section class="grid glass-float">
     <div class="page-header">
       <div>
         <h2>知识检索</h2>
@@ -10,7 +10,7 @@
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     <template v-else>
       <!-- 检索表单 -->
-      <article class="panel stack">
+      <article class="panel glass-effect stack">
         <form class="field-grid" @submit.prevent="handleRetrieve">
           <!-- 第一行：知识库选择 -->
           <label class="field" style="grid-column: 1 / -1">
@@ -74,10 +74,10 @@
             <span>查询文本</span>
             <textarea v-model="query" rows="3" placeholder="输入要检索的问题或关键词"></textarea>
           </label>
-          <button class="primary" type="submit" :disabled="!selectedKbId || !query.trim() || searching">
+          <CustomButton type="primary" native-type="submit" :disabled="!selectedKbId || !query.trim() || searching">
             {{ searching ? '检索中...' : '开始检索' }}
-          </button>
-          <button class="secondary" type="button" @click="loadKnowledgeBases">刷新知识库</button>
+          </CustomButton>
+          <CustomButton type="secondary" @click="loadKnowledgeBases">刷新知识库</CustomButton>
         </form>
       </article>
 
@@ -105,6 +105,9 @@ import { listKnowledgeBases } from '@/api/knowledge-api'
 import { retrieve } from '@/api/retrieval-api'
 import type { KnowledgeBase, RetrievalChunk } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const knowledgeBases = ref<KnowledgeBase[]>([])

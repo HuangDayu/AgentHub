@@ -1,5 +1,5 @@
 <template>
-  <section class="skill-management">
+  <section class="skill-management glass-float">
     <div class="page-header">
       <h2>技能管理</h2>
       <p class="muted">管理Agent可调用的技能定义</p>
@@ -91,6 +91,9 @@ import { ref, onMounted } from 'vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listSkills, createSkill, updateSkill, enableSkill, disableSkill, deleteSkill } from '@/api/skill-api'
 import type { Skill } from '@/types/memory'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const skills = ref<Skill[]>([])
@@ -112,6 +115,13 @@ const selection = () => ({
 })
 
 onMounted(async () => {
+
+// 监听全局新增事件
+onMounted(() => {
+  window.addEventListener('global-add', () => {
+    showCreateForm.value = true
+  })
+})
   await loadSkills()
 })
 

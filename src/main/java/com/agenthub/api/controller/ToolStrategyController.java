@@ -1,5 +1,6 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateToolStrategyRequest;
 import com.agenthub.api.dto.ToolStrategyResponse;
 import com.agenthub.api.dto.UpdateToolStrategyRequest;
@@ -69,9 +70,7 @@ public class ToolStrategyController {
             @PathVariable String id,
             @RequestBody UpdateToolStrategyRequest request
     ) {
-        UpdateToolStrategyCommand command = new UpdateToolStrategyCommand(
-            request.name(), request.description()
-        );
+        UpdateToolStrategyCommand command = BeanUtil.copyProperties(request, UpdateToolStrategyCommand.class);
         return toResponse(toolStrategyUseCase.update(id, command));
     }
 

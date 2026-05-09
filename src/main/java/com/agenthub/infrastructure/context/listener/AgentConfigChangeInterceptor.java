@@ -1,7 +1,8 @@
 package com.agenthub.infrastructure.context.listener;
 
 import com.agenthub.common.annotations.ConfigChangeListenerEntity;
-import com.agenthub.domain.event.AgentConfigChangeEvent;
+import com.agenthub.domain.event.AgentConfigChangedEvent;
+import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -17,7 +18,7 @@ import java.util.List;
  */
 @Slf4j
 @Component
-public class AgentConfigChangeInterceptor implements com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor {
+public class AgentConfigChangeInterceptor implements InnerInterceptor {
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -46,8 +47,8 @@ public class AgentConfigChangeInterceptor implements com.baomidou.mybatisplus.ex
     }
 
     private boolean isAuditCommand(SqlCommandType commandType) {
-        return commandType == SqlCommandType.UPDATE 
-            || commandType == SqlCommandType.DELETE;
+        return commandType == SqlCommandType.UPDATE
+                || commandType == SqlCommandType.DELETE;
     }
 
     private Class<?> extractEntityClass(MappedStatement ms) {
@@ -78,30 +79,31 @@ public class AgentConfigChangeInterceptor implements com.baomidou.mybatisplus.ex
     }
 
     private void publishAuditEvent(Class<?> entityClass, SqlCommandType commandType, List<String> primaryKeys) {
-        AgentConfigChangeEvent.ChangeType changeType = convertToChangeType(commandType);
-        AgentConfigChangeEvent event = buildEvent(entityClass, changeType, primaryKeys);
+        AgentConfigChangedEvent.ChangeType changeType = convertToChangeType(commandType);
+        AgentConfigChangedEvent event = buildEvent(entityClass, changeType, primaryKeys);
         logAuditInfo(entityClass, changeType, primaryKeys);
         eventPublisher.publishEvent(event);
     }
 
-    private AgentConfigChangeEvent.ChangeType convertToChangeType(SqlCommandType commandType) {
+    private AgentConfigChangedEvent.ChangeType convertToChangeType(SqlCommandType commandType) {
         if (commandType == SqlCommandType.DELETE) {
-            return AgentConfigChangeEvent.ChangeType.DELETE;
+            return AgentConfigChangedEvent.ChangeType.DELETE;
         }
-        return AgentConfigChangeEvent.ChangeType.UPDATE;
+        return AgentConfigChangedEvent.ChangeType.UPDATE;
     }
 
-    private AgentConfigChangeEvent buildEvent(Class<?> entityClass, AgentConfigChangeEvent.ChangeType changeType, List<String> primaryKeys) {
-        return AgentConfigChangeEvent.builder()
-            .entityType(entityClass.getSimpleName())
-            .changeType(changeType)
-            .primaryKeys(primaryKeys)
-            .timestamp(java.time.Instant.now())
-            .build();
+    private AgentConfigChangedEvent buildEvent(Class<?> entityClass, AgentConfigChangedEvent.ChangeType changeType, List<String> primaryKeys) {
+        return AgentConfigChangedEvent.builder()
+                .entityType(entityClass.getSimpleName())
+                .changeType(changeType)
+                .primaryKeys(primaryKeys)
+                .entityAnnotation(entityClass.getAnnotation(ConfigChangeListenerEntity.class))
+                .timestamp(java.time.Instant.now())
+                .build();
     }
 
-    private void logAuditInfo(Class<?> entityClass, AgentConfigChangeEvent.ChangeType changeType, List<String> primaryKeys) {
-        log.info("检测到数据变更 - 实体: {}, 类型: {}, 主键IDs: {}", 
-            entityClass.getSimpleName(), changeType, primaryKeys);
+    private void logAuditInfo(Class<?> entityClass, AgentConfigChangedEvent.ChangeType changeType, List<String> primaryKeys) {
+        log.info("检测到数据变更 - 实体: {}, 类型: {}, 主键IDs: {}",
+                entityClass.getSimpleName(), changeType, primaryKeys);
     }
 }

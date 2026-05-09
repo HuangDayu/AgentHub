@@ -2,86 +2,88 @@
   <div class="strategy-panel">
     <div class="panel-header">
       <h3>工具策略配置</h3>
-      <button class="primary" @click="showCreateForm = true">创建策略</button>
+      
     </div>
 
-    <!-- 创建表单 -->
-    <form v-if="showCreateForm" @submit.prevent="createStrategy" class="form">
-      <div class="form-group">
-        <label>策略名称 *</label>
-        <input v-model="newStrategy.name" required placeholder="输入策略名称" />
-      </div>
-      <div class="form-group">
-        <label>描述</label>
-        <textarea v-model="newStrategy.description" placeholder="输入策略描述"></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>最大并发调用数</label>
+    <!-- 创建弹窗 -->
+    <ModalDialog
+      v-model:visible="showCreateForm"
+      title="创建工具策略"
+      @confirm="createStrategy"
+      @close="showCreateForm = false"
+      :confirm-disabled="loading"
+      confirm-text="创建"
+    >
+      <form>
+        <label class="field">
+          <span>策略名称 *</span>
+          <input v-model="newStrategy.name" required placeholder="输入策略名称" />
+        </label>
+        <label class="field">
+          <span>描述</span>
+          <textarea v-model="newStrategy.description" placeholder="输入策略描述"></textarea>
+        </label>
+        <label class="field">
+          <span>最大并发调用数</span>
           <input type="number" v-model.number="newStrategy.maxConcurrentCalls" placeholder="5" />
-        </div>
-        <div class="form-group">
-          <label>超时时间(秒)</label>
+        </label>
+        <label class="field">
+          <span>超时时间(秒)</span>
           <input type="number" v-model.number="newStrategy.timeoutSeconds" placeholder="30" />
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>重试次数</label>
+        </label>
+        <label class="field">
+          <span>重试次数</span>
           <input type="number" v-model.number="newStrategy.retryCount" placeholder="3" />
-        </div>
-        <div class="form-group">
-          <label>启用降级</label>
+        </label>
+        <label class="field">
+          <span>启用降级</span>
           <select v-model="newStrategy.fallbackEnabled">
             <option :value="true">是</option>
             <option :value="false">否</option>
           </select>
-        </div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="ghost" @click="showCreateForm = false">取消</button>
-        <button type="submit" class="primary">创建</button>
-      </div>
-    </form>
+        </label>
+      </form>
+    </ModalDialog>
 
-    <!-- 编辑表单 -->
-    <form v-if="showEditForm" @submit.prevent="updateStrategy" class="form">
-      <div class="form-group">
-        <label>策略名称 *</label>
-        <input v-model="editStrategyData.name" required placeholder="输入策略名称" />
-      </div>
-      <div class="form-group">
-        <label>描述</label>
-        <textarea v-model="editStrategyData.description" placeholder="输入策略描述"></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>最大并发调用数</label>
+    <!-- 编辑弹窗 -->
+    <ModalDialog
+      v-model:visible="showEditForm"
+      title="编辑工具策略"
+      @confirm="updateStrategy"
+      @close="showEditForm = false"
+      :confirm-disabled="loading"
+      confirm-text="更新"
+    >
+      <form>
+        <label class="field">
+          <span>策略名称 *</span>
+          <input v-model="editStrategyData.name" required placeholder="输入策略名称" />
+        </label>
+        <label class="field">
+          <span>描述</span>
+          <textarea v-model="editStrategyData.description" placeholder="输入策略描述"></textarea>
+        </label>
+        <label class="field">
+          <span>最大并发调用数</span>
           <input type="number" v-model.number="editStrategyData.maxConcurrentCalls" />
-        </div>
-        <div class="form-group">
-          <label>超时时间(秒)</label>
+        </label>
+        <label class="field">
+          <span>超时时间(秒)</span>
           <input type="number" v-model.number="editStrategyData.timeoutSeconds" />
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>重试次数</label>
+        </label>
+        <label class="field">
+          <span>重试次数</span>
           <input type="number" v-model.number="editStrategyData.retryCount" />
-        </div>
-        <div class="form-group">
-          <label>启用降级</label>
+        </label>
+        <label class="field">
+          <span>启用降级</span>
           <select v-model="editStrategyData.fallbackEnabled">
             <option :value="true">是</option>
             <option :value="false">否</option>
           </select>
-        </div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="ghost" @click="closeEditForm">取消</button>
-        <button type="submit" class="primary">保存</button>
-      </div>
-    </form>
+        </label>
+      </form>
+    </ModalDialog>
 
     <!-- 策略列表 -->
     <div v-if="loading" class="loading">加载中...</div>
@@ -120,6 +122,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
+import ModalDialog from '@/components/ModalDialog.vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import {
   listToolStrategies,
@@ -238,6 +241,9 @@ async function deleteStrategyHandler(id: string) {
 }
 
 onMounted(loadStrategies)
+  window.addEventListener('strategy-tool-add', () => {
+    showCreateForm.value = true
+  })
 </script>
 
 <style scoped>

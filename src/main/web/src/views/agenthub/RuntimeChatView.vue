@@ -564,7 +564,6 @@ onMounted(() => {
 /* Chat Layout */
 .chat-layout {
   display: flex;
-  gap: 20px;
   height: 100%;
   overflow: hidden;
 }
@@ -1174,8 +1173,8 @@ onMounted(() => {
   position: fixed;
   bottom: 24px;
   left: 24px;
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: none;
   background: linear-gradient(135deg, #264266, #3a8ad6);

@@ -1,11 +1,13 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.command.CreateGuardrailStrategyCommand;
 import com.agenthub.application.command.UpdateGuardrailStrategyCommand;
 import com.agenthub.application.port.out.repositories.GuardrailStrategyRepository;
 import com.agenthub.domain.model.GuardrailStrategy;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,9 +28,10 @@ public class GuardrailStrategyUseCase {
 
 
     public GuardrailStrategy update(String id, UpdateGuardrailStrategyCommand command) {
-        GuardrailStrategy strategy = get(id);
-        strategy.updateBasicInfo(command.name(), command.description());
-        return repository.save(strategy);
+        GuardrailStrategy guardrailStrategy = new GuardrailStrategy();
+        BeanUtils.copyProperties(command, guardrailStrategy);
+        guardrailStrategy.setId(id);
+        return repository.save(guardrailStrategy);
     }
 
 

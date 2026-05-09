@@ -1,5 +1,7 @@
 package com.agenthub.application.command;
 
+import java.util.List;
+
 /**
  * 更新工具策略命令。
  *
@@ -7,7 +9,13 @@ package com.agenthub.application.command;
  * @param description 策略描述
  */
 public record UpdateToolStrategyCommand(
+    String workspaceId,
     String name,
-    String description
+    String description,
+    Integer maxConcurrentCalls,
+    Integer timeoutSeconds,
+    Integer retryCount,
+    Boolean fallbackEnabled,
+    List<String> allowedTools
 ) {
 }

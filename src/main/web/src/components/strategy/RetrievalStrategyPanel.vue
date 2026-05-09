@@ -2,108 +2,162 @@
   <div class="strategy-panel">
     <div class="panel-header">
       <h3>检索策略配置</h3>
-      <button class="primary" @click="showCreateForm = true">创建策略</button>
+      
     </div>
 
-    <!-- 创建表单 -->
-    <form v-if="showCreateForm" @submit.prevent="createStrategy" class="form">
-      <div class="form-row">
-        <div class="form-group">
-          <label>策略名称 *</label>
+    <!-- 创建弹窗 -->
+    <ModalDialog
+      v-model:visible="showCreateForm"
+      title="创建检索策略"
+      @confirm="createStrategy"
+      @close="showCreateForm = false"
+      :confirm-disabled="loading"
+      confirm-text="创建"
+    >
+      <form>
+        <label class="field">
+          <span>策略名称 *</span>
           <input v-model="newStrategy.name" required placeholder="输入策略名称" />
-        </div>
-        <div class="form-group">
-          <label>检索类型</label>
+        </label>
+        <label class="field">
+          <span>检索类型</span>
           <select v-model="newStrategy.retrievalType">
             <option value="HYBRID">混合检索</option>
             <option value="VECTOR">向量检索</option>
             <option value="KEYWORD">关键词检索</option>
           </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>描述</label>
-        <textarea v-model="newStrategy.description" placeholder="输入策略描述"></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Top K</label>
+        </label>
+        <label class="field">
+          <span>描述</span>
+          <textarea v-model="newStrategy.description" placeholder="输入策略描述"></textarea>
+        </label>
+        <label class="field">
+          <span>Top K</span>
           <input type="number" v-model.number="newStrategy.topK" placeholder="10" />
-        </div>
-        <div class="form-group">
-          <label>分数阈值</label>
+        </label>
+        <label class="field">
+          <span>分数阈值</span>
           <input type="number" step="0.01" v-model.number="newStrategy.scoreThreshold" placeholder="0.75" />
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>向量权重</label>
+        </label>
+        <label class="field">
+          <span>向量权重</span>
           <input type="number" step="0.1" v-model.number="newStrategy.vectorWeight" placeholder="0.7" />
-        </div>
-        <div class="form-group">
-          <label>关键词权重</label>
+        </label>
+        <label class="field">
+          <span>关键词权重</span>
           <input type="number" step="0.1" v-model.number="newStrategy.keywordWeight" placeholder="0.3" />
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>启用查询改写</label>
+        </label>
+        <label class="field">
+          <span>启用查询改写</span>
           <select v-model="newStrategy.enableQueryRewrite">
             <option :value="true">是</option>
             <option :value="false">否</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label>启用重排序</label>
+        </label>
+        <label class="field">
+          <span>启用重排序</span>
           <select v-model="newStrategy.enableRerank">
             <option :value="true">是</option>
             <option :value="false">否</option>
           </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>启用文本搜索</label>
+        </label>
+        <label class="field">
+          <span>启用文本搜索</span>
           <select v-model="newStrategy.enableTextSearch">
             <option :value="true">是</option>
             <option :value="false">否</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label>启用向量搜索</label>
+        </label>
+        <label class="field">
+          <span>启用向量搜索</span>
           <select v-model="newStrategy.enableVectorSearch">
             <option :value="true">是</option>
             <option :value="false">否</option>
           </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>重排序模型</label>
-          <input v-model="newStrategy.rerankModel" placeholder="重排序模型ID" />
-        </div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="ghost" @click="showCreateForm = false">取消</button>
-        <button type="submit" class="primary">创建</button>
-      </div>
-    </form>
+        </label>
+        <label class="field">
+          <span>重排序模型</span>
+          <input v-model="newStrategy.rerankModel" placeholder="重排序模型" />
+        </label>
+      </form>
+    </ModalDialog>
 
-    <!-- 编辑表单 -->
-    <form v-if="showEditForm" @submit.prevent="updateStrategy" class="form">
-      <div class="form-group">
-        <label>策略名称 *</label>
-        <input v-model="editStrategyData.name" required placeholder="输入策略名称" />
-      </div>
-      <div class="form-group">
-        <label>描述</label>
-        <textarea v-model="editStrategyData.description" placeholder="输入策略描述"></textarea>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="ghost" @click="closeEditForm">取消</button>
-        <button type="submit" class="primary">保存</button>
-      </div>
-    </form>
+    <!-- 编辑弹窗 -->
+    <ModalDialog
+      v-model:visible="showEditForm"
+      title="编辑检索策略"
+      @confirm="updateStrategy"
+      @close="showEditForm = false"
+      :confirm-disabled="loading"
+      confirm-text="更新"
+    >
+      <form>
+        <label class="field">
+          <span>策略名称 *</span>
+          <input v-model="editStrategyData.name" required placeholder="输入策略名称" />
+        </label>
+        <label class="field">
+          <span>检索类型</span>
+          <select v-model="editStrategyData.retrievalType">
+            <option value="HYBRID">混合检索</option>
+            <option value="VECTOR">向量检索</option>
+            <option value="KEYWORD">关键词检索</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>描述</span>
+          <textarea v-model="editStrategyData.description" placeholder="输入策略描述"></textarea>
+        </label>
+        <label class="field">
+          <span>Top K</span>
+          <input type="number" v-model.number="editStrategyData.topK" placeholder="10" />
+        </label>
+        <label class="field">
+          <span>分数阈值</span>
+          <input type="number" step="0.01" v-model.number="editStrategyData.scoreThreshold" placeholder="0.75" />
+        </label>
+        <label class="field">
+          <span>向量权重</span>
+          <input type="number" step="0.1" v-model.number="editStrategyData.vectorWeight" placeholder="0.7" />
+        </label>
+        <label class="field">
+          <span>关键词权重</span>
+          <input type="number" step="0.1" v-model.number="editStrategyData.keywordWeight" placeholder="0.3" />
+        </label>
+        <label class="field">
+          <span>启用查询改写</span>
+          <select v-model="editStrategyData.enableQueryRewrite">
+            <option :value="true">是</option>
+            <option :value="false">否</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>启用重排序</span>
+          <select v-model="editStrategyData.enableRerank">
+            <option :value="true">是</option>
+            <option :value="false">否</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>启用文本搜索</span>
+          <select v-model="editStrategyData.enableTextSearch">
+            <option :value="true">是</option>
+            <option :value="false">否</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>启用向量搜索</span>
+          <select v-model="editStrategyData.enableVectorSearch">
+            <option :value="true">是</option>
+            <option :value="false">否</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>重排序模型</span>
+          <input v-model="editStrategyData.rerankModel" placeholder="重排序模型" />
+        </label>
+      </form>
+    </ModalDialog>
 
     <!-- 策略列表 -->
     <div v-if="loading" class="loading">加载中...</div>
@@ -148,6 +202,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
+import ModalDialog from '@/components/ModalDialog.vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import {
   listRetrievalStrategies,
@@ -182,6 +237,16 @@ const newStrategy = reactive({
 const editStrategyData = reactive({
   name: '',
   description: '',
+  retrievalType: 'HYBRID',
+  topK: 10,
+  scoreThreshold: 0.75,
+  vectorWeight: 0.7,
+  keywordWeight: 0.3,
+  enableQueryRewrite: false,
+  enableRerank: false,
+  enableTextSearch: false,
+  enableVectorSearch: false,
+  rerankModel: '',
 })
 
 function formatDate(date?: string) {
@@ -242,6 +307,16 @@ function editStrategyHandler(strategy: RetrievalStrategy) {
   editingId.value = strategy.id
   editStrategyData.name = strategy.name
   editStrategyData.description = strategy.description || ''
+  editStrategyData.retrievalType = strategy.retrievalType || 'HYBRID'
+  editStrategyData.topK = strategy.topK || 10
+  editStrategyData.scoreThreshold = strategy.scoreThreshold || 0.75
+  editStrategyData.vectorWeight = strategy.vectorWeight || 0.7
+  editStrategyData.keywordWeight = strategy.keywordWeight || 0.3
+  editStrategyData.enableQueryRewrite = strategy.enableQueryRewrite || false
+  editStrategyData.enableRerank = strategy.enableRerank || false
+  editStrategyData.enableTextSearch = strategy.enableTextSearch || false
+  editStrategyData.enableVectorSearch = strategy.enableVectorSearch || false
+  editStrategyData.rerankModel = strategy.rerankModel || ''
   showEditForm.value = true
 }
 
@@ -272,6 +347,9 @@ async function deleteStrategyHandler(id: string) {
 }
 
 onMounted(loadStrategies)
+  window.addEventListener('strategy-retrieval-add', () => {
+    showCreateForm.value = true
+  })
 </script>
 
 <style scoped>

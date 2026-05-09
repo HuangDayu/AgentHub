@@ -2,142 +2,136 @@
   <div class="strategy-panel">
     <div class="panel-header">
       <h3>护栏策略配置</h3>
-      <button class="primary" @click="showCreateForm = true">创建策略</button>
+      
     </div>
 
-    <!-- 创建表单 -->
-    <form v-if="showCreateForm" @submit.prevent="createStrategy" class="form">
-      <div class="form-group">
-        <label>策略名称 *</label>
-        <input v-model="newStrategy.name" required placeholder="输入策略名称" />
-      </div>
-      <div class="form-group">
-        <label>描述</label>
-        <textarea v-model="newStrategy.description" placeholder="输入策略描述"></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>输入验证</label>
+    <!-- 创建弹窗 -->
+    <ModalDialog
+      v-model:visible="showCreateForm"
+      title="创建护栏策略"
+      @confirm="createStrategy"
+      @close="showCreateForm = false"
+      :confirm-disabled="loading"
+      confirm-text="创建"
+    >
+      <form>
+        <label class="field">
+          <span>策略名称 *</span>
+          <input v-model="newStrategy.name" required placeholder="输入策略名称" />
+        </label>
+        <label class="field">
+          <span>描述</span>
+          <textarea v-model="newStrategy.description" placeholder="输入策略描述"></textarea>
+        </label>
+        <label class="field">
+          <span>启用输入验证</span>
           <select v-model="newStrategy.inputValidationEnabled">
-            <option :value="true">启用</option>
-            <option :value="false">禁用</option>
+            <option :value="true">是</option>
+            <option :value="false">否</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label>输出验证</label>
+        </label>
+        <label class="field">
+          <span>启用输出验证</span>
           <select v-model="newStrategy.outputValidationEnabled">
-            <option :value="true">启用</option>
-            <option :value="false">禁用</option>
+            <option :value="true">是</option>
+            <option :value="false">否</option>
           </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>PII检测</label>
+        </label>
+        <label class="field">
+          <span>启用PII检测</span>
           <select v-model="newStrategy.piiDetectionEnabled">
-            <option :value="true">启用</option>
-            <option :value="false">禁用</option>
+            <option :value="true">是</option>
+            <option :value="false">否</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label>PII脱敏</label>
+        </label>
+        <label class="field">
+          <span>启用PII掩码</span>
           <select v-model="newStrategy.piiMaskingEnabled">
-            <option :value="true">启用</option>
-            <option :value="false">禁用</option>
+            <option :value="true">是</option>
+            <option :value="false">否</option>
           </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>提示注入检测</label>
+        </label>
+        <label class="field">
+          <span>启用提示注入检测</span>
           <select v-model="newStrategy.promptInjectionDetection">
-            <option :value="true">启用</option>
-            <option :value="false">禁用</option>
+            <option :value="true">是</option>
+            <option :value="false">否</option>
           </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>最大输入长度</label>
-          <input type="number" v-model.number="newStrategy.maxInputLength" placeholder="10000" />
-        </div>
-        <div class="form-group">
-          <label>最大输出长度</label>
-          <input type="number" v-model.number="newStrategy.maxOutputLength" placeholder="4096" />
-        </div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="ghost" @click="showCreateForm = false">取消</button>
-        <button type="submit" class="primary">创建</button>
-      </div>
-    </form>
+        </label>
+        <label class="field">
+          <span>最大输入长度</span>
+          <input type="number" v-model.number="newStrategy.maxInputLength" placeholder="1000" />
+        </label>
+        <label class="field">
+          <span>最大输出长度</span>
+          <input type="number" v-model.number="newStrategy.maxOutputLength" placeholder="2000" />
+        </label>
+      </form>
+    </ModalDialog>
 
-    <!-- 编辑表单 -->
-    <form v-if="showEditForm" @submit.prevent="updateStrategy" class="form">
-      <div class="form-group">
-        <label>策略名称 *</label>
-        <input v-model="editStrategyData.name" required placeholder="输入策略名称" />
-      </div>
-      <div class="form-group">
-        <label>描述</label>
-        <textarea v-model="editStrategyData.description" placeholder="输入策略描述"></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>输入验证</label>
+    <!-- 编辑弹窗 -->
+    <ModalDialog
+      v-model:visible="showEditForm"
+      title="编辑护栏策略"
+      @confirm="updateStrategy"
+      @close="showEditForm = false"
+      :confirm-disabled="loading"
+      confirm-text="更新"
+    >
+      <form>
+        <label class="field">
+          <span>策略名称 *</span>
+          <input v-model="editStrategyData.name" required placeholder="输入策略名称" />
+        </label>
+        <label class="field">
+          <span>描述</span>
+          <textarea v-model="editStrategyData.description" placeholder="输入策略描述"></textarea>
+        </label>
+        <label class="field">
+          <span>启用输入验证</span>
           <select v-model="editStrategyData.inputValidationEnabled">
-            <option :value="true">启用</option>
-            <option :value="false">禁用</option>
+            <option :value="true">是</option>
+            <option :value="false">否</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label>输出验证</label>
+        </label>
+        <label class="field">
+          <span>启用输出验证</span>
           <select v-model="editStrategyData.outputValidationEnabled">
-            <option :value="true">启用</option>
-            <option :value="false">禁用</option>
+            <option :value="true">是</option>
+            <option :value="false">否</option>
           </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>PII检测</label>
+        </label>
+        <label class="field">
+          <span>启用PII检测</span>
           <select v-model="editStrategyData.piiDetectionEnabled">
-            <option :value="true">启用</option>
-            <option :value="false">禁用</option>
+            <option :value="true">是</option>
+            <option :value="false">否</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label>PII脱敏</label>
+        </label>
+        <label class="field">
+          <span>启用PII掩码</span>
           <select v-model="editStrategyData.piiMaskingEnabled">
-            <option :value="true">启用</option>
-            <option :value="false">禁用</option>
+            <option :value="true">是</option>
+            <option :value="false">否</option>
           </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>提示注入检测</label>
+        </label>
+        <label class="field">
+          <span>启用提示注入检测</span>
           <select v-model="editStrategyData.promptInjectionDetection">
-            <option :value="true">启用</option>
-            <option :value="false">禁用</option>
+            <option :value="true">是</option>
+            <option :value="false">否</option>
           </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>最大输入长度</label>
+        </label>
+        <label class="field">
+          <span>最大输入长度</span>
           <input type="number" v-model.number="editStrategyData.maxInputLength" />
-        </div>
-        <div class="form-group">
-          <label>最大输出长度</label>
+        </label>
+        <label class="field">
+          <span>最大输出长度</span>
           <input type="number" v-model.number="editStrategyData.maxOutputLength" />
-        </div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="ghost" @click="closeEditForm">取消</button>
-        <button type="submit" class="primary">保存</button>
-      </div>
-    </form>
+        </label>
+      </form>
+    </ModalDialog>
 
     <!-- 策略列表 -->
     <div v-if="loading" class="loading">加载中...</div>
@@ -176,6 +170,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
+import ModalDialog from '@/components/ModalDialog.vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import {
   listGuardrailStrategies,
@@ -291,6 +286,13 @@ async function updateStrategy() {
     {
       name: editStrategyData.name,
       description: editStrategyData.description,
+      inputValidationEnabled: editStrategyData.inputValidationEnabled,
+      outputValidationEnabled: editStrategyData.outputValidationEnabled,
+      piiDetectionEnabled: editStrategyData.piiDetectionEnabled,
+      piiMaskingEnabled: editStrategyData.piiMaskingEnabled,
+      promptInjectionDetection: editStrategyData.promptInjectionDetection,
+      maxInputLength: editStrategyData.maxInputLength,
+      maxOutputLength: editStrategyData.maxOutputLength,
     }
   )
   closeEditForm()
@@ -305,6 +307,9 @@ async function deleteStrategyHandler(id: string) {
 }
 
 onMounted(loadStrategies)
+  window.addEventListener('strategy-guardrail-add', () => {
+    showCreateForm.value = true
+  })
 </script>
 
 <style scoped>

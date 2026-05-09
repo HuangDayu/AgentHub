@@ -1,22 +1,23 @@
 <template>
-  <section class="grid">
+  <section class="grid glass-float">
     <div class="page-header">
-      <div>
-        <h2>大模型配置</h2>
-        <p class="muted">管理大模型API配置，用于知识库嵌入和Agent对话。</p>
-      </div>
+      <h2>大模型配置</h2>
+      <p class="muted">管理大模型API配置，用于知识库嵌入和Agent对话。</p>
       <p class="status">{{ error }}</p>
     </div>
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     <template v-else>
       <!-- 创建/编辑大模型配置 -->
-      <article v-show="showCreateForm || editingId" class="panel stack">
-        <div class="page-header">
-          <h3 style="margin: 0">{{ editingId ? '编辑大模型配置' : '创建大模型配置' }}</h3>
-          <button class="ghost" type="button" @click="cancelForm">取消</button>
-        </div>
-        <form class="field-grid" @submit.prevent="submitConfig">
-          <label class="field">
+      <ModalDialog
+      v-model:visible="showCreateForm"
+      :title="editingId ? '编辑大模型配置' : '创建大模型配置'"
+      @confirm="submitConfig"
+      @close="showCreateForm = false"
+      :confirm-disabled="loading"
+      :confirm-text="editingId ? '更新' : '创建'"
+    >
+      <form>
+        <label class="field">
             <span>名称</span>
             <input v-model="form.name" placeholder="GPT-4 Production" required />
           </label>
@@ -57,16 +58,12 @@
               <option :value="false">禁用</option>
             </select>
           </label>
-          <button class="primary" type="submit">{{ editingId ? '更新配置' : '创建配置' }}</button>
-        </form>
-      </article>
+      </form>
+    </ModalDialog>
 
       <!-- 配置列表 -->
       <article class="table-card">
-        <div class="page-header">
-          <h3 style="margin: 0">配置列表</h3>
-          <button class="primary" type="button" @click="showCreateForm = true">新建配置</button>
-        </div>
+          
         <table>
           <thead>
             <tr>
@@ -96,9 +93,9 @@
               <td>{{ formatDateTime(config.createdAt) }}</td>
               <td>
                 <div class="chip-row">
-                  <button class="ghost" type="button" @click="startEdit(config)">编辑</button>
-                  <button class="ghost" type="button" @click="testModel(config)">测试模型</button>
-                  <button class="ghost" type="button" @click="handleDelete(config.id)">删除</button>
+                  <CustomButton type="ghost" @click="startEdit(config)">编辑</CustomButton>
+                  <CustomButton type="ghost" @click="testModel(config)">测试模型</CustomButton>
+                  <CustomButton type="ghost" @click="handleDelete(config.id)">删除</CustomButton>
                 </div>
               </td>
             </tr>
@@ -117,7 +114,7 @@
         <div v-if="testing" class="test-loading">
           <div class="loading-spinner"></div>
           <p>正在测试大模型连接，请稍候...</p>
-          <button class="secondary" type="button" @click="cancelTest">中断测试</button>
+          <CustomButton type="secondary" @click="cancelTest">中断测试</CustomButton>
         </div>
         <div v-else :class="['test-chunkResult', testResult?.success ? 'test-success' : 'test-error']">
           <p><strong>状态：</strong>{{ testResult?.success ? '成功' : '失败' }}</p>
@@ -143,6 +140,8 @@ import {
 import { formatDateTime } from '@/common/format'
 import type { ModelConfig } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const error = ref('')
@@ -166,6 +165,13 @@ const form = reactive({
 const selectionReady = computed(() => Boolean(store.tenantId && store.workspaceId))
 
 onMounted(loadConfigs)
+
+// 监听全局新增事件
+onMounted(() => {
+  window.addEventListener('global-add', () => {
+    showCreateForm.value = true
+  })
+})
 watch(() => [store.tenantId, store.workspaceId], loadConfigs)
 
 async function loadConfigs() {
@@ -187,6 +193,7 @@ function startEdit(config: ModelConfig) {
   form.apiKey = config.apiKey || ''
   form.baseUrl = config.baseUrl || ''
   form.enabled = config.enabled
+  showCreateForm.value = true
 }
 
 function cancelEdit() {

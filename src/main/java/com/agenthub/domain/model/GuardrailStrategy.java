@@ -1,5 +1,8 @@
 package com.agenthub.domain.model;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.Instant;
 
 import static com.agenthub.common.utils.RandomUtils.randomId;
@@ -7,10 +10,12 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
 /**
  * 护栏策略聚合根。
  */
+@NoArgsConstructor
+@Data
 public class GuardrailStrategy {
-    private final String id;
-    private final String tenantId;
-    private final String workspaceId;
+    private String id;
+    private String tenantId;
+    private String workspaceId;
     private String name;
     private String description;
     private boolean inputValidationEnabled;
@@ -20,7 +25,7 @@ public class GuardrailStrategy {
     private boolean promptInjectionDetection;
     private int maxInputLength;
     private int maxOutputLength;
-    private final Instant createdAt;
+    private Instant createdAt;
     private Instant updatedAt;
 
     private GuardrailStrategy(String id, String workspaceId, Instant createdAt) {
@@ -62,6 +67,7 @@ public class GuardrailStrategy {
         strategy.updatedAt = updatedAt;
         return strategy;
     }
+
     public void updateBasicInfo(String name, String description) {
         this.name = name;
         this.description = description;
@@ -116,18 +122,4 @@ public class GuardrailStrategy {
         this.updatedAt = Instant.now();
     }
 
-    public String getId() { return id; }
-    public String getTenantId() { return tenantId; }
-    public String getWorkspaceId() { return workspaceId; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public boolean isInputValidationEnabled() { return inputValidationEnabled; }
-    public boolean isOutputValidationEnabled() { return outputValidationEnabled; }
-    public boolean isPiiDetectionEnabled() { return piiDetectionEnabled; }
-    public boolean isPiiMaskingEnabled() { return piiMaskingEnabled; }
-    public boolean isPromptInjectionDetection() { return promptInjectionDetection; }
-    public int getMaxInputLength() { return maxInputLength; }
-    public int getMaxOutputLength() { return maxOutputLength; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
 }

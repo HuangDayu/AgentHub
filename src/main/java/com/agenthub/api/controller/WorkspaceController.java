@@ -1,9 +1,9 @@
 package com.agenthub.api.controller;
 
 import com.agenthub.api.dto.CreateWorkspaceRequest;
+import com.agenthub.api.dto.UpdateWorkspaceRequest;
 import com.agenthub.api.dto.WorkspaceResponse;
-import com.agenthub.application.usecase.CreateWorkspaceUseCase;
-import com.agenthub.application.usecase.ListWorkspacesUseCase;
+import com.agenthub.application.usecase.WorkspaceUseCase;
 import com.agenthub.domain.model.Workspace;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -19,18 +19,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/workspaces")
 public class WorkspaceController {
-    private final CreateWorkspaceUseCase createWorkspaceUseCase;
-    private final ListWorkspacesUseCase listWorkspacesUseCase;
+    private final WorkspaceUseCase workspaceUseCase;
 
     /**
      * 构造工作空间控制器。
      *
-     * @param createWorkspaceUseCase 创建工作空间用例
-     * @param listWorkspacesUseCase  列出工作空间用例
+     * @param workspaceUseCase 创建工作空间用例
+     * @param workspaceUseCase 列出工作空间用例
      */
-    public WorkspaceController(CreateWorkspaceUseCase createWorkspaceUseCase, ListWorkspacesUseCase listWorkspacesUseCase) {
-        this.createWorkspaceUseCase = createWorkspaceUseCase;
-        this.listWorkspacesUseCase = listWorkspacesUseCase;
+    public WorkspaceController(WorkspaceUseCase workspaceUseCase) {
+        this.workspaceUseCase = workspaceUseCase;
     }
 
     /**
@@ -45,23 +43,9 @@ public class WorkspaceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        return listWorkspacesUseCase.execute(page, size).stream()
+        return workspaceUseCase.execute(page, size).stream()
                 .map(WorkspaceResponse::from)
                 .toList();
-    }
-
-    /**
-     * 在指定租户下创建新工作空间（租户路径参数）。
-     *
-     * @param tenantId 租户ID（路径参数）
-     * @param request  创建工作空间请求
-     * @return 创建的工作空间响应
-     */
-    @PostMapping("/tenants/{tenantId}/workspaces")
-    @ResponseStatus(HttpStatus.CREATED)
-    public WorkspaceResponse createWorkspaceForTenant(@PathVariable String tenantId, @RequestBody CreateWorkspaceRequest request) {
-        Workspace workspace = createWorkspaceUseCase.execute(request.workspaceCode(), request.name(), request.region(), tenantId);
-        return WorkspaceResponse.from(workspace);
     }
 
     /**
@@ -73,12 +57,14 @@ public class WorkspaceController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public WorkspaceResponse createWorkspace(@RequestBody CreateWorkspaceRequest request,
-                                             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantId) {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID is required via X-Tenant-ID header or path variable");
-        }
-        Workspace workspace = createWorkspaceUseCase.execute(request.workspaceCode(), request.name(), request.region(), tenantId);
+    public WorkspaceResponse createWorkspace(@RequestBody CreateWorkspaceRequest request) {
+        Workspace workspace = workspaceUseCase.execute(request.workspaceCode(), request.name(), request.region());
         return WorkspaceResponse.from(workspace);
+    }
+
+
+    @PatchMapping("/{id}")
+    public void update(@PathVariable String id, @RequestBody UpdateWorkspaceRequest updateWorkspaceRequest) {
+        workspaceUseCase.update(Workspace.update(id, updateWorkspaceRequest.name(), updateWorkspaceRequest.region()));
     }
 }

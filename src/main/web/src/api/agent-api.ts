@@ -52,7 +52,7 @@ export async function updateAgent(
 ): Promise<Agent> {
   return requestJson<Agent>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}`, {
     baseUrl: runtimeConfig.agentApiBase,
-    method: 'PATCH',
+    method: 'PUT',
     headers: buildHeaders(selection),
     bodyJson: { name, description },
   })

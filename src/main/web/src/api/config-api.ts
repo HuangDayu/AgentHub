@@ -49,7 +49,7 @@ export async function updateVectorStoreConfig(
 ): Promise<VectorStoreConfig> {
   return requestJson<VectorStoreConfig>(`/api/v1/workspaces/${selection.workspaceId}/vector-stores/${configId}`, {
     baseUrl: runtimeConfig.knowledgeApiBase,
-    method: 'PATCH',
+    method: 'PUT',
     headers: scopedHeaders(selection),
     bodyJson: config,
   })

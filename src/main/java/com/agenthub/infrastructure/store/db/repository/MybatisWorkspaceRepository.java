@@ -1,10 +1,10 @@
 package com.agenthub.infrastructure.store.db.repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.agenthub.domain.model.Workspace;
 import com.agenthub.application.port.out.repositories.WorkspaceRepository;
+import com.agenthub.domain.model.Workspace;
 import com.agenthub.infrastructure.store.db.entity.WorkspaceEntity;
 import com.agenthub.infrastructure.store.db.mapper.WorkspaceMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -121,6 +121,11 @@ public class MybatisWorkspaceRepository implements WorkspaceRepository {
                 .skip((long) page * size)
                 .limit(size)
                 .toList();
+    }
+
+    @Override
+    public void update(Workspace workspace) {
+        mapper.updateById(toPo(workspace));
     }
 
     /**

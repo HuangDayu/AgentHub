@@ -13,23 +13,23 @@ public record HttpTool(
         /** 工具唯一标识 */
         String id,
         /** 工具名称 */
-        java.lang.String name,
+        String name,
         /** 工具描述 */
-        java.lang.String description,
+        String description,
         /** 是否启用 */
         boolean enabled,
         /** HTTP 调用端点地址 */
-        java.lang.String endpoint,
+        String endpoint,
         /** HTTP 请求方法 */
-        java.lang.String httpMethod,
+        String httpMethod,
         /** 输入参数的 JSON Schema */
-        java.lang.String inputSchemaJson,
+        String inputSchemaJson,
         /** 调用超时时间（毫秒） */
         int timeoutMs,
         /** 创建时间 */
         Instant createdAt) {
     private static final int DEFAULT_TIMEOUT_MS = 30_000;
-    private static final java.lang.String DEFAULT_HTTP_METHOD = "POST";
+    private static final String DEFAULT_HTTP_METHOD = "POST";
 
     /**
      * 紧凑构造函数，执行验证和规范化。
@@ -44,7 +44,7 @@ public record HttpTool(
     /**
      * 验证必填字段。
      */
-    private static void validateRequiredFields(String id, java.lang.String name, Instant createdAt) {
+    private static void validateRequiredFields(String id, String name, Instant createdAt) {
         if (id == null) throw new IllegalArgumentException("id must not be null");
         if (name == null || name.isBlank()) throw new IllegalArgumentException("name must not be blank");
         if (createdAt == null) throw new IllegalArgumentException("createdAt must not be null");
@@ -60,7 +60,7 @@ public record HttpTool(
     /**
      * 规范化 HTTP 方法。
      */
-    private static java.lang.String normalizeHttpMethod(java.lang.String httpMethod) {
+    private static String normalizeHttpMethod(String httpMethod) {
         return httpMethod == null || httpMethod.isBlank() ? DEFAULT_HTTP_METHOD : httpMethod.toUpperCase();
     }
 
@@ -74,15 +74,15 @@ public record HttpTool(
     /**
      * 创建新工具（向后兼容重载）。
      */
-    public static HttpTool create(String id, java.lang.String name, java.lang.String description, boolean enabled) {
+    public static HttpTool create(String id, String name, String description, boolean enabled) {
         return create(id, name, description, enabled, null, null, null, 0);
     }
 
     /**
      * 创建新工具（含 HTTP 调用元数据）。
      */
-    public static HttpTool create(String id, java.lang.String name, java.lang.String description, boolean enabled,
-                                  java.lang.String endpoint, java.lang.String httpMethod, java.lang.String inputSchemaJson, int timeoutMs) {
+    public static HttpTool create(String id, String name, String description, boolean enabled,
+                                  String endpoint, String httpMethod, String inputSchemaJson, int timeoutMs) {
         return new HttpTool(id, name.trim(), sanitizeDescription(description), enabled,
                 endpoint, httpMethod, inputSchemaJson, timeoutMs, Instant.now());
     }
@@ -90,15 +90,15 @@ public record HttpTool(
     /**
      * 清理描述文本。
      */
-    private static java.lang.String sanitizeDescription(java.lang.String description) {
+    private static String sanitizeDescription(String description) {
         return description == null ? "" : description.trim();
     }
 
     /**
      * 部分更新工具信息。
      */
-    public HttpTool patch(java.lang.String name, java.lang.String description, Boolean enabled,
-                          java.lang.String endpoint, java.lang.String httpMethod, java.lang.String inputSchemaJson, Integer timeoutMs) {
+    public HttpTool patch(String name, String description, Boolean enabled,
+                          String endpoint, String httpMethod, String inputSchemaJson, Integer timeoutMs) {
         return new HttpTool(this.id,
                 resolveName(name),
                 resolveDescription(description),
@@ -110,18 +110,18 @@ public record HttpTool(
                 this.createdAt);
     }
 
-    private java.lang.String resolveName(java.lang.String name) { return name == null ? this.name : name.trim(); }
-    private java.lang.String resolveDescription(java.lang.String desc) { return desc == null ? this.description : sanitizeDescription(desc); }
+    private String resolveName(String name) { return name == null ? this.name : name.trim(); }
+    private String resolveDescription(String desc) { return desc == null ? this.description : sanitizeDescription(desc); }
     private boolean resolveEnabled(Boolean enabled) { return enabled == null ? this.enabled : enabled; }
-    private java.lang.String resolveEndpoint(java.lang.String endpoint) { return endpoint == null ? this.endpoint : endpoint; }
-    private java.lang.String resolveHttpMethod(java.lang.String method) { return method == null ? this.httpMethod : method.toUpperCase(); }
-    private java.lang.String resolveSchema(java.lang.String schema) { return schema == null ? this.inputSchemaJson : schema; }
+    private String resolveEndpoint(String endpoint) { return endpoint == null ? this.endpoint : endpoint; }
+    private String resolveHttpMethod(String method) { return method == null ? this.httpMethod : method.toUpperCase(); }
+    private String resolveSchema(String schema) { return schema == null ? this.inputSchemaJson : schema; }
     private int resolveTimeout(Integer timeout) { return timeout == null ? this.timeoutMs : timeout; }
 
     /**
      * 向后兼容的 patch。
      */
-    public HttpTool patch(java.lang.String name, java.lang.String description, Boolean enabled) {
+    public HttpTool patch(String name, String description, Boolean enabled) {
         return patch(name, description, enabled, null, null, null, null);
     }
 

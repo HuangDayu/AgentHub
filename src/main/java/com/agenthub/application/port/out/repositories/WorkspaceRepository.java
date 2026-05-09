@@ -51,4 +51,6 @@ public interface WorkspaceRepository {
      */
     List<Workspace> findWorkspacesByTenantId(String tenantId, int page, int size);
 
+    void update(Workspace workspace);
+
 }

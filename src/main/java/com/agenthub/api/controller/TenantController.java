@@ -2,12 +2,7 @@ package com.agenthub.api.controller;
 
 import com.agenthub.api.dto.*;
 import com.agenthub.application.command.PatchTenantCommand;
-import com.agenthub.application.usecase.CreateTenantUseCase;
-import com.agenthub.application.usecase.GetTenantUseCase;
-import com.agenthub.application.usecase.ListTenantsUseCase;
-import com.agenthub.application.usecase.PatchTenantUseCase;
-import com.agenthub.application.usecase.CreateWorkspaceUseCase;
-import com.agenthub.application.usecase.ListWorkspacesUseCase;
+import com.agenthub.application.usecase.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,22 +22,19 @@ public class TenantController {
     private final GetTenantUseCase getTenantUseCase;
     private final PatchTenantUseCase patchTenantUseCase;
     private final ListTenantsUseCase listTenantsUseCase;
-    private final CreateWorkspaceUseCase createWorkspaceUseCase;
-    private final ListWorkspacesUseCase listWorkspacesUseCase;
+    private final WorkspaceUseCase workspaceUseCase;
 
     public TenantController(
             CreateTenantUseCase createTenantUseCase,
             GetTenantUseCase getTenantUseCase,
             PatchTenantUseCase patchTenantUseCase,
             ListTenantsUseCase listTenantsUseCase,
-            CreateWorkspaceUseCase createWorkspaceUseCase,
-            ListWorkspacesUseCase listWorkspacesUseCase) {
+            WorkspaceUseCase workspaceUseCase) {
         this.createTenantUseCase = createTenantUseCase;
         this.getTenantUseCase = getTenantUseCase;
         this.patchTenantUseCase = patchTenantUseCase;
         this.listTenantsUseCase = listTenantsUseCase;
-        this.createWorkspaceUseCase = createWorkspaceUseCase;
-        this.listWorkspacesUseCase = listWorkspacesUseCase;
+        this.workspaceUseCase = workspaceUseCase;
     }
 
     /**
@@ -111,9 +103,7 @@ public class TenantController {
     @ResponseStatus(HttpStatus.CREATED)
     public WorkspaceResponse createWorkspaceUnderTenant(@PathVariable String tenantId,
                                                         @RequestBody CreateWorkspaceRequest request) {
-        var workspace = createWorkspaceUseCase.execute(
-                request.workspaceCode(), request.name(), request.region(), tenantId
-        );
+        var workspace = workspaceUseCase.execute(request.workspaceCode(), request.name(), request.region());
         return WorkspaceResponse.from(workspace);
     }
 
@@ -129,7 +119,7 @@ public class TenantController {
     public List<WorkspaceResponse> listWorkspacesUnderTenant(@PathVariable String tenantId,
                                                              @RequestParam(defaultValue = "0", required = false) int page,
                                                              @RequestParam(defaultValue = "20", required = false) int size) {
-        return listWorkspacesUseCase.findWorkspacesByTenantId(tenantId, page, size).stream()
+        return workspaceUseCase.findWorkspacesByTenantId(tenantId, page, size).stream()
                 .map(WorkspaceResponse::from)
                 .toList();
     }

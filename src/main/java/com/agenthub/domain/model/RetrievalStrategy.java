@@ -1,6 +1,7 @@
 package com.agenthub.domain.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
@@ -9,11 +10,12 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
 /**
  * 检索策略聚合根。
  */
+@NoArgsConstructor
 @Data
 public class RetrievalStrategy {
-    private final String id;
-    private final String tenantId;
-    private final String workspaceId;
+    private String id;
+    private String tenantId;
+    private String workspaceId;
     private String name;
     private String description;
     private RetrievalType retrievalType;
@@ -28,7 +30,7 @@ public class RetrievalStrategy {
     private String rerankModel;
     private double vectorWeight;
     private double keywordWeight;
-    private final Instant createdAt;
+    private Instant createdAt;
     private Instant updatedAt;
 
     public enum RetrievalType {

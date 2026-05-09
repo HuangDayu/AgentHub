@@ -1,8 +1,6 @@
 package com.agenthub.infrastructure.store.db.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.time.Instant;
@@ -14,8 +12,9 @@ import java.time.Instant;
 @Data
 @TableName("app.workspace")
 public class WorkspaceEntity {
-    @TableId(type = IdType.INPUT)
+    @TableId(type = IdType.ASSIGN_ID)
     private String id;
+    @TableField(value = "tenant_id", fill = FieldFill.INSERT)
     private String tenantId;
     private String workspaceCode;
     private String name;

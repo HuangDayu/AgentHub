@@ -65,13 +65,13 @@ public class HttpInvokerTools implements HttpToolInvoker {
 
 
     @Override
-    public HttpToolInvocationResult invoke(java.lang.String toolId, InvokeToolCommand command) {
+    public HttpToolInvocationResult invoke(String toolId, InvokeToolCommand command) {
         HttpTool httpTool = requireTool(toolId);
         Map<java.lang.String, Object> payload = command.payload() == null ? Map.of() : command.payload();
         return invoke(httpTool, payload);
     }
 
-    private HttpTool requireTool(java.lang.String toolId) {
+    private HttpTool requireTool(String toolId) {
         return repository.findById(toolId).orElseThrow(() -> new ToolNotFoundException(toolId));
     }
 
@@ -99,7 +99,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
      */
     private HttpToolInvocationResult doInvoke(HttpTool httpTool, Map<java.lang.String, Object> payload) {
         Map<java.lang.String, Object> filteredPayload = validateAndFilter(httpTool, payload);
-        java.lang.String resolvedUrl = resolveUrlVariables(httpTool.endpoint(), filteredPayload);
+        String resolvedUrl = resolveUrlVariables(httpTool.endpoint(), filteredPayload);
         ResponseEntity<java.lang.String> response = retryTemplate.execute(
                 context -> doHttpRequest(resolvedUrl, httpTool.httpMethod(), filteredPayload)
         );
@@ -187,7 +187,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
         JsonNode requiredNode = schemaNode.get("required");
         if (requiredNode != null && requiredNode.isArray()) {
             for (JsonNode req : requiredNode) {
-                java.lang.String key = req.asText();
+                String key = req.asText();
                 if (!payload.containsKey(key)) {
                     throw new IllegalArgumentException("缺少必填参数: " + key);
                 }
@@ -212,13 +212,13 @@ public class HttpInvokerTools implements HttpToolInvoker {
     /**
      * 解析 URL 路径变量。
      */
-    private java.lang.String resolveUrlVariables(java.lang.String endpoint, Map<java.lang.String, Object> payload) {
+    private String resolveUrlVariables(String endpoint, Map<java.lang.String, Object> payload) {
         Matcher matcher = URL_VARIABLE_PATTERN.matcher(endpoint);
         StringBuilder resolved = new StringBuilder();
         while (matcher.find()) {
-            java.lang.String varName = matcher.group(1);
+            String varName = matcher.group(1);
             Object value = payload.get(varName);
-            java.lang.String replacement = value != null ? value.toString() : matcher.group();
+            String replacement = value != null ? value.toString() : matcher.group();
             matcher.appendReplacement(resolved, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(resolved);
@@ -228,7 +228,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
     /**
      * 提取 URL 中定义的路径变量名。
      */
-    private Set<java.lang.String> extractUrlVariableNames(java.lang.String endpoint) {
+    private Set<java.lang.String> extractUrlVariableNames(String endpoint) {
         Set<java.lang.String> vars = new HashSet<>();
         Matcher matcher = URL_VARIABLE_PATTERN.matcher(endpoint);
         while (matcher.find()) {
@@ -240,7 +240,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
     /**
      * 执行实际的 HTTP 请求。
      */
-    private ResponseEntity<java.lang.String> doHttpRequest(java.lang.String url, java.lang.String method, Map<java.lang.String, Object> payload) {
+    private ResponseEntity<java.lang.String> doHttpRequest(String url, String method, Map<java.lang.String, Object> payload) {
         HttpMethod httpMethod = HttpMethod.valueOf(method);
         HttpHeaders headers = createHeaders();
         if (httpMethod == HttpMethod.GET || httpMethod == HttpMethod.DELETE) {
@@ -262,7 +262,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
     /**
      * 执行 GET 或 DELETE 请求。
      */
-    private ResponseEntity<java.lang.String> executeGetOrDelete(java.lang.String url, HttpMethod httpMethod, Map<java.lang.String, Object> payload, HttpHeaders headers) {
+    private ResponseEntity<java.lang.String> executeGetOrDelete(String url, HttpMethod httpMethod, Map<java.lang.String, Object> payload, HttpHeaders headers) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url);
         Set<java.lang.String> urlVars = extractUrlVariableNames(url);
         for (Map.Entry<java.lang.String, Object> entry : payload.entrySet()) {
@@ -270,7 +270,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
                 builder.queryParam(entry.getKey(), entry.getValue());
             }
         }
-        java.lang.String finalUrl = builder.build().toUriString();
+        String finalUrl = builder.build().toUriString();
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         return restTemplate.exchange(finalUrl, httpMethod, entity, java.lang.String.class);
     }
@@ -278,7 +278,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
     /**
      * 执行 POST 或 PUT 请求。
      */
-    private ResponseEntity<java.lang.String> executePostOrPut(java.lang.String url, HttpMethod httpMethod, Map<java.lang.String, Object> payload, HttpHeaders headers) {
+    private ResponseEntity<java.lang.String> executePostOrPut(String url, HttpMethod httpMethod, Map<java.lang.String, Object> payload, HttpHeaders headers) {
         HttpEntity<Map<java.lang.String, Object>> entity = new HttpEntity<>(payload, headers);
         return restTemplate.exchange(url, httpMethod, entity, java.lang.String.class);
     }
@@ -286,7 +286,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
     /**
      * 解析 HTTP 响应体为 Map。
      */
-    private Map<java.lang.String, Object> parseResponse(java.lang.String body) {
+    private Map<java.lang.String, Object> parseResponse(String body) {
         if (body == null || body.isBlank()) {
             return Map.of();
         }

@@ -1,8 +1,8 @@
 <template>
-  <section class="grid">
+  <section class="grid glass-float">
     <div class="page-header">
       <div>
-        <h2>知识库工作台</h2>
+        <h2>知识库</h2>
         <p class="muted">基于当前租户/工作区上下文管理知识库与文档。</p>
       </div>
       <p class="status">{{ error }}</p>
@@ -10,13 +10,16 @@
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     <template v-else>
       <!-- 创建知识库 -->
-      <article v-show="showCreateForm" class="panel stack">
-        <div class="page-header">
-          <h3 style="margin: 0">创建知识库</h3>
-          <button class="ghost" type="button" @click="showCreateForm = false">取消</button>
-        </div>
-        <form class="field-grid" @submit.prevent="submitKnowledgeBase">
-          <label class="field">
+      <ModalDialog
+      v-model:visible="showCreateForm"
+      title="创建知识库"
+      @confirm="submitKnowledgeBase"
+      @close="showCreateForm = false"
+      :confirm-disabled="loading"
+      confirm-text="创建"
+    >
+      <form>
+        <label class="field">
             <span>名称</span>
             <input v-model="form.name" required placeholder="知识库名称" />
           </label>
@@ -55,18 +58,21 @@
             <span>描述</span>
             <textarea v-model="form.description" rows="3" placeholder="描述该知识库的数据范围与检索策略"></textarea>
           </label>
-          <button class="primary" type="submit">创建知识库</button>
-          <button class="secondary" type="button" @click="loadKnowledgeBases">刷新列表</button>
-        </form>
-      </article>
+          
+          <CustomButton type="secondary" @click="loadKnowledgeBases">刷新列表</CustomButton>
+      </form>
+    </ModalDialog>
 
-      <!-- 编辑知识库 -->
-      <article v-show="showEditForm" class="panel stack">
-        <div class="page-header">
-          <h3 style="margin: 0">编辑知识库</h3>
-          <button class="ghost" type="button" @click="showEditForm = false">取消</button>
-        </div>
-        <form class="field-grid" @submit.prevent="submitEditKnowledgeBase">
+      <!-- 编辑知识库弹窗 -->
+      <ModalDialog
+        v-model:visible="showEditForm"
+        title="编辑知识库"
+        @confirm="submitEditKnowledgeBase"
+        @close="showEditForm = false"
+        :confirm-disabled="loading"
+        confirm-text="保存"
+      >
+        <form>
           <label class="field">
             <span>名称</span>
             <input v-model="editForm.name" required placeholder="知识库名称" />
@@ -102,16 +108,11 @@
             <span>描述</span>
             <textarea v-model="editForm.description" rows="3" placeholder="描述该知识库的数据范围与检索策略"></textarea>
           </label>
-          <button class="primary" type="submit">保存修改</button>
         </form>
-      </article>
+      </ModalDialog>
 
       <!-- 知识库列表 -->
       <article class="table-card">
-        <div class="page-header">
-          <h3 style="margin: 0">知识库列表</h3>
-          <button class="primary" type="button" @click="showCreateForm = true">新建知识库</button>
-        </div>
         <table>
           <thead>
             <tr>
@@ -129,9 +130,9 @@
               <td>{{ formatDateTime(item.createdAt) }}</td>
               <td>
                 <div class="chip-row">
-                  <button class="secondary" type="button" @click="openEditForm(item)">编辑</button>
-                  <button class="secondary" type="button" @click="openDocPanel(item.id)">文档管理</button>
-                  <button class="ghost" type="button" @click="handleDeleteKb(item.id)">删除</button>
+                  <CustomButton type="secondary" @click="openEditForm(item)">编辑</CustomButton>
+                  <CustomButton type="secondary" @click="openDocPanel(item.id)">文档管理</CustomButton>
+                  <CustomButton type="ghost" @click="handleDeleteKb(item.id)">删除</CustomButton>
                 </div>
               </td>
             </tr>
@@ -146,7 +147,7 @@
             <h3 style="margin: 0">文档管理 · {{ activeDocKbId }}</h3>
             <p class="muted">上传文档到知识库，查看已有文档列表。</p>
           </div>
-          <button class="ghost" type="button" @click="activeDocKbId = ''">关闭</button>
+          <CustomButton type="ghost" @click="activeDocKbId = ''">关闭</CustomButton>
         </div>
         <!-- 上传 -->
         <form class="field-grid" @submit.prevent>
@@ -184,8 +185,8 @@
                 <td><span class="tag">{{ doc.status }}</span></td>
                 <td>{{ formatDateTime(doc.createdAt) }}</td>
                 <td>
-                  <button class="secondary" type="button" @click="handleVectorizeDoc(doc.docId)" :disabled="vectorizingDocId === doc.docId">{{ vectorizingDocId === doc.docId ? "向量化中..." : "向量化" }}</button>
-                  <button class="ghost" type="button" @click="handleDeleteDoc(doc.docId)">删除</button>
+                  <CustomButton type="secondary" @click="handleVectorizeDoc(doc.docId)" :disabled="vectorizingDocId === doc.docId">{{ vectorizingDocId === doc.docId ? "向量化中..." : "向量化" }}</CustomButton>
+                  <CustomButton type="ghost" @click="handleDeleteDoc(doc.docId)">删除</CustomButton>
                 </td>
               </tr>
             </tbody>
@@ -212,6 +213,9 @@ import {
 import { listModelConfigs, listVectorStoreConfigs } from '@/api/config-api'
 import type { KnowledgeBase, ModelConfig, VectorStoreConfig } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const selectionReady = computed(() => !!store.tenantId && !!store.workspaceId)
@@ -248,10 +252,16 @@ const selectedFile = ref<File | null>(null)
 const uploading = ref(false)
 const vectorizingDocId = ref<string | null>(null)
 
+// 监听全局新增事件
 onMounted(() => {
-  if (selectionReady.value) loadKnowledgeBases()
-  loadModelConfigs()
   loadVectorStoreConfigs()
+  loadModelConfigs()
+  if (selectionReady.value) loadKnowledgeBases()
+  
+  // 监听全局新增事件
+  window.addEventListener('global-add', () => {
+    showCreateForm.value = true
+  })
 })
 
 watch(selectionReady, (ready) => {
@@ -266,12 +276,15 @@ watch(() => store.workspaceId, (newId, oldId) => {
 })
 
 async function loadModelConfigs() {
+  if (selectionReady.value) loadKnowledgeBases()
   try {
     modelConfigs.value = await listModelConfigs({ tenantId: store.tenantId, workspaceId: store.workspaceId })
   } catch { /* ignore */ }
 }
 
 async function loadVectorStoreConfigs() {
+  loadModelConfigs()
+  if (selectionReady.value) loadKnowledgeBases()
   try {
     vectorStoreConfigs.value = await listVectorStoreConfigs({ tenantId: store.tenantId, workspaceId: store.workspaceId })
   } catch { /* ignore */ }
@@ -287,7 +300,7 @@ async function submitKnowledgeBase() {
   await execute(async () => {
     await createKnowledgeBase({
       selection: { tenantId: store.tenantId, workspaceId: store.workspaceId },
-      kbId: form.kbCode,
+      kbCode: form.kbCode,
       name: form.name,
       description: form.description,
       indexVersions: ['v1'],

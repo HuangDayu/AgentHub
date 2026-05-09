@@ -30,7 +30,7 @@ export async function listKnowledgeBases(selection: SelectionState) {
 
 export function createKnowledgeBase(payload: {
     selection: SelectionState
-    kbId: string
+    kbCode: string
     name: string
     description: string
     indexVersions: string[]
@@ -44,7 +44,7 @@ export function createKnowledgeBase(payload: {
         method: 'POST',
         headers: scopedHeaders(payload.selection),
         bodyJson: {
-            kbId: payload.kbId,
+            kbCode: payload.kbCode,
             name: payload.name,
             description: payload.description,
             indexVersions: payload.indexVersions,

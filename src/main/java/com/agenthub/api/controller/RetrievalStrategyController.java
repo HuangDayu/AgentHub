@@ -1,5 +1,6 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateRetrievalStrategyRequest;
 import com.agenthub.api.dto.RetrievalStrategyResponse;
 import com.agenthub.api.dto.UpdateRetrievalStrategyRequest;
@@ -73,9 +74,7 @@ public class RetrievalStrategyController {
             @PathVariable String id,
             @RequestBody UpdateRetrievalStrategyRequest request
     ) {
-        UpdateRetrievalStrategyCommand command = new UpdateRetrievalStrategyCommand(
-                request.name(), request.description()
-        );
+        UpdateRetrievalStrategyCommand command = BeanUtil.copyProperties(request, UpdateRetrievalStrategyCommand.class);
         return toResponse(retrievalStrategyUseCase.update(id, command));
     }
 

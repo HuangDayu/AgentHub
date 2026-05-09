@@ -33,6 +33,8 @@
     <!-- 悬浮设置按钮 -->
     <FloatingSettingsButton />
   </div>
+    <FloatingEffectButton />
+    <FloatingAddButton v-if="showAddButton" @add="handleAdd" />
 </template>
 
 <script setup lang="ts">
@@ -43,7 +45,41 @@ import { getCurrentUser } from '@/api/tenant-api'
 import WorkspaceSelector from './WorkspaceSelector.vue'
 import FloatingSettingsButton from './FloatingSettingsButton.vue'
 
+import FloatingEffectButton from './FloatingEffectButton.vue'
+import FloatingAddButton from './FloatingAddButton.vue'
 const store = useWorkspaceStore()
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+// 判断是否显示新增按钮
+const showAddButton = computed(() => {
+  const path = route.path
+  return path.includes('strategies') ||
+         path.includes('agents') ||
+         path.includes('workspace') ||
+         path.includes('vector-stores') || 
+         path.includes('models') || 
+         path.includes('agent-configs') ||
+         path.includes('knowledge') ||
+         path.includes('retrieval') ||
+         path.includes('strategy') ||
+         path.includes('mcp-tool') ||
+         path.includes('prompt-template') ||
+         path.includes('memory') ||
+         path.includes('skill') ||
+         path.includes('workflow') ||
+         path.includes('agent-team') ||
+         path.includes('security-policy') ||
+         path.includes('scheduled-task')
+})
+
+// 处理新增按钮点击
+const handleAdd = () => {
+  // 触发全局事件，让各个页面监听
+  window.dispatchEvent(new CustomEvent('global-add'))
+}
 const router = useRouter()
 
 // 初始化租户ID

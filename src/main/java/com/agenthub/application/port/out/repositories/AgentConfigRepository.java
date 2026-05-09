@@ -22,6 +22,8 @@ public interface AgentConfigRepository {
 
     AgentConfig findOneAgentConfig(String agentId, AgentConfigCategory category, AgentConfigType type);
 
+    List<AgentConfig> findAgentConfigs(AgentConfigCategory category, AgentConfigType type, String configId);
+
     void deleteById(String id);
 
     void deleteByAgentId(String agentId);

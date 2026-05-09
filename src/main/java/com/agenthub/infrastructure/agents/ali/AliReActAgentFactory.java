@@ -12,6 +12,7 @@ import com.agenthub.infrastructure.agents.ali.store.StoreFactory;
 import com.agenthub.infrastructure.agents.ali.tools.GraphToolsFactory;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import com.agenthub.infrastructure.tools.AgentToolsFactory;
+import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.agent.Builder;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.checkpoint.BaseCheckpointSaver;

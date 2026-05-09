@@ -1,5 +1,5 @@
 <template>
-  <section class="workflow-management">
+  <section class="workflow-management glass-float">
     <div class="page-header">
       <h2>工作流管理</h2>
       <p class="muted">管理Agent的工作流图定义</p>
@@ -81,6 +81,9 @@ import { ref, onMounted } from 'vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listWorkflows, createWorkflow, updateWorkflow, publishWorkflow, unpublishWorkflow, deleteWorkflow } from '@/api/workflow-api'
 import type { Workflow } from '@/types/memory'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const workflows = ref<Workflow[]>([])
@@ -101,6 +104,13 @@ const selection = () => ({
 })
 
 onMounted(async () => {
+
+// 监听全局新增事件
+onMounted(() => {
+  window.addEventListener('global-add', () => {
+    showCreateForm.value = true
+  })
+})
   await loadWorkflows()
 })
 

@@ -23,50 +23,35 @@
             </svg>
             工作区列表
           </h3>
-          <button class="primary" @click="showCreateForm = true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-              <path d="M12 5v14M5 12h14"/>
-            </svg>
-            新建工作区
-          </button>
+          
         </div>
 
-        <!-- 创建/编辑表单 -->
-        <form v-if="showCreateForm || editingWorkspace" class="workspace-form fade-in" @submit.prevent="submitWorkspace">
-          <div class="form-header">
-            <h4>{{ editingWorkspace ? '编辑工作区' : '创建新工作区' }}</h4>
-            <button type="button" class="close-btn" @click="cancelForm">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 6L6 18M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-          <div class="form-grid">
-            <label class="field">
-              <span>工作区代码 *</span>
-              <input v-model="workspaceForm.workspaceCode" :disabled="!!editingWorkspace" required placeholder="workspace-001" />
-            </label>
-            <label class="field">
-              <span>名称 *</span>
-              <input v-model="workspaceForm.name" required placeholder="我的工作区" />
-            </label>
-            <label class="field">
-              <span>区域</span>
-              <input v-model="workspaceForm.region" placeholder="cn-north-1" />
-            </label>
-          </div>
-          <div class="form-actions">
-            <button class="secondary" type="button" @click="cancelForm">取消</button>
-            <button class="primary" type="submit">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-                <polyline points="7 3 7 8 15 8"/>
-              </svg>
-              {{ editingWorkspace ? '更新' : '创建' }}
-            </button>
-          </div>
-        </form>
+        <!-- 创建/编辑弹窗 -->
+        <ModalDialog
+          v-model:visible="showCreateForm"
+          :title="editingWorkspace ? '编辑工作区' : '创建新工作区'"
+          @confirm="submitWorkspace"
+          @close="showCreateForm = false"
+          :confirm-disabled="loading"
+          :confirm-text="editingWorkspace ? '更新' : '创建'"
+        >
+          <form>
+            <div class="form-grid">
+              <label class="field">
+                <span>工作区代码 *</span>
+                <input v-model="workspaceForm.workspaceCode" :disabled="!!editingWorkspace" required placeholder="workspace-001" />
+              </label>
+              <label class="field">
+                <span>名称 *</span>
+                <input v-model="workspaceForm.name" required placeholder="我的工作区" />
+              </label>
+              <label class="field">
+                <span>区域</span>
+                <input v-model="workspaceForm.region" placeholder="cn-north-1" />
+              </label>
+            </div>
+          </form>
+        </ModalDialog>
 
         <!-- 工作区卡片列表 -->
         <div v-if="workspaces.length === 0" class="empty-state">
@@ -149,6 +134,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue'
+import ModalDialog from '@/components/ModalDialog.vue'
 import { formatDateTime } from '@/common/format'
 import {
   getCurrentUser,
@@ -185,6 +171,12 @@ onMounted(async () => {
     await loadWorkspaces()
   })
   loading.value = false
+  
+  // 监听全局新增事件
+  window.addEventListener('global-add', () => {
+    editingWorkspace.value = null
+    showCreateForm.value = true
+  })
 })
 
 async function loadWorkspaces() {
@@ -205,6 +197,7 @@ function startEdit(ws: Workspace) {
   workspaceForm.workspaceCode = ws.workspaceCode
   workspaceForm.name = ws.name
   workspaceForm.region = ws.region || ''
+  showCreateForm.value = true
 }
 
 function cancelForm() {

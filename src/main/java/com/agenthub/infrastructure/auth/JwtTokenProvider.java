@@ -18,8 +18,8 @@ import java.util.Date;
  */
 @Component
 public class JwtTokenProvider implements JwtTokenProviderPort {
-    private static final long ACCESS_TOKEN_EXPIRY_SECONDS = 3600; // 1小时
-    private static final long REFRESH_TOKEN_EXPIRY_SECONDS = 86400 * 7; // 7天
+    private static final long ACCESS_TOKEN_EXPIRY_SECONDS = 86400 * 7; // 7天
+    private static final long REFRESH_TOKEN_EXPIRY_SECONDS = 86400 * 30; // 30天
 
     private final SecretKey secretKey;
 

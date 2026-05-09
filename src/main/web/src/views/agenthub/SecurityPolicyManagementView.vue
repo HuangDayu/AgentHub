@@ -1,5 +1,5 @@
 <template>
-  <section class="security-policy-management">
+  <section class="security-policy-management glass-float">
     <div class="page-header">
       <h2>安全策略管理</h2>
       <p class="muted">管理Agent的安全控制策略</p>
@@ -97,6 +97,9 @@ import { ref, onMounted } from 'vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listSecurityPolicies, createSecurityPolicy, updateSecurityPolicy, deleteSecurityPolicy } from '@/api/security-policy-api'
 import type { SecurityPolicy } from '@/types/memory'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const policies = ref<SecurityPolicy[]>([])
@@ -121,6 +124,13 @@ const selection = () => ({
 })
 
 onMounted(async () => {
+
+// 监听全局新增事件
+onMounted(() => {
+  window.addEventListener('global-add', () => {
+    showCreateForm.value = true
+  })
+})
   await loadPolicies()
 })
 

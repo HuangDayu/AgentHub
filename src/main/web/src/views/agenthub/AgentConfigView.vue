@@ -1,22 +1,17 @@
 <template>
-  <section class="agent-config-page">
+  <section class="agent-config-page glass-float">
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
-    
+
     <template v-else>
       <!-- Agent选择 -->
-      <article class="panel header-panel">
+      <article class="panel glass-effect header-panel">
         <div class="header-row">
           <div class="header-left">
             <h2>Agent配置管理</h2>
             <p class="muted">管理Agent的配置关联关系</p>
           </div>
           <div class="header-right">
-            <select v-model="selectedAgentId" @change="onAgentChange" class="agent-select">
-              <option value="">请选择Agent</option>
-              <option v-for="agent in agents" :key="agent.id" :value="agent.id">
-                {{ agent.name }}
-              </option>
-            </select>
+            <CustomSelect v-model="selectedAgentId" :options="agentsOptions" placeholder="请选择Agent" />
           </div>
         </div>
         <p v-if="error" class="status">{{ error }}</p>
@@ -27,18 +22,8 @@
         <div class="panel-header">
           <h3>{{ selectedAgentName }} - 配置列表</h3>
           <div class="header-controls">
-            <select v-model="selectedCategory" class="filter-select">
-              <option value="">全部类别</option>
-              <option v-for="ct in configTypes" :key="ct.category" :value="ct.category">
-                {{ ct.displayName }}
-              </option>
-            </select>
-            <select v-model="selectedType" class="filter-select">
-              <option value="">全部类型</option>
-              <option v-for="t in typesForFilter" :key="t.type" :value="t.type">
-                {{ t.displayName }}
-              </option>
-            </select>
+            <CustomSelect v-model="selectedCategory" :options="configTypesOptions" placeholder="全部类别" />
+            <CustomSelect v-model="selectedType" :options="typesForFilterOptions" placeholder="全部类型" />
             <select v-model="cardSize" class="size-select">
               <option :value="1">大小: 1级</option>
               <option :value="2">大小: 2级</option>
@@ -46,11 +31,11 @@
               <option :value="4">大小: 4级</option>
               <option :value="5">大小: 5级</option>
             </select>
-            <button class="secondary" @click="handleSync" :disabled="loading || !selectedAgentId">同步</button>
-            <button class="primary" @click="showAddForm = true">添加</button>
+            <CustomButton type="secondary" @click="handleSync" :disabled="loading || !selectedAgentId">同步</CustomButton>
+            
           </div>
         </div>
-        
+
         <!-- 配置方块网格 -->
         <div v-if="filteredConfigs.length === 0" class="empty-hint">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -58,7 +43,7 @@
           </svg>
           <span>暂无配置，请点击"添加配置"按钮</span>
         </div>
-        
+
         <div v-else class="config-grid" :class="`size-${cardSize}`">
           <div v-for="config in filteredConfigs" :key="config.id" class="config-card" :class="`category-${config.category.toLowerCase()}`">
             <div class="config-header">
@@ -79,7 +64,7 @@
               </div>
               <div class="config-actions">
                 <button class="btn-detail" @click="showDetail(config)">详情</button>
-                <button 
+                <button
                   :class="['btn-toggle', config.enabled ? 'btn-disable' : 'btn-enable']"
                   @click="toggleEnabled(config)"
                   :disabled="loading"
@@ -132,41 +117,29 @@
       </div>
 
       <!-- 添加配置表单 -->
-      <article v-if="showAddForm" class="panel form-panel">
-        <div class="panel-header">
-          <h3>添加配置</h3>
-          <button class="ghost" @click="cancelAdd">取消</button>
-        </div>
-        <form class="config-form" @submit.prevent="handleAdd">
-          <div class="form-row">
+      <ModalDialog
+      v-model:visible="showAddForm"
+      title="添加配置"
+      @confirm="handleAdd"
+      @close="showAddForm = false"
+      :confirm-disabled="!isFormValid || loading"
+      confirm-text="添加"
+    >
+      <form>
+        <div class="form-row">
             <label class="form-field">
               <span>分类 *</span>
-              <select v-model="form.category" @change="onCategoryChange" required>
-                <option value="">请选择分类</option>
-                <option v-for="ct in configTypes" :key="ct.category" :value="ct.category">
-                  {{ ct.displayName }}
-                </option>
-              </select>
+              <CustomSelect v-model="form.category" :options="configTypesOptions" placeholder="请选择分类" required />
             </label>
             <label class="form-field">
               <span>类型 *</span>
-              <select v-model="form.type" @change="onTypeChange" :disabled="!form.category" required>
-                <option value="">请选择类型</option>
-                <option v-for="t in typesForCategory" :key="t.type" :value="t.type">
-                  {{ t.displayName }}
-                </option>
-              </select>
+              <CustomSelect v-model="form.type" :options="typesForFilterOptions" placeholder="请选择类型" disabled required />
             </label>
           </div>
           <div class="form-row">
             <label class="form-field">
               <span>配置项 *</span>
-              <select v-model="form.configId" :disabled="!form.type" required>
-                <option value="">请选择配置</option>
-                <option v-for="c in availableConfigsForType" :key="c.id" :value="c.id">
-                  {{ c.name }}
-                </option>
-              </select>
+              <CustomSelect v-model="form.configId" :options="availableConfigsForTypeOptions" placeholder="请选择配置" disabled required />
             </label>
             <label class="form-field">
               <span>优先级</span>
@@ -185,24 +158,34 @@
             <input v-model="form.enabled" type="checkbox" />
             <span>启用此配置</span>
           </label>
-          <div class="form-actions">
-            <button type="submit" class="primary" :disabled="loading || !isFormValid">
-              {{ loading ? '添加中...' : '添加' }}
-            </button>
-          </div>
-        </form>
-      </article>
+      </form>
+    </ModalDialog>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { useWorkspaceStore } from '@/store/workspace-store'
-import { listAgents, type Agent } from '@/api/agent-api'
-import { listAgentConfigs, setAgentConfig, updateAgentConfig, deleteAgentConfig, syncAgentConfigs, type AgentConfig } from '@/api/agent-config-api'
-import { getConfigTypes, getAvailableConfigs, type ConfigTypeDefinition, type AvailableConfig } from '@/api/agent-config-type-api'
+import {computed, onMounted, ref, watch} from 'vue'
+import {useRoute} from 'vue-router'
+import {useWorkspaceStore} from '@/store/workspace-store'
+import {type Agent, listAgents} from '@/api/agent-api'
+import {
+  type AgentConfig,
+  deleteAgentConfig,
+  listAgentConfigs,
+  setAgentConfig,
+  syncAgentConfigs,
+  updateAgentConfig
+} from '@/api/agent-config-api'
+import {
+  type AvailableConfig,
+  type ConfigTypeDefinition,
+  getAvailableConfigs,
+  getConfigTypes
+} from '@/api/agent-config-type-api'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const route = useRoute()
@@ -219,6 +202,13 @@ const selectedType = ref('')
 const cardSize = ref(3)
 const showDetailModal = ref(false)
 const detailConfig = ref<AgentConfig | null>(null)
+const agentsOptions = computed(() => agents.value.map(agent => ({ value: agent.id, label: agent.name })))
+const configTypesOptions = computed(() => configTypes.value.map(ct => ({ value: ct.category, label: ct.displayName })))
+const typesForFilterOptions = computed(() => typesForFilter.value.map(t => ({ value: t.type, label: t.displayName })))
+const availableConfigsForTypeOptions = computed(() => {
+  const ac = availableConfigs.value.get(selectedType.value)
+  return ac?.map(c => ({ value: c.id, label: c.name })) || []
+})
 
 const form = ref({
   category: '',
@@ -279,6 +269,13 @@ const filteredConfigs = computed(() => {
 })
 
 onMounted(() => {
+
+// 监听全局新增事件
+onMounted(() => {
+  window.addEventListener('global-add', () => {
+    showAddForm.value = true
+  })
+})
   if (selectionReady.value) {
     loadAgents()
     loadConfigTypes()
@@ -437,7 +434,7 @@ async function handleAdd() {
     const configName = getConfigNameFromSelection()
     const name = form.value.name || configName
     const description = form.value.description || configName
-    
+
     await setAgentConfig(selection, selectedAgentId.value, {
       category: form.value.category,
       type: form.value.type,

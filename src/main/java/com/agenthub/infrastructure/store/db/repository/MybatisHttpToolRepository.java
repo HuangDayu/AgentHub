@@ -52,7 +52,7 @@ public class MybatisHttpToolRepository implements HttpToolRepository {
     }
 
     @Override
-    public List<HttpTool> findByWorkspaceId(java.lang.String workspaceId) {
+    public List<HttpTool> findByWorkspaceId(String workspaceId) {
         LambdaQueryWrapper<HttpToolsEntity> query = new LambdaQueryWrapper<>();
         query.eq(HttpToolsEntity::getWorkspaceId, workspaceId);
         return mapper.selectList(query).stream().map(this::toDomain).toList();

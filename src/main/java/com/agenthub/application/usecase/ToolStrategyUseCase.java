@@ -1,13 +1,14 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.command.CreateToolStrategyCommand;
 import com.agenthub.application.command.UpdateToolStrategyCommand;
 import com.agenthub.application.port.out.repositories.ToolStrategyRepository;
+import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.ToolStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -21,8 +22,8 @@ public class ToolStrategyUseCase {
 
 
     public ToolStrategy update(String id, UpdateToolStrategyCommand command) {
-        ToolStrategy strategy = get(id);
-        strategy.updateBasicInfo(command.name(), command.description());
+        ToolStrategy strategy = ToolStrategy.rebuild(id, command.workspaceId(), command.name(), command.description(),
+                command.maxConcurrentCalls(), command.timeoutSeconds(), command.retryCount(), command.fallbackEnabled(), Instant.now(), Instant.now());
         return repository.save(strategy);
     }
 

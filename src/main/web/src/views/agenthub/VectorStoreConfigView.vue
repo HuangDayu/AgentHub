@@ -1,5 +1,5 @@
 <template>
-  <section class="grid">
+  <section class="grid glass-float">
     <div class="page-header">
       <div>
         <h2>向量数据库配置</h2>
@@ -10,12 +10,15 @@
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     <template v-else>
       <!-- 创建/编辑向量数据库配置 -->
-      <article v-show="showCreateForm || editingId" class="panel stack">
-        <div class="page-header">
-          <h3 style="margin: 0">{{ editingId ? '编辑向量数据库配置' : '创建向量数据库配置' }}</h3>
-          <button class="ghost" type="button" @click="cancelForm">取消</button>
-        </div>
-        <form class="field-grid" @submit.prevent="submitConfig">
+      <ModalDialog
+        v-model:visible="showCreateForm"
+        :title="editingId ? '编辑向量数据库配置' : '创建向量数据库配置'"
+        @confirm="submitConfig"
+        @close="showCreateForm = false"
+        :confirm-disabled="loading"
+        :confirm-text="editingId ? '更新' : '创建'"
+      >
+        <form>
           <label class="field">
             <span>名称</span>
             <input v-model="form.name" placeholder="Qdrant Production" required />
@@ -58,16 +61,12 @@
               <option :value="false">禁用</option>
             </select>
           </label>
-          <button class="primary" type="submit">{{ editingId ? '更新配置' : '创建配置' }}</button>
         </form>
-      </article>
+      </ModalDialog>
 
       <!-- 配置列表 -->
       <article class="table-card">
-        <div class="page-header">
-          <h3 style="margin: 0">配置列表</h3>
-          <button class="primary" type="button" @click="showCreateForm = true">新建配置</button>
-        </div>
+        
         <table>
           <thead>
             <tr>
@@ -97,10 +96,10 @@
               <td>{{ formatDateTime(config.createdAt) }}</td>
               <td>
                 <div class="chip-row">
-                  <button class="ghost" type="button" @click="startEdit(config)">编辑</button>
-                  <button class="ghost" type="button" @click="testConnection(config)">测试连接</button>
-                  <button class="ghost" type="button" @click="refreshInstance(config)">刷新实例</button>
-                  <button class="ghost" type="button" @click="handleDelete(config.id)">删除</button>
+                  <CustomButton type="ghost" @click="startEdit(config)">编辑</CustomButton>
+                  <CustomButton type="ghost" @click="testConnection(config)">测试连接</CustomButton>
+                  <CustomButton type="ghost" @click="refreshInstance(config)">刷新实例</CustomButton>
+                  <CustomButton type="ghost" @click="handleDelete(config.id)">删除</CustomButton>
                 </div>
               </td>
             </tr>
@@ -119,7 +118,7 @@
         <div v-if="testing" class="test-loading">
           <div class="loading-spinner"></div>
           <p>正在测试向量数据库连接，请稍候...</p>
-          <button class="secondary" type="button" @click="cancelTest">中断测试</button>
+          <CustomButton type="secondary" @click="cancelTest">中断测试</CustomButton>
         </div>
         <div v-else :class="['test-chunkResult', testResult?.success ? 'test-success' : 'test-error']">
           <p><strong>状态：</strong>{{ testResult?.success ? '成功' : '失败' }}</p>
@@ -145,6 +144,8 @@ import {
 import { formatDateTime } from '@/common/format'
 import type { VectorStoreConfig } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const error = ref('')
@@ -169,6 +170,14 @@ const form = reactive({
 const selectionReady = computed(() => Boolean(store.tenantId && store.workspaceId))
 
 onMounted(loadConfigs)
+
+// 监听全局新增事件
+onMounted(() => {
+  window.addEventListener('global-add', () => {
+    editingId.value = null
+    showCreateForm.value = true
+  })
+})
 watch(() => [store.tenantId, store.workspaceId], loadConfigs)
 
 async function loadConfigs() {
@@ -191,10 +200,12 @@ function startEdit(config: VectorStoreConfig) {
   form.collectionName = config.collectionName
   form.extraParams = config.extraParams || ''
   form.enabled = config.enabled
+  showCreateForm.value = true
 }
 
 function cancelEdit() {
   editingId.value = null
+      showCreateForm.value = false
   form.name = ''
   form.type = 'QDRANT'
   form.host = 'localhost'
@@ -228,7 +239,9 @@ async function submitConfig() {
           enabled: form.enabled,
         }
       )
+      showCreateForm.value = false
       editingId.value = null
+      showCreateForm.value = false
     } else {
       // 创建配置
       await createVectorStoreConfig(
@@ -243,6 +256,7 @@ async function submitConfig() {
           extraParams: form.extraParams.trim() || undefined,
         }
       )
+      showCreateForm.value = false
     }
     // Reset form
     cancelForm()

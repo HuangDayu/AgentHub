@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.agents;
 
+import com.agenthub.domain.model.ReActAgentContext;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import reactor.core.publisher.Flux;
@@ -10,6 +11,8 @@ import reactor.core.publisher.Flux;
 public abstract class AbstractReActAgent {
 
     public abstract String getName();
+
+    public abstract ReActAgentContext getContext();
 
     public abstract Flux<Message> streamMessages(String userMessage);
 

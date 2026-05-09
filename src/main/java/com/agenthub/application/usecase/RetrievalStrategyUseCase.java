@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.command.CreateRetrievalStrategyCommand;
 import com.agenthub.application.command.UpdateRetrievalStrategyCommand;
@@ -21,9 +22,10 @@ public class RetrievalStrategyUseCase {
 
 
     public RetrievalStrategy update(String id, UpdateRetrievalStrategyCommand command) {
-        RetrievalStrategy strategy = get(id);
-        strategy.updateBasicInfo(command.name(), command.description());
-        return repository.save(strategy);
+        RetrievalStrategy retrievalStrategy = new RetrievalStrategy();
+        BeanUtil.copyProperties(command, retrievalStrategy);
+        retrievalStrategy.setId(id);
+        return repository.save(retrievalStrategy);
     }
 
 

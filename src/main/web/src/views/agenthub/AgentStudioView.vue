@@ -9,13 +9,16 @@
     </div>
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     <template v-else>
-      <!-- 创建 Agent -->
-      <article v-show="showCreateForm" class="panel stack">
-        <div class="page-header">
-          <h3 style="margin: 0">{{ editingAgent ? '编辑 Agent' : '创建 Agent' }}</h3>
-          <button class="ghost" type="button" @click="cancelForm">取消</button>
-        </div>
-        <form class="field-grid" @submit.prevent="submitAgent">
+      <!-- 创建/编辑 Agent 弹窗 -->
+      <ModalDialog
+        v-model:visible="showCreateForm"
+        :title="editingAgent ? '编辑 Agent' : '创建 Agent'"
+        @confirm="submitAgent"
+        @close="showCreateForm = false"
+        :confirm-disabled="loading"
+        :confirm-text="editingAgent ? '更新' : '创建'"
+      >
+        <form>
           <label class="field">
             <span>Agent 名称</span>
             <input v-model="agentName" placeholder="销售教练" />
@@ -24,22 +27,16 @@
             <span>描述</span>
             <input v-model="agentDescription" placeholder="Agent 的目标与交互风格" />
           </label>
-          <button class="primary" type="submit">{{ editingAgent ? '更新 Agent' : '创建 Agent' }}</button>
         </form>
-      </article>
+      </ModalDialog>
 
       <!-- Agent 列表 -->
       <article class="table-card">
-        <div class="page-header">
-          <h3 style="margin: 0">Agent 列表</h3>
-          <button class="primary" type="button" @click="showCreateForm = true">新建 Agent</button>
-        </div>
         <table>
           <thead>
             <tr>
               <th>Agent</th>
               <th>状态</th>
-              <th>配置</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -73,6 +70,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import ModalDialog from '@/components/ModalDialog.vue'
 import { useRouter } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listAgents, createAgent, updateAgent, deleteAgent, publishAgent, unpublishAgent } from '@/api/agent-api'
@@ -90,6 +88,14 @@ const editingAgent = ref<Agent | null>(null)
 const selectionReady = computed(() => store.tenantId && store.workspaceId)
 
 onMounted(loadAgents)
+
+// 监听全局新增事件
+onMounted(() => {
+  window.addEventListener('global-add', () => {
+    editingAgent.value = null
+    showCreateForm.value = true
+  })
+})
 
 // 监听workspaceId变化，重新加载数据
 watch(() => store.workspaceId, (newId, oldId) => {
@@ -178,16 +184,6 @@ function openConfigPanel(agent: Agent) {
 </script>
 
 <style scoped>
-.grid {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
 
 .status {
   color: var(--color-error, #dc2626);

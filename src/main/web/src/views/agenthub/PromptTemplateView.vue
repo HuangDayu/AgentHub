@@ -1,5 +1,5 @@
 <template>
-  <section class="grid">
+  <section class="grid glass-float">
     <div class="page-header">
       <div>
         <h2>提示词管理</h2>
@@ -12,7 +12,7 @@
       <article v-show="showCreateForm || editingId" class="panel stack">
         <div class="page-header">
           <h3 style="margin: 0">{{ editingId ? '编辑提示词' : '创建提示词' }}</h3>
-          <button class="ghost" type="button" @click="cancelForm">取消</button>
+          <CustomButton type="ghost" @click="cancelForm">取消</CustomButton>
         </div>
         <form class="field-grid" @submit.prevent="submitConfig">
           <label class="field">
@@ -43,14 +43,14 @@
               <option :value="false">禁用</option>
             </select>
           </label>
-          <button class="primary" type="submit">{{ editingId ? '更新' : '创建' }}</button>
+          <CustomButton type="primary" native-type="submit">{{ editingId ? '更新' : '创建' }}</CustomButton>
         </form>
       </article>
 
       <article class="table-card">
         <div class="page-header">
           <h3 style="margin: 0">模板列表</h3>
-          <button class="primary" type="button" @click="showCreateForm = true">新建模板</button>
+          <CustomButton type="primary" @click="showCreateForm = true">新建模板</CustomButton>
         </div>
         <table>
           <thead>
@@ -79,8 +79,8 @@
               <td>{{ formatDateTime(tpl.createdAt) }}</td>
               <td>
                 <div class="chip-row">
-                  <button class="ghost" type="button" @click="startEdit(tpl)">编辑</button>
-                  <button class="ghost" type="button" @click="handleDelete(tpl.id)">删除</button>
+                  <CustomButton type="ghost" @click="startEdit(tpl)">编辑</CustomButton>
+                  <CustomButton type="ghost" @click="handleDelete(tpl.id)">删除</CustomButton>
                 </div>
               </td>
             </tr>
@@ -97,6 +97,9 @@ import { formatDateTime } from '@/common/format'
 import { listPromptTemplates, createPromptTemplate, updatePromptTemplate, deletePromptTemplate, type PromptTemplate } from '@/api/prompt-api'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
 const error = ref('')
@@ -114,6 +117,11 @@ const form = reactive({
 const selectionReady = computed(() => Boolean(store.tenantId && store.workspaceId))
 
 onMounted(loadTemplates)
+
+  // 监听全局新增事件
+  window.addEventListener('global-add', () => {
+    showCreateForm.value = true
+  })
 watch(() => [store.tenantId, store.workspaceId], loadTemplates)
 
 async function loadTemplates() {

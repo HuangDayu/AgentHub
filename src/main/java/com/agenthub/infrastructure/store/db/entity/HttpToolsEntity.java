@@ -23,17 +23,17 @@ import static com.agenthub.domain.model.AgentConfigType.MCP_TOOL;
 @ConfigChangeListenerEntity(category = TOOL, type = HTTP_TOOL)
 public class HttpToolsEntity {
     @TableId(type = IdType.ASSIGN_ID)
-    private java.lang.String id;
+    private String id;
     @TableField(value = "tenant_id", fill = FieldFill.INSERT)
-    private java.lang.String tenantId;
+    private String tenantId;
     @TableField(value = "workspace_id", fill = FieldFill.INSERT)
-    private java.lang.String workspaceId;
-    private java.lang.String name;
-    private java.lang.String description;
+    private String workspaceId;
+    private String name;
+    private String description;
     private boolean enabled;
-    private java.lang.String endpoint;
-    private java.lang.String authType;
-    private java.lang.String inputSchema;
+    private String endpoint;
+    private String authType;
+    private String inputSchema;
     private int timeoutMs;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
