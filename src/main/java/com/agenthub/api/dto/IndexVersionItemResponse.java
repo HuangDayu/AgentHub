@@ -1,10 +1,13 @@
 package com.agenthub.api.dto;
 
-/**
- * 索引版本项响应DTO。
- */
-public record IndexVersionItemResponse(
-        String indexVersion,
-        boolean active
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class IndexVersionItemResponse {
+    private String indexVersion;
+    private boolean active;
 }

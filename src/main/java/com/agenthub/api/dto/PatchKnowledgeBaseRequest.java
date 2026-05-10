@@ -2,16 +2,19 @@ package com.agenthub.api.dto;
 
 import java.util.List;
 
-/**
- * 更新知识库请求DTO。
- */
-public record PatchKnowledgeBaseRequest(
-        String kbId,
-        String kbCode,
-        String name,
-        String description,
-        String vectorStoreConfigId,
-        String embeddingModelConfigId,
-        String chatModelConfigId
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PatchKnowledgeBaseRequest {
+    private String kbId;
+    private String kbCode;
+    private String name;
+    private String description;
+    private String vectorStoreConfigId;
+    private String embeddingModelConfigId;
+    private String chatModelConfigId;
 }

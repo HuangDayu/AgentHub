@@ -1,13 +1,14 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.agenthub.application.command.KnowledgeBaseCommand;
+import com.agenthub.application.port.out.repositories.KnowledgeBaseRepository;
 import com.agenthub.common.exception.ConflictException;
 import com.agenthub.common.exception.NotFoundException;
-import com.agenthub.application.port.out.repositories.KnowledgeBaseRepository;
 import com.agenthub.domain.model.KnowledgeBase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
 import java.util.List;
 
 @Component
@@ -15,9 +16,9 @@ import java.util.List;
 public class KnowledgeBaseUseCase {
     private final KnowledgeBaseRepository repository;
 
-    public KnowledgeBase create(Command command) {
-        validateKbCode(command.kbCode());
-        KnowledgeBase kb = buildKnowledgeBase(command);
+    public KnowledgeBase create(KnowledgeBaseCommand knowledgeBaseCommand) {
+        validateKbCode(knowledgeBaseCommand.getKbCode());
+        KnowledgeBase kb = BeanUtil.copyProperties(knowledgeBaseCommand, KnowledgeBase.class);
         return repository.save(kb);
     }
 
@@ -27,14 +28,14 @@ public class KnowledgeBaseUseCase {
         }
     }
 
-    private KnowledgeBase buildKnowledgeBase(Command command) {
-        return KnowledgeBase.create(command.kbCode(), command.name(), command.description(),
-                command.vectorStoreConfigId(), command.embeddingModelConfigId(), command.chatModelConfigId());
+
+    public List<KnowledgeBase> list() {
+        return repository.findAll();
     }
 
-    public List<KnowledgeBase> list() { return repository.findAll(); }
-
-    public List<KnowledgeBase> list(String tenantId) { return repository.findByTenantId(tenantId); }
+    public List<KnowledgeBase> list(String tenantId) {
+        return repository.findByTenantId(tenantId);
+    }
 
     public List<KnowledgeBase> listByWorkspace(String workspaceId) {
         return repository.findByWorkspace(workspaceId);
@@ -45,9 +46,9 @@ public class KnowledgeBaseUseCase {
                 .orElseThrow(() -> new NotFoundException("knowledge base not found: " + kbId));
     }
 
-    public KnowledgeBase update(Command command) {
-        KnowledgeBase existing = getById(command.kbId());
-        return repository.save(buidldPatchedKnowledgeBase(existing,command));
+    public KnowledgeBase update(KnowledgeBaseCommand knowledgeBaseCommand) {
+        KnowledgeBase knowledgeBase = BeanUtil.copyProperties(knowledgeBaseCommand, KnowledgeBase.class);
+        return repository.save(knowledgeBase);
     }
 
     public void deleteById(String kbId) {
@@ -55,31 +56,5 @@ public class KnowledgeBaseUseCase {
         repository.deleteById(kbId);
     }
 
-    public record Command(
-            String kbId, String tenantId, String workspaceId, String name, String kbCode,
-            String description, String vectorStoreConfigId, String embeddingModelConfigId,
-            String chatModelConfigId, String retrievalPolicy
-    ) {}
 
-    /**
-     * 部分更新知识库的名称和描述。
-     *
-     * @return 更新后的KnowledgeBase实例
-     */
-    public KnowledgeBase buidldPatchedKnowledgeBase(KnowledgeBase existing,KnowledgeBaseUseCase.Command command) {
-        String patchedName = command.name() == null ? existing.name() : command.name();
-        String patchedDescription = command.description() == null ? existing.description() : command.description();
-        return new KnowledgeBase(
-                existing.id(),
-                existing.kbCode(),
-                patchedName,
-                existing.tenantId(),
-                patchedDescription,
-                command.vectorStoreConfigId(),
-                command.embeddingModelConfigId(),
-                command.chatModelConfigId(),
-                existing.createdAt(),
-                Instant.now()
-        );
-    }
 }

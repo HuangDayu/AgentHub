@@ -2,9 +2,9 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.application.command.PatchTenantCommand;
 import com.agenthub.application.port.out.TimeProvider;
+import com.agenthub.application.port.out.repositories.TenantRepository;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.Tenant;
-import com.agenthub.application.port.out.repositories.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -32,9 +32,7 @@ public class PatchTenantUseCase {
         // 查找租户，如果不存在则抛出异常
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> new NotFoundException("Tenant not found: " + tenantId));
-
-        // 根据命令更新租户信息
-        Tenant updated = command.name() == null ? tenant : tenant.rename(command.name(), timeProvider.now());
-        return tenantRepository.save(updated);
+        tenant.setName(command.getName());
+        return tenantRepository.save(tenant);
     }
 }

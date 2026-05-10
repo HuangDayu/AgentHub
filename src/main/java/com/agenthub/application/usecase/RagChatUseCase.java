@@ -45,7 +45,7 @@ public class RagChatUseCase {
         AgentOutput agent = agentUseCase.get(agentId);
         validatePublished(agent);
         ValidationOutput validation = validateInput(agentId, userPrompt);
-        if (!validation.valid()) return createErrorFlux(validation);
+        if (!validation.isValid()) return createErrorFlux(validation);
         return retrievalAugmentedGenerationPort.ragStream(buildRagCommand(agentId, sessionId, userPrompt));
     }
 
@@ -53,10 +53,10 @@ public class RagChatUseCase {
         AgentOutput agent = agentUseCase.get(agentId);
         validatePublished(agent);
         ValidationOutput validation = validateInput(agentId, userPrompt);
-        if (!validation.valid()) return "输入验证失败";
+        if (!validation.isValid()) return "输入验证失败";
         String response = retrievalAugmentedGenerationPort.ragChat(buildRagCommand(agentId, sessionId, userPrompt));
         ValidationOutput outputValidation = validateOutput(agentId, response);
-        if (!outputValidation.valid()) return "输出验证失败";
+        if (!outputValidation.isValid()) return "输出验证失败";
         saveSession(sessionId, agentId, new ArrayList<>(), response);
         return response;
     }
@@ -67,7 +67,7 @@ public class RagChatUseCase {
 
     private List<String> getKnowledgeBaseIds(String agentId) {
         List<AgentConfig> knowledgeBases = agentConfigRepository.findEnabledAgentConfigs(agentId, KNOWLEDGE, KNOWLEDGE_BASE);
-        return knowledgeBases.stream().map(AgentConfig::configId).collect(Collectors.toList());
+        return knowledgeBases.stream().map(AgentConfig::getConfigId).collect(Collectors.toList());
     }
 
     private ModelStrategy modelStrategy(String agentId) {
@@ -83,17 +83,17 @@ public class RagChatUseCase {
     private String getPromptTemplate(String agentId) {
         String configId = agentConfigRepository.getConfigId(agentId, AgentConfigCategory.PROMPT, SYSTEM_PROMPT);
         Optional<PromptTemplateInfo> optional = promptTemplateRepository.findById(configId);
-        return optional.isPresent() ? optional.get().content() : " ";
+        return optional.isPresent() ? optional.get().getContent() : " ";
     }
 
     private void validatePublished(AgentOutput agent) {
-        if (!agent.enabled()) {
+        if (!agent.isEnabled()) {
             throw new IllegalStateException("Agent未启用");
         }
     }
 
     private Flux<String> createErrorFlux(ValidationOutput validation) {
-        return Flux.error(new IllegalStateException(String.join(",", validation.violations())));
+        return Flux.error(new IllegalStateException(String.join(",", validation.getViolations())));
     }
 
     private ValidationOutput validateInput(String agentId, String input) {

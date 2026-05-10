@@ -36,10 +36,10 @@ public class AgentConfigChangeEventListener {
             if (agentConfigs != null && !agentConfigs.isEmpty()) {
                 for (AgentConfig agentConfig : agentConfigs) {
                     if (event.getChangeType() == AgentConfigChangedEvent.ChangeType.DELETE) {
-                        eventPublisher.publishEvent(new AgentConfigDeletedEvent(agentConfig.agentId(), entityAnnotation.category(), entityAnnotation.type(), agentConfig.id()));
-                        agentConfigRepository.deleteById(agentConfig.id());
+                        eventPublisher.publishEvent(new AgentConfigDeletedEvent(agentConfig.getAgentId(), entityAnnotation.category(), entityAnnotation.type(), agentConfig.getId()));
+                        agentConfigRepository.deleteById(agentConfig.getId());
                     } else {
-                        eventPublisher.publishEvent(new AgentConfigUpdatedEvent(agentConfig.agentId(), entityAnnotation.category(), entityAnnotation.type(), agentConfig.id()));
+                        eventPublisher.publishEvent(new AgentConfigUpdatedEvent(agentConfig.getAgentId(), entityAnnotation.category(), entityAnnotation.type(), agentConfig.getId()));
                     }
                 }
             }

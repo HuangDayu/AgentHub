@@ -1,15 +1,18 @@
 package com.agenthub.api.dto;
 
-/**
- * 创建模型策略请求体。
- */
-public record CreateModelStrategyRequest(
-    String name,
-    String description,
-    Double temperature,
-    Integer maxTokens,
-    Double topP,
-    Double frequencyPenalty,
-    Double presencePenalty
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateModelStrategyRequest {
+    private String name;
+    private String description;
+    private Double temperature;
+    private Integer maxTokens;
+    private Double topP;
+    private Double frequencyPenalty;
+    private Double presencePenalty;
 }

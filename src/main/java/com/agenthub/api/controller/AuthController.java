@@ -37,25 +37,25 @@ public class AuthController {
     @PostMapping("/login")
     @IgnoreTenantContext
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        var tokens = authApplicationService.login(request.username(), request.password());
+        var tokens = authApplicationService.login(request.getUsername(), request.getPassword());
         return ResponseEntity.ok(responseMapper.toResponse(tokens));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody RefreshRequest request) {
-        var tokens = authApplicationService.refresh(request.refreshToken());
+        var tokens = authApplicationService.refresh(request.getRefreshToken());
         return ResponseEntity.ok(responseMapper.toResponse(tokens));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestBody RefreshRequest request) {
-        authApplicationService.logout(request.refreshToken());
+        authApplicationService.logout(request.getRefreshToken());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/verify")
     public ResponseEntity<Map<String, Object>> verify(@RequestBody VerifyRequest request) {
-        Map<String, Object> result = verifyTokenUseCase.execute(request.accessToken());
+        Map<String, Object> result = verifyTokenUseCase.execute(request.getAccessToken());
         return ResponseEntity.ok(result);
     }
 

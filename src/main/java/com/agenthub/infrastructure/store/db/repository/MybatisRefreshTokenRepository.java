@@ -74,9 +74,9 @@ public class MybatisRefreshTokenRepository implements RefreshTokenRepository {
      */
     private RefreshTokenSessionEntity toPo(RefreshTokenSession session) {
         RefreshTokenSessionEntity po = new RefreshTokenSessionEntity();
-        po.setToken(session.token());
-        po.setSubject(session.subject());
-        po.setExpiresAt(session.expiresAt());
+        po.setToken(session.getToken());
+        po.setSubject(session.getSubject());
+        po.setExpiresAt(session.getExpiresAt());
         return po;
     }
 

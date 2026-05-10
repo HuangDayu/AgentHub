@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.McpToolRepository;
 import com.agenthub.domain.model.McpTool;
 import com.agenthub.infrastructure.store.db.entity.McpToolEntity;
@@ -68,22 +69,7 @@ public class MybatisMcpToolRepository implements McpToolRepository {
     }
 
     private McpToolEntity toEntity(McpTool tool) {
-        McpToolEntity entity = new McpToolEntity();
-        entity.setId(tool.id());
-        entity.setTenantId(tool.tenantId());
-        entity.setWorkspaceId(tool.workspaceId());
-        entity.setName(tool.name());
-        entity.setDescription(tool.description());
-        entity.setServerUrl(tool.serverUrl());
-        entity.setServerType(tool.serverType().name());
-        entity.setCommand(tool.command());
-        entity.setArgs(toJson(tool.args()));
-        entity.setEnv(toJson(tool.env()));
-        entity.setAsync(tool.async());
-        entity.setEnabled(tool.enabled());
-        entity.setCreatedAt(tool.createdAt());
-        entity.setUpdatedAt(tool.updatedAt());
-        return entity;
+        return BeanUtil.copyProperties(tool, McpToolEntity.class);
     }
 
     private McpTool toDomain(McpToolEntity entity) {

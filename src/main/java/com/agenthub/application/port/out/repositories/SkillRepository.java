@@ -2,7 +2,6 @@ package com.agenthub.application.port.out.repositories;
 
 import com.agenthub.domain.model.Skill;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,7 +10,7 @@ import java.util.Optional;
  */
 public interface SkillRepository {
 
-    Skill save(Skill skill);
+    Skill saveOrUpdate(Skill skill);
 
     Optional<Skill> findById(String skillId);
 

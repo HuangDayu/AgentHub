@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.common.exception.ConflictException;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.command.CreateVectorStoreConfigCommand;
@@ -42,7 +43,7 @@ public class VectorStoreConfigUseCase {
     public VectorStoreConfig create(CreateVectorStoreConfigCommand command) {
         command.validate();
         validateNameNotExists(command.name());
-        VectorStoreConfig config = buildConfig(command);
+        VectorStoreConfig config = BeanUtil.copyProperties(command, VectorStoreConfig.class);
         return repository.save(config);
     }
 
@@ -56,20 +57,6 @@ public class VectorStoreConfigUseCase {
                 });
     }
 
-    /**
-     * 根据命令构建配置对象。
-     */
-    private VectorStoreConfig buildConfig(CreateVectorStoreConfigCommand command) {
-        return VectorStoreConfig.create(
-                command.name(),
-                command.type(),
-                command.host(),
-                command.port(),
-                command.apiKey(),
-                command.collectionName(),
-                command.extraParams()
-        );
-    }
 
     /**
      * 根据 ID 获取向量库配置。
@@ -101,8 +88,7 @@ public class VectorStoreConfigUseCase {
      */
     @Transactional
     public VectorStoreConfig update(UpdateVectorStoreConfigCommand command) {
-        VectorStoreConfig existing = findExistingConfig(command.id());
-        VectorStoreConfig updated = applyUpdates(existing, command);
+        VectorStoreConfig updated = BeanUtil.copyProperties(command, VectorStoreConfig.class);
         return repository.save(updated);
     }
 
@@ -114,22 +100,7 @@ public class VectorStoreConfigUseCase {
                 .orElseThrow(() -> new NotFoundException("Vector store config not found: " + id));
     }
 
-    /**
-     * 应用更新到配置对象。
-     */
-    private VectorStoreConfig applyUpdates(
-            VectorStoreConfig existing,
-            UpdateVectorStoreConfigCommand command) {
-        return existing.withUpdates(
-                command.name(),
-                command.host(),
-                command.port(),
-                command.apiKey(),
-                command.collectionName(),
-                command.extraParams(),
-                command.enabled()
-        );
-    }
+
 
     /**
      * 删除向量库配置。

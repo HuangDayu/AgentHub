@@ -1,8 +1,10 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.common.exception.NotFoundException;
+import cn.hutool.core.bean.BeanUtil;
+import com.agenthub.application.command.WorkflowCommand;
 import com.agenthub.application.dto.WorkflowOutput;
 import com.agenthub.application.port.out.repositories.WorkflowRepository;
+import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.Workflow;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,10 +16,8 @@ import java.util.List;
 public class WorkflowUseCase {
     private final WorkflowRepository repository;
 
-    public WorkflowOutput create(String tenantId, String workspaceId, String workflowCode,
-                                 String name, String description, String graphDefinition) {
-        Workflow workflow = Workflow.create(tenantId, workspaceId, workflowCode,
-                name, description, graphDefinition);
+    public WorkflowOutput create(WorkflowCommand command) {
+        Workflow workflow = BeanUtil.copyProperties(command, Workflow.class);
         return toOutput(repository.save(workflow));
     }
 
@@ -34,10 +34,9 @@ public class WorkflowUseCase {
                 .stream().map(this::toOutput).toList();
     }
 
-    public WorkflowOutput update(String workflowId, String name, String description,
-                                 String graphDefinition) {
-        Workflow workflow = findById(workflowId);
-        workflow.update(name, description, graphDefinition);
+    public WorkflowOutput update(String workflowId, WorkflowCommand command) {
+        Workflow workflow = BeanUtil.copyProperties(command, Workflow.class);
+        workflow.setWorkspaceId(workflowId);
         return toOutput(repository.save(workflow));
     }
 

@@ -2,11 +2,15 @@ package com.agenthub.api.dto;
 
 import java.util.Map;
 
-/**
- * 工具调用结果响应DTO。
- */
-public record HttpToolInvokeViewResponse(
-        String toolId,
-        String status,
-        Map<String, Object> output) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class HttpToolInvokeViewResponse {
+    private String toolId;
+    private String status;
+    private Map<String, Object> output;
 }

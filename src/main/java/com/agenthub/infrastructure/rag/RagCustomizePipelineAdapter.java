@@ -42,14 +42,14 @@ public class RagCustomizePipelineAdapter implements RetrievalAugmentedGeneration
     }
 
     private SessionMessage buildSessionMessage(RagCommand ragCommand) {
-        String modelId = agentConfigRepository.getConfigId(ragCommand.agentId(), MODEL, CHAT_MODEL);
+        String modelId = agentConfigRepository.getConfigId(ragCommand.getAgentId(), MODEL, CHAT_MODEL);
         List<ChatMessage> chatMessages = buildMessages(ragCommand);
-        return new SessionMessage(ragCommand.sessionId(), ragCommand.agentId(), modelId, ragCommand.modelStrategy(), chatMessages);
+        return new SessionMessage(ragCommand.getSessionId(), ragCommand.getAgentId(), modelId, ragCommand.getModelStrategy(), chatMessages);
     }
 
     public List<ChatMessage> buildMessages(RagCommand ragCommand) {
         List<RetrievalChunk> contexts = ragRetrievalPort.retrieve(ragCommand);
-        return messagePromptBuilder.build(ragCommand.promptTemplate(), ragCommand.prompt(), contexts);
+        return messagePromptBuilder.build(ragCommand.getPromptTemplate(), ragCommand.getPrompt(), contexts);
     }
 
 

@@ -19,9 +19,9 @@ public class MybatisScheduledTaskRepository implements ScheduledTaskRepository {
     }
 
     @Override
-    public ScheduledTask save(ScheduledTask task) {
+    public ScheduledTask saveOrUpdate(ScheduledTask task) {
         ScheduledTaskEntity entity = ScheduledTaskMapper.toEntity(task);
-        mapper.insert(entity);
+        mapper.insertOrUpdate(entity);
         return task;
     }
 

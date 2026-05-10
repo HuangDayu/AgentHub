@@ -1,10 +1,20 @@
 package com.agenthub.application.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
-/**
- * @author huangdayu
- */
-public record ValidationOutput(boolean valid, List<String> violations) {
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ValidationOutput {
+    private boolean valid;
+    private List<String> violations;
 }

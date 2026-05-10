@@ -1,7 +1,12 @@
 package com.agenthub.api.dto;
 
-/**
- * 发送消息请求体。
- */
-public record SendMessageRequest(String content) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class SendMessageRequest {
+    private String content;
 }

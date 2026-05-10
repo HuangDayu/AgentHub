@@ -28,12 +28,12 @@ public class RagSpringModelChatAdapter implements RagModelChatPort {
 
     @Override
     public String chat(SessionMessage sessionMessage) {
-        return chat(getChatClient(sessionMessage), sessionMessage.chatMessages());
+        return chat(getChatClient(sessionMessage), sessionMessage.getChatMessages());
     }
 
     @Override
     public Flux<String> stream(SessionMessage sessionMessage) {
-        return stream(getChatClient(sessionMessage), sessionMessage.chatMessages());
+        return stream(getChatClient(sessionMessage), sessionMessage.getChatMessages());
     }
 
     public Flux<String> stream(ChatClient chatClient, List<ChatMessage> messages) {

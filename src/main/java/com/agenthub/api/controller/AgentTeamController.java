@@ -1,7 +1,9 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.AgentTeamResponse;
 import com.agenthub.api.dto.CreateAgentTeamRequest;
+import com.agenthub.application.command.AgentTeamCommand;
 import com.agenthub.application.dto.AgentTeamOutput;
 import com.agenthub.application.usecase.AgentTeamUseCase;
 import org.springframework.http.HttpStatus;
@@ -21,9 +23,7 @@ public class AgentTeamController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AgentTeamResponse create(@RequestBody CreateAgentTeamRequest request) {
-        AgentTeamOutput result = useCase.create(request.tenantId(), request.workspaceId(),
-                request.teamCode(), request.name(), request.description(),
-                request.coordinationMode(), request.memberConfig());
+        AgentTeamOutput result = useCase.create(BeanUtil.copyProperties(request, AgentTeamCommand.class));
         return toResponse(result);
     }
 
@@ -40,8 +40,9 @@ public class AgentTeamController {
     @PutMapping("/{teamId}")
     public AgentTeamResponse update(@PathVariable String teamId,
                                     @RequestBody CreateAgentTeamRequest request) {
-        AgentTeamOutput result = useCase.update(teamId, request.name(), request.description(),
-                request.coordinationMode(), request.memberConfig());
+        AgentTeamCommand command = BeanUtil.copyProperties(request, AgentTeamCommand.class);
+        command.setTenantId(teamId);
+        AgentTeamOutput result = useCase.update(command);
         return toResponse(result);
     }
 
@@ -62,9 +63,6 @@ public class AgentTeamController {
     }
 
     private AgentTeamResponse toResponse(AgentTeamOutput result) {
-        return new AgentTeamResponse(result.id(), result.tenantId(), result.workspaceId(),
-                result.teamCode(), result.name(), result.description(),
-                result.coordinationMode(), result.memberConfig(), result.status(),
-                result.createdAt(), result.updatedAt());
+        return BeanUtil.copyProperties(result, AgentTeamResponse.class);
     }
 }

@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.CreateHttpToolCommand;
 import com.agenthub.application.command.InvokeToolCommand;
 import com.agenthub.application.command.UpdateToolCommand;
@@ -7,7 +8,10 @@ import com.agenthub.application.port.out.HttpToolInvoker;
 import com.agenthub.application.port.out.IdempotencyCachePort;
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
 import com.agenthub.common.exception.ToolNotFoundException;
-import com.agenthub.domain.model.*;
+import com.agenthub.domain.model.HttpTool;
+import com.agenthub.domain.model.HttpToolInvocationResult;
+import com.agenthub.domain.model.HttpToolInvokeView;
+import com.agenthub.domain.model.HttpToolView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -31,7 +35,7 @@ public class HttpToolsUseCase {
     }
 
     public HttpToolView createTool(CreateHttpToolCommand command) {
-        HttpTool httpTool = HttpTool.create(null, command.name(), command.description(), command.enabled());
+        HttpTool httpTool = BeanUtil.copyProperties(command, HttpTool.class);
         HttpTool saved = repository.save(httpTool);
         return toView(saved);
     }
@@ -41,14 +45,14 @@ public class HttpToolsUseCase {
     }
 
     public HttpToolView updateTool(String toolId, UpdateToolCommand command) {
-        HttpTool current = requireTool(toolId);
-        HttpTool updated = current.patch(command.name(), command.description(), command.enabled());
+        HttpTool updated = BeanUtil.copyProperties(command, HttpTool.class);
+        updated.setId(toolId);
         HttpTool saved = repository.save(updated);
         return toView(saved);
     }
 
     public HttpToolInvokeView invokeTool(String toolId, InvokeToolCommand command) {
-        String idempotencyKey = command.idempotencyKey();
+        String idempotencyKey = command.getIdempotencyKey();
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
             return invokeWithIdempotency(toolId, command, idempotencyKey);
         }
@@ -85,7 +89,7 @@ public class HttpToolsUseCase {
 
     private HttpToolInvokeView doInvoke(String toolId, InvokeToolCommand command) {
         HttpToolInvocationResult result = httpToolInvoker.invoke(toolId, command);
-        return new HttpToolInvokeView(result.toolId(), result.status(), result.output());
+        return BeanUtil.copyProperties(result, HttpToolInvokeView.class);
     }
 
     private HttpTool requireTool(String toolId) {
@@ -93,6 +97,6 @@ public class HttpToolsUseCase {
     }
 
     private HttpToolView toView(HttpTool httpTool) {
-        return new HttpToolView(httpTool.id(), httpTool.name(), httpTool.description(), httpTool.enabled());
+        return BeanUtil.copyProperties(httpTool, HttpToolView.class);
     }
 }

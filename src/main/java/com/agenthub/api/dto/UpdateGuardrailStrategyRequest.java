@@ -1,18 +1,21 @@
 package com.agenthub.api.dto;
 
-/**
- * 更新护栏策略请求体。
- */
-public record UpdateGuardrailStrategyRequest(
-        String workspaceId,
-        String name,
-        String description,
-        Boolean inputValidationEnabled,
-        Boolean outputValidationEnabled,
-        Boolean piiDetectionEnabled,
-        Boolean piiMaskingEnabled,
-        Boolean promptInjectionDetection,
-        Integer maxInputLength,
-        Integer maxOutputLength
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UpdateGuardrailStrategyRequest {
+    private String workspaceId;
+    private String name;
+    private String description;
+    private Boolean inputValidationEnabled;
+    private Boolean outputValidationEnabled;
+    private Boolean piiDetectionEnabled;
+    private Boolean piiMaskingEnabled;
+    private Boolean promptInjectionDetection;
+    private Integer maxInputLength;
+    private Integer maxOutputLength;
 }

@@ -1,11 +1,15 @@
 package com.agenthub.api.dto;
 
-/**
- * 工具视图响应DTO。
- */
-public record HttpToolViewResponse(
-        String id,
-        String name,
-        String description,
-        boolean enabled) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class HttpToolViewResponse {
+    private String id;
+    private String name;
+    private String description;
+    private boolean enabled;
 }

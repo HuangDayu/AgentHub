@@ -2,16 +2,22 @@ package com.agenthub.application.dto;
 
 import java.time.Instant;
 
-public record AgentOutput(
-        String id,
-        String tenantId,
-        String workspaceId,
-        String agentCode,
-        String name,
-        String description,
-        String status,
-        boolean enabled,
-        Instant createdAt,
-        Instant updatedAt
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class AgentOutput {
+    private String id;
+    private String tenantId;
+    private String workspaceId;
+    private String agentCode;
+    private String name;
+    private String description;
+    private String status;
+    private boolean enabled;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

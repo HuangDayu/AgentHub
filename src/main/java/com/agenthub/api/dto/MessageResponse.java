@@ -2,8 +2,17 @@ package com.agenthub.api.dto;
 
 import java.time.Instant;
 
-/**
- * 消息响应体。
- */
-public record MessageResponse(String id, String sessionId, String role, String content, Instant createdAt) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class MessageResponse {
+    private String id;
+    private String sessionId;
+    private String role;
+    private String content;
+    private Instant createdAt;
 }

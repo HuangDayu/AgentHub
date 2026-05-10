@@ -1,7 +1,9 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateWorkflowRequest;
 import com.agenthub.api.dto.WorkflowResponse;
+import com.agenthub.application.command.WorkflowCommand;
 import com.agenthub.application.dto.WorkflowOutput;
 import com.agenthub.application.usecase.WorkflowUseCase;
 import org.springframework.http.HttpStatus;
@@ -21,9 +23,7 @@ public class WorkflowController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public WorkflowResponse create(@RequestBody CreateWorkflowRequest request) {
-        WorkflowOutput result = useCase.create(request.tenantId(), request.workspaceId(),
-                request.workflowCode(), request.name(), request.description(),
-                request.graphDefinition());
+        WorkflowOutput result = useCase.create(BeanUtil.copyProperties(request, WorkflowCommand.class));
         return toResponse(result);
     }
 
@@ -40,8 +40,7 @@ public class WorkflowController {
     @PutMapping("/{workflowId}")
     public WorkflowResponse update(@PathVariable String workflowId,
                                    @RequestBody CreateWorkflowRequest request) {
-        WorkflowOutput result = useCase.update(workflowId, request.name(),
-                request.description(), request.graphDefinition());
+        WorkflowOutput result = useCase.update(workflowId, BeanUtil.copyProperties(request, WorkflowCommand.class));
         return toResponse(result);
     }
 
@@ -62,9 +61,6 @@ public class WorkflowController {
     }
 
     private WorkflowResponse toResponse(WorkflowOutput result) {
-        return new WorkflowResponse(result.id(), result.tenantId(), result.workspaceId(),
-                result.workflowCode(), result.name(), result.description(),
-                result.graphDefinition(), result.status(),
-                result.createdAt(), result.updatedAt());
+        return BeanUtil.copyProperties(result, WorkflowResponse.class);
     }
 }

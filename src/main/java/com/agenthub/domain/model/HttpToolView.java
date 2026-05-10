@@ -1,13 +1,15 @@
 package com.agenthub.domain.model;
 
-/** 工具视图对象，用于 API 响应。 */
-public record HttpToolView(
-        /** 工具唯一标识 */
-        String id,
-        /** 工具名称 */
-        String name,
-        /** 工具描述 */
-        String description,
-        /** 是否启用 */
-        boolean enabled) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class HttpToolView {
+    private /** 工具唯一标识 */ String id;
+    private /** 工具名称 */ String name;
+    private /** 工具描述 */ String description;
+    private /** 是否启用 */ boolean enabled;
 }

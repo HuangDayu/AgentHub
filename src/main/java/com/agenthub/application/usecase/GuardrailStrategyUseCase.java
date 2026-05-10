@@ -1,13 +1,12 @@
 package com.agenthub.application.usecase;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.command.CreateGuardrailStrategyCommand;
 import com.agenthub.application.command.UpdateGuardrailStrategyCommand;
 import com.agenthub.application.port.out.repositories.GuardrailStrategyRepository;
+import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.GuardrailStrategy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -28,8 +27,7 @@ public class GuardrailStrategyUseCase {
 
 
     public GuardrailStrategy update(String id, UpdateGuardrailStrategyCommand command) {
-        GuardrailStrategy guardrailStrategy = new GuardrailStrategy();
-        BeanUtils.copyProperties(command, guardrailStrategy);
+        GuardrailStrategy guardrailStrategy = BeanUtil.copyProperties(command, GuardrailStrategy.class);
         guardrailStrategy.setId(id);
         return repository.save(guardrailStrategy);
     }
@@ -48,35 +46,8 @@ public class GuardrailStrategyUseCase {
 
 
     public GuardrailStrategy create(CreateGuardrailStrategyCommand command) {
-        GuardrailStrategy strategy = createStrategy(command);
+        GuardrailStrategy strategy = BeanUtil.copyProperties(command, GuardrailStrategy.class);
         return repository.save(strategy);
-    }
-
-    private GuardrailStrategy createStrategy(CreateGuardrailStrategyCommand cmd) {
-        GuardrailStrategy strategy = GuardrailStrategy.create(cmd.workspaceId(), cmd.name());
-        strategy.updateBasicInfo(cmd.name(), cmd.description());
-        configureValidation(strategy, cmd);
-        configurePii(strategy, cmd);
-        configureInjection(strategy, cmd);
-        strategy.setLengthLimits(cmd.maxInputLength(), cmd.maxOutputLength());
-        return strategy;
-    }
-
-    private void configureValidation(GuardrailStrategy s, CreateGuardrailStrategyCommand c) {
-        if (c.inputValidationEnabled()) s.enableInputValidation();
-        else s.disableInputValidation();
-        if (c.outputValidationEnabled()) s.enableOutputValidation();
-        else s.disableOutputValidation();
-    }
-
-    private void configurePii(GuardrailStrategy s, CreateGuardrailStrategyCommand c) {
-        if (c.piiDetectionEnabled()) s.enablePiiDetection(c.piiMaskingEnabled());
-        else s.disablePiiDetection();
-    }
-
-    private void configureInjection(GuardrailStrategy s, CreateGuardrailStrategyCommand c) {
-        if (c.promptInjectionDetection()) s.enablePromptInjectionDetection();
-        else s.disablePromptInjectionDetection();
     }
 
 }

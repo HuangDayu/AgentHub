@@ -19,7 +19,7 @@ public class MybatisToolStrategyRepository implements ToolStrategyRepository {
     }
 
     @Override
-    public ToolStrategy save(ToolStrategy strategy) {
+    public ToolStrategy saveOrUpdate(ToolStrategy strategy) {
         ToolStrategyEntity entity = toEntity(strategy);
         mapper.insertOrUpdate(entity);
         return strategy;

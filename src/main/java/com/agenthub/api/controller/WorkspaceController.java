@@ -1,8 +1,10 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateWorkspaceRequest;
 import com.agenthub.api.dto.UpdateWorkspaceRequest;
 import com.agenthub.api.dto.WorkspaceResponse;
+import com.agenthub.application.command.WorkspaceCommand;
 import com.agenthub.application.usecase.WorkspaceUseCase;
 import com.agenthub.domain.model.Workspace;
 import org.springframework.http.HttpStatus;
@@ -58,13 +60,13 @@ public class WorkspaceController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public WorkspaceResponse createWorkspace(@RequestBody CreateWorkspaceRequest request) {
-        Workspace workspace = workspaceUseCase.execute(request.workspaceCode(), request.name(), request.region());
+        Workspace workspace = workspaceUseCase.execute(BeanUtil.copyProperties(request, WorkspaceCommand.class));
         return WorkspaceResponse.from(workspace);
     }
 
 
     @PatchMapping("/{id}")
     public void update(@PathVariable String id, @RequestBody UpdateWorkspaceRequest updateWorkspaceRequest) {
-        workspaceUseCase.update(Workspace.update(id, updateWorkspaceRequest.name(), updateWorkspaceRequest.region()));
+        workspaceUseCase.update(id, BeanUtil.copyProperties(updateWorkspaceRequest, WorkspaceCommand.class));
     }
 }

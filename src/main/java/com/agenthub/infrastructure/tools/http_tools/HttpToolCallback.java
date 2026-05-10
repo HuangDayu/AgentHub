@@ -29,14 +29,14 @@ public class HttpToolCallback implements ToolCallback {
     }
     
     public String getName() {
-        return httpTool.name();
+        return httpTool.getName();
     }
     
     @Override
     public ToolDefinition getToolDefinition() {
         return ToolDefinition.builder()
-                .name(httpTool.name())
-                .description(httpTool.description())
+                .name(httpTool.getName())
+                .description(httpTool.getDescription())
                 .inputSchema(resolveInputSchema())
                 .build();
     }
@@ -46,7 +46,7 @@ public class HttpToolCallback implements ToolCallback {
         try {
             return executeHttpCall(functionInput);
         } catch (Exception e) {
-            log.error("HTTP tool call failed: {}", httpTool.name(), e);
+            log.error("HTTP tool call failed: {}", httpTool.getName(), e);
             return buildErrorResponse(e);
         }
     }
@@ -70,12 +70,12 @@ public class HttpToolCallback implements ToolCallback {
     }
     
     private ResponseEntity<String> sendRequest(HttpEntity<Map<String, Object>> entity) {
-        HttpMethod method = HttpMethod.valueOf(httpTool.httpMethod());
-        return restTemplate.exchange(httpTool.endpoint(), method, entity, String.class);
+        HttpMethod method = HttpMethod.valueOf(httpTool.getHttpMethod());
+        return restTemplate.exchange(httpTool.getEndpoint(), method, entity, String.class);
     }
     
     private String resolveInputSchema() {
-        return httpTool.inputSchemaJson() != null ? httpTool.inputSchemaJson() : "{\"type\":\"object\"}";
+        return httpTool.getInputSchemaJson() != null ? httpTool.getInputSchemaJson() : "{\"type\":\"object\"}";
     }
     
     private String buildErrorResponse(Exception e) {

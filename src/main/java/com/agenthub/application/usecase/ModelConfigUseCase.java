@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.CreateModelConfigCommand;
 import com.agenthub.application.command.UpdateModelConfigCommand;
 import com.agenthub.application.dto.ModelTestOutput;
@@ -70,39 +71,11 @@ public class ModelConfigUseCase {
      */
     @Transactional
     public ModelConfig update(UpdateModelConfigCommand command) {
-        ModelConfig existing = findExistingConfig(command.id());
-        ModelConfig updated = buildUpdatedConfig(existing, command);
+        ModelConfig updated = BeanUtil.copyProperties(command, ModelConfig.class);
         ModelConfig saved = modelConfigRepository.save(updated);
-        modelPoolManagerPort.evictCache(command.id());
+        modelPoolManagerPort.evictCache(command.getId());
         log.info("Updated model config: id={}", saved.id());
         return saved;
-    }
-
-    /**
-     * 查找现有配置。
-     */
-    private ModelConfig findExistingConfig(String id) {
-        return modelConfigRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Model config not found: id=" + id));
-    }
-
-    /**
-     * 构建更新后的配置。
-     */
-    private ModelConfig buildUpdatedConfig(ModelConfig existing, UpdateModelConfigCommand command) {
-        return new ModelConfig(
-                existing.id(),
-                command.name() != null ? command.name() : existing.name(),
-                command.type() != null ? command.type() : existing.type(),
-                command.supplier() != null ? command.supplier() : existing.supplier(),
-                command.apiKey() != null ? command.apiKey() : existing.apiKey(),
-                command.baseUrl() != null ? command.baseUrl() : existing.baseUrl(),
-                command.model() != null ? command.model() : existing.model(),
-                command.enabled() != null ? command.enabled() : existing.enabled(),
-                existing.createdAt(),
-                Instant.now(),
-                existing.createdBy()
-        );
     }
 
     /**

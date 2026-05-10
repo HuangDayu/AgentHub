@@ -193,7 +193,7 @@ public class SpringVectorStoreFactory implements VectorPoolManagerPort {
     private VectorStoreTestOutput doTestConnection(String configId, VectorStoreConfig config) {
         log.info("Testing vector store connection for config={}, type={}", configId, config.type());
         var result = testConnection(config);
-        log.info("Vector store connection test completed for config={}, success={}", configId, result.success());
+        log.info("Vector store connection test completed for config={}, success={}", configId, result.isSuccess());
         return result;
     }
 

@@ -47,7 +47,7 @@ public class McpToolCallbackProvider {
      * 判断MCP工具是否启用。
      */
     private boolean isEnabled(McpTool mcpTool) {
-        return mcpTool.enabled();
+        return mcpTool.isEnabled();
     }
 
 

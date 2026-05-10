@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.PromptTemplateRepository;
 import com.agenthub.domain.model.PromptTemplateInfo;
 import com.agenthub.infrastructure.store.db.entity.PromptTemplateEntity;
@@ -58,27 +59,15 @@ public class MybatisPromptTemplateRepository implements PromptTemplateRepository
     }
 
     private PromptTemplateEntity toEntity(PromptTemplateInfo template) {
-        PromptTemplateEntity entity = new PromptTemplateEntity();
-        entity.setId(template.id());
-        entity.setTenantId(template.tenantId());
-        entity.setWorkspaceId(template.workspaceId());
-        entity.setName(template.name());
-        entity.setDescription(template.description());
-        entity.setCategory(template.category());
-        entity.setContent(template.content());
-        entity.setVariables(toJson(template.variables()));
-        entity.setActive(template.isActive());
-        entity.setCreatedAt(template.createdAt());
-        entity.setUpdatedAt(template.updatedAt());
+        PromptTemplateEntity entity = BeanUtil.copyProperties(template, PromptTemplateEntity.class);
+        entity.setVariables(toJson(template.getVariables()));
         return entity;
     }
 
     private PromptTemplateInfo toDomain(PromptTemplateEntity entity) {
-        return new PromptTemplateInfo(
-                entity.getId(), entity.getTenantId(), entity.getWorkspaceId(),
-                entity.getName(), entity.getDescription(), entity.getCategory(),
-                entity.getContent(), fromJson(entity.getVariables(), new TypeReference<>() {}),
-                entity.isActive(), entity.getCreatedAt(), entity.getUpdatedAt()
-        );
+        PromptTemplateInfo promptTemplateInfo = BeanUtil.copyProperties(entity, PromptTemplateInfo.class);
+        promptTemplateInfo.setVariables(fromJson(entity.getVariables(), new TypeReference<>() {
+        }));
+        return promptTemplateInfo;
     }
 }

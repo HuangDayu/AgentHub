@@ -1,13 +1,14 @@
 package com.agenthub.api.controller;
 
-import com.agenthub.common.exception.ModelNotFoundException;
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.ModelConfigRequest;
 import com.agenthub.api.dto.ModelConfigResponse;
 import com.agenthub.api.dto.ModelTestResponse;
 import com.agenthub.api.mapper.ModelConfigResponseMapper;
-import com.agenthub.application.usecase.ModelConfigUseCase;
 import com.agenthub.application.command.CreateModelConfigCommand;
 import com.agenthub.application.command.UpdateModelConfigCommand;
+import com.agenthub.application.usecase.ModelConfigUseCase;
+import com.agenthub.common.exception.ModelNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -41,26 +42,11 @@ public class ModelConfigController {
     @ResponseStatus(HttpStatus.CREATED)
     public ModelConfigResponse create(
             @Validated @RequestBody ModelConfigRequest request) {
-        CreateModelConfigCommand command = buildCreateCommand(request);
+        CreateModelConfigCommand command = BeanUtil.copyProperties(request, CreateModelConfigCommand.class);
         var config = appService.create(command);
         return responseMapper.toResponse(config);
     }
 
-    /**
-     * 构建创建命令。
-     */
-    private CreateModelConfigCommand buildCreateCommand(ModelConfigRequest request) {
-        return new CreateModelConfigCommand(
-                request.name(),
-                request.type(),
-                request.supplier(),
-                request.apiKey(),
-                request.baseUrl(),
-                request.model(),
-                request.enabled(),
-                null
-        );
-    }
 
     /**
      * 更新模型配置。
@@ -69,25 +55,10 @@ public class ModelConfigController {
     public ModelConfigResponse update(
             @PathVariable String id,
             @Validated @RequestBody ModelConfigRequest request) {
-        UpdateModelConfigCommand command = buildUpdateCommand(id, request);
+        UpdateModelConfigCommand command = BeanUtil.copyProperties(request, UpdateModelConfigCommand.class);
+        command.setId(id);
         var config = appService.update(command);
         return responseMapper.toResponse(config);
-    }
-
-    /**
-     * 构建更新命令。
-     */
-    private UpdateModelConfigCommand buildUpdateCommand(String id, ModelConfigRequest request) {
-        return new UpdateModelConfigCommand(
-                id,
-                request.name(),
-                request.type(),
-                request.supplier(),
-                request.apiKey(),
-                request.baseUrl(),
-                request.model(),
-                request.enabled()
-        );
     }
 
     /**
@@ -138,10 +109,6 @@ public class ModelConfigController {
     @PostMapping("/{id}/test")
     public ResponseEntity<ModelTestResponse> testModel(@PathVariable String id) {
         var result = appService.testModel(id);
-        return ResponseEntity.ok(new ModelTestResponse(
-                result.success(),
-                result.message(),
-                result.details()
-        ));
+        return ResponseEntity.ok(BeanUtil.copyProperties(result, ModelTestResponse.class));
     }
 }

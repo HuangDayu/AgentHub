@@ -1,19 +1,19 @@
 package com.agenthub.application.command;
 
-/**
- * 更新模型策略命令。
- *
- * @param name        策略名称
- * @param description 策略描述
- */
-public record UpdateModelStrategyCommand(
-        String id,
-        String name,
-        String description,
-        Double temperature,
-        Integer maxTokens,
-        Double topP,
-        Double frequencyPenalty,
-        Double presencePenalty
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UpdateModelStrategyCommand {
+    private String id;
+    private String name;
+    private String description;
+    private Double temperature;
+    private Integer maxTokens;
+    private Double topP;
+    private Double frequencyPenalty;
+    private Double presencePenalty;
 }

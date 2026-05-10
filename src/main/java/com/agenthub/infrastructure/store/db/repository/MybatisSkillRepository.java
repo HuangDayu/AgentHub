@@ -21,7 +21,7 @@ public class MybatisSkillRepository implements SkillRepository {
     }
 
     @Override
-    public Skill save(Skill skill) {
+    public Skill saveOrUpdate(Skill skill) {
         SkillEntity entity = toEntity(skill);
         mapper.insertOrUpdate(entity);
         return skill;

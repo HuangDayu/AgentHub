@@ -1,5 +1,7 @@
 package com.agenthub.domain.model;
 
+import lombok.Data;
+
 import java.time.Instant;
 
 import static com.agenthub.common.utils.RandomUtils.randomId;
@@ -7,6 +9,7 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
 /**
  * 智能体聚合根，管理配置关联。
  */
+@Data
 public class Agent {
     private String id;
     private String tenantId;
@@ -60,101 +63,5 @@ public class Agent {
         return this;
     }
 
-    // Getters
-    public String getId() {
-        return id;
-    }
 
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public String getWorkspaceId() {
-        return workspaceId;
-    }
-
-    public String getAgentCode() {
-        return agentCode;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    // Setters for reconstruction
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    public void setWorkspaceId(String workspaceId) {
-        this.workspaceId = workspaceId;
-    }
-
-    public void setAgentCode(String agentCode) {
-        this.agentCode = agentCode;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
 }

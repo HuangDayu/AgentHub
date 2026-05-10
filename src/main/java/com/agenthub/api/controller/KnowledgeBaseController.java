@@ -1,7 +1,9 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.*;
 import com.agenthub.api.mapper.IngestionJobResponseMapper;
+import com.agenthub.application.command.KnowledgeBaseCommand;
 import com.agenthub.application.command.RetrievalCommand;
 import com.agenthub.application.dto.IngestionJobOutput;
 import com.agenthub.application.dto.RetrievalOutput;
@@ -22,7 +24,6 @@ import reactor.core.publisher.Flux;
 import java.util.List;
 
 import static com.agenthub.api.dto.SearchResponse.toSearchResponse;
-import static com.agenthub.common.utils.RandomUtils.randomShortId;
 
 @RequiredArgsConstructor
 @RestController
@@ -44,19 +45,10 @@ public class KnowledgeBaseController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public KnowledgeBaseResponse createKnowledgeBase(@RequestBody CreateKnowledgeBaseRequest request) {
-        KnowledgeBase kb = knowledgeBaseUseCase.create(buildCreateCommand(request));
+        KnowledgeBase kb = knowledgeBaseUseCase.create(BeanUtil.copyProperties(request, KnowledgeBaseCommand.class));
         return KnowledgeBaseResponse.from(kb);
     }
 
-    private KnowledgeBaseUseCase.Command buildCreateCommand(CreateKnowledgeBaseRequest request) {
-        return new KnowledgeBaseUseCase.Command(
-                randomShortId(), request.tenantId(), request.workspaceId(),
-                request.name(), request.kbCode(),
-                request.description(), request.vectorStoreConfigId(),
-                request.embeddingModelConfigId(), request.chatModelConfigId(),
-                request.retrievalPolicy()
-        );
-    }
 
     @GetMapping("/{kbId}")
     public KnowledgeBaseResponse getKnowledgeBase(@PathVariable String kbId) {
@@ -66,17 +58,12 @@ public class KnowledgeBaseController {
     @PatchMapping("/{kbId}")
     public KnowledgeBaseResponse patchKnowledgeBase(@PathVariable String kbId,
                                                     @RequestBody PatchKnowledgeBaseRequest request) {
-        KnowledgeBase kb = knowledgeBaseUseCase.update(buildUpdateCommand(kbId, request));
+        KnowledgeBaseCommand knowledgeBaseCommand = BeanUtil.copyProperties(request, KnowledgeBaseCommand.class);
+        knowledgeBaseCommand.setId(kbId);
+        KnowledgeBase kb = knowledgeBaseUseCase.update(knowledgeBaseCommand);
         return KnowledgeBaseResponse.from(kb);
     }
 
-    private KnowledgeBaseUseCase.Command buildUpdateCommand(String kbId, PatchKnowledgeBaseRequest request) {
-        return new KnowledgeBaseUseCase.Command(
-                kbId, null, null, request.name(), request.kbCode(),
-                request.description(), request.vectorStoreConfigId(),
-                request.embeddingModelConfigId(), request.chatModelConfigId(), null
-        );
-    }
 
     @DeleteMapping("/{kbId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -97,7 +84,7 @@ public class KnowledgeBaseController {
             @PathVariable String kbId,
             @RequestBody RetrieveRequest request
     ) {
-        RetrievalOutput result = ragRetrievalPort.retrieve(buildRetrievalCommand(kbId, request));
+        RetrievalOutput result = ragRetrievalPort.retrieve(BeanUtil.copyProperties(request, RetrievalCommand.class));
         return toSearchResponse(result);
     }
 
@@ -113,16 +100,8 @@ public class KnowledgeBaseController {
             @PathVariable String kbId,
             @RequestBody RetrieveRequest request
     ) {
-        RetrievalOutput result = ragRetrievalPort.retrieve(buildRetrievalCommand(kbId, request));
+        RetrievalOutput result = ragRetrievalPort.retrieve(BeanUtil.copyProperties(request, RetrievalCommand.class));
         return Flux.just(toSearchResponse(result));
-    }
-
-    private RetrievalCommand buildRetrievalCommand(String kbId, RetrieveRequest request) {
-        return new RetrievalCommand(
-                kbId, request.query(), request.topK(), request.scoreThreshold(),
-                request.enableQueryRewrite(), request.enableRerank(), request.enableTextSearch(),
-                request.enableVectorSearch(), request.rerankModel(), request.vectorWeight(), request.keywordWeight()
-        );
     }
 
     /**
@@ -140,11 +119,7 @@ public class KnowledgeBaseController {
             @PathVariable String kbId,
             @RequestBody SearchRequest request
     ) {
-        RetrievalOutput result = ragRetrievalPort.retrieve(new RetrievalCommand(
-                kbId, request.query(), request.topK(), request.scoreThreshold(),
-                request.enableQueryRewrite(), request.enableRerank(), request.enableTextSearch(),
-                request.enableVectorSearch(), request.rerankModel(), request.vectorWeight(), request.keywordWeight()
-        ));
+        RetrievalOutput result = ragRetrievalPort.retrieve(BeanUtil.copyProperties(request, RetrievalCommand.class));
         return toSearchResponse(result);
     }
 

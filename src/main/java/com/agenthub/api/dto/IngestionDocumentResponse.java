@@ -1,12 +1,15 @@
 package com.agenthub.api.dto;
 
-/**
- * 入库文档响应DTO。
- */
-public record IngestionDocumentResponse(
-        String documentId,
-        String fileName,
-        String contentType,
-        long size
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class IngestionDocumentResponse {
+    private String documentId;
+    private String fileName;
+    private String contentType;
+    private long size;
 }

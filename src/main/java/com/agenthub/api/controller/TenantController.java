@@ -1,7 +1,10 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.*;
 import com.agenthub.application.command.PatchTenantCommand;
+import com.agenthub.application.command.TenantCommand;
+import com.agenthub.application.command.WorkspaceCommand;
 import com.agenthub.application.usecase.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -46,9 +49,7 @@ public class TenantController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TenantResponse createTenant(@RequestBody CreateTenantRequest request) {
-        var tenant = createTenantUseCase.execute(
-                request.tenantCode(), request.name(), request.planCode(), request.isolationLevel(), request.region()
-        );
+        var tenant = createTenantUseCase.execute(BeanUtil.copyProperties(request, TenantCommand.class));
         return TenantResponse.from(tenant);
     }
 
@@ -88,7 +89,7 @@ public class TenantController {
      */
     @PatchMapping("/{tenantId}")
     public TenantResponse patchTenant(@PathVariable String tenantId, @RequestBody PatchTenantRequest request) {
-        var tenant = patchTenantUseCase.execute(tenantId, new PatchTenantCommand(request.name()));
+        var tenant = patchTenantUseCase.execute(tenantId, new PatchTenantCommand(request.getName()));
         return TenantResponse.from(tenant);
     }
 
@@ -103,7 +104,7 @@ public class TenantController {
     @ResponseStatus(HttpStatus.CREATED)
     public WorkspaceResponse createWorkspaceUnderTenant(@PathVariable String tenantId,
                                                         @RequestBody CreateWorkspaceRequest request) {
-        var workspace = workspaceUseCase.execute(request.workspaceCode(), request.name(), request.region());
+        var workspace = workspaceUseCase.execute(BeanUtil.copyProperties(request, WorkspaceCommand.class));
         return WorkspaceResponse.from(workspace);
     }
 

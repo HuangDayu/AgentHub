@@ -1,8 +1,10 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateScheduledTaskRequest;
 import com.agenthub.api.dto.ScheduledTaskResponse;
 import com.agenthub.api.dto.UpdateScheduledTaskRequest;
+import com.agenthub.application.command.ScheduledTaskCommand;
 import com.agenthub.application.dto.ScheduledTaskOutput;
 import com.agenthub.application.usecase.ScheduledTaskUseCase;
 import org.springframework.http.HttpStatus;
@@ -22,9 +24,7 @@ public class ScheduledTaskController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ScheduledTaskResponse create(@RequestBody CreateScheduledTaskRequest request) {
-        ScheduledTaskOutput result = useCase.create(request.tenantId(), request.workspaceId(),
-                request.taskCode(), request.name(), request.description(),
-                request.taskType(), request.cronExpression(), request.executorConfig(), request.prompt());
+        ScheduledTaskOutput result = useCase.create(BeanUtil.copyProperties(request, ScheduledTaskCommand.class));
         return toResponse(result);
     }
 
@@ -41,8 +41,7 @@ public class ScheduledTaskController {
     @PutMapping("/{taskId}")
     public ScheduledTaskResponse update(@PathVariable String taskId,
                                         @RequestBody UpdateScheduledTaskRequest request) {
-        ScheduledTaskOutput result = useCase.update(taskId, request.name(),
-                request.description(), request.cronExpression(), request.executorConfig(), request.prompt());
+        ScheduledTaskOutput result = useCase.update(taskId, BeanUtil.copyProperties(request, ScheduledTaskCommand.class));
         return toResponse(result);
     }
 
@@ -69,10 +68,6 @@ public class ScheduledTaskController {
     }
 
     private ScheduledTaskResponse toResponse(ScheduledTaskOutput output) {
-        return new ScheduledTaskResponse(output.id(), output.tenantId(), output.workspaceId(),
-                output.taskCode(), output.name(), output.description(), output.taskType(),
-                output.cronExpression(), output.executorConfig(), output.prompt(),
-                output.enabled(), output.lastExecuteTime(), output.nextExecuteTime(),
-                output.status(), output.createdAt(), output.updatedAt());
+        return BeanUtil.copyProperties(output, ScheduledTaskResponse.class);
     }
 }

@@ -2,20 +2,20 @@ package com.agenthub.application.command;
 
 import java.util.List;
 
-/**
- * 更新工具策略命令。
- *
- * @param name        策略名称
- * @param description 策略描述
- */
-public record UpdateToolStrategyCommand(
-    String workspaceId,
-    String name,
-    String description,
-    Integer maxConcurrentCalls,
-    Integer timeoutSeconds,
-    Integer retryCount,
-    Boolean fallbackEnabled,
-    List<String> allowedTools
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UpdateToolStrategyCommand {
+    private String workspaceId;
+    private String name;
+    private String description;
+    private Integer maxConcurrentCalls;
+    private Integer timeoutSeconds;
+    private Integer retryCount;
+    private Boolean fallbackEnabled;
+    private List<String> allowedTools;
 }

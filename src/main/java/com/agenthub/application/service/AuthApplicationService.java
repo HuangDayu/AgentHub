@@ -78,10 +78,10 @@ public class AuthApplicationService {
      */
     public AuthTokens refresh(String refreshToken) {
         RefreshTokenSession existingSession = refreshTokenRepository.findByToken(refreshToken)
-                .filter(session -> !session.expiresAt().isBefore(Instant.now(clock)))
+                .filter(session -> !session.getExpiresAt().isBefore(Instant.now(clock)))
                 .orElseThrow(() -> new InvalidRefreshTokenException("Invalid refresh token"));
         refreshTokenRepository.deleteByToken(refreshToken);
-        return issueTokens(existingSession.subject());
+        return issueTokens(existingSession.getSubject());
     }
 
     /**
@@ -116,6 +116,6 @@ public class AuthApplicationService {
         // 保存刷新令牌会话
         refreshTokenRepository.save(new RefreshTokenSession(refreshToken, subject, expiresAt));
         // 返回完整的认证令牌响应
-        return new AuthTokens(accessToken.tokenValue(), refreshToken, "Bearer", accessToken.expiresInSeconds());
+        return new AuthTokens(accessToken.getTokenValue(), refreshToken, "Bearer", accessToken.getExpiresInSeconds());
     }
 }

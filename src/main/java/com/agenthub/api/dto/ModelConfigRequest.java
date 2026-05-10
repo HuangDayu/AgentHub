@@ -5,16 +5,19 @@ import com.agenthub.domain.model.ModelType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-/**
- * 创建/更新模型配置请求 DTO。
- */
-public record ModelConfigRequest(
-        @NotBlank String name,
-        @NotNull ModelType type,
-        @NotNull ModelSupplier supplier,
-        @NotBlank String apiKey,
-        String baseUrl,
-        String model,
-        Boolean enabled
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ModelConfigRequest {
+    private @NotBlank String name;
+    private @NotNull ModelType type;
+    private @NotNull ModelSupplier supplier;
+    private @NotBlank String apiKey;
+    private String baseUrl;
+    private String model;
+    private Boolean enabled;
 }

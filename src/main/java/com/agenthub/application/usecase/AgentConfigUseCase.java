@@ -1,5 +1,7 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.agenthub.application.command.AgentConfigCommand;
 import com.agenthub.application.dto.AgentConfigOutput;
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
 import com.agenthub.application.port.out.repositories.McpToolRepository;
@@ -14,9 +16,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
 import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
 import static com.agenthub.domain.model.AgentConfigType.*;
-import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
 
 @Component
 @RequiredArgsConstructor
@@ -39,7 +41,7 @@ public class AgentConfigUseCase {
     private void syncSkillTool(String agentId) {
         List<Skill> skills = skillToolScannerPort.scanSkills(skillSharePath);
         parallelStreamWithTtl(4, skills, skill -> {
-            agentConfigRepository.save(AgentConfig.create(agentId, TOOL, SKILL_TOOL, skill.getSkillCode(), skill.getName(), skill.getDescription(), 1, skill.isEnabled()));
+            agentConfigRepository.saveOrUpdate(new AgentConfig(agentId, TOOL, SKILL_TOOL, skill.getSkillCode(), skill.getName(), skill.getDescription(), 1, skill.isEnabled()));
             return null;
         });
     }
@@ -47,7 +49,7 @@ public class AgentConfigUseCase {
     private void syncMcpTool(String agentId) {
         List<McpTool> list = mcpToolRepository.findList();
         parallelStreamWithTtl(4, list, mcpTool -> {
-            agentConfigRepository.save(AgentConfig.create(agentId, TOOL, MCP_TOOL, mcpTool.id(), mcpTool.name(), mcpTool.description(), 1, mcpTool.enabled()));
+            agentConfigRepository.saveOrUpdate(new AgentConfig(agentId, TOOL, MCP_TOOL, mcpTool.getId(), mcpTool.getName(), mcpTool.getDescription(), 1, mcpTool.isEnabled()));
             return null;
         });
     }
@@ -56,30 +58,19 @@ public class AgentConfigUseCase {
         List<SystemTool> systemTools = systemToolScannerPort.scanSystemTools();
         systemTools = systemToolsRepository.syncTools(systemTools);
         parallelStreamWithTtl(4, systemTools, systemTool -> {
-            agentConfigRepository.save(AgentConfig.create(agentId, TOOL, SYSTEM_TOOL, systemTool.getId(), systemTool.getToolName(), systemTool.getDescription(), 1, systemTool.isEnabled()));
+            agentConfigRepository.saveOrUpdate(new AgentConfig(agentId, TOOL, SYSTEM_TOOL, systemTool.getId(), systemTool.getToolName(), systemTool.getDescription(), 1, systemTool.isEnabled()));
             return null;
         });
     }
 
-    public AgentConfigOutput setConfig(String agentId, String category, String type,
-                                       String configId, String name, String description,
-                                       Integer priority, Boolean enabled) {
-        AgentConfigType t = AgentConfigType.valueOf(type);
-        AgentConfigCategory c = AgentConfigCategory.valueOf(category);
-        // 工具类别和知识库类别可以关联多个
-        if (!AgentConfigCategory.TOOL.equals(c) && !AgentConfigCategory.KNOWLEDGE.equals(c)) {
-            AgentConfig existing = agentConfigRepository.findOneAgentConfig(agentId, c, t);
-            if (existing != null) return updateExisting(existing, configId, name, description, priority, enabled);
-        }
-        return createNew(agentId, category, type, configId, name, description, priority);
-    }
-
-    public AgentConfigOutput updateConfig(String id, String agentId, String category, String type,
-                                          String configId, String name, String description,
-                                          Integer priority, Boolean enabled) {
-        AgentConfig existing = agentConfigRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Agent config not found: " + id));
-        return updateExisting(existing, configId, name, description, priority, enabled);
+    public AgentConfigOutput saveOrUpdateConfig(AgentConfigCommand command) {
+        AgentConfigType type = AgentConfigType.valueOf(command.getType());
+        AgentConfigCategory category = AgentConfigCategory.valueOf(command.getCategory());
+        AgentConfig agentConfig = BeanUtil.copyProperties(command, AgentConfig.class);
+        agentConfig.setType(type);
+        agentConfig.setCategory(category);
+        AgentConfig agentConfig1 = agentConfigRepository.saveOrUpdate(agentConfig);
+        return toResult(agentConfig1);
     }
 
     public List<AgentConfigOutput> listConfigs(String agentId) {
@@ -105,26 +96,7 @@ public class AgentConfigUseCase {
         agentConfigRepository.deleteByAgentId(agentId);
     }
 
-    private AgentConfigOutput updateExisting(AgentConfig existing, String configId, String name,
-                                             String description, Integer priority, Boolean enabled) {
-        AgentConfig updated = existing.update(configId, name, description, priority, enabled);
-        return toResult(agentConfigRepository.update(updated));
-    }
-
-    private AgentConfigOutput createNew(String agentId, String category, String type,
-                                        String configId, String name, String description, Integer priority) {
-        AgentConfigCategory cat = AgentConfigCategory.valueOf(category);
-        AgentConfigType t = AgentConfigType.valueOf(type);
-        int prio = priority != null ? priority : 0;
-        AgentConfig config = AgentConfig.create(agentId, cat, t, configId, name, description, prio, true);
-        return toResult(agentConfigRepository.save(config));
-    }
-
     private AgentConfigOutput toResult(AgentConfig config) {
-        return new AgentConfigOutput(
-                config.id(), config.agentId(), config.category().name(), config.type().name(),
-                config.configId(), config.name(), config.description(), config.priority(), config.enabled(),
-                config.createdAt(), config.updatedAt()
-        );
+        return BeanUtil.copyProperties(config, AgentConfigOutput.class);
     }
 }

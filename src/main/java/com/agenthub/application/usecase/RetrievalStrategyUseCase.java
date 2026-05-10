@@ -47,21 +47,8 @@ public class RetrievalStrategyUseCase {
 
 
     public RetrievalStrategy create(CreateRetrievalStrategyCommand command) {
-        RetrievalStrategy strategy = createStrategy(command);
+        RetrievalStrategy strategy = BeanUtil.copyProperties(command, RetrievalStrategy.class);
         return repository.save(strategy);
-    }
-
-    private RetrievalStrategy createStrategy(CreateRetrievalStrategyCommand cmd) {
-        RetrievalStrategy strategy = RetrievalStrategy.create(cmd.workspaceId(), cmd.name());
-        strategy.updateBasicInfo(cmd.name(), cmd.description());
-        strategy.configureRetrieval(RetrievalStrategy.RetrievalType.valueOf(cmd.retrievalType()), cmd.topK(), cmd.scoreThreshold());
-        strategy.setWeights(cmd.vectorWeight(), cmd.keywordWeight());
-        strategy.setEnableRerank(cmd.enableRerank());
-        strategy.setRerankModel(cmd.rerankModel());
-        strategy.setEnableQueryRewrite(cmd.enableQueryRewrite());
-        strategy.setEnableTextSearch(cmd.enableTextSearch());
-        strategy.setEnableVectorSearch(cmd.enableVectorSearch());
-        return strategy;
     }
 
 

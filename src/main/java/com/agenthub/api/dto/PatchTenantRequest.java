@@ -1,9 +1,12 @@
 package com.agenthub.api.dto;
 
-/**
- * 更新租户请求DTO.
- */
-public record PatchTenantRequest(
-        /** 租户名称 */String name
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PatchTenantRequest {
+    private /** 租户名称 */String name;
 }

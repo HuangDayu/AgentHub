@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
 import com.agenthub.domain.model.HttpTool;
 import com.agenthub.infrastructure.store.db.entity.HttpToolsEntity;
@@ -30,11 +31,7 @@ public class MybatisHttpToolRepository implements HttpToolRepository {
     @Override
     public HttpTool save(HttpTool httpTool) {
         HttpToolsEntity entity = toEntity(httpTool);
-        if (mapper.selectById(entity.getId()) == null) {
-            mapper.insert(entity);
-        } else {
-            mapper.updateById(entity);
-        }
+        mapper.insertOrUpdate(entity);
         return toDomain(entity);
     }
 
@@ -67,29 +64,10 @@ public class MybatisHttpToolRepository implements HttpToolRepository {
     }
 
     private HttpTool toDomain(HttpToolsEntity entity) {
-        return new HttpTool(
-                entity.getId(),
-                entity.getName(),
-                entity.getDescription(),
-                Boolean.TRUE.equals(entity.isEnabled()),
-                entity.getEndpoint(),
-                entity.getAuthType(),
-                entity.getInputSchema(),
-                entity.getTimeoutMs(),
-                entity.getCreatedAt()
-        );
+        return BeanUtil.copyProperties(entity, HttpTool.class);
     }
 
     private HttpToolsEntity toEntity(HttpTool httpTool) {
-        HttpToolsEntity entity = new HttpToolsEntity();
-        entity.setId(httpTool.id());
-        entity.setName(httpTool.name());
-        entity.setDescription(httpTool.description());
-        entity.setEnabled(httpTool.enabled());
-        entity.setEndpoint(httpTool.endpoint());
-        entity.setInputSchema(httpTool.inputSchemaJson());
-        entity.setTimeoutMs(httpTool.timeoutMs());
-        entity.setCreatedAt(httpTool.createdAt());
-        return entity;
+        return BeanUtil.copyProperties(httpTool, HttpToolsEntity.class);
     }
 }

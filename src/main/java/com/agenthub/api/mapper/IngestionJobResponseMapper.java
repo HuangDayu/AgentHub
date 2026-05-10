@@ -1,5 +1,6 @@
 package com.agenthub.api.mapper;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateIngestionJobResponse;
 import com.agenthub.api.dto.DocumentResponse;
 import com.agenthub.api.dto.IngestionDocumentResponse;
@@ -28,12 +29,7 @@ public class IngestionJobResponseMapper {
      * @return 创建任务响应DTO
      */
     public CreateIngestionJobResponse toCreateResponse(IngestionJobOutput job) {
-        return new CreateIngestionJobResponse(
-                job.jobId(),
-                job.kbId(),
-                job.status(),
-                job.fileCount()
-        );
+        return BeanUtil.copyProperties(job, CreateIngestionJobResponse.class);
     }
 
     /**

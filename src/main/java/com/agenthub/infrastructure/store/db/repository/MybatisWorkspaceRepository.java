@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.WorkspaceRepository;
 import com.agenthub.domain.model.Workspace;
 import com.agenthub.infrastructure.store.db.entity.WorkspaceEntity;
@@ -78,8 +79,8 @@ public class MybatisWorkspaceRepository implements WorkspaceRepository {
         return mapper.selectList(query).stream()
                 .filter(this::isValidEntity)
                 .map(this::toDomain)
-                .filter(w -> w.createdAt() != null)
-                .sorted(Comparator.comparing(Workspace::createdAt))
+                .filter(w -> w.getCreatedAt() != null)
+                .sorted(Comparator.comparing(Workspace::getCreatedAt))
                 .skip((long) page * size)
                 .limit(size)
                 .toList();
@@ -116,8 +117,8 @@ public class MybatisWorkspaceRepository implements WorkspaceRepository {
         return mapper.selectList(query).stream()
                 .filter(this::isValidEntity)
                 .map(this::toDomain)
-                .filter(w -> w.createdAt() != null)
-                .sorted(Comparator.comparing(Workspace::createdAt))
+                .filter(w -> w.getCreatedAt() != null)
+                .sorted(Comparator.comparing(Workspace::getCreatedAt))
                 .skip((long) page * size)
                 .limit(size)
                 .toList();
@@ -148,16 +149,7 @@ public class MybatisWorkspaceRepository implements WorkspaceRepository {
      * @return 工作空间持久化对象
      */
     private WorkspaceEntity toPo(Workspace workspace) {
-        WorkspaceEntity po = new WorkspaceEntity();
-        po.setId(workspace.id());
-        po.setTenantId(workspace.tenantId());
-        po.setWorkspaceCode(workspace.workspaceCode());
-        po.setName(workspace.name());
-        po.setRegion(workspace.region());
-        po.setStatus(workspace.status().name());
-        po.setCreatedAt(workspace.createdAt());
-        po.setUpdatedAt(workspace.updatedAt());
-        return po;
+        return BeanUtil.copyProperties(workspace, WorkspaceEntity.class);
     }
 
     /**
@@ -167,15 +159,6 @@ public class MybatisWorkspaceRepository implements WorkspaceRepository {
      * @return 工作空间领域对象
      */
     private Workspace toDomain(WorkspaceEntity po) {
-        return Workspace.rehydrate(
-                po.getId(),
-                po.getTenantId(),
-                po.getWorkspaceCode(),
-                po.getName(),
-                po.getRegion(),
-                Workspace.WorkspaceStatus.valueOf(po.getStatus()),
-                po.getCreatedAt(),
-                po.getUpdatedAt()
-        );
+        return BeanUtil.copyProperties(po, Workspace.class);
     }
 }

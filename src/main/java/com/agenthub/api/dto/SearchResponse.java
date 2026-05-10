@@ -1,5 +1,6 @@
 package com.agenthub.api.dto;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.dto.CitationOutput;
 import com.agenthub.application.dto.RetrievalOutput;
 import com.agenthub.application.dto.RetrievalResultOutput;
@@ -28,9 +29,9 @@ public record SearchResponse(
      */
     public static SearchResponse toSearchResponse(RetrievalOutput result) {
         return new SearchResponse(
-                result.rewrittenQuery(),
-                result.results().stream().map(SearchResponse::toResultItem).toList(),
-                result.citations().stream().map(SearchResponse::toCitationItem).toList()
+                result.getRewrittenQuery(),
+                result.getResults().stream().map(SearchResponse::toResultItem).toList(),
+                result.getCitations().stream().map(SearchResponse::toCitationItem).toList()
         );
     }
 
@@ -41,8 +42,7 @@ public record SearchResponse(
      * @return 检索结果项DTO
      */
     private static RetrievalResultItem toResultItem(RetrievalResultOutput r) {
-        return new RetrievalResultItem(
-                r.documentId(), r.chunkId(), r.content(), r.score());
+        return BeanUtil.copyProperties(r, RetrievalResultItem.class);
     }
 
     /**
@@ -52,8 +52,7 @@ public record SearchResponse(
      * @return 引用项DTO
      */
     private static CitationItem toCitationItem(CitationOutput c) {
-        return new CitationItem(
-                c.index(), c.documentId(), c.chunkId(), c.excerpt());
+        return BeanUtil.copyProperties(c, CitationItem.class);
     }
 
 }

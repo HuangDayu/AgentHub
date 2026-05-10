@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.command.CreateModelStrategyCommand;
 import com.agenthub.application.command.UpdateModelStrategyCommand;
@@ -21,8 +22,9 @@ public class ModelStrategyUseCase {
 
 
     public ModelStrategy update(String id, UpdateModelStrategyCommand command) {
-        ModelStrategy strategy = get(id);
-        return repository.save(updateStrategy(strategy,command));
+        ModelStrategy strategy = BeanUtil.copyProperties(command, ModelStrategy.class);
+        strategy.setId(id);
+        return repository.save(strategy);
     }
 
 
@@ -43,23 +45,12 @@ public class ModelStrategyUseCase {
     }
 
     public ModelStrategy create(CreateModelStrategyCommand command) {
-        ModelStrategy strategy = createStrategy(command);
+        ModelStrategy strategy = BeanUtil.copyProperties(command, ModelStrategy.class);
         return repository.save(strategy);
     }
 
-    private ModelStrategy createStrategy(CreateModelStrategyCommand cmd) {
-        ModelStrategy strategy = ModelStrategy.create(cmd.workspaceId(), cmd.name());
-        strategy.updateBasicInfo(cmd.name(), cmd.description());
-        strategy.configureParameters(cmd.temperature(), cmd.maxTokens(), cmd.topP());
-        strategy.setPenalties(cmd.frequencyPenalty(), cmd.presencePenalty());
-        return strategy;
-    }
 
-    private ModelStrategy updateStrategy(ModelStrategy strategy,UpdateModelStrategyCommand cmd) {
-        strategy.updateBasicInfo(cmd.name(), cmd.description());
-        strategy.configureParameters(cmd.temperature(), cmd.maxTokens(), cmd.topP());
-        strategy.setPenalties(cmd.frequencyPenalty(), cmd.presencePenalty());
-        return strategy;
-    }
+
+
 
 }

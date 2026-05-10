@@ -1,12 +1,14 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreatePromptTemplateRequest;
 import com.agenthub.api.dto.PromptTemplateResponse;
 import com.agenthub.api.dto.UpdatePromptTemplateRequest;
-import com.agenthub.api.dto.*;
+import com.agenthub.application.command.PromptTemplateInfoCommand;
 import com.agenthub.application.dto.PromptTemplateOutput;
 import com.agenthub.application.dto.VariableOutput;
 import com.agenthub.application.usecase.PromptTemplateUseCase;
+import com.agenthub.domain.model.PromptTemplateInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,11 +26,11 @@ public class PromptTemplateController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PromptTemplateResponse create(@PathVariable String workspaceId,
-                                         @RequestHeader("X-Tenant-Id") String tenantId,
                                          @RequestBody CreatePromptTemplateRequest request) {
         List<VariableOutput> vars = toVariableResults(request.variables());
-        PromptTemplateOutput result = useCase.create(workspaceId, tenantId, request.name(), request.description(),
-                request.category(), request.content(), vars, request.isActive());
+        PromptTemplateInfoCommand command = BeanUtil.copyProperties(request, PromptTemplateInfoCommand.class);
+        command.setVariables(vars);
+        PromptTemplateOutput result = useCase.create(command);
         return toResponse(result);
     }
 
@@ -50,8 +52,9 @@ public class PromptTemplateController {
     public PromptTemplateResponse update(@PathVariable String workspaceId, @PathVariable String id,
                                          @RequestBody UpdatePromptTemplateRequest request) {
         List<VariableOutput> vars = toVariableResultsFromUpdate(request.variables());
-        PromptTemplateOutput result = useCase.update(id, request.name(), request.description(),
-                request.category(), request.content(), vars, request.isActive());
+        PromptTemplateInfoCommand command = BeanUtil.copyProperties(request, PromptTemplateInfoCommand.class);
+        command.setVariables(vars);
+        PromptTemplateOutput result = useCase.update(id, command);
         return toResponse(result);
     }
 
@@ -71,12 +74,12 @@ public class PromptTemplateController {
         return dtos.stream().map(v -> new VariableOutput(v.name(), v.description(), v.defaultValue(), v.required())).toList();
     }
 
-    private PromptTemplateResponse toResponse(PromptTemplateOutput result) {
-        List<PromptTemplateResponse.VariableDto> vars = result.variables() != null
-                ? result.variables().stream().map(v -> new PromptTemplateResponse.VariableDto(v.name(), v.description(), v.defaultValue(), v.required())).toList()
+    private PromptTemplateResponse toResponse(PromptTemplateOutput template) {
+        List<PromptTemplateResponse.VariableDto> vars = template.getVariables() != null
+                ? template.getVariables().stream().map(v -> BeanUtil.copyProperties(v,PromptTemplateResponse.VariableDto.class)).toList()
                 : List.of();
-        return new PromptTemplateResponse(result.id(), result.name(), result.description(),
-                result.category(), result.content(), vars, result.isActive(),
-                result.createdAt(), result.updatedAt());
+        PromptTemplateResponse promptTemplateOutput = BeanUtil.copyProperties(template, PromptTemplateResponse.class);
+        promptTemplateOutput.setVariables(vars);
+        return promptTemplateOutput;
     }
 }

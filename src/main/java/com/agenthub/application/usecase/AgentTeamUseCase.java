@@ -1,8 +1,10 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.common.exception.NotFoundException;
+import cn.hutool.core.bean.BeanUtil;
+import com.agenthub.application.command.AgentTeamCommand;
 import com.agenthub.application.dto.AgentTeamOutput;
 import com.agenthub.application.port.out.repositories.AgentTeamRepository;
+import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.AgentTeam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,11 +16,8 @@ import java.util.List;
 public class AgentTeamUseCase {
     private final AgentTeamRepository repository;
 
-    public AgentTeamOutput create(String tenantId, String workspaceId, String teamCode,
-                                  String name, String description, String coordinationMode,
-                                  String memberConfig) {
-        AgentTeam team = AgentTeam.create(tenantId, workspaceId, teamCode,
-                name, description, coordinationMode, memberConfig);
+    public AgentTeamOutput create(AgentTeamCommand command) {
+        AgentTeam team = BeanUtil.copyProperties(command, AgentTeam.class);
         return toOutput(repository.save(team));
     }
 
@@ -35,10 +34,8 @@ public class AgentTeamUseCase {
                 .stream().map(this::toOutput).toList();
     }
 
-    public AgentTeamOutput update(String teamId, String name, String description,
-                                  String coordinationMode, String memberConfig) {
-        AgentTeam team = findById(teamId);
-        team.update(name, description, coordinationMode, memberConfig);
+    public AgentTeamOutput update(AgentTeamCommand command) {
+        AgentTeam team = BeanUtil.copyProperties(command, AgentTeam.class);
         return toOutput(repository.save(team));
     }
 

@@ -1,5 +1,7 @@
 package com.agenthub.domain.model;
 
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,10 +11,11 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
 /**
  * 工具策略聚合根。
  */
+@Data
 public class ToolStrategy {
-    private final String id;
-    private final String tenantId;
-    private final String workspaceId;
+    private String id;
+    private String tenantId;
+    private String workspaceId;
     private String name;
     private String description;
     private int maxConcurrentCalls;
@@ -93,19 +96,6 @@ public class ToolStrategy {
         this.updatedAt = Instant.now();
     }
 
-    public String getId() { return id; }
-    public String getTenantId() { return tenantId; }
-    public String getWorkspaceId() { return workspaceId; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public int getMaxConcurrentCalls() { return maxConcurrentCalls; }
-    public int getTimeoutSeconds() { return timeoutSeconds; }
-    public int getRetryCount() { return retryCount; }
-    public boolean isFallbackEnabled() { return fallbackEnabled; }
-    public List<ToolBinding> getToolBindings() { return List.copyOf(toolBindings); }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
-
     public static class ToolBinding {
         private final String toolId;
         private final int priority;
@@ -117,8 +107,16 @@ public class ToolStrategy {
             this.enabled = enabled;
         }
 
-        public String getToolId() { return toolId; }
-        public int getPriority() { return priority; }
-        public boolean isEnabled() { return enabled; }
+        public String getToolId() {
+            return toolId;
+        }
+
+        public int getPriority() {
+            return priority;
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
     }
 }

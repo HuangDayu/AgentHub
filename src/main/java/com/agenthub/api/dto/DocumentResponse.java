@@ -2,16 +2,19 @@ package com.agenthub.api.dto;
 
 import java.time.Instant;
 
-/**
- * 文档响应DTO。
- */
-public record DocumentResponse(
-        String docId,
-        String kbId,
-        String fileName,
-        String contentType,
-        long size,
-        String status,
-        Instant createdAt
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class DocumentResponse {
+    private String docId;
+    private String kbId;
+    private String fileName;
+    private String contentType;
+    private long size;
+    private String status;
+    private Instant createdAt;
 }

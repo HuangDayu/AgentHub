@@ -1,10 +1,14 @@
 package com.agenthub.api.dto;
 
-/**
- * 模型测试响应。
- */
-public record ModelTestResponse(
-        boolean success,
-        String message,
-        String details
-) {}
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ModelTestResponse {
+    private boolean success;
+    private String message;
+    private String details;
+}

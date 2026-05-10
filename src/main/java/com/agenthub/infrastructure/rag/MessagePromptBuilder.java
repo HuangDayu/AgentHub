@@ -60,7 +60,7 @@ public class MessagePromptBuilder {
      */
     private String buildContext(List<RetrievalChunk> chunks) {
         return chunks.stream()
-                .sorted(Comparator.comparingDouble(RetrievalChunk::score).reversed())
+                .sorted(Comparator.comparingDouble(RetrievalChunk::getScore).reversed())
                 .map(this::formatChunk)
                 .collect(Collectors.joining("\n"));
     }
@@ -69,8 +69,8 @@ public class MessagePromptBuilder {
      * 格式化单个文档片段。
      */
     private String formatChunk(RetrievalChunk c) {
-        String title = c.documentTitle() != null ? c.documentTitle() : c.documentId();
-        return "- [%s] (score: %.4f)\n  %s".formatted(title, c.score(), c.content());
+        String title = c.getDocumentTitle() != null ? c.getDocumentTitle() : c.getDocumentId();
+        return "- [%s] (score: %.4f)\n  %s".formatted(title, c.getScore(), c.getContent());
     }
 
     /**

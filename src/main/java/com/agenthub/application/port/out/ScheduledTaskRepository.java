@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ScheduledTaskRepository {
-    ScheduledTask save(ScheduledTask task);
+    ScheduledTask saveOrUpdate(ScheduledTask task);
     Optional<ScheduledTask> findById(String id);
     List<ScheduledTask> findByWorkspaceId(String workspaceId);
     void deleteById(String id);

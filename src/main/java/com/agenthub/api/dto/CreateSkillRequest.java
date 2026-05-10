@@ -1,13 +1,19 @@
 package com.agenthub.api.dto;
 
-public record CreateSkillRequest(
-        String tenantId,
-        String workspaceId,
-        String skillCode,
-        String name,
-        String description,
-        String skillType,
-        String skillPath,
-        String skillFilesTree
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateSkillRequest {
+    private String tenantId;
+    private String workspaceId;
+    private String skillCode;
+    private String name;
+    private String description;
+    private String skillType;
+    private String skillPath;
+    private String skillFilesTree;
 }

@@ -1,10 +1,14 @@
 package com.agenthub.api.dto;
 
-/**
- * 向量存储测试响应。
- */
-public record VectorStoreTestResponse(
-        boolean success,
-        String message,
-        String details
-) {}
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class VectorStoreTestResponse {
+    private boolean success;
+    private String message;
+    private String details;
+}

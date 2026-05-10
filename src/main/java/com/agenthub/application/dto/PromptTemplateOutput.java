@@ -1,12 +1,41 @@
 package com.agenthub.application.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.Instant;
 import java.util.List;
 
-public record PromptTemplateOutput(
-        String id, String name, String description, String category,
-        String content, List<VariableResult> variables,
-        boolean isActive, Instant createdAt, Instant updatedAt
-) {
-    public record VariableResult(String name, String description, String defaultValue, boolean required) {}
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PromptTemplateOutput {
+
+    private String id;
+    private String tenantId;
+    private String workspaceId;
+    private String name;
+    private String description;
+    private String category;
+    private String content;
+    private List<VariableResult> variables;
+    private boolean isActive;
+    private Instant createdAt;
+    private Instant updatedAt;
+
+    @Getter
+    public enum Category {SYSTEM, USER, ASSISTANT, GENERAL}
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VariableResult {
+        private String name;
+        private String description;
+        private String defaultValue;
+        private boolean required;
+    }
 }

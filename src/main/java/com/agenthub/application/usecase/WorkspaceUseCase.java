@@ -1,5 +1,7 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.agenthub.application.command.WorkspaceCommand;
 import com.agenthub.application.port.out.IdGenerator;
 import com.agenthub.application.port.out.TimeProvider;
 import com.agenthub.application.port.out.repositories.TenantRepository;
@@ -29,15 +31,11 @@ public class WorkspaceUseCase {
     /**
      * 执行创建工作空间操作。
      *
-     * @param workspaceCode 工作空间编码
-     * @param name          工作空间名称
-     * @param region        区域
      * @return 创建的工作空间
      * @throws NotFoundException 当租户不存在时抛出
      */
-    public Workspace execute(String workspaceCode, String name, String region) {
-        Workspace workspace = Workspace.create(workspaceCode, name, region);
-        return workspaceRepository.save(workspace);
+    public Workspace execute(WorkspaceCommand command) {
+        return workspaceRepository.save(BeanUtil.copyProperties(command, Workspace.class));
     }
 
     /**
@@ -59,7 +57,9 @@ public class WorkspaceUseCase {
         return workspaceRepository.findWorkspacesByTenantId(tenantId, page, size);
     }
 
-    public void update(Workspace workspace) {
+    public void update(String id, WorkspaceCommand command) {
+        Workspace workspace = BeanUtil.copyProperties(command, Workspace.class);
+        workspace.setId(id);
         workspaceRepository.update(workspace);
 
     }

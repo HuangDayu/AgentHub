@@ -1,16 +1,19 @@
 package com.agenthub.application.command;
 
-/**
- * 创建模型策略命令。
- */
-public record CreateModelStrategyCommand(
-    String workspaceId,
-    String name,
-    String description,
-    double temperature,
-    int maxTokens,
-    double topP,
-    double frequencyPenalty,
-    double presencePenalty
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateModelStrategyCommand {
+    private String workspaceId;
+    private String name;
+    private String description;
+    private double temperature;
+    private int maxTokens;
+    private double topP;
+    private double frequencyPenalty;
+    private double presencePenalty;
 }

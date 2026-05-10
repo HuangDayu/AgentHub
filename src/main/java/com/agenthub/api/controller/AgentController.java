@@ -1,7 +1,9 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.AgentResponse;
 import com.agenthub.api.dto.CreateAgentRequest;
+import com.agenthub.application.command.CreateAgentCommand;
 import com.agenthub.application.dto.AgentOutput;
 import com.agenthub.application.usecase.AgentUseCase;
 import org.springframework.http.HttpStatus;
@@ -21,8 +23,7 @@ public class AgentController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AgentResponse create(@RequestBody CreateAgentRequest request) {
-        AgentOutput result = useCase.create(request.tenantId(), request.workspaceId(),
-                request.agentCode(), request.name(), request.description());
+        AgentOutput result = useCase.create(BeanUtil.copyProperties(request, CreateAgentCommand.class));
         return toResponse(result);
     }
 
@@ -38,7 +39,9 @@ public class AgentController {
 
     @PutMapping("/{agentId}")
     public AgentResponse update(@PathVariable String agentId, @RequestBody CreateAgentRequest request) {
-        AgentOutput result = useCase.update(agentId, request.name(), request.description());
+        CreateAgentCommand command = BeanUtil.copyProperties(request, CreateAgentCommand.class);
+        command.setId(agentId);
+        AgentOutput result = useCase.update(command);
         return toResponse(result);
     }
 
@@ -59,9 +62,6 @@ public class AgentController {
     }
 
     private AgentResponse toResponse(AgentOutput result) {
-        return new AgentResponse(result.id(), result.tenantId(), result.workspaceId(),
-                result.agentCode(), result.name(), result.description(),
-                result.status(), result.enabled(),
-                result.createdAt(), result.updatedAt());
+        return BeanUtil.copyProperties(result, AgentResponse.class);
     }
 }

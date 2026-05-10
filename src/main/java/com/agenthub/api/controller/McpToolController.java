@@ -1,9 +1,10 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateMcpToolRequest;
 import com.agenthub.api.dto.McpToolResponse;
 import com.agenthub.api.dto.UpdateMcpToolRequest;
-import com.agenthub.api.dto.*;
+import com.agenthub.application.command.McpToolCommand;
 import com.agenthub.application.dto.McpToolOutput;
 import com.agenthub.application.usecase.McpToolUseCase;
 import org.springframework.http.HttpStatus;
@@ -23,11 +24,8 @@ public class McpToolController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public McpToolResponse create(@PathVariable String workspaceId,
-                                  @RequestHeader("X-Tenant-Id") String tenantId,
                                   @RequestBody CreateMcpToolRequest request) {
-        McpToolOutput result = useCase.create(workspaceId, tenantId, request.name(), request.description(),
-                request.serverUrl(), request.serverType(), request.command(),
-                request.args(), request.env(),request.async(), request.enabled());
+        McpToolOutput result = useCase.create(BeanUtil.copyProperties(request, McpToolCommand.class));
         return toResponse(result);
     }
 
@@ -44,8 +42,9 @@ public class McpToolController {
     @PutMapping("/{id}")
     public McpToolResponse update(@PathVariable String workspaceId, @PathVariable String id,
                                   @RequestBody UpdateMcpToolRequest request) {
-        McpToolOutput result = useCase.update(id, request.name(), request.description(), request.serverUrl(),
-                request.serverType(), request.command(), request.args(), request.env(),request.async(), request.enabled());
+        McpToolCommand mcpToolCommand = BeanUtil.copyProperties(request, McpToolCommand.class);
+        mcpToolCommand.setId(id);
+        McpToolOutput result = useCase.update(mcpToolCommand);
         return toResponse(result);
     }
 
@@ -56,9 +55,6 @@ public class McpToolController {
     }
 
     private McpToolResponse toResponse(McpToolOutput result) {
-        return new McpToolResponse(result.id(), result.name(), result.description(),
-                result.serverUrl(), result.serverType(), result.command(),
-                result.args(), result.env(), result.enabled(),
-                result.createdAt(), result.updatedAt());
+        return BeanUtil.copyProperties(result, McpToolResponse.class);
     }
 }

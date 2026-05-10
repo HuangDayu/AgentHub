@@ -1,12 +1,14 @@
 package com.agenthub.api.dto;
 
-/**
- * 创建工作空间请求DTO.
- */
-public record CreateWorkspaceRequest(
-        /** 工作空间编码 */ String workspaceCode,
-        /** 工作空间名称 */ String name,
-        /** 区域 */ String region
-) {
-}
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateWorkspaceRequest {
+    private /** 工作空间编码 */ String workspaceCode;
+    private /** 工作空间名称 */ String name;
+    private /** 区域 */ String region;
+}

@@ -1,7 +1,9 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.AgentConfigResponse;
 import com.agenthub.api.dto.SetAgentConfigRequest;
+import com.agenthub.application.command.AgentConfigCommand;
 import com.agenthub.application.dto.AgentConfigOutput;
 import com.agenthub.application.usecase.AgentConfigUseCase;
 import org.springframework.http.HttpStatus;
@@ -22,16 +24,19 @@ public class AgentConfigController {
     @ResponseStatus(HttpStatus.CREATED)
     public AgentConfigResponse setConfig(@PathVariable String agentId,
                                          @RequestBody SetAgentConfigRequest request) {
-        AgentConfigOutput result = useCase.setConfig(agentId, request.category(), request.type(),
-                request.configId(), request.name(), request.description(), request.priority(), request.enabled());
+        AgentConfigCommand command = BeanUtil.copyProperties(request, AgentConfigCommand.class);
+        command.setAgentId(agentId);
+        AgentConfigOutput result = useCase.saveOrUpdateConfig(command);
         return toResponse(result);
     }
 
     @PutMapping("/{id}")
     public AgentConfigResponse updateConfig(@PathVariable String agentId, @PathVariable String id,
                                             @RequestBody SetAgentConfigRequest request) {
-        AgentConfigOutput result = useCase.updateConfig(id, agentId, request.category(), request.type(),
-                request.configId(), request.name(), request.description(), request.priority(), request.enabled());
+        AgentConfigCommand command = BeanUtil.copyProperties(request, AgentConfigCommand.class);
+        command.setAgentId(agentId);
+        command.setId(id);
+        AgentConfigOutput result = useCase.saveOrUpdateConfig(command);
         return toResponse(result);
     }
 
@@ -67,8 +72,6 @@ public class AgentConfigController {
     }
 
     private AgentConfigResponse toResponse(AgentConfigOutput result) {
-        return new AgentConfigResponse(result.id(), result.agentId(), result.category(), result.type(),
-                result.configId(), result.name(), result.description(), result.priority(), result.enabled(),
-                result.createdAt(), result.updatedAt());
+        return BeanUtil.copyProperties(result, AgentConfigResponse.class);
     }
 }

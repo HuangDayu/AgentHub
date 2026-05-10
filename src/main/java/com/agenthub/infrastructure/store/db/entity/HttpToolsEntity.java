@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.entity;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import com.agenthub.domain.model.HttpTool;
 import com.baomidou.mybatisplus.annotation.*;
@@ -9,7 +10,6 @@ import java.time.Instant;
 
 import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
 import static com.agenthub.domain.model.AgentConfigType.HTTP_TOOL;
-import static com.agenthub.domain.model.AgentConfigType.MCP_TOOL;
 
 /**
  * 工具注册表 MyBatis 实体。
@@ -48,16 +48,7 @@ public class HttpToolsEntity {
      * @return MyBatis 实体
      */
     public static HttpToolsEntity fromDomain(HttpTool httpTool) {
-        HttpToolsEntity entity = new HttpToolsEntity();
-        entity.setId(httpTool.id());
-        entity.setName(httpTool.name());
-        entity.setDescription(httpTool.description());
-        entity.setEnabled(httpTool.enabled());
-        entity.setEndpoint(httpTool.endpoint());
-        entity.setInputSchema(httpTool.inputSchemaJson());
-        entity.setTimeoutMs(httpTool.timeoutMs());
-        entity.setCreatedAt(httpTool.createdAt());
-        return entity;
+        return BeanUtil.copyProperties(httpTool, HttpToolsEntity.class);
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
 import com.agenthub.domain.model.AgentConfig;
 import com.agenthub.domain.model.AgentConfigCategory;
@@ -24,23 +25,27 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
     }
 
     @Override
-    public AgentConfig save(AgentConfig config) {
+    public AgentConfig saveOrUpdate(AgentConfig config) {
         AgentConfigEntity newEntity = toEntity(config);
-        AgentConfigEntity oldEntity = exists(newEntity);
-        if (oldEntity != null) {
-            newEntity.setId(oldEntity.getId());
+        LambdaQueryWrapper<AgentConfigEntity> queryWrapper = buildQueryWrapper(config.getCategory().getSum(), newEntity);
+        AgentConfigEntity configEntity = mapper.selectOne(queryWrapper);
+        if (configEntity != null) {
+            newEntity.setId(configEntity.getId());
         }
         mapper.insertOrUpdate(newEntity);
         return toDomain(newEntity);
     }
 
-    private AgentConfigEntity exists(AgentConfigEntity entity) {
+    private LambdaQueryWrapper<AgentConfigEntity> buildQueryWrapper(int sum, AgentConfigEntity entity) {
         LambdaQueryWrapper<AgentConfigEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(AgentConfigEntity::getAgentId, entity.getAgentId());
         queryWrapper.eq(AgentConfigEntity::getCategory, entity.getCategory());
         queryWrapper.eq(AgentConfigEntity::getType, entity.getType());
+        if (sum == 1) {
+            return queryWrapper;
+        }
         queryWrapper.eq(AgentConfigEntity::getConfigId, entity.getConfigId());
-        return mapper.selectOne(queryWrapper);
+        return queryWrapper;
     }
 
     @Override
@@ -118,36 +123,17 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
         if (config == null) {
             throw new IllegalStateException("未找到对应的配置");
         }
-        return config.configId();
+        return config.getConfigId();
     }
 
     private AgentConfigEntity toEntity(AgentConfig config) {
-        AgentConfigEntity entity = new AgentConfigEntity();
-        entity.setId(config.id());
-        entity.setAgentId(config.agentId());
-        entity.setCategory(config.category().name());
-        entity.setType(config.type().name());
-        entity.setConfigId(config.configId());
-        entity.setName(config.name());
-        entity.setDescription(config.description());
-        entity.setPriority(config.priority());
-        entity.setEnabled(config.enabled());
-        entity.setCreatedAt(config.createdAt());
-        entity.setUpdatedAt(config.updatedAt());
-        return entity;
+        return BeanUtil.copyProperties(config, AgentConfigEntity.class);
     }
 
     private AgentConfig toDomain(AgentConfigEntity entity) {
         if (entity == null) {
             return null;
         }
-        return new AgentConfig(
-                entity.getId(), entity.getAgentId(),
-                AgentConfigCategory.valueOf(entity.getCategory()),
-                AgentConfigType.valueOf(entity.getType()),
-                entity.getConfigId(), entity.getName(), entity.getDescription(),
-                entity.getPriority() != null ? entity.getPriority() : 0,
-                entity.isEnabled(), entity.getCreatedAt(), entity.getUpdatedAt()
-        );
+        return BeanUtil.copyProperties(entity, AgentConfig.class);
     }
 }

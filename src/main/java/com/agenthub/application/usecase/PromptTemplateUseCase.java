@@ -1,10 +1,12 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.application.port.out.repositories.PromptTemplateRepository;
+import cn.hutool.core.bean.BeanUtil;
+import com.agenthub.application.command.PromptTemplateInfoCommand;
 import com.agenthub.application.dto.PromptTemplateOutput;
 import com.agenthub.application.dto.VariableOutput;
-import com.agenthub.domain.model.PromptTemplateInfo;
+import com.agenthub.application.port.out.repositories.PromptTemplateRepository;
 import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.model.PromptTemplateInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,13 +16,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PromptTemplateUseCase {
     private final PromptTemplateRepository repository;
-    public PromptTemplateOutput create(String workspaceId, String tenantId, String name, String description,
-                                       String category, String content, List<VariableOutput> variables,
-                                       Boolean isActive) {
-        List<PromptTemplateInfo.Variable> vars = toVariables(variables);
-        PromptTemplateInfo template = PromptTemplateInfo.create(null, tenantId, workspaceId, name, description,
-                category, content, vars, isActive != null ? isActive : true);
-        return toResult(repository.save(template));
+
+    public PromptTemplateOutput create(PromptTemplateInfoCommand command) {
+        List<PromptTemplateInfo.Variable> vars = toVariables(command.getVariables());
+        PromptTemplateInfo promptTemplateInfo = BeanUtil.copyProperties(command, PromptTemplateInfo.class);
+        promptTemplateInfo.setVariables(vars);
+        return toResult(repository.save(promptTemplateInfo));
     }
 
     public List<PromptTemplateOutput> list(String workspaceId) {
@@ -36,13 +37,12 @@ public class PromptTemplateUseCase {
                 .orElseThrow(() -> new NotFoundException("Prompt Template not found: " + id)));
     }
 
-    public PromptTemplateOutput update(String id, String name, String description, String category,
-                                       String content, List<VariableOutput> variables, Boolean isActive) {
-        List<PromptTemplateInfo.Variable> vars = toVariables(variables);
-        PromptTemplateInfo existing = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Prompt Template not found: " + id));
-        PromptTemplateInfo updated = existing.patch(name, description, category, content, vars, isActive);
-        return toResult(repository.update(updated));
+    public PromptTemplateOutput update(String id, PromptTemplateInfoCommand command) {
+        List<PromptTemplateInfo.Variable> vars = toVariables(command.getVariables());
+        PromptTemplateInfo promptTemplateInfo = BeanUtil.copyProperties(command, PromptTemplateInfo.class);
+        promptTemplateInfo.setId(id);
+        promptTemplateInfo.setVariables(vars);
+        return toResult(repository.update(promptTemplateInfo));
     }
 
     public void delete(String id) {
@@ -51,15 +51,15 @@ public class PromptTemplateUseCase {
 
     private List<PromptTemplateInfo.Variable> toVariables(List<VariableOutput> results) {
         if (results == null) return List.of();
-        return results.stream().map(v -> new PromptTemplateInfo.Variable(v.name(), v.description(), v.defaultValue(), v.required())).toList();
+        return results.stream().map(v -> BeanUtil.copyProperties(v, PromptTemplateInfo.Variable.class)).toList();
     }
 
     private PromptTemplateOutput toResult(PromptTemplateInfo template) {
-        List<PromptTemplateOutput.VariableResult> vars = template.variables() != null
-                ? template.variables().stream().map(v -> new PromptTemplateOutput.VariableResult(v.name(), v.description(), v.defaultValue(), v.required())).toList()
+        List<PromptTemplateOutput.VariableResult> vars = template.getVariables() != null
+                ? template.getVariables().stream().map(v -> BeanUtil.copyProperties(v,PromptTemplateOutput.VariableResult.class)).toList()
                 : List.of();
-        return new PromptTemplateOutput(template.id(), template.name(), template.description(),
-                template.category(), template.content(), vars, template.isActive(),
-                template.createdAt(), template.updatedAt());
+        PromptTemplateOutput promptTemplateOutput = BeanUtil.copyProperties(template, PromptTemplateOutput.class);
+        promptTemplateOutput.setVariables(vars);
+        return promptTemplateOutput;
     }
 }

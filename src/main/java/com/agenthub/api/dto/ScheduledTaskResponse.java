@@ -2,21 +2,28 @@ package com.agenthub.api.dto;
 
 import java.time.LocalDateTime;
 
-public record ScheduledTaskResponse(
-    String id,
-    String tenantId,
-    String workspaceId,
-    String taskCode,
-    String name,
-    String description,
-    String taskType,
-    String cronExpression,
-    String executorConfig,
-    String prompt,
-    boolean enabled,
-    LocalDateTime lastExecuteTime,
-    LocalDateTime nextExecuteTime,
-    String status,
-    LocalDateTime createdAt,
-    LocalDateTime updatedAt
-) {}
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ScheduledTaskResponse {
+    private String id;
+    private String tenantId;
+    private String workspaceId;
+    private String taskCode;
+    private String name;
+    private String description;
+    private String taskType;
+    private String cronExpression;
+    private String executorConfig;
+    private String prompt;
+    private boolean enabled;
+    private LocalDateTime lastExecuteTime;
+    private LocalDateTime nextExecuteTime;
+    private String status;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}

@@ -1,5 +1,7 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.agenthub.application.command.SkillRequestCommand;
 import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.dto.SkillOutput;
 import com.agenthub.application.port.out.repositories.SkillRepository;
@@ -14,12 +16,9 @@ import java.util.List;
 public class SkillUseCase {
     private final SkillRepository repository;
 
-    public SkillOutput create(String tenantId, String workspaceId, String skillCode,
-                              String name, String description, String skillType,
-                              String skillPath, String skillFilesTree) {
-        Skill skill = Skill.create(tenantId, workspaceId, skillCode,
-                name, description, skillType, skillPath, skillFilesTree);
-        return toOutput(repository.save(skill));
+    public SkillOutput create(SkillRequestCommand command) {
+        Skill skill = BeanUtil.copyProperties(command, Skill.class);
+        return toOutput(repository.saveOrUpdate(skill));
     }
 
     public SkillOutput get(String skillId) {
@@ -35,23 +34,22 @@ public class SkillUseCase {
                 .stream().map(this::toOutput).toList();
     }
 
-    public SkillOutput update(String skillId, String name, String description,
-                              String skillFilesTree) {
-        Skill skill = findById(skillId);
-        skill.update(name, description, skillFilesTree);
-        return toOutput(repository.save(skill));
+    public SkillOutput update(String skillId, SkillRequestCommand command) {
+        Skill skill = BeanUtil.copyProperties(command, Skill.class);
+        skill.setId(skillId);
+        return toOutput(repository.saveOrUpdate(skill));
     }
 
     public SkillOutput enable(String skillId) {
         Skill skill = findById(skillId);
         skill.enable();
-        return toOutput(repository.save(skill));
+        return toOutput(repository.saveOrUpdate(skill));
     }
 
     public SkillOutput disable(String skillId) {
         Skill skill = findById(skillId);
         skill.disable();
-        return toOutput(repository.save(skill));
+        return toOutput(repository.saveOrUpdate(skill));
     }
 
     public void delete(String skillId) {

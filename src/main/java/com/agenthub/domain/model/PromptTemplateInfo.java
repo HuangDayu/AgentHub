@@ -1,35 +1,41 @@
 package com.agenthub.domain.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.Instant;
 import java.util.List;
 
-public record PromptTemplateInfo(
-        String id, String tenantId, String workspaceId,
-        String name, String description, String category,
-        String content, List<Variable> variables,
-        boolean isActive, Instant createdAt, Instant updatedAt
-) {
-    public enum Category { SYSTEM, USER, ASSISTANT, GENERAL }
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PromptTemplateInfo {
 
-    public record Variable(String name, String description, String defaultValue, boolean required) {}
+    private String id;
+    private String tenantId;
+    private String workspaceId;
+    private String name;
+    private String description;
+    private Category category;
+    private String content;
+    private List<Variable> variables;
+    private boolean isActive;
+    private Instant createdAt;
+    private Instant updatedAt;
 
-    public static PromptTemplateInfo create(String id, String tenantId, String workspaceId,
-                                            String name, String description, String category,
-                                            String content, List<Variable> variables, boolean isActive) {
-        Instant now = Instant.now();
-        return new PromptTemplateInfo(id, tenantId, workspaceId, name, description,
-                category, content, variables, isActive, now, now);
+    @Getter
+    public enum Category {SYSTEM, USER, ASSISTANT, GENERAL}
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Variable {
+        private String name;
+        private String description;
+        private String defaultValue;
+        private boolean required;
     }
 
-    public PromptTemplateInfo patch(String name, String description, String category,
-                                    String content, List<Variable> variables, Boolean isActive) {
-        return new PromptTemplateInfo(this.id, this.tenantId, this.workspaceId,
-                name != null ? name : this.name,
-                description != null ? description : this.description,
-                category != null ? category : this.category,
-                content != null ? content : this.content,
-                variables != null ? variables : this.variables,
-                isActive != null ? isActive : this.isActive,
-                this.createdAt, Instant.now());
-    }
 }

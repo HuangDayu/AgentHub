@@ -34,20 +34,11 @@ public class ToolStrategyController {
             @PathVariable String workspaceId,
             @RequestBody CreateToolStrategyRequest request
     ) {
-        CreateToolStrategyCommand command = buildCreateCommand(workspaceId, request);
+        CreateToolStrategyCommand command = BeanUtil.copyProperties(request, CreateToolStrategyCommand.class);
         return toResponse(toolStrategyUseCase.create(command));
     }
 
-    private CreateToolStrategyCommand buildCreateCommand(String workspaceId, CreateToolStrategyRequest req) {
-        return new CreateToolStrategyCommand(
-            workspaceId, req.name(), req.description(),
-            req.maxConcurrentCalls() != null ? req.maxConcurrentCalls() : 5,
-            req.timeoutSeconds() != null ? req.timeoutSeconds() : 30,
-            req.retryCount() != null ? req.retryCount() : 3,
-            req.fallbackEnabled() != null ? req.fallbackEnabled() : true,
-            req.allowedTools()
-        );
-    }
+
 
     @GetMapping
     public List<ToolStrategyResponse> list(@PathVariable String workspaceId) {

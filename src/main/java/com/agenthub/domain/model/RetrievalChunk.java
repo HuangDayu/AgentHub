@@ -1,19 +1,17 @@
 package com.agenthub.domain.model;
 
-/**
- * 检索结果片段。从知识库检索到的文档内容片段。
- */
-public record RetrievalChunk(
-    /** 文档内容 */
-    String content,
-    /** 文档标题/来源 */
-    String documentTitle,
-    /** 文档 ID */
-    String documentId,
-    /** Chunk ID */
-    String chunkId,
-    /** 相似度分数 */
-    double score,
-    /** 知识库 ID */
-    String knowledgeBaseId
-) {}
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class RetrievalChunk {
+    private /** 文档内容 */ String content;
+    private /** 文档标题/来源 */ String documentTitle;
+    private /** 文档 ID */ String documentId;
+    private /** Chunk ID */ String chunkId;
+    private /** 相似度分数 */ double score;
+    private /** 知识库 ID */ String knowledgeBaseId;
+}

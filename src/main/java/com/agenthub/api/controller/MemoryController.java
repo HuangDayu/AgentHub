@@ -1,7 +1,9 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateMemoryRequest;
 import com.agenthub.api.dto.MemoryResponse;
+import com.agenthub.application.command.MemoryCommand;
 import com.agenthub.application.dto.MemoryOutput;
 import com.agenthub.application.usecase.MemoryUseCase;
 import org.springframework.http.HttpStatus;
@@ -21,9 +23,7 @@ public class MemoryController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public MemoryResponse create(@RequestBody CreateMemoryRequest request) {
-        MemoryOutput result = useCase.create(request.tenantId(), request.workspaceId(),
-                request.agentId(), request.memoryType(), request.content(),
-                request.metadata(), request.importance(), request.expiresAt());
+        MemoryOutput result = useCase.create(BeanUtil.copyProperties(request, MemoryCommand.class));
         return toResponse(result);
     }
 
@@ -40,8 +40,9 @@ public class MemoryController {
     @PutMapping("/{memoryId}")
     public MemoryResponse update(@PathVariable String memoryId,
                                  @RequestBody CreateMemoryRequest request) {
-        MemoryOutput result = useCase.update(memoryId, request.content(),
-                request.metadata(), request.importance(), request.expiresAt());
+        MemoryCommand command = BeanUtil.copyProperties(request, MemoryCommand.class);
+        command.setId(memoryId);
+        MemoryOutput result = useCase.update(command);
         return toResponse(result);
     }
 
@@ -58,9 +59,6 @@ public class MemoryController {
     }
 
     private MemoryResponse toResponse(MemoryOutput result) {
-        return new MemoryResponse(result.id(), result.tenantId(), result.workspaceId(),
-                result.agentId(), result.memoryType(), result.content(),
-                result.metadata(), result.importance(), result.expiresAt(),
-                result.createdAt(), result.updatedAt());
+        return BeanUtil.copyProperties(result, MemoryResponse.class);
     }
 }

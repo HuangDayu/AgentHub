@@ -1,7 +1,14 @@
 package com.agenthub.application.dto;
 
-public record AvailableConfigOutput(
-        String id,
-        String name,
-        String description
-) {}
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class AvailableConfigOutput {
+    private String id;
+    private String name;
+    private String description;
+}

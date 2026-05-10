@@ -2,17 +2,20 @@ package com.agenthub.api.dto;
 
 import com.agenthub.domain.model.VectorStoreType;
 
-/**
- * 向量库配置创建/更新请求 DTO。
- */
-public record VectorStoreConfigRequest(
-        String name,
-        VectorStoreType type,
-        String host,
-        Integer port,
-        String apiKey,
-        String collectionName,
-        String extraParams,
-        Boolean enabled
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class VectorStoreConfigRequest {
+    private String name;
+    private VectorStoreType type;
+    private String host;
+    private Integer port;
+    private String apiKey;
+    private String collectionName;
+    private String extraParams;
+    private Boolean enabled;
 }

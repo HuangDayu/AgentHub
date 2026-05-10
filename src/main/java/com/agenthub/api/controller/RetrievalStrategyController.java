@@ -34,24 +34,10 @@ public class RetrievalStrategyController {
             @PathVariable String workspaceId,
             @RequestBody CreateRetrievalStrategyRequest request
     ) {
-        CreateRetrievalStrategyCommand command = buildCreateCommand(workspaceId, request);
+        CreateRetrievalStrategyCommand command = BeanUtil.copyProperties(request, CreateRetrievalStrategyCommand.class);
         return toResponse(retrievalStrategyUseCase.create(command));
     }
 
-    private CreateRetrievalStrategyCommand buildCreateCommand(String workspaceId, CreateRetrievalStrategyRequest req) {
-        return new CreateRetrievalStrategyCommand(
-                workspaceId, req.name(), req.description(),
-                req.retrievalType(), req.topK() != null ? req.topK() : 10,
-                req.scoreThreshold() != null ? req.scoreThreshold() : 0.75,
-                req.enableRerank() != null ? req.enableRerank() : false,
-                req.enableQueryRewrite() != null ? req.enableQueryRewrite() : false,
-                req.enableTextSearch() != null ? req.enableTextSearch() : false,
-                req.enableVectorSearch() != null ? req.enableVectorSearch() : false,
-                req.rerankModel(),
-                req.vectorWeight() != null ? req.vectorWeight() : 0.7,
-                req.keywordWeight() != null ? req.keywordWeight() : 0.3
-        );
-    }
 
     @GetMapping
     public List<RetrievalStrategyResponse> list(@PathVariable String workspaceId) {

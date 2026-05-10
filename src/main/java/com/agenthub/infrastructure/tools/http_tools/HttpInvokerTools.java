@@ -67,7 +67,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
     @Override
     public HttpToolInvocationResult invoke(String toolId, InvokeToolCommand command) {
         HttpTool httpTool = requireTool(toolId);
-        Map<java.lang.String, Object> payload = command.payload() == null ? Map.of() : command.payload();
+        Map<java.lang.String, Object> payload = command.getPayload() == null ? Map.of() : command.getPayload();
         return invoke(httpTool, payload);
     }
 
@@ -80,7 +80,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
      */
     @Override
     public HttpToolInvocationResult invoke(HttpTool httpTool, Map<java.lang.String, Object> payload) {
-        log.info("调用外部工具: toolId={}, endpoint={}, method={}", httpTool.id(), httpTool.endpoint(), httpTool.httpMethod());
+        log.info("调用外部工具: toolId={}, endpoint={}, method={}", httpTool.getId(), httpTool.getEndpoint(), httpTool.getHttpMethod());
         try {
             return doInvoke(httpTool, payload);
         } catch (HttpClientErrorException e) {
@@ -99,20 +99,20 @@ public class HttpInvokerTools implements HttpToolInvoker {
      */
     private HttpToolInvocationResult doInvoke(HttpTool httpTool, Map<java.lang.String, Object> payload) {
         Map<java.lang.String, Object> filteredPayload = validateAndFilter(httpTool, payload);
-        String resolvedUrl = resolveUrlVariables(httpTool.endpoint(), filteredPayload);
+        String resolvedUrl = resolveUrlVariables(httpTool.getEndpoint(), filteredPayload);
         ResponseEntity<java.lang.String> response = retryTemplate.execute(
-                context -> doHttpRequest(resolvedUrl, httpTool.httpMethod(), filteredPayload)
+                context -> doHttpRequest(resolvedUrl, httpTool.getHttpMethod(), filteredPayload)
         );
-        log.info("外部工具调用成功: toolId={}, status={}", httpTool.id(), response.getStatusCode());
-        return new HttpToolInvocationResult(httpTool.id(), "SUCCESS", parseResponse(response.getBody()));
+        log.info("外部工具调用成功: toolId={}, status={}", httpTool.getId(), response.getStatusCode());
+        return new HttpToolInvocationResult(httpTool.getId(), "SUCCESS", parseResponse(response.getBody()));
     }
 
     /**
      * 处理客户端错误。
      */
     private HttpToolInvocationResult handleClientError(HttpTool httpTool, HttpClientErrorException e) {
-        log.warn("外部工具返回客户端错误: toolId={}, status={}", httpTool.id(), e.getStatusCode());
-        return new HttpToolInvocationResult(httpTool.id(), "FAILURE",
+        log.warn("外部工具返回客户端错误: toolId={}, status={}", httpTool.getId(), e.getStatusCode());
+        return new HttpToolInvocationResult(httpTool.getId(), "FAILURE",
                 Map.of("error", "CLIENT_ERROR:" + e.getStatusCode() + ":" + e.getResponseBodyAsString()));
     }
 
@@ -120,8 +120,8 @@ public class HttpInvokerTools implements HttpToolInvoker {
      * 处理服务端错误。
      */
     private HttpToolInvocationResult handleServerError(HttpTool httpTool, HttpServerErrorException e) {
-        log.error("外部工具返回服务端错误: toolId={}, status={}", httpTool.id(), e.getStatusCode());
-        return new HttpToolInvocationResult(httpTool.id(), "FAILURE",
+        log.error("外部工具返回服务端错误: toolId={}, status={}", httpTool.getId(), e.getStatusCode());
+        return new HttpToolInvocationResult(httpTool.getId(), "FAILURE",
                 Map.of("error", "SERVER_ERROR:" + e.getStatusCode() + ":" + e.getResponseBodyAsString()));
     }
 
@@ -129,29 +129,29 @@ public class HttpInvokerTools implements HttpToolInvoker {
      * 处理超时错误。
      */
     private HttpToolInvocationResult handleTimeout(HttpTool httpTool, ResourceAccessException e) {
-        log.error("外部工具连接超时: toolId={}", httpTool.id(), e);
-        return new HttpToolInvocationResult(httpTool.id(), "FAILURE", Map.of("error", "TIMEOUT:" + e.getMessage()));
+        log.error("外部工具连接超时: toolId={}", httpTool.getId(), e);
+        return new HttpToolInvocationResult(httpTool.getId(), "FAILURE", Map.of("error", "TIMEOUT:" + e.getMessage()));
     }
 
     /**
      * 处理一般错误。
      */
     private HttpToolInvocationResult handleGeneralError(HttpTool httpTool, Exception e) {
-        log.error("外部工具调用异常: toolId={}", httpTool.id(), e);
-        return new HttpToolInvocationResult(httpTool.id(), "FAILURE", Map.of("error", "ERROR:" + e.getMessage()));
+        log.error("外部工具调用异常: toolId={}", httpTool.getId(), e);
+        return new HttpToolInvocationResult(httpTool.getId(), "FAILURE", Map.of("error", "ERROR:" + e.getMessage()));
     }
 
     /**
      * 参数白名单校验：仅允许 inputSchema 中定义的属性通过。
      */
     private Map<java.lang.String, Object> validateAndFilter(HttpTool httpTool, Map<java.lang.String, Object> payload) {
-        if (httpTool.inputSchemaJson() == null || httpTool.inputSchemaJson().isBlank()) {
+        if (httpTool.getInputSchemaJson() == null || httpTool.getInputSchemaJson().isBlank()) {
             return payload;
         }
         try {
             return filterBySchema(httpTool, payload);
         } catch (JsonProcessingException e) {
-            log.error("解析 inputSchema 失败: toolId={}", httpTool.id(), e);
+            log.error("解析 inputSchema 失败: toolId={}", httpTool.getId(), e);
             throw new IllegalArgumentException("inputSchema JSON 格式无效: " + e.getMessage());
         }
     }
@@ -160,10 +160,10 @@ public class HttpInvokerTools implements HttpToolInvoker {
      * 根据 schema 过滤参数。
      */
     private Map<java.lang.String, Object> filterBySchema(HttpTool httpTool, Map<java.lang.String, Object> payload) throws JsonProcessingException {
-        JsonNode schemaNode = objectMapper.readTree(httpTool.inputSchemaJson());
+        JsonNode schemaNode = objectMapper.readTree(httpTool.getInputSchemaJson());
         JsonNode propertiesNode = schemaNode.get("properties");
         if (propertiesNode == null || !propertiesNode.isObject()) {
-            log.warn("inputSchema 缺少 properties 定义，跳过校验: toolId={}", httpTool.id());
+            log.warn("inputSchema 缺少 properties 定义，跳过校验: toolId={}", httpTool.getId());
             return payload;
         }
         Set<java.lang.String> allowedKeys = getAllowedKeys(propertiesNode);

@@ -1,7 +1,9 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateSkillRequest;
 import com.agenthub.api.dto.SkillResponse;
+import com.agenthub.application.command.SkillRequestCommand;
 import com.agenthub.application.dto.SkillOutput;
 import com.agenthub.application.usecase.SkillUseCase;
 import org.springframework.http.HttpStatus;
@@ -21,9 +23,7 @@ public class SkillController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public SkillResponse create(@RequestBody CreateSkillRequest request) {
-        SkillOutput result = useCase.create(request.tenantId(), request.workspaceId(),
-                request.skillCode(), request.name(), request.description(),
-                request.skillType(), request.skillPath(), request.skillFilesTree());
+        SkillOutput result = useCase.create(BeanUtil.copyProperties(request, SkillRequestCommand.class));
         return toResponse(result);
     }
 
@@ -40,8 +40,7 @@ public class SkillController {
     @PutMapping("/{skillId}")
     public SkillResponse update(@PathVariable String skillId,
                                 @RequestBody CreateSkillRequest request) {
-        SkillOutput result = useCase.update(skillId, request.name(), request.description(),
-                request.skillFilesTree());
+        SkillOutput result = useCase.update(skillId, BeanUtil.copyProperties(request, SkillRequestCommand.class));
         return toResponse(result);
     }
 
@@ -62,9 +61,6 @@ public class SkillController {
     }
 
     private SkillResponse toResponse(SkillOutput result) {
-        return new SkillResponse(result.id(), result.tenantId(), result.workspaceId(),
-                result.skillCode(), result.name(), result.description(),
-                result.skillType(), result.skillPath(), result.skillFilesTree(),
-                result.enabled(), result.createdAt(), result.updatedAt());
+        return BeanUtil.copyProperties(result, SkillResponse.class);
     }
 }

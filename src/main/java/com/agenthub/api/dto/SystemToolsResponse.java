@@ -2,16 +2,23 @@ package com.agenthub.api.dto;
 
 import java.time.Instant;
 
-public record SystemToolsResponse(
-    String id,
-    String tenantId,
-    String toolClassName,
-    String toolName,
-    String description,
-    String category,
-    int methodCount,
-    boolean enabled,
-    boolean systemTool,
-    Instant createdAt,
-    Instant updatedAt
-) {}
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class SystemToolsResponse {
+    private String id;
+    private String tenantId;
+    private String toolClassName;
+    private String toolName;
+    private String description;
+    private String category;
+    private int methodCount;
+    private boolean enabled;
+    private boolean systemTool;
+    private Instant createdAt;
+    private Instant updatedAt;
+}

@@ -1,7 +1,12 @@
 package com.agenthub.api.dto;
 
-/**
- * 流式消息请求体。
- */
-public record StreamMessageRequest(String prompt) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class StreamMessageRequest {
+    private String prompt;
 }

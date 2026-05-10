@@ -4,9 +4,23 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-public record McpToolOutput(
-        String id, String name, String description,
-        String serverUrl, String serverType, String command,
-        List<String> args, Map<String, String> env,
-        boolean enabled, Instant createdAt, Instant updatedAt
-) {}
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class McpToolOutput {
+    private String id;
+    private String name;
+    private String description;
+    private String serverUrl;
+    private String serverType;
+    private String command;
+    private List<String> args;
+    private Map<String, String> env;
+    private boolean enabled;
+    private Instant createdAt;
+    private Instant updatedAt;
+}

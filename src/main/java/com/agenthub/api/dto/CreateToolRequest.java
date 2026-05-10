@@ -1,11 +1,14 @@
 package com.agenthub.api.dto;
 
-/** 创建工具请求对象。 */
-public record CreateToolRequest(
-        /** 工具名称 */
-        String name,
-        /** 工具描述 */
-        String description,
-        /** 是否启用 */
-        Boolean enabled) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateToolRequest {
+    private /** 工具名称 */ String name;
+    private /** 工具描述 */ String description;
+    private /** 是否启用 */ Boolean enabled;
 }

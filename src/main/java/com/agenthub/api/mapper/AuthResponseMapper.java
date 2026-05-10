@@ -1,5 +1,6 @@
 package com.agenthub.api.mapper;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.AuthResponse;
 import com.agenthub.api.dto.UserInfoResponse;
 import com.agenthub.domain.model.AuthTokens;
@@ -22,9 +23,7 @@ public class AuthResponseMapper {
      * @return 认证响应DTO
      */
     public AuthResponse toResponse(AuthTokens tokens) {
-        return new AuthResponse(
-                tokens.accessToken(), tokens.refreshToken(),
-                tokens.tokenType(), tokens.expiresInSeconds());
+        return BeanUtil.copyProperties(tokens, AuthResponse.class);
     }
 
     /**
@@ -34,8 +33,6 @@ public class AuthResponseMapper {
      * @return 用户信息响应DTO
      */
     public UserInfoResponse toResponse(UserInfo userInfo) {
-        return new UserInfoResponse(
-                userInfo.id(), userInfo.username(),
-                userInfo.tenantId());
+        return BeanUtil.copyProperties(userInfo, UserInfoResponse.class);
     }
 }

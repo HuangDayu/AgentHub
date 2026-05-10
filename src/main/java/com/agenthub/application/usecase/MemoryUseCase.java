@@ -1,8 +1,10 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.common.exception.NotFoundException;
+import cn.hutool.core.bean.BeanUtil;
+import com.agenthub.application.command.MemoryCommand;
 import com.agenthub.application.dto.MemoryOutput;
 import com.agenthub.application.port.out.repositories.MemoryRepository;
+import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.Memory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,11 +17,8 @@ import java.util.List;
 public class MemoryUseCase {
     private final MemoryRepository repository;
 
-    public MemoryOutput create(String tenantId, String workspaceId, String agentId,
-                               String memoryType, String content, String metadata,
-                               double importance, Instant expiresAt) {
-        Memory memory = Memory.create(tenantId, workspaceId, agentId,
-                memoryType, content, metadata, importance, expiresAt);
+    public MemoryOutput create(MemoryCommand command) {
+        Memory memory = BeanUtil.copyProperties(command, Memory.class);
         return toOutput(repository.save(memory));
     }
 
@@ -31,10 +30,8 @@ public class MemoryUseCase {
         return repository.findByAgentId(agentId).stream().map(this::toOutput).toList();
     }
 
-    public MemoryOutput update(String memoryId, String content, String metadata,
-                               double importance, Instant expiresAt) {
-        Memory memory = findById(memoryId);
-        memory.update(content, metadata, importance, expiresAt);
+    public MemoryOutput update(MemoryCommand command) {
+        Memory memory = BeanUtil.copyProperties(command, Memory.class);
         return toOutput(repository.save(memory));
     }
 

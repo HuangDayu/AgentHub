@@ -52,14 +52,14 @@ public class HttpToolCallbackProvider {
      * 判断HTTP工具是否启用。
      */
     private boolean isEnabled(HttpTool httpTool) {
-        return httpTool.enabled();
+        return httpTool.isEnabled();
     }
     
     /**
      * 创建ToolCallback。
      */
     private ToolCallback createToolCallback(HttpTool httpTool) {
-        log.debug("Creating ToolCallback for HTTP tool: {}", httpTool.name());
+        log.debug("Creating ToolCallback for HTTP tool: {}", httpTool.getName());
         return new HttpToolCallback(httpTool, restTemplate, objectMapper);
     }
 }

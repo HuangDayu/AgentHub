@@ -2,18 +2,21 @@ package com.agenthub.api.dto;
 
 import java.time.Instant;
 
-/**
- * 工具策略响应体。
- */
-public record ToolStrategyResponse(
-    String id,
-    String name,
-    String description,
-    int maxConcurrentCalls,
-    int timeoutSeconds,
-    int retryCount,
-    boolean fallbackEnabled,
-    Instant createdAt,
-    Instant updatedAt
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ToolStrategyResponse {
+    private String id;
+    private String name;
+    private String description;
+    private int maxConcurrentCalls;
+    private int timeoutSeconds;
+    private int retryCount;
+    private boolean fallbackEnabled;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

@@ -1,7 +1,13 @@
 package com.agenthub.api.dto;
 
-/**
- * 更新智能体请求体。
- */
-public record UpdateAgentRequest(String name, String description) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UpdateAgentRequest {
+    private String name;
+    private String description;
 }

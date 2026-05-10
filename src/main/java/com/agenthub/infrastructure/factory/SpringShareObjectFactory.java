@@ -33,8 +33,8 @@ public class SpringShareObjectFactory {
     }
 
     public VectorStore getVectorStoreByKb(KnowledgeBase knowledgeBase) {
-        EmbeddingModel embeddingModel = springChatModelFactory.getOrCreateEmbeddingModel(knowledgeBase.embeddingModelConfigId());
-        return getVectorStoreByConfigId(knowledgeBase.vectorStoreConfigId(), embeddingModel);
+        EmbeddingModel embeddingModel = springChatModelFactory.getOrCreateEmbeddingModel(knowledgeBase.getEmbeddingModelConfigId());
+        return getVectorStoreByConfigId(knowledgeBase.getVectorStoreConfigId(), embeddingModel);
     }
 
     public VectorStore getVectorStoreByConfigId(String vectorStoreConfigId, EmbeddingModel embeddingModel) {
@@ -44,11 +44,11 @@ public class SpringShareObjectFactory {
     }
 
     public ChatClient getChatClientBySessionId(SessionMessage sessionMessage) {
-        return CHAT_CLIENT_MAP.computeIfAbsent(sessionMessage.sessionId(), key -> {
-            ChatModel chatModel = getChatModelByConfigId(sessionMessage.chatModelConfigId());
+        return CHAT_CLIENT_MAP.computeIfAbsent(sessionMessage.getSessionId(), key -> {
+            ChatModel chatModel = getChatModelByConfigId(sessionMessage.getChatModelConfigId());
             MessageWindowChatMemory memory = MessageWindowChatMemory.builder()
                     .chatMemoryRepository(jdbcChatMemoryRepository)
-                    .maxMessages(sessionMessage.strategy().getMaxMessages()).build();
+                    .maxMessages(sessionMessage.getStrategy().getMaxMessages()).build();
             return ChatClient.builder(chatModel)
                     .defaultAdvisors(MessageChatMemoryAdvisor.builder(memory).build()).build();
         });
@@ -59,7 +59,7 @@ public class SpringShareObjectFactory {
     }
 
     public ChatModel getChatModelByKb(KnowledgeBase knowledgeBase) {
-        return getChatModelByConfigId(knowledgeBase.chatModelConfigId());
+        return getChatModelByConfigId(knowledgeBase.getChatModelConfigId());
     }
 
     public ChatModel getChatModelByConfigId(String chatModelConfigId) {
@@ -73,7 +73,7 @@ public class SpringShareObjectFactory {
     }
 
     public EmbeddingModel getEmbeddingModelByKb(KnowledgeBase knowledgeBase) {
-        return getEmbeddingModelByConfigId(knowledgeBase.embeddingModelConfigId());
+        return getEmbeddingModelByConfigId(knowledgeBase.getEmbeddingModelConfigId());
     }
 
     public EmbeddingModel getEmbeddingModelByConfigId(String embeddingModelConfigId) {

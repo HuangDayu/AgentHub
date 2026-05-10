@@ -2,21 +2,24 @@ package com.agenthub.api.dto;
 
 import java.time.Instant;
 
-/**
- * 护栏策略响应体。
- */
-public record GuardrailStrategyResponse(
-    String id,
-    String name,
-    String description,
-    boolean inputValidationEnabled,
-    boolean outputValidationEnabled,
-    boolean piiDetectionEnabled,
-    boolean piiMaskingEnabled,
-    boolean promptInjectionDetection,
-    int maxInputLength,
-    int maxOutputLength,
-    Instant createdAt,
-    Instant updatedAt
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class GuardrailStrategyResponse {
+    private String id;
+    private String name;
+    private String description;
+    private boolean inputValidationEnabled;
+    private boolean outputValidationEnabled;
+    private boolean piiDetectionEnabled;
+    private boolean piiMaskingEnabled;
+    private boolean promptInjectionDetection;
+    private int maxInputLength;
+    private int maxOutputLength;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

@@ -2,21 +2,24 @@ package com.agenthub.api.dto;
 
 import java.util.List;
 
-/**
- * 创建检索策略请求体。
- */
-public record CreateRetrievalStrategyRequest(
-    String name,
-    String description,
-    String retrievalType,
-    Integer topK,
-    Double scoreThreshold,
-    Boolean enableRerank,
-    Boolean enableQueryRewrite,
-    Boolean enableTextSearch,
-    Boolean enableVectorSearch,
-    String rerankModel,
-    Double vectorWeight,
-    Double keywordWeight
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateRetrievalStrategyRequest {
+    private String name;
+    private String description;
+    private String retrievalType;
+    private Integer topK;
+    private Double scoreThreshold;
+    private Boolean enableRerank;
+    private Boolean enableQueryRewrite;
+    private Boolean enableTextSearch;
+    private Boolean enableVectorSearch;
+    private String rerankModel;
+    private Double vectorWeight;
+    private Double keywordWeight;
 }

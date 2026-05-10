@@ -1,5 +1,6 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.*;
 import com.agenthub.api.mapper.HttpToolViewMapper;
 import com.agenthub.application.command.CreateHttpToolCommand;
@@ -33,16 +34,7 @@ public class HttpToolsController {
 
     @PostMapping
     public HttpToolViewResponse createTool(@RequestBody CreateToolRequest request) {
-        boolean enabled = resolveEnabled(request);
-        return toResponse(service.createTool(buildCreateCommand(request, enabled)));
-    }
-
-    private boolean resolveEnabled(CreateToolRequest request) {
-        return request.enabled() == null || request.enabled();
-    }
-
-    private CreateHttpToolCommand buildCreateCommand(CreateToolRequest request, boolean enabled) {
-        return new CreateHttpToolCommand(request.name(), request.description(), enabled);
+        return toResponse(service.createTool(BeanUtil.copyProperties(request, CreateHttpToolCommand.class)));
     }
 
     @GetMapping("/{toolId}")
@@ -52,11 +44,8 @@ public class HttpToolsController {
 
     @PatchMapping("/{toolId}")
     public HttpToolViewResponse updateTool(@PathVariable String toolId, @RequestBody UpdateToolRequest request) {
-        return toResponse(service.updateTool(toolId, buildUpdateCommand(request)));
-    }
-
-    private UpdateToolCommand buildUpdateCommand(UpdateToolRequest request) {
-        return new UpdateToolCommand(request.name(), request.description(), request.enabled());
+        UpdateToolCommand command = BeanUtil.copyProperties(request, UpdateToolCommand.class);
+        return toResponse(service.updateTool(toolId, command));
     }
 
     @PostMapping("/{toolId}/invoke")
@@ -69,13 +58,13 @@ public class HttpToolsController {
     }
 
     private String resolveIdempotencyKey(InvokeToolRequest request, String header) {
-        if (request != null && request.idempotencyKey() != null) {
-            return request.idempotencyKey();
+        if (request != null && request.getIdempotencyKey() != null) {
+            return request.getIdempotencyKey();
         }
         return header;
     }
 
     private InvokeToolCommand buildInvokeCommand(InvokeToolRequest request, String idempotencyKey) {
-        return new InvokeToolCommand(idempotencyKey, request == null ? null : request.payload());
+        return new InvokeToolCommand(idempotencyKey, request == null ? null : request.getPayload());
     }
 }

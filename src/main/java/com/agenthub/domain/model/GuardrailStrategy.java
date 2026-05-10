@@ -1,5 +1,6 @@
 package com.agenthub.domain.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
 /**
  * 护栏策略聚合根。
  */
+@AllArgsConstructor
 @NoArgsConstructor
 @Data
 public class GuardrailStrategy {

@@ -94,7 +94,7 @@ public class ReActAgentManager {
 
     @SneakyThrows
     private Path resolvePath(Workspace workspace, String subPath) {
-        Path path = Paths.get(System.getProperty("user.home"), ".agenthub", workspace.workspaceCode(), subPath);
+        Path path = Paths.get(System.getProperty("user.home"), ".agenthub", workspace.getWorkspaceCode(), subPath);
         Files.createDirectories(path);
         return path;
     }
@@ -107,27 +107,27 @@ public class ReActAgentManager {
     private String resolveSystemPrompt(List<AgentConfig> configs) {
         String promptId = findConfigId(configs, AgentConfigCategory.PROMPT, AgentConfigType.SYSTEM_PROMPT);
         if (promptId == null) return null;
-        return promptTemplateRepository.findById(promptId).map(PromptTemplateInfo::content).orElse(null);
+        return promptTemplateRepository.findById(promptId).map(PromptTemplateInfo::getContent).orElse(null);
     }
 
     private List<AgentToolInfo> resolveTools(List<AgentConfig> configs) {
-        return configs.parallelStream().filter(c -> c.category() == AgentConfigCategory.TOOL)
-                .map(v -> new AgentToolInfo(AgentToolType.valueOf(v.type().name()), v.configId(), v.name(), v.description(), v.enabled()))
+        return configs.parallelStream().filter(c -> c.getCategory() == AgentConfigCategory.TOOL)
+                .map(v -> new AgentToolInfo(AgentToolType.valueOf(v.getType().name()), v.getConfigId(), v.getName(), v.getDescription(), v.isEnabled()))
                 .toList();
     }
 
 
     private List<java.lang.String> resolveToolIds(List<AgentConfig> configs) {
         return configs.stream()
-                .filter(c -> c.category() == AgentConfigCategory.TOOL)
-                .map(AgentConfig::configId)
+                .filter(c -> c.getCategory() == AgentConfigCategory.TOOL)
+                .map(AgentConfig::getConfigId)
                 .toList();
     }
 
     private List<java.lang.String> resolveKnowledgeIds(List<AgentConfig> configs) {
         return configs.stream()
-                .filter(c -> c.type() == AgentConfigType.KNOWLEDGE_BASE)
-                .map(AgentConfig::configId)
+                .filter(c -> c.getType() == AgentConfigType.KNOWLEDGE_BASE)
+                .map(AgentConfig::getConfigId)
                 .toList();
     }
 
@@ -157,9 +157,9 @@ public class ReActAgentManager {
 
     private String findConfigId(List<AgentConfig> configs, AgentConfigCategory category, AgentConfigType type) {
         return configs.stream()
-                .filter(c -> c.category() == category && c.type() == type)
+                .filter(c -> c.getCategory() == category && c.getType() == type)
                 .findFirst()
-                .map(AgentConfig::configId)
+                .map(AgentConfig::getConfigId)
                 .orElse(null);
     }
 }

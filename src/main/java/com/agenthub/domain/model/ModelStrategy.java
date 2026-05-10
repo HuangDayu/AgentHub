@@ -1,6 +1,8 @@
 package com.agenthub.domain.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
@@ -10,10 +12,12 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
  * 模型策略聚合根。
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ModelStrategy {
-    private final String id;
-    private final String tenantId;
-    private final String workspaceId;
+    private String id;
+    private String tenantId;
+    private String workspaceId;
     private String name;
     private String description;
     private double temperature;
@@ -23,7 +27,7 @@ public class ModelStrategy {
     private int topK;
     private double frequencyPenalty;
     private double presencePenalty;
-    private final Instant createdAt;
+    private Instant createdAt;
     private Instant updatedAt;
 
     private ModelStrategy(String id, String workspaceId, Instant createdAt) {

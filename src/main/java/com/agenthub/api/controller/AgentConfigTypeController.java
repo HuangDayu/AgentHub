@@ -40,6 +40,6 @@ public class AgentConfigTypeController {
     public List<AvailableConfig> getAvailableConfigs(
             @RequestParam String type, @RequestParam String category, @RequestParam(required = false) String workspaceId) {
         List<AvailableConfigOutput> results = useCase.getAvailableConfigs(category, type, workspaceId);
-        return results.stream().map(r -> new AvailableConfig(r.id(), r.name(), r.description())).toList();
+        return results.stream().map(r -> new AvailableConfig(r.getId(), r.getName(), r.getDescription())).toList();
     }
 }

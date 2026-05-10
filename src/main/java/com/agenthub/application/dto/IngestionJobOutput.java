@@ -2,14 +2,17 @@ package com.agenthub.application.dto;
 
 import java.time.Instant;
 
-/**
- * 入库任务输出DTO。
- */
-public record IngestionJobOutput(
-        /** 任务ID */String jobId,
-        /** 知识库ID */String kbId,
-        /** 文件数量 */int fileCount,
-        /** 状态 */String status,
-        /** 创建时间 */Instant createdAt
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class IngestionJobOutput {
+    private /** 任务ID */String jobId;
+    private /** 知识库ID */String kbId;
+    private /** 文件数量 */int fileCount;
+    private /** 状态 */String status;
+    private /** 创建时间 */Instant createdAt;
 }

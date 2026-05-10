@@ -2,16 +2,16 @@ package com.agenthub.api.dto;
 
 import java.time.Instant;
 
-/**
- * 错误响应DTO。
- * <p>
- * 用于统一返回API错误信息。
- * </p>
- */
-public record ErrorResponse(
-        Instant timestamp,
-        int status,
-        String message,
-        String messageId
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ErrorResponse {
+    private Instant timestamp;
+    private int status;
+    private String message;
+    private String messageId;
 }

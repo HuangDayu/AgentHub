@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AgentConfigRepository {
-    AgentConfig save(AgentConfig config);
+    AgentConfig saveOrUpdate(AgentConfig config);
 
     Optional<AgentConfig> findById(String id);
 

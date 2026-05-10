@@ -3,17 +3,20 @@ package com.agenthub.application.command;
 import com.agenthub.domain.model.ModelSupplier;
 import com.agenthub.domain.model.ModelType;
 
-/**
- * 更新模型配置命令。
- */
-public record UpdateModelConfigCommand(
-        String id,
-        String name,
-        ModelType type,
-        ModelSupplier supplier,
-        String apiKey,
-        String baseUrl,
-        String model,
-        Boolean enabled
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UpdateModelConfigCommand {
+    private String id;
+    private String name;
+    private ModelType type;
+    private ModelSupplier supplier;
+    private String apiKey;
+    private String baseUrl;
+    private String model;
+    private Boolean enabled;
 }

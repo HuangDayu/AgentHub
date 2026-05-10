@@ -63,7 +63,7 @@ public class AgentConfigTypeUseCase {
 
     private List<AvailableConfigOutput> getHttpTools(String workspaceId) {
         return httpToolRepository.findByWorkspaceId(workspaceId).stream()
-                .map(v -> new AvailableConfigOutput(v.id(), v.name(), v.description())).toList();
+                .map(v -> new AvailableConfigOutput(v.getId(), v.getName(), v.getDescription())).toList();
     }
 
     private List<AvailableConfigOutput> getSystemTools(String workspaceId) {
@@ -78,17 +78,17 @@ public class AgentConfigTypeUseCase {
 
     private List<AvailableConfigOutput> getPrompts(String workspaceId, String category) {
         return templateRepository.findByWorkspaceIdAndCategory(workspaceId, category).stream()
-                .map(v -> new AvailableConfigOutput(v.id(), v.name(), v.description())).toList();
+                .map(v -> new AvailableConfigOutput(v.getId(), v.getName(), v.getDescription())).toList();
     }
 
     private List<AvailableConfigOutput> getMcpTools(String workspaceId) {
         return mcpToolRepository.findByWorkspaceId(workspaceId).stream()
-                .map(v -> new AvailableConfigOutput(v.id(), v.name(), v.description())).toList();
+                .map(v -> new AvailableConfigOutput(v.getId(), v.getName(), v.getDescription())).toList();
     }
 
     private List<AvailableConfigOutput> getKnowledgeBases(String workspaceId) {
         return knowledgeBaseRepository.findByWorkspace(workspaceId).stream()
-                .map(kb -> new AvailableConfigOutput(kb.id(), kb.name(), kb.description())).toList();
+                .map(kb -> new AvailableConfigOutput(kb.getId(), kb.getName(), kb.getDescription())).toList();
     }
 
     private List<AvailableConfigOutput> getRetrievalStrategies(String workspaceId) {

@@ -41,10 +41,10 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
      */
     public List<RetrievalChunk> retrieve(RagCommand query) {
         List<RetrievalChunk> allChunks = new ArrayList<>();
-        for (String kbId : query.kbIds()) {
+        for (String kbId : query.getKbIds()) {
             retrieveFromKnowledgeBase(kbId, query, allChunks);
         }
-        return sortAndLimit(allChunks, query.strategy().getTopK());
+        return sortAndLimit(allChunks, query.getStrategy().getTopK());
     }
 
     /**
@@ -52,8 +52,8 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
      */
     private void retrieveFromKnowledgeBase(String kbId, RagCommand query, List<RetrievalChunk> allChunks) {
         try {
-            RetrievalStrategy strategy = query.strategy();
-            RetrievalCommand retrievalCommand = new RetrievalCommand(kbId, query.prompt(), strategy.getTopK(), strategy.getScoreThreshold(),
+            RetrievalStrategy strategy = query.getStrategy();
+            RetrievalCommand retrievalCommand = new RetrievalCommand(kbId, query.getPrompt(), strategy.getTopK(), strategy.getScoreThreshold(),
                     strategy.isEnableQueryRewrite(), strategy.isEnableVectorSearch(), strategy.isEnableTextSearch(),
                     strategy.isEnableRerank(), strategy.getRerankModel(), strategy.getVectorWeight(), strategy.getKeywordWeight());
             RetrievalOutput result = retrieve(retrievalCommand);
@@ -69,13 +69,13 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
      * 添加检索结果到块列表。
      */
     private void addChunksToResult(List<RetrievalChunk> allChunks, RetrievalOutput result, String kbId) {
-        for (RetrievalResultOutput item : result.results()) {
+        for (RetrievalResultOutput item : result.getResults()) {
             allChunks.add(new RetrievalChunk(
-                    item.content(),
-                    item.documentId(),
-                    item.documentId(),
-                    item.chunkId(),
-                    item.score(),
+                    item.getContent(),
+                    item.getDocumentId(),
+                    item.getDocumentId(),
+                    item.getChunkId(),
+                    item.getScore(),
                     kbId
             ));
         }
@@ -87,7 +87,7 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
     private List<RetrievalChunk> sortAndLimit(List<RetrievalChunk> allChunks, int topK) {
         return allChunks.stream()
                 .distinct()
-                .sorted(Comparator.comparingDouble(RetrievalChunk::score).reversed())
+                .sorted(Comparator.comparingDouble(RetrievalChunk::getScore).reversed())
                 .limit(topK)
                 .toList();
     }
@@ -101,21 +101,21 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
      */
     @Override
     public RetrievalOutput retrieve(RetrievalCommand retrievalCommand) {
-        validateKnowledgeBase(retrievalCommand.kbId());
-        String rewrittenQuery = retrievalCommand.enableQueryRewrite() ? ragQueryRewritePort.rewrite(retrievalCommand.kbId(), retrievalCommand.query()) : retrievalCommand.query();
-        log.debug("Query rewritten [{}]: '{}' -> '{}'", retrievalCommand.enableQueryRewrite(), retrievalCommand.query(), rewrittenQuery);
-        List<RetrievalResult> vectorResults = retrievalCommand.enableVectorSearch() ? ragVectorSearchPort.search(retrievalCommand.kbId(), rewrittenQuery, retrievalCommand.topK()) : new ArrayList<>();
-        log.debug("Vector search [{}] returned {} results", retrievalCommand.enableVectorSearch(), vectorResults.size());
-        List<RetrievalResult> textResults = retrievalCommand.enableTextSearch() ? ragTextSearchPort.search(retrievalCommand.kbId(), rewrittenQuery, retrievalCommand.topK()) : new ArrayList<>();
-        log.debug("Text search [{}] returned {} results", retrievalCommand.enableTextSearch(), textResults.size());
+        validateKnowledgeBase(retrievalCommand.getKbId());
+        String rewrittenQuery = retrievalCommand.isEnableQueryRewrite() ? ragQueryRewritePort.rewrite(retrievalCommand.getKbId(), retrievalCommand.getQuery()) : retrievalCommand.getQuery();
+        log.debug("Query rewritten [{}]: '{}' -> '{}'", retrievalCommand.isEnableQueryRewrite(), retrievalCommand.getQuery(), rewrittenQuery);
+        List<RetrievalResult> vectorResults = retrievalCommand.isEnableVectorSearch() ? ragVectorSearchPort.search(retrievalCommand.getKbId(), rewrittenQuery, retrievalCommand.getTopK()) : new ArrayList<>();
+        log.debug("Vector search [{}] returned {} results", retrievalCommand.isEnableVectorSearch(), vectorResults.size());
+        List<RetrievalResult> textResults = retrievalCommand.isEnableTextSearch() ? ragTextSearchPort.search(retrievalCommand.getKbId(), rewrittenQuery, retrievalCommand.getTopK()) : new ArrayList<>();
+        log.debug("Text search [{}] returned {} results", retrievalCommand.isEnableTextSearch(), textResults.size());
         List<RetrievalResult> merged = mergeResults(vectorResults, textResults);
         log.debug("After merge: {} results", merged.size());
-        List<RetrievalResult> reranked = retrievalCommand.enableRerank() ? ragRerankerPort.rerank(rewrittenQuery, merged) : new ArrayList<>();
-        log.debug("After rerank [{}]: {} results", retrievalCommand.enableRerank(), reranked.size());
-        List<RetrievalResult> filtered = filterByScore(reranked, retrievalCommand.scoreThreshold());
-        log.debug("After filter (threshold={}): {} results", retrievalCommand.scoreThreshold(), filtered.size());
-        List<RetrievalResult> limited = limitResults(filtered, retrievalCommand.topK());
-        log.debug("After limited (topK={}): {} results", retrievalCommand.topK(), filtered.size());
+        List<RetrievalResult> reranked = retrievalCommand.isEnableRerank() ? ragRerankerPort.rerank(rewrittenQuery, merged) : new ArrayList<>();
+        log.debug("After rerank [{}]: {} results", retrievalCommand.isEnableRerank(), reranked.size());
+        List<RetrievalResult> filtered = filterByScore(reranked, retrievalCommand.getScoreThreshold());
+        log.debug("After filter (threshold={}): {} results", retrievalCommand.getScoreThreshold(), filtered.size());
+        List<RetrievalResult> limited = limitResults(filtered, retrievalCommand.getTopK());
+        log.debug("After limited (topK={}): {} results", retrievalCommand.getTopK(), filtered.size());
         return buildRetrievalOutput(rewrittenQuery, limited);
     }
 

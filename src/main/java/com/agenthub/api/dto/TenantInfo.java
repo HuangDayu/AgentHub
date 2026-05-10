@@ -1,6 +1,14 @@
 package com.agenthub.api.dto;
 
-/**
- * 租户信息。
- */
-public record TenantInfo(String id, String name, String code) {}
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class TenantInfo {
+    private String id;
+    private String name;
+    private String code;
+}

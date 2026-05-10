@@ -1,11 +1,12 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.MessageResponse;
 import com.agenthub.api.dto.SendMessageRequest;
 import com.agenthub.api.dto.SessionResponse;
+import com.agenthub.api.mapper.MessageResponseMapper;
 import com.agenthub.application.dto.MessageOutput;
 import com.agenthub.application.dto.SessionOutput;
-import com.agenthub.api.mapper.MessageResponseMapper;
 import com.agenthub.application.usecase.AgentChatUseCase;
 import com.agenthub.application.usecase.SessionUseCase;
 import com.agenthub.domain.model.ChatMessage;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+
 /**
  * 会话 API 控制器。
  */
@@ -36,11 +38,7 @@ public class SessionController {
      * @return 会话响应DTO
      */
     private static SessionResponse toResponse(SessionOutput output) {
-        return new SessionResponse(
-                output.id(),
-                output.agentId(),
-                output.createdAt()
-        );
+        return BeanUtil.copyProperties(output, SessionResponse.class);
     }
 
     /**
@@ -50,13 +48,7 @@ public class SessionController {
      * @return 消息响应DTO
      */
     private static MessageResponse toResponse(MessageOutput output) {
-        return new MessageResponse(
-                output.id(),
-                output.sessionId(),
-                output.role(),
-                output.content(),
-                output.createdAt()
-        );
+        return BeanUtil.copyProperties(output, MessageResponse.class);
     }
 
     /**
@@ -99,7 +91,7 @@ public class SessionController {
             @PathVariable String sessionId,
             @RequestBody SendMessageRequest request
     ) {
-        String response = agentChatUseCase.chat(agentId, sessionId, request.content());
+        String response = agentChatUseCase.chat(agentId, sessionId, request.getContent());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new org.springframework.ai.chat.messages.AssistantMessage(response));
     }
@@ -136,7 +128,7 @@ public class SessionController {
             @PathVariable String sessionId,
             @RequestBody SendMessageRequest request
     ) {
-        return agentChatUseCase.streamChat(agentId, sessionId, request.content());
+        return agentChatUseCase.streamChat(agentId, sessionId, request.getContent());
     }
 
 }

@@ -1,12 +1,15 @@
 package com.agenthub.application.dto;
 
-/**
- * 检索结果输出DTO。
- */
-public record RetrievalResultOutput(
-        /** 文档ID */String documentId,
-        /** 块ID */String chunkId,
-        /** 内容 */String content,
-        /** 分数 */double score
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class RetrievalResultOutput {
+    private /** 文档ID */String documentId;
+    private /** 块ID */String chunkId;
+    private /** 内容 */String content;
+    private /** 分数 */double score;
 }

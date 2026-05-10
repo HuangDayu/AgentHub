@@ -1,5 +1,6 @@
 package com.agenthub.api.dto;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.domain.model.Tenant;
 
 import java.time.Instant;
@@ -25,10 +26,6 @@ public record TenantResponse(
      * @return 租户响应DTO
      */
     public static TenantResponse from(Tenant tenant) {
-        return new TenantResponse(
-                tenant.id(), tenant.tenantCode(), tenant.name(), tenant.planCode(),
-                tenant.isolationLevel().name(), tenant.status().name(), tenant.region(),
-                tenant.createdAt(), tenant.updatedAt()
-        );
+        return BeanUtil.copyProperties(tenant, TenantResponse.class);
     }
 }

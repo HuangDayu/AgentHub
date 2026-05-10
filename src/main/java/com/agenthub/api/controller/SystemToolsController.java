@@ -1,5 +1,6 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.SystemToolsResponse;
 import com.agenthub.application.dto.SystemToolOutput;
 import com.agenthub.application.usecase.SystemToolsUseCase;
@@ -57,8 +58,6 @@ public class SystemToolsController {
     }
 
     private SystemToolsResponse toResponse(SystemToolOutput o) {
-        return new SystemToolsResponse(o.id(), o.tenantId(), o.toolClassName(),
-            o.toolName(), o.description(), o.category(), o.methodCount(),
-            o.enabled(), o.systemTool(), o.createdAt(), o.updatedAt());
+        return BeanUtil.copyProperties(o, SystemToolsResponse.class);
     }
 }

@@ -152,10 +152,10 @@ public class AliReActAgentFactory implements ReActAgentFactory {
 
     private ReactAgent buildReactAgent(AliReActAgentConfig config) {
         Builder builder = ReactAgent.builder()
-                .name(config.name())
-                .model(config.chatModel())
-                .toolContext(config.toolContext())
-                .tools(config.tools());
+                .name(config.getName())
+                .model(config.getChatModel())
+                .toolContext(config.getToolContext())
+                .tools(config.getTools());
         applySystemPrompt(builder, config);
         applySaver(builder, config);
         applyHooks(builder, config);
@@ -164,26 +164,26 @@ public class AliReActAgentFactory implements ReActAgentFactory {
     }
 
     private void applySystemPrompt(Builder builder, AliReActAgentConfig config) {
-        if (config.systemPrompt() != null) {
-            builder.systemPrompt(config.systemPrompt());
+        if (config.getSystemPrompt() != null) {
+            builder.systemPrompt(config.getSystemPrompt());
         }
     }
 
     private void applySaver(Builder builder, AliReActAgentConfig config) {
-        if (config.saver() != null) {
-            builder.saver(config.saver());
+        if (config.getSaver() != null) {
+            builder.saver(config.getSaver());
         }
     }
 
     private void applyHooks(Builder builder, AliReActAgentConfig config) {
-        if (config.hooks() != null && !config.hooks().isEmpty()) {
-            builder.hooks(config.hooks());
+        if (config.getHooks() != null && !config.getHooks().isEmpty()) {
+            builder.hooks(config.getHooks());
         }
     }
 
     private void applyInterceptors(Builder builder, AliReActAgentConfig config) {
-        if (config.interceptors() != null && !config.interceptors().isEmpty()) {
-            builder.interceptors(config.interceptors());
+        if (config.getInterceptors() != null && !config.getInterceptors().isEmpty()) {
+            builder.interceptors(config.getInterceptors());
         }
     }
 

@@ -1,7 +1,13 @@
 package com.agenthub.api.dto;
 
-/**
- * 创建消息请求体。
- */
-public record CreateMessageRequest(String role, String content) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateMessageRequest {
+    private String role;
+    private String content;
 }

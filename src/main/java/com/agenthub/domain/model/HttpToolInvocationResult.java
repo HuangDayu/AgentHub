@@ -2,12 +2,15 @@ package com.agenthub.domain.model;
 
 import java.util.Map;
 
-/** 工具调用结果领域模型，封装工具执行后的返回数据。 */
-public record HttpToolInvocationResult(
-        /** 工具标识 */
-        String toolId,
-        /** 调用状态（如 SUCCESS、FAILED） */
-        String status,
-        /** 调用输出数据 */
-        Map<String, Object> output) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class HttpToolInvocationResult {
+    private /** 工具标识 */ String toolId;
+    private /** 调用状态（如 SUCCESS、FAILED） */ String status;
+    private /** 调用输出数据 */ Map<String, Object> output;
 }

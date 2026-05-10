@@ -2,18 +2,24 @@ package com.agenthub.api.dto;
 
 import java.time.Instant;
 
-public record SkillResponse(
-        String id,
-        String tenantId,
-        String workspaceId,
-        String skillCode,
-        String name,
-        String description,
-        String skillType,
-        String skillPath,
-        String skillFilesTree,
-        boolean enabled,
-        Instant createdAt,
-        Instant updatedAt
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class SkillResponse {
+    private String id;
+    private String tenantId;
+    private String workspaceId;
+    private String skillCode;
+    private String name;
+    private String description;
+    private String skillType;
+    private String skillPath;
+    private String skillFilesTree;
+    private boolean enabled;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

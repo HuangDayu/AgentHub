@@ -1,11 +1,17 @@
 package com.agenthub.api.dto;
 
-public record CreateWorkflowRequest(
-        String tenantId,
-        String workspaceId,
-        String workflowCode,
-        String name,
-        String description,
-        String graphDefinition
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateWorkflowRequest {
+    private String tenantId;
+    private String workspaceId;
+    private String workflowCode;
+    private String name;
+    private String description;
+    private String graphDefinition;
 }

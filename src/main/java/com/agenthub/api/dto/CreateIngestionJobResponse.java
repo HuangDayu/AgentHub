@@ -1,12 +1,15 @@
 package com.agenthub.api.dto;
 
-/**
- * 创建入库任务响应DTO。
- */
-public record CreateIngestionJobResponse(
-        String jobId,
-        String kbId,
-        String status,
-        int documentCount
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateIngestionJobResponse {
+    private String jobId;
+    private String kbId;
+    private String status;
+    private int documentCount;
 }

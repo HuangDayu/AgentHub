@@ -1,9 +1,11 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.agenthub.application.command.TenantCommand;
 import com.agenthub.application.port.out.IdGenerator;
 import com.agenthub.application.port.out.TimeProvider;
-import com.agenthub.domain.model.Tenant;
 import com.agenthub.application.port.out.repositories.TenantRepository;
+import com.agenthub.domain.model.Tenant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -23,26 +25,14 @@ public class CreateTenantUseCase {
     /**
      * 执行创建租户操作。
      *
-     * @param tenantCode     租户编码
-     * @param name           租户名称
-     * @param planCode       套餐编码
-     * @param isolationLevel 隔离级别字符串
-     * @param region         区域
      * @return 创建的租户
      */
-    public Tenant execute(String tenantCode, String name, String planCode, String isolationLevel, String region) {
+    public Tenant execute(TenantCommand command) {
         // 解析隔离级别
-        Tenant.IsolationLevel level = parseIsolationLevel(isolationLevel);
+        Tenant.IsolationLevel level = parseIsolationLevel(command.getIsolationLevel());
         // 使用ID生成器创建租户
-        Tenant tenant = Tenant.createWithId(
-                idGenerator.nextId(),
-                tenantCode,
-                name,
-                planCode,
-                level,
-                region,
-                timeProvider.now()
-        );
+        Tenant tenant = BeanUtil.copyProperties(command, Tenant.class);
+        tenant.setIsolationLevel(level);
         return tenantRepository.save(tenant);
     }
 

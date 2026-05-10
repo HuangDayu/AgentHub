@@ -1,7 +1,8 @@
 package com.agenthub.infrastructure.store.db.repository;
 
-import com.agenthub.domain.model.Tenant;
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.TenantRepository;
+import com.agenthub.domain.model.Tenant;
 import com.agenthub.infrastructure.store.db.entity.TenantEntity;
 import com.agenthub.infrastructure.store.db.mapper.TenantMapper;
 import org.springframework.context.annotation.Primary;
@@ -74,7 +75,7 @@ public class MybatisTenantRepository implements TenantRepository {
         return mapper.selectList(null).stream()
                 .filter(this::isValidEntity)
                 .map(this::toDomain)
-                .sorted(Comparator.comparing(Tenant::createdAt, Comparator.nullsLast(Comparator.naturalOrder())))
+                .sorted(Comparator.comparing(Tenant::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
                 .skip((long) page * size)
                 .limit(size)
                 .toList();
@@ -110,17 +111,7 @@ public class MybatisTenantRepository implements TenantRepository {
      * @return 租户持久化对象
      */
     private TenantEntity toPo(Tenant tenant) {
-        TenantEntity po = new TenantEntity();
-        po.setId(tenant.id());
-        po.setTenantCode(tenant.tenantCode());
-        po.setName(tenant.name());
-        po.setPlanCode(tenant.planCode());
-        po.setIsolationLevel(tenant.isolationLevel().name());
-        po.setStatus(tenant.status().name());
-        po.setRegion(tenant.region());
-        po.setCreatedAt(tenant.createdAt());
-        po.setUpdatedAt(tenant.updatedAt());
-        return po;
+        return BeanUtil.copyProperties(tenant, TenantEntity.class);
     }
 
     /**
@@ -130,16 +121,6 @@ public class MybatisTenantRepository implements TenantRepository {
      * @return 租户领域对象
      */
     private Tenant toDomain(TenantEntity po) {
-        return Tenant.rehydrate(
-                po.getId(),
-                po.getTenantCode(),
-                po.getName(),
-                po.getPlanCode(),
-                Tenant.IsolationLevel.valueOf(po.getIsolationLevel()),
-                Tenant.TenantStatus.valueOf(po.getStatus()),
-                po.getRegion(),
-                po.getCreatedAt(),
-                po.getUpdatedAt()
-        );
+        return BeanUtil.copyProperties(po, Tenant.class);
     }
 }

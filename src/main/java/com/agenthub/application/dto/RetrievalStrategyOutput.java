@@ -2,21 +2,24 @@ package com.agenthub.application.dto;
 
 import java.time.Instant;
 
-/**
- * 检索策略输出DTO。
- */
-public record RetrievalStrategyOutput(
-    String id,
-    String name,
-    String description,
-    String retrievalType,
-    int topK,
-    double similarityThreshold,
-    boolean rerankEnabled,
-    String rerankModel,
-    double vectorWeight,
-    double keywordWeight,
-    Instant createdAt,
-    Instant updatedAt
-) {
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class RetrievalStrategyOutput {
+    private String id;
+    private String name;
+    private String description;
+    private String retrievalType;
+    private int topK;
+    private double similarityThreshold;
+    private boolean rerankEnabled;
+    private String rerankModel;
+    private double vectorWeight;
+    private double keywordWeight;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

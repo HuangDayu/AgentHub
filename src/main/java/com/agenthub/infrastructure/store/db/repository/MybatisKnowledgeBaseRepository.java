@@ -1,13 +1,14 @@
 package com.agenthub.infrastructure.store.db.repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.KnowledgeBaseRepository;
 import com.agenthub.domain.model.KnowledgeBase;
 import com.agenthub.domain.model.PageResult;
 import com.agenthub.infrastructure.store.db.entity.KnowledgeBaseEntity;
 import com.agenthub.infrastructure.store.db.mapper.KnowledgeBaseMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
@@ -170,35 +171,17 @@ public class MybatisKnowledgeBaseRepository implements KnowledgeBaseRepository {
      * 将领域对象转换为数据库实体。
      */
     private KnowledgeBaseEntity toEntity(KnowledgeBase model) {
-        KnowledgeBaseEntity entity = createBaseEntity(model);
-        if (model.vectorStoreConfigId() != null) {
-            entity.setVectorStoreConfigId(model.vectorStoreConfigId().toString());
-        } else {
-            entity.setVectorStoreConfigId(null);
-        }
-        return entity;
+        return createBaseEntity(model);
     }
 
     /**
      * 创建基础实体并填充核心字段。
      */
     private KnowledgeBaseEntity createBaseEntity(KnowledgeBase model) {
-        KnowledgeBaseEntity entity = new KnowledgeBaseEntity();
-        entity.setId(model.id());
-        entity.setKbCode(model.kbCode());
-        entity.setName(model.name());
-        entity.setTenantId(model.tenantId());
-        entity.setDescription(model.description());
+        KnowledgeBaseEntity entity = BeanUtil.copyProperties(model, KnowledgeBaseEntity.class);
         entity.setStatus("ACTIVE");
-        entity.setVectorStoreConfigId(model.vectorStoreConfigId());
-        entity.setEmbeddingModelConfigId(model.embeddingModelConfigId());
-        entity.setChatModelConfigId(model.chatModelConfigId());
-        entity.setCreatedAt(model.createdAt());
-        entity.setUpdatedAt(model.updatedAt());
         return entity;
     }
-
-
 
 
     /**
@@ -208,20 +191,7 @@ public class MybatisKnowledgeBaseRepository implements KnowledgeBaseRepository {
      * @return 知识库领域对象
      */
     private KnowledgeBase toDomain(KnowledgeBaseEntity entity) {
-        Instant createdAt = defaultInstant(entity.getCreatedAt());
-        Instant updatedAt = defaultInstant(entity.getUpdatedAt());
-        return new KnowledgeBase(
-                entity.getId(),
-                entity.getKbCode(),
-                entity.getName(),
-                entity.getTenantId(),
-                entity.getDescription(),
-                entity.getVectorStoreConfigId(),
-                entity.getEmbeddingModelConfigId(),
-                entity.getChatModelConfigId(),
-                createdAt,
-                updatedAt
-        );
+        return BeanUtil.copyProperties(entity, KnowledgeBase.class);
     }
 
     /**

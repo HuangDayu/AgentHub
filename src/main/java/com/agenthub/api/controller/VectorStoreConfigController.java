@@ -1,12 +1,13 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.VectorStoreConfigRequest;
 import com.agenthub.api.dto.VectorStoreConfigResponse;
 import com.agenthub.api.dto.VectorStoreTestResponse;
 import com.agenthub.application.command.CreateVectorStoreConfigCommand;
 import com.agenthub.application.command.UpdateVectorStoreConfigCommand;
-import com.agenthub.application.usecase.VectorStoreConfigUseCase;
 import com.agenthub.application.usecase.ManageVectorStoreUseCase;
+import com.agenthub.application.usecase.VectorStoreConfigUseCase;
 import com.agenthub.domain.model.VectorStoreConfig;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/workspaces/{workspaceId}/vector-stores")
 public class VectorStoreConfigController {
-    
+
     private final VectorStoreConfigUseCase vectorStoreConfigUseCase;
     private final ManageVectorStoreUseCase manageVectorStoreUseCase;
 
@@ -38,16 +39,11 @@ public class VectorStoreConfigController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public VectorStoreConfigResponse create(@RequestBody VectorStoreConfigRequest request) {
-        CreateVectorStoreConfigCommand command = buildCreateCommand(request);
+        CreateVectorStoreConfigCommand command = BeanUtil.copyProperties(request, CreateVectorStoreConfigCommand.class);
         VectorStoreConfig config = vectorStoreConfigUseCase.create(command);
         return VectorStoreConfigResponse.from(config);
     }
 
-    private CreateVectorStoreConfigCommand buildCreateCommand(VectorStoreConfigRequest request) {
-        return new CreateVectorStoreConfigCommand(
-                request.name(), request.type(), request.host(), request.port(),
-                request.apiKey(), request.collectionName(), request.extraParams());
-    }
 
     @GetMapping
     public List<VectorStoreConfigResponse> listAll() {
@@ -64,16 +60,12 @@ public class VectorStoreConfigController {
     @PutMapping("/{configId}")
     public VectorStoreConfigResponse update(
             @PathVariable String configId, @RequestBody VectorStoreConfigRequest request) {
-        UpdateVectorStoreConfigCommand command = buildUpdateCommand(configId, request);
+        UpdateVectorStoreConfigCommand command = BeanUtil.copyProperties(request, UpdateVectorStoreConfigCommand.class);
+        command.setId(configId);
         VectorStoreConfig config = vectorStoreConfigUseCase.update(command);
         return VectorStoreConfigResponse.from(config);
     }
 
-    private UpdateVectorStoreConfigCommand buildUpdateCommand(String configId, VectorStoreConfigRequest request) {
-        return new UpdateVectorStoreConfigCommand(
-                configId, request.name(), request.host(), request.port(),
-                request.apiKey(), request.collectionName(), request.extraParams(), request.enabled());
-    }
 
     @DeleteMapping("/{configId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -96,8 +88,7 @@ public class VectorStoreConfigController {
     @PostMapping("/{configId}/test")
     public ResponseEntity<VectorStoreTestResponse> testConnection(@PathVariable String configId) {
         var result = vectorStoreConfigUseCase.testConnection(configId);
-        return ResponseEntity.ok(new VectorStoreTestResponse(
-                result.success(), result.message(), result.details()));
+        return ResponseEntity.ok(BeanUtil.copyProperties(result, VectorStoreTestResponse.class));
     }
 
 }

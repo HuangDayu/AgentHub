@@ -1,5 +1,6 @@
 package com.agenthub.api.mapper;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.HttpToolInvokeViewResponse;
 import com.agenthub.api.dto.HttpToolViewResponse;
 import com.agenthub.domain.model.HttpToolInvokeView;
@@ -14,19 +15,10 @@ public final class HttpToolViewMapper {
     }
 
     public static HttpToolViewResponse toResponse(HttpToolView view) {
-        return new HttpToolViewResponse(
-            view.id(),
-            view.name(),
-            view.description(),
-            view.enabled()
-        );
+        return BeanUtil.copyProperties(view, HttpToolViewResponse.class);
     }
 
     public static HttpToolInvokeViewResponse toResponse(HttpToolInvokeView view) {
-        return new HttpToolInvokeViewResponse(
-            view.toolId(),
-            view.status(),
-            view.output()
-        );
+        return BeanUtil.copyProperties(view, HttpToolInvokeViewResponse.class);
     }
 }
