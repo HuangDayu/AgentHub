@@ -22,7 +22,7 @@ public class MybatisModelStrategyRepository implements ModelStrategyRepository {
     public ModelStrategy save(ModelStrategy strategy) {
         ModelStrategyEntity entity = toEntity(strategy);
         mapper.insertOrUpdate(entity);
-        return strategy;
+        return toDomain(entity);
     }
 
     @Override

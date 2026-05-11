@@ -70,7 +70,7 @@ public class RagCrossEncoderRerankerAdapter implements RagRerankerPort {
      * 创建重排请求。
      */
     private RerankInput createRerankInput(String queryText, List<RetrievalResult> results) {
-        return new RerankInput(queryText, results.stream().map(RetrievalResult::content).toList());
+        return new RerankInput(queryText, results.stream().map(RetrievalResult::getContent).toList());
     }
 
     /**
@@ -105,10 +105,10 @@ public class RagCrossEncoderRerankerAdapter implements RagRerankerPort {
         }
         RetrievalResult original = originals.get(scored.index());
         return new RetrievalResult(
-                original.documentId(),
-                original.documentTitle(),
-                original.chunkId(),
-                original.content(),
+                original.getDocumentId(),
+                original.getDocumentTitle(),
+                original.getChunkId(),
+                original.getContent(),
                 Math.min(scored.score(), 1.0)
         );
     }

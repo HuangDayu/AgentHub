@@ -52,7 +52,7 @@ class PromptTemplateControllerIntegrationTest {
                                 {
                                     "name": "system-content-%s",
                                     "description": "System content template",
-                                    "category": "system",
+                                    "category": "SYSTEM",
                                     "content": "You are a helpful assistant.",
                                     "variables": [],
                                     "isActive": true
@@ -93,7 +93,7 @@ class PromptTemplateControllerIntegrationTest {
                                 {
                                     "name": "updated-content",
                                     "description": "Updated description",
-                                    "category": "system",
+                                    "category": "SYSTEM",
                                     "content": "You are an expert assistant.",
                                     "variables": [],
                                     "isActive": true

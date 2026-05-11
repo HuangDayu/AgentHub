@@ -22,7 +22,7 @@ public class MybatisGuardrailStrategyRepository implements GuardrailStrategyRepo
     public GuardrailStrategy save(GuardrailStrategy strategy) {
         GuardrailStrategyEntity entity = toEntity(strategy);
         mapper.insertOrUpdate(entity);
-        return strategy;
+        return toDomain(entity);
     }
 
     @Override

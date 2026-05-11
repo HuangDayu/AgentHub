@@ -27,12 +27,12 @@ public class OllamaModelFactory implements ModelFactory {
 
     @Override
     public ChatModel createChatModel(ModelConfig config) {
-        log.info("Creating Ollama ChatModel: model={}, baseUrl={}", config.model(), config.baseUrl());
+        log.info("Creating Ollama ChatModel: model={}, baseUrl={}", config.getModel(), config.getBaseUrl());
 
         OllamaApi ollamaApi = createOllamaApi(config);
 
         OllamaChatOptions options = OllamaChatOptions.builder()
-                .model(config.model())
+                .model(config.getModel())
                 .build();
 
         return OllamaChatModel.builder()
@@ -43,12 +43,12 @@ public class OllamaModelFactory implements ModelFactory {
 
     @Override
     public EmbeddingModel createEmbeddingModel(ModelConfig config) {
-        log.info("Creating Ollama EmbeddingModel: model={}", config.model());
+        log.info("Creating Ollama EmbeddingModel: model={}", config.getModel());
 
         OllamaApi ollamaApi = createOllamaApi(config);
 
         OllamaEmbeddingOptions options = OllamaEmbeddingOptions.builder()
-                .model(config.model())
+                .model(config.getModel())
                 .build();
 
         return OllamaEmbeddingModel.builder()
@@ -58,8 +58,8 @@ public class OllamaModelFactory implements ModelFactory {
     }
 
     private OllamaApi createOllamaApi(ModelConfig config) {
-        String baseUrl = (config.baseUrl() != null && !config.baseUrl().isBlank())
-                ? config.baseUrl() : "http://localhost:11434";
+        String baseUrl = (config.getBaseUrl() != null && !config.getBaseUrl().isBlank())
+                ? config.getBaseUrl() : "http://localhost:11434";
         return OllamaApi.builder()
                 .baseUrl(baseUrl)
                 .build();

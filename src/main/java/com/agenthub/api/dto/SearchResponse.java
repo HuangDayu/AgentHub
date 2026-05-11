@@ -4,22 +4,21 @@ import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.dto.CitationOutput;
 import com.agenthub.application.dto.RetrievalOutput;
 import com.agenthub.application.dto.RetrievalResultOutput;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * 知识库检索响应。
- *
- * @param rewrittenQuery 改写后的查询文本
- * @param results        检索结果列表
- * @param citations      引用列表
- */
-public record SearchResponse(
-        String rewrittenQuery,
-        List<RetrievalResultItem> results,
-        List<CitationItem> citations
-) {
-
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class SearchResponse {
+    private String rewrittenQuery;
+    private List<RetrievalResultItem> results;
+    private List<CitationItem> citations;
 
     /**
      * 将流水线结果转换为搜索响应DTO。
@@ -55,4 +54,26 @@ public record SearchResponse(
         return BeanUtil.copyProperties(c, CitationItem.class);
     }
 
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RetrievalResultItem {
+        private String documentId;
+        private String documentTitle;
+        private String chunkId;
+        private String content;
+        private double score;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CitationItem {
+        private int index;
+        private String documentId;
+        private String chunkId;
+        private String excerpt;
+    }
 }

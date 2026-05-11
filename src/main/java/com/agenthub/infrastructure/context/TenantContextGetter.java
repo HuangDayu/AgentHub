@@ -37,21 +37,21 @@ public class TenantContextGetter {
      * @return 租户ID，若无则返回null
      */
     public String getTenantId() {
-        return findFirstTenantContext().tenantId();
+        return findFirstTenantContext().getTenantId();
     }
 
 
     public String getWorkspaceId() {
-        return findFirstTenantContext().workspaceId();
+        return findFirstTenantContext().getWorkspaceId();
     }
 
 
     public boolean isIgnoreTenantContext() {
-        return findFirstTenantContext().ignoreTenantContext();
+        return findFirstTenantContext().isIgnoreTenantContext();
     }
 
     public String getRequestId() {
-        return findFirstTenantContext().requestId();
+        return findFirstTenantContext().getRequestId();
     }
 
     /**

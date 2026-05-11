@@ -1,15 +1,20 @@
 package com.agenthub.api.dto;
 
 import com.agenthub.domain.model.KnowledgeBase;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * 知识库列表响应DTO。
- */
-public record KnowledgeBaseListResponse(
-        List<KnowledgeBaseResponse> items
-) {
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class KnowledgeBaseListResponse {
+    private List<KnowledgeBaseResponse> items;
+
     public static KnowledgeBaseListResponse from(List<KnowledgeBase> knowledgeBases) {
         List<KnowledgeBaseResponse> items = knowledgeBases.stream()
                 .map(KnowledgeBaseResponse::from)

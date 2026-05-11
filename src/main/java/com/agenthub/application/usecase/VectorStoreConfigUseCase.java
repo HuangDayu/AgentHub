@@ -41,8 +41,7 @@ public class VectorStoreConfigUseCase {
      */
     @Transactional
     public VectorStoreConfig create(CreateVectorStoreConfigCommand command) {
-        command.validate();
-        validateNameNotExists(command.name());
+        validateNameNotExists(command.getName());
         VectorStoreConfig config = BeanUtil.copyProperties(command, VectorStoreConfig.class);
         return repository.save(config);
     }
@@ -124,7 +123,7 @@ public class VectorStoreConfigUseCase {
     public List<VectorStoreConfig> listEnabled(String tenantId) {
         return repository.findAllByTenantId(tenantId)
                 .stream()
-                .filter(VectorStoreConfig::enabled)
+                .filter(VectorStoreConfig::getEnabled)
                 .toList();
     }
 

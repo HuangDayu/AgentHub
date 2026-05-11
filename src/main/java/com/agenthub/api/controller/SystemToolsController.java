@@ -21,9 +21,8 @@ public class SystemToolsController {
 
     @PostMapping("/sync")
     @ResponseStatus(HttpStatus.OK)
-    public String sync(@PathVariable String workspaceId) {
+    public void sync(@PathVariable String workspaceId) {
         useCase.syncTools();
-        return "Tools synced successfully";
     }
 
     @GetMapping

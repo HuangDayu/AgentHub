@@ -1,12 +1,15 @@
 package com.agenthub.infrastructure.factory;
 
-import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.dto.VectorStoreTestOutput;
 import com.agenthub.application.port.out.VectorPoolManagerPort;
 import com.agenthub.application.port.out.repositories.VectorStoreConfigRepository;
+import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.VectorStoreConfig;
 import com.agenthub.infrastructure.vector.VectorStoreFactory;
 import com.agenthub.infrastructure.vector.VectorStoreFactoryRegistry;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -62,11 +65,11 @@ public class SpringVectorStoreFactory implements VectorPoolManagerPort {
     public VectorStore getOrCreate(VectorStoreConfig config, EmbeddingModel embeddingModel) {
         String cacheKey = buildCacheKey(config);
         return instanceCache.computeIfAbsent(cacheKey, key -> {
-            log.info("Creating new VectorStore instance for config={}, type={}", config.id(), config.type());
-            VectorStoreFactory factory = vectorStoreFactoryRegistry.getFactory(config.type());
+            log.info("Creating new VectorStore instance for config={}, type={}", config.getId(), config.getType());
+            VectorStoreFactory factory = vectorStoreFactoryRegistry.getFactory(config.getType());
             VectorStore vectorStore = factory.create(config, embeddingModel);
             return new VectorStoreAndModel(vectorStore, embeddingModel);
-        }).vectorStore();
+        }).getVectorStore();
     }
 
     /**
@@ -83,7 +86,7 @@ public class SpringVectorStoreFactory implements VectorPoolManagerPort {
             throw new NotFoundException("VectorStore instance not found");
         }
         destroy(cacheKey);
-        getOrCreate(config, vectorStore.embeddingModel());
+        getOrCreate(config, vectorStore.getEmbeddingModel());
     }
 
     /**
@@ -138,16 +141,18 @@ public class SpringVectorStoreFactory implements VectorPoolManagerPort {
      * 构建缓存键。
      */
     private String buildCacheKey(VectorStoreConfig config) {
-        return "vectorStore" + ":" + config.id();
+        return "vectorStore" + ":" + config.getId();
     }
 
     /**
      * 向量存储和嵌入模型的组合记录。
      */
-    public record VectorStoreAndModel(
-            VectorStore vectorStore,
-            EmbeddingModel embeddingModel
-    ) {
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VectorStoreAndModel {
+        private VectorStore vectorStore;
+        private EmbeddingModel embeddingModel;
     }
 
     /**
@@ -158,14 +163,14 @@ public class SpringVectorStoreFactory implements VectorPoolManagerPort {
      */
     @Override
     public VectorStoreTestOutput testConnection(VectorStoreConfig config) {
-        log.info("Testing vector store connection for config={}, type={}", config.id(), config.type());
+        log.info("Testing vector store connection for config={}, type={}", config.getId(), config.getType());
         try {
-            VectorStoreFactory factory = vectorStoreFactoryRegistry.getFactory(config.type());
+            VectorStoreFactory factory = vectorStoreFactoryRegistry.getFactory(config.getType());
             VectorStoreFactory.VectorStoreTestResult factoryResult = factory.testConnection(config);
-            log.info("Vector store connection test completed for config={}, success={}", config.id(), factoryResult.success());
+            log.info("Vector store connection test completed for config={}, success={}", config.getId(), factoryResult.success());
             return new VectorStoreTestOutput(factoryResult.success(), factoryResult.message(), factoryResult.details());
         } catch (Exception e) {
-            log.error("Vector store connection test failed for config={}: {}", config.id(), e.getMessage(), e);
+            log.error("Vector store connection test failed for config={}: {}", config.getId(), e.getMessage(), e);
             return new VectorStoreTestOutput(false, "连接失败: " + e.getMessage(), e.getClass().getSimpleName());
         }
     }
@@ -191,7 +196,7 @@ public class SpringVectorStoreFactory implements VectorPoolManagerPort {
      * 执行连接测试。
      */
     private VectorStoreTestOutput doTestConnection(String configId, VectorStoreConfig config) {
-        log.info("Testing vector store connection for config={}, type={}", configId, config.type());
+        log.info("Testing vector store connection for config={}, type={}", configId, config.getType());
         var result = testConnection(config);
         log.info("Vector store connection test completed for config={}, success={}", configId, result.isSuccess());
         return result;

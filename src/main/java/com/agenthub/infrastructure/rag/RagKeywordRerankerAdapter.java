@@ -91,7 +91,7 @@ public class RagKeywordRerankerAdapter implements RagRerankerPort {
                 })
                 .collect(Collectors.toList());
         if (log.isDebugEnabled()) {
-            log.debug("Reranking complete. Top result changed: {}", !Objects.equals(results.get(0).chunkId(), reranked.get(0).chunkId()));
+            log.debug("Reranking complete. Top result changed: {}", !Objects.equals(results.get(0).getChunkId(), reranked.get(0).getChunkId()));
         }
         return reranked;
     }
@@ -100,8 +100,8 @@ public class RagKeywordRerankerAdapter implements RagRerankerPort {
      * 计算单个结果的融合分数。
      */
     private double computeFinalScore(RetrievalResult result, Set<String> queryKeywords) {
-        double keywordScore = computeKeywordScore(result.content(), queryKeywords);
-        return ALPHA * result.score() + BETA * keywordScore;
+        double keywordScore = computeKeywordScore(result.getContent(), queryKeywords);
+        return ALPHA * result.getScore() + BETA * keywordScore;
     }
 
     /**

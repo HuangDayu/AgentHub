@@ -52,7 +52,7 @@ public class IngestionJobUseCase
         Objects.requireNonNull(command, "command must not be null");
 
         String jobId = randomId();
-        IngestionJob job = IngestionJob.create(jobId, command.kbId(), 0);
+        IngestionJob job = IngestionJob.create(jobId, command.getKbId(), 0);
 
         IngestionJob saved = jobRepository.save(job);
         log.info("Created ingestion job: jobId={}, kbCode={}", saved.getJobId(), saved.getKbId());

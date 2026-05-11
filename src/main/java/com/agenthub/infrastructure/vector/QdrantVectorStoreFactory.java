@@ -48,7 +48,7 @@ public class QdrantVectorStoreFactory implements VectorStoreFactory {
      */
     private QdrantClient createQdrantClient(VectorStoreConfig config) {
         QdrantGrpcClient.Builder builder = QdrantGrpcClient.newBuilder(
-                config.host(), config.port(), false, false);
+                config.getHost(), config.getPort(), false, false);
         return new QdrantClient(builder.build());
     }
 
@@ -58,7 +58,7 @@ public class QdrantVectorStoreFactory implements VectorStoreFactory {
     private VectorStore buildVectorStore(QdrantClient client, VectorStoreConfig config,
             EmbeddingModel embeddingModel) {
         return QdrantVectorStore.builder(client, embeddingModel)
-                .collectionName(config.collectionName())
+                .collectionName(config.getCollectionName())
                 .batchingStrategy(new TokenCountBatchingStrategy())
                 .initializeSchema(false)
                 .build();
@@ -86,10 +86,10 @@ public class QdrantVectorStoreFactory implements VectorStoreFactory {
      */
     private boolean checkCollectionExists(QdrantClient client, VectorStoreConfig config)
             throws Exception {
-        ListenableFuture<Boolean> existsFuture = client.collectionExistsAsync(config.collectionName());
+        ListenableFuture<Boolean> existsFuture = client.collectionExistsAsync(config.getCollectionName());
         boolean exists = existsFuture.get(5, TimeUnit.SECONDS);
         if (exists) {
-            log.debug("Qdrant collection already exists: {}", config.collectionName());
+            log.debug("Qdrant collection already exists: {}", config.getCollectionName());
         }
         return exists;
     }
@@ -101,7 +101,7 @@ public class QdrantVectorStoreFactory implements VectorStoreFactory {
             EmbeddingModel embeddingModel) throws Exception {
         VectorParams vectorParams = buildVectorParams(embeddingModel);
         ListenableFuture<Collections.CollectionOperationResponse> future =
-                client.createCollectionAsync(config.collectionName(), vectorParams);
+                client.createCollectionAsync(config.getCollectionName(), vectorParams);
         Collections.CollectionOperationResponse response = future.get(10, TimeUnit.SECONDS);
         validateCreationResponse(response, config);
     }
@@ -124,7 +124,7 @@ public class QdrantVectorStoreFactory implements VectorStoreFactory {
         if (!response.getResult()) {
             throw new VectorStoreException("VectorStore collection create failed");
         }
-        log.info("Successfully created Qdrant collection: {}", config.collectionName());
+        log.info("Successfully created Qdrant collection: {}", config.getCollectionName());
     }
 
     /**
@@ -137,7 +137,7 @@ public class QdrantVectorStoreFactory implements VectorStoreFactory {
     public VectorStoreTestResult testConnection(VectorStoreConfig config) {
         QdrantClient client = null;
         try {
-            log.info("Testing Qdrant connection: {}:{}", config.host(), config.port());
+            log.info("Testing Qdrant connection: {}:{}", config.getHost(), config.getPort());
             client = createQdrantClient(config);
             return performConnectionTest(client, config);
         } catch (Exception e) {
@@ -156,7 +156,7 @@ public class QdrantVectorStoreFactory implements VectorStoreFactory {
         List<String> response = future.get(5, TimeUnit.SECONDS);
         log.info("Qdrant connection test successful, found {} collections", response.size());
         return new VectorStoreTestResult(true, "连接成功",
-                String.format("地址: %s:%d, 集合数: %d", config.host(), config.port(), response.size()));
+                String.format("地址: %s:%d, 集合数: %d", config.getHost(), config.getPort(), response.size()));
     }
 
     /**

@@ -46,7 +46,7 @@ public class WeaviateVectorStoreFactory implements VectorStoreFactory {
      * 创建Weaviate客户端。
      */
     private WeaviateClient createWeaviateClient(VectorStoreConfig config) {
-        Config weaviateConfig = new Config("http", config.host() + ":" + config.port());
+        Config weaviateConfig = new Config("http", config.getHost() + ":" + config.getPort());
         return new WeaviateClient(weaviateConfig);
     }
 
@@ -55,7 +55,7 @@ public class WeaviateVectorStoreFactory implements VectorStoreFactory {
      */
     private WeaviateVectorStoreOptions createOptions(VectorStoreConfig config) {
         WeaviateVectorStoreOptions options = new WeaviateVectorStoreOptions();
-        options.setObjectClass(config.collectionName());
+        options.setObjectClass(config.getCollectionName());
         return options;
     }
 
@@ -68,7 +68,7 @@ public class WeaviateVectorStoreFactory implements VectorStoreFactory {
     @Override
     public VectorStoreTestResult testConnection(VectorStoreConfig config) {
         try {
-            log.info("Testing Weaviate connection: {}:{}", config.host(), config.port());
+            log.info("Testing Weaviate connection: {}:{}", config.getHost(), config.getPort());
             WeaviateClient client = createWeaviateClient(config);
             return performConnectionTest(client, config);
         } catch (Exception e) {
@@ -88,7 +88,7 @@ public class WeaviateVectorStoreFactory implements VectorStoreFactory {
         int classCount = calculateClassCount(result.getResult());
         log.info("Weaviate connection test successful, found {} classes", classCount);
         return new VectorStoreTestResult(true, "连接成功",
-                String.format("地址: %s:%d, 类数: %d", config.host(), config.port(), classCount));
+                String.format("地址: %s:%d, 类数: %d", config.getHost(), config.getPort(), classCount));
     }
 
     /**

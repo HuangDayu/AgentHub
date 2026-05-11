@@ -22,7 +22,7 @@ public class MybatisRetrievalStrategyRepository implements RetrievalStrategyRepo
     public RetrievalStrategy save(RetrievalStrategy strategy) {
         RetrievalStrategyEntity entity = toEntity(strategy);
         mapper.insertOrUpdate(entity);
-        return strategy;
+        return toDomain(entity);
     }
 
     @Override

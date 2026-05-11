@@ -85,7 +85,7 @@ public class MybatisStudioSessionRepository implements StudioSessionRepository {
     public List<Session> findByAgentId(String agentId) {
         LambdaQueryWrapper<SessionEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SessionEntity::getAgentId, agentId)
-                .orderByAsc(SessionEntity::getCreatedAt);
+                .orderByDesc(SessionEntity::getCreatedAt);
         List<SessionEntity> sessionEntities = sessionMapper.selectList(wrapper);
 
         return sessionEntities.stream().map(sessionEntity -> {

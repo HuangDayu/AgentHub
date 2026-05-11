@@ -1,11 +1,12 @@
 package com.agenthub.infrastructure.web;
 
-import com.agenthub.api.dto.ErrorResponse;
+import com.agenthub.common.exception.ErrorResponse;
 import com.agenthub.common.exception.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -116,10 +117,14 @@ public class ApiExceptionHandler {
     public ResponseEntity<ErrorResponse> handleRuntime(Exception exception) {
         if (exception.getClass().getName().startsWith("io.jsonwebtoken")) {
             ErrorResponse errorResponse = handlerException(exception, HttpStatus.UNAUTHORIZED.value());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorResponse);
         }
         ErrorResponse errorResponse = handlerException(exception, HttpStatus.INTERNAL_SERVER_ERROR.value());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorResponse);
     }
 
     /**
@@ -134,7 +139,9 @@ public class ApiExceptionHandler {
     })
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException exception) {
         ErrorResponse body = handlerException(exception, HttpStatus.NOT_FOUND.value());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
 
     /**
@@ -149,7 +156,9 @@ public class ApiExceptionHandler {
         HttpStatusCode status = exception.getStatusCode();
         String message = getResponseStatusMessage(exception);
         ErrorResponse body = handlerException(new RuntimeException(message), status.value());
-        return new ResponseEntity<>(body, status);
+        return ResponseEntity.status(status)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
 
     /**
@@ -168,7 +177,9 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException exception) {
         ErrorResponse body = handlerException(exception, HttpStatus.CONFLICT.value());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
 
     /**
@@ -180,7 +191,9 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidation(ValidationException exception) {
         ErrorResponse body = handlerException(exception, HttpStatus.BAD_REQUEST.value());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
 
     /**
@@ -192,7 +205,9 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ModelFallbackException.class)
     public ResponseEntity<ErrorResponse> handleModelFallbackException(ModelFallbackException exception) {
         ErrorResponse body = handlerException(exception, HttpStatus.BAD_REQUEST.value());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
 
     /**
@@ -221,7 +236,9 @@ public class ApiExceptionHandler {
      */
     private ResponseEntity<ErrorResponse> createNotFoundResponse(IllegalArgumentException exception) {
         ErrorResponse body = handlerException(exception, HttpStatus.NOT_FOUND.value());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
 
     /**
@@ -229,7 +246,9 @@ public class ApiExceptionHandler {
      */
     private ResponseEntity<ErrorResponse> createBadRequestResponse(IllegalArgumentException exception) {
         ErrorResponse body = handlerException(exception, HttpStatus.BAD_REQUEST.value());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
 
     /**

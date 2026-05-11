@@ -17,6 +17,7 @@ public enum AgentConfigType {
     CHAT_MODEL("聊天模型", "对话模型配置"), // 聊天模型
     EMBEDDING_MODEL("嵌入模型", "向量嵌入模型配置"), // 嵌入模型
     KNOWLEDGE_BASE("知识库", "知识库配置"),   // 知识库
+    KNOWLEDGE_WIKI("Wiki", "Wiki配置"),   // 知识库
     MCP_TOOL("MCP", "MCP协议工具配置"),        // MCP工具
     SKILL_TOOL("Skill", "Skill技能配置"),        // Skill工具
     SYSTEM_TOOL("System", "System工具配置"),        // Function工具

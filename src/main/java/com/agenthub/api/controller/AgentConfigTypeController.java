@@ -25,13 +25,13 @@ public class AgentConfigTypeController {
     public List<ConfigTypeDefinition> getConfigTypes() {
         List<AgentConfigTypeOutput> results = useCase.getConfigTypes();
         return results.stream().map(r -> new ConfigTypeDefinition(
-                r.category(),
-                r.displayName(),
-                r.description(),
-                r.types().stream().map(t -> new ConfigTypeDefinition.TypeInfo(
-                        t.type(),
-                        t.displayName(),
-                        t.description()
+                r.getCategory(),
+                r.getDisplayName(),
+                r.getDescription(),
+                r.getTypes().stream().map(t -> new ConfigTypeDefinition.TypeInfo(
+                        t.getType(),
+                        t.getDisplayName(),
+                        t.getDescription()
                 )).toList()
         )).toList();
     }

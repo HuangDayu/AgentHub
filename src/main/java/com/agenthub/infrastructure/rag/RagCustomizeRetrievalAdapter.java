@@ -137,10 +137,10 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
     ) {
         Map<String, RetrievalResult> deduplicated = new LinkedHashMap<>();
         for (RetrievalResult result : vectorResults) {
-            deduplicated.putIfAbsent(result.chunkId(), result);
+            deduplicated.putIfAbsent(result.getChunkId(), result);
         }
         for (RetrievalResult result : textResults) {
-            deduplicated.putIfAbsent(result.chunkId(), result);
+            deduplicated.putIfAbsent(result.getChunkId(), result);
         }
         return new ArrayList<>(deduplicated.values());
     }
@@ -150,7 +150,7 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
      */
     private List<RetrievalResult> filterByScore(List<RetrievalResult> results, double threshold) {
         return results.stream()
-                .filter(r -> r.score() >= threshold)
+                .filter(r -> r.getScore() >= threshold)
                 .toList();
     }
 
@@ -175,12 +175,12 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
      */
     private RetrievalOutput buildRetrievalOutput(String rewrittenQuery, List<RetrievalResult> results) {
         List<RetrievalResultOutput> outputResults = results.stream()
-                .map(r -> new RetrievalResultOutput(r.documentId(), r.chunkId(), r.content(), r.score()))
+                .map(r -> new RetrievalResultOutput(r.getDocumentId(), r.getChunkId(), r.getContent(), r.getScore()))
                 .toList();
         List<CitationOutput> outputCitations = IntStream.range(0, results.size())
                 .mapToObj(i -> {
                     RetrievalResult r = results.get(i);
-                    return new CitationOutput(i + 1, r.documentId(), r.chunkId(), excerpt(r.content()));
+                    return new CitationOutput(i + 1, r.getDocumentId(), r.getChunkId(), excerpt(r.getContent()));
                 })
                 .toList();
         return new RetrievalOutput(rewrittenQuery, outputResults, outputCitations);

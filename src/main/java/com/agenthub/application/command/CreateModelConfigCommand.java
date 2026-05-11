@@ -2,23 +2,22 @@ package com.agenthub.application.command;
 
 import com.agenthub.domain.model.ModelSupplier;
 import com.agenthub.domain.model.ModelType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/**
- * 创建模型配置命令。
- */
-public record CreateModelConfigCommand(
-        String name,
-        ModelType type,
-        ModelSupplier supplier,
-        String apiKey,
-        String baseUrl,
-        String model,
-        Boolean enabled,
-        String createdBy
-) {
-    public CreateModelConfigCommand {
-        if (enabled == null) {
-            enabled = true;
-        }
-    }
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateModelConfigCommand {
+    private String name;
+    private ModelType type;
+    private ModelSupplier supplier;
+    private String apiKey;
+    private String baseUrl;
+    private String model;
+    private Boolean enabled;
+    private String createdBy;
 }

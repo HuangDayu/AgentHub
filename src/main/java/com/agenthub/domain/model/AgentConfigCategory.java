@@ -14,7 +14,7 @@ public enum AgentConfigCategory {
     TOOL("工具", "Agent的工具相关配置", -1, MCP_TOOL, SKILL_TOOL, SYSTEM_TOOL, HTTP_TOOL),       // 工具
     PROMPT("提示词", "Agent的提示词相关配置", -1, SYSTEM_PROMPT, ASSISTANT_PROMPT),     // 提示词
     MODEL("模型", "Agent的模型相关配置", 1, CHAT_MODEL, EMBEDDING_MODEL),       // 模型
-    KNOWLEDGE("知识库", "Agent的知识库相关配置", -1, KNOWLEDGE_BASE);   // 知识库
+    KNOWLEDGE("知识库", "Agent的知识库相关配置", -1, KNOWLEDGE_BASE, KNOWLEDGE_WIKI);   // 知识库
 
     private final String displayName;
     private final String description;

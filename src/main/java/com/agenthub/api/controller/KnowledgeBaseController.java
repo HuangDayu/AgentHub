@@ -39,7 +39,8 @@ public class KnowledgeBaseController {
 
     @GetMapping
     public KnowledgeBaseListResponse listKnowledgeBases(@PathVariable String workspaceId) {
-        return KnowledgeBaseListResponse.from(knowledgeBaseUseCase.listByWorkspace(workspaceId));
+        List<KnowledgeBase> knowledgeBases = knowledgeBaseUseCase.listByWorkspace(workspaceId);
+        return KnowledgeBaseListResponse.from(knowledgeBases);
     }
 
     @PostMapping

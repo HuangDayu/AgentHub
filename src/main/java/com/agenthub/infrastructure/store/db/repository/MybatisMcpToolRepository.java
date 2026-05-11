@@ -69,7 +69,10 @@ public class MybatisMcpToolRepository implements McpToolRepository {
     }
 
     private McpToolEntity toEntity(McpTool tool) {
-        return BeanUtil.copyProperties(tool, McpToolEntity.class);
+        McpToolEntity mcpToolEntity = BeanUtil.copyProperties(tool, McpToolEntity.class);
+        mcpToolEntity.setArgs(toJson(tool.getArgs()));
+        mcpToolEntity.setEnv(toJson(tool.getEnv()));
+        return mcpToolEntity;
     }
 
     private McpTool toDomain(McpToolEntity entity) {

@@ -113,7 +113,7 @@ public class AgentConfigTypeUseCase {
 
     private List<AvailableConfigOutput> getModelConfigs(String workspaceId, ModelType modelType) {
         return modelConfigRepository.findByWorkspace(workspaceId, modelType.name()).stream()
-                .map(m -> new AvailableConfigOutput(m.id(), m.name(), null)).toList();
+                .map(m -> new AvailableConfigOutput(m.getId(), m.getName(), null)).toList();
     }
 
     public List<AgentConfigTypeOutput> getConfigTypes() {

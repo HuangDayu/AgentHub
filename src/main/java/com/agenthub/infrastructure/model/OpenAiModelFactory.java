@@ -28,12 +28,12 @@ public class OpenAiModelFactory implements ModelFactory {
 
     @Override
     public ChatModel createChatModel(ModelConfig config) {
-        log.info("Creating OpenAI ChatModel: model={}, baseUrl={}", config.model(), config.baseUrl());
+        log.info("Creating OpenAI ChatModel: model={}, baseUrl={}", config.getModel(), config.getBaseUrl());
 
         OpenAiApi openAiApi = createOpenAiApi(config);
 
         OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .model(config.model())
+                .model(config.getModel())
                 .build();
 
         return OpenAiChatModel.builder()
@@ -44,12 +44,12 @@ public class OpenAiModelFactory implements ModelFactory {
 
     @Override
     public EmbeddingModel createEmbeddingModel(ModelConfig config) {
-        log.info("Creating OpenAI EmbeddingModel: model={}", config.model());
+        log.info("Creating OpenAI EmbeddingModel: model={}", config.getModel());
 
         OpenAiApi openAiApi = createOpenAiApi(config);
 
         OpenAiEmbeddingOptions options = OpenAiEmbeddingOptions.builder()
-                .model(config.model())
+                .model(config.getModel())
                 .build();
 
         return new OpenAiEmbeddingModel(openAiApi, MetadataMode.EMBED, options);
@@ -57,10 +57,10 @@ public class OpenAiModelFactory implements ModelFactory {
 
     private OpenAiApi createOpenAiApi(ModelConfig config) {
         OpenAiApi.Builder apiBuilder = OpenAiApi.builder()
-                .apiKey(config.apiKey());
+                .apiKey(config.getApiKey());
 
-        if (config.baseUrl() != null && !config.baseUrl().isBlank()) {
-            apiBuilder.baseUrl(config.baseUrl());
+        if (config.getBaseUrl() != null && !config.getBaseUrl().isBlank()) {
+            apiBuilder.baseUrl(config.getBaseUrl());
         }
 
         return apiBuilder.build();

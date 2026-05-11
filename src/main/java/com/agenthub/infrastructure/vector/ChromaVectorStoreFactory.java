@@ -36,7 +36,7 @@ public class ChromaVectorStoreFactory implements VectorStoreFactory {
         String baseUrl = resolveBaseUrl(config);
         ChromaApi chromaApi = new ChromaApi(baseUrl, RestClient.builder(), JsonMapper.builder().build());
         return ChromaVectorStore.builder(chromaApi, embeddingModel)
-                .collectionName(config.collectionName())
+                .collectionName(config.getCollectionName())
                 .build();
     }
 
@@ -44,9 +44,9 @@ public class ChromaVectorStoreFactory implements VectorStoreFactory {
      * 解析基础URL。
      */
     private String resolveBaseUrl(VectorStoreConfig config) {
-        return (config.extraParams() != null && !config.extraParams().isBlank())
-                ? config.extraParams()
-                : "http://" + config.host() + ":" + config.port();
+        return (config.getExtraParams() != null && !config.getExtraParams().isBlank())
+                ? config.getExtraParams()
+                : "http://" + config.getHost() + ":" + config.getPort();
     }
 
     /**
@@ -58,7 +58,7 @@ public class ChromaVectorStoreFactory implements VectorStoreFactory {
     @Override
     public VectorStoreTestResult testConnection(VectorStoreConfig config) {
         try {
-            log.info("Testing Chroma connection: {}:{}", config.host(), config.port());
+            log.info("Testing Chroma connection: {}:{}", config.getHost(), config.getPort());
             String baseUrl = resolveBaseUrl(config);
             String response = testHeartbeat(baseUrl);
             log.info("Chroma connection test successful: {}", response);

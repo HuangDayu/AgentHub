@@ -24,7 +24,7 @@ public class MybatisWorkflowRepository implements WorkflowRepository {
     public Workflow save(Workflow workflow) {
         WorkflowEntity entity = toEntity(workflow);
         mapper.insertOrUpdate(entity);
-        return workflow;
+        return toDomain(entity);
     }
 
     @Override

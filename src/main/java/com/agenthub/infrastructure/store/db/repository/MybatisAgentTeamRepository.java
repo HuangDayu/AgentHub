@@ -1,10 +1,10 @@
 package com.agenthub.infrastructure.store.db.repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.AgentTeamRepository;
 import com.agenthub.domain.model.AgentTeam;
 import com.agenthub.infrastructure.store.db.entity.AgentTeamEntity;
 import com.agenthub.infrastructure.store.db.mapper.AgentTeamMybatisMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +24,7 @@ public class MybatisAgentTeamRepository implements AgentTeamRepository {
     public AgentTeam save(AgentTeam team) {
         AgentTeamEntity entity = toEntity(team);
         mapper.insertOrUpdate(entity);
-        return team;
+        return toDomain(entity);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class MybatisAgentTeamRepository implements AgentTeamRepository {
     public List<AgentTeam> findByTenantIdAndWorkspaceId(String tenantId, String workspaceId) {
         LambdaQueryWrapper<AgentTeamEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentTeamEntity::getTenantId, tenantId)
-               .eq(AgentTeamEntity::getWorkspaceId, workspaceId);
+                .eq(AgentTeamEntity::getWorkspaceId, workspaceId);
         return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
     }
 

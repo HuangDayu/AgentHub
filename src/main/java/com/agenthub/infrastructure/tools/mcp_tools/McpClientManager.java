@@ -57,9 +57,6 @@ public class McpClientManager {
                 .requestTimeout(timeout)
                 .initializationTimeout(timeout)
                 .build();
-        if (!mcpSyncClient.isInitialized()) {
-            mcpSyncClient.initialize();
-        }
         return SyncMcpToolCallbackProvider.builder().mcpClients(mcpSyncClient).build();
     }
 
@@ -69,11 +66,7 @@ public class McpClientManager {
                 .requestTimeout(timeout)
                 .initializationTimeout(timeout)
                 .build();
-        if (!mcpAsyncClient.isInitialized()) {
-            mcpAsyncClient.initialize();
-        }
         return AsyncMcpToolCallbackProvider.builder().mcpClients(mcpAsyncClient).build();
-
     }
 
     private McpClientTransport createMcpClientTransport(McpTool mcpTool) {

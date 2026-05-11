@@ -8,5 +8,5 @@ import java.util.List;
 
 @Mapper
 public interface ScheduledTaskMyBatisMapper extends BaseMapper<ScheduledTaskEntity> {
-    List<ScheduledTaskEntity> findByWorkspaceId(String workspaceId);
+
 }

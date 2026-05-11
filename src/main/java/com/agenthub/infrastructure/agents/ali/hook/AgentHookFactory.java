@@ -24,7 +24,7 @@ public class AgentHookFactory {
                         .projectSkillsDirectory(workspace.getSkillsPath().toString())
                         .userSkillsDirectory(workspace.getShareSkillsPath().toString())
                         .build())
-                .autoReload(true)
+                .autoReload(false)
                 .build();
     }
 

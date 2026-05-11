@@ -23,9 +23,9 @@ public final class TenantMdcContext {
      * @param context 租户线程上下文
      */
     public static void apply(TenantThreadContext context) {
-        putIfPresent("tenant_id", context.tenantId());
-        putIfPresent("workspace_id", context.workspaceId());
-        putIfPresent("trace_id", context.requestId());
+        putIfPresent("tenant_id", context.getTenantId());
+        putIfPresent("workspace_id", context.getWorkspaceId());
+        putIfPresent("trace_id", context.getRequestId());
     }
 
     /**

@@ -34,12 +34,12 @@ public class OpenRouterModelFactory implements ModelFactory {
 
     @Override
     public ChatModel createChatModel(ModelConfig config) {
-        log.info("Creating OpenRouter ChatModel: model={}", config.model());
+        log.info("Creating OpenRouter ChatModel: model={}", config.getModel());
 
         OpenAiApi openAiApi = createOpenAiApi(config);
 
         OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .model(config.model())
+                .model(config.getModel())
                 .build();
 
         return OpenAiChatModel.builder()
@@ -50,23 +50,23 @@ public class OpenRouterModelFactory implements ModelFactory {
 
     @Override
     public EmbeddingModel createEmbeddingModel(ModelConfig config) {
-        log.info("Creating OpenRouter EmbeddingModel: model={}", config.model());
+        log.info("Creating OpenRouter EmbeddingModel: model={}", config.getModel());
 
         OpenAiApi openAiApi = createOpenAiApi(config);
 
         OpenAiEmbeddingOptions options = OpenAiEmbeddingOptions.builder()
-                .model(config.model())
+                .model(config.getModel())
                 .build();
 
         return new OpenAiEmbeddingModel(openAiApi, MetadataMode.EMBED, options);
     }
 
     private OpenAiApi createOpenAiApi(ModelConfig config) {
-        String baseUrl = (config.baseUrl() != null && !config.baseUrl().isBlank())
-                ? config.baseUrl() : DEFAULT_BASE_URL;
+        String baseUrl = (config.getBaseUrl() != null && !config.getBaseUrl().isBlank())
+                ? config.getBaseUrl() : DEFAULT_BASE_URL;
 
         return OpenAiApi.builder()
-                .apiKey(config.apiKey())
+                .apiKey(config.getApiKey())
                 .baseUrl(baseUrl)
                 .build();
     }

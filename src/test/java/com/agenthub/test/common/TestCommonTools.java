@@ -1,5 +1,6 @@
 package com.agenthub.test.common;
 
+import cn.hutool.core.io.FileUtil;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -12,6 +13,7 @@ import static com.agenthub.infrastructure.context.TenantContextHeaders.*;
  */
 public class TestCommonTools {
 
+    public static final String token = FileUtil.readUtf8String(System.getProperty("user.dir") + "/token.txt");
 
     public static String getConfigTestLocation() {
         String property = System.getProperty("user.dir");
@@ -38,7 +40,7 @@ public class TestCommonTools {
 
     public static RequestBuilder getRequestBuilder() {
         return MockMvcRequestBuilders.get("/")
-                .header("Authorization", "Bearer Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJsaXNpIiwidGVuYW50SWQiOiIxMDAwMDAwMDIiLCJpYXQiOjE3NzgxNDkxNjYsImV4cCI6MTc3ODE1Mjc2Nn0.7hzbOrlkNEx6KZYl2yc63IkPRU6KVGXBxSIN2p-NrKD0kFZEws3L0c3SMS2FU_TM")
+                .header("Authorization", token)
                 .header(CONTEXT_TENANT_ID, "100000002")
                 .header(CONTEXT_WORKSPACE_ID, "100000002")
                 .header(CONTEXT_REQUEST_ID, randomId());

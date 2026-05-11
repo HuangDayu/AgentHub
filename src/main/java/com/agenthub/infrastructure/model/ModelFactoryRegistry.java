@@ -63,7 +63,7 @@ public class ModelFactoryRegistry {
      * @return Spring AI ChatModel 实例
      */
     public ChatModel createChatModel(ModelConfig config) {
-        ModelFactory factory = getFactory(config.supplier().name());
+        ModelFactory factory = getFactory(config.getSupplier().name());
         return factory.createChatModel(config);
     }
 
@@ -74,7 +74,7 @@ public class ModelFactoryRegistry {
      * @return Spring AI EmbeddingModel 实例
      */
     public EmbeddingModel createEmbeddingModel(ModelConfig config) {
-        ModelFactory factory = getFactory(config.supplier().name());
+        ModelFactory factory = getFactory(config.getSupplier().name());
         return factory.createEmbeddingModel(config);
     }
 

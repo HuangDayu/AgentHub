@@ -40,7 +40,7 @@ public class TenantContextInterceptor implements HandlerInterceptor {
     }
 
     private TenantThreadContext buildContext(HttpServletRequest request, Object handler) {
-        return TenantThreadContext.from(
+        return new TenantThreadContext(
                 getTenantId(request, handler),
                 getWorkspaceId(request),
                 request.getHeader(TenantContextHeaders.CONTEXT_REQUEST_ID),

@@ -34,7 +34,6 @@ public class ModelConfigUseCase {
     private final ModelPoolManagerPort modelPoolManagerPort;
 
 
-
     /**
      * 创建模型配置。
      */
@@ -43,7 +42,6 @@ public class ModelConfigUseCase {
         Instant now = Instant.now();
         ModelConfig config = buildNewConfig(command, now);
         ModelConfig saved = modelConfigRepository.save(config);
-        logCreated(saved);
         return saved;
     }
 
@@ -51,19 +49,10 @@ public class ModelConfigUseCase {
      * 构建新的模型配置。
      */
     private ModelConfig buildNewConfig(CreateModelConfigCommand command, Instant now) {
-        return new ModelConfig(
-                null, command.name(), command.type(), command.supplier(),
-                command.apiKey(), command.baseUrl(), command.model(),
-                command.enabled(), now, now, command.createdBy()
-        );
-    }
-
-    /**
-     * 记录创建日志。
-     */
-    private void logCreated(ModelConfig saved) {
-        log.info("Created model config: id={}, name={}, supplier={}, type={}",
-                saved.id(), saved.name(), saved.supplier(), saved.type());
+        ModelConfig modelConfig = BeanUtil.copyProperties(command, ModelConfig.class);
+        modelConfig.setCreatedAt(now);
+        modelConfig.setUpdatedAt(now);
+        return modelConfig;
     }
 
     /**
@@ -74,7 +63,7 @@ public class ModelConfigUseCase {
         ModelConfig updated = BeanUtil.copyProperties(command, ModelConfig.class);
         ModelConfig saved = modelConfigRepository.save(updated);
         modelPoolManagerPort.evictCache(command.getId());
-        log.info("Updated model config: id={}", saved.id());
+        log.info("Updated model config: id={}", saved.getId());
         return saved;
     }
 

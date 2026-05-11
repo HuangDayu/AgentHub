@@ -1,10 +1,32 @@
 package com.agenthub.api.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
-public record CreatePromptTemplateRequest(
-        String name, String description, String category,
-        String content, List<VariableDto> variables, Boolean isActive
-) {
-    public record VariableDto(String name, String description, String defaultValue, boolean required) {}
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreatePromptTemplateRequest {
+    private String name;
+    private String description;
+    private String category;
+    private String content;
+    private List<VariableDto> variables;
+    private Boolean isActive;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VariableDto {
+        private String name;
+        private String description;
+        private String defaultValue;
+        private boolean required;
+    }
 }

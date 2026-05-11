@@ -37,7 +37,7 @@ public class MilvusVectorStoreFactory implements VectorStoreFactory {
     public VectorStore create(VectorStoreConfig config, EmbeddingModel embeddingModel) {
         MilvusServiceClient client = createClient(config);
         return MilvusVectorStore.builder(client, embeddingModel)
-                .collectionName(config.collectionName())
+                .collectionName(config.getCollectionName())
                 .initializeSchema(true)
                 .build();
     }
@@ -50,10 +50,10 @@ public class MilvusVectorStoreFactory implements VectorStoreFactory {
      */
     private MilvusServiceClient createClient(VectorStoreConfig config) {
         ConnectParam.Builder builder = ConnectParam.newBuilder()
-                .withHost(config.host())
-                .withPort(config.port());
-        if (config.apiKey() != null && !config.apiKey().isBlank()) {
-            builder.withToken(config.apiKey());
+                .withHost(config.getHost())
+                .withPort(config.getPort());
+        if (config.getApiKey() != null && !config.getApiKey().isBlank()) {
+            builder.withToken(config.getApiKey());
         }
         return new MilvusServiceClient(builder.build());
     }
@@ -68,7 +68,7 @@ public class MilvusVectorStoreFactory implements VectorStoreFactory {
     public VectorStoreTestResult testConnection(VectorStoreConfig config) {
         MilvusServiceClient client = null;
         try {
-            log.info("Testing Milvus connection: {}:{}", config.host(), config.port());
+            log.info("Testing Milvus connection: {}:{}", config.getHost(), config.getPort());
             client = createClient(config);
             int collectionCount = getCollectionCount(client);
             log.info("Milvus connection test successful, found {} collections", collectionCount);
@@ -104,7 +104,7 @@ public class MilvusVectorStoreFactory implements VectorStoreFactory {
         return new VectorStoreTestResult(
                 true,
                 "连接成功",
-                String.format("地址: %s:%d, 集合数: %d", config.host(), config.port(), count)
+                String.format("地址: %s:%d, 集合数: %d", config.getHost(), config.getPort(), count)
         );
     }
 

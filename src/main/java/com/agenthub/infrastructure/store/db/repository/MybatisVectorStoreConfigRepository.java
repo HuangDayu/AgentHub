@@ -1,11 +1,11 @@
 package com.agenthub.infrastructure.store.db.repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.VectorStoreConfigRepository;
 import com.agenthub.domain.model.VectorStoreConfig;
-import com.agenthub.domain.model.VectorStoreType;
 import com.agenthub.infrastructure.store.db.entity.VectorStoreConfigEntity;
 import com.agenthub.infrastructure.store.db.mapper.VectorStoreConfigMybatisMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -79,37 +79,13 @@ public class MybatisVectorStoreConfigRepository implements VectorStoreConfigRepo
      * 领域对象 → 持久化对象
      */
     private VectorStoreConfigEntity toPersistence(VectorStoreConfig domain) {
-        VectorStoreConfigEntity po = new VectorStoreConfigEntity();
-        po.setId(domain.id());
-        po.setName(domain.name());
-        po.setType(domain.type().name());
-        po.setHost(domain.host());
-        po.setPort(domain.port());
-        po.setApiKey(domain.apiKey());
-        po.setCollectionName(domain.collectionName());
-        po.setExtraParams(domain.extraParams());
-        po.setEnabled(domain.enabled());
-        po.setCreatedAt(domain.createdAt());
-        po.setUpdatedAt(domain.updatedAt());
-        return po;
+        return BeanUtil.copyProperties(domain, VectorStoreConfigEntity.class);
     }
 
     /**
      * 持久化对象 → 领域对象
      */
     private VectorStoreConfig toDomain(VectorStoreConfigEntity po) {
-        return new VectorStoreConfig(
-                po.getId(),
-                po.getName(),
-                VectorStoreType.valueOf(po.getType()),
-                po.getHost(),
-                po.getPort(),
-                po.getApiKey(),
-                po.getCollectionName(),
-                po.getExtraParams(),
-                po.getEnabled(),
-                po.getCreatedAt(),
-                po.getUpdatedAt()
-        );
+        return BeanUtil.copyProperties(po, VectorStoreConfig.class);
     }
 }

@@ -27,6 +27,11 @@ public class SkillController {
         return toResponse(result);
     }
 
+    @PostMapping("/sync")
+    public void sync() {
+        useCase.sync();
+    }
+
     @GetMapping
     public List<SkillResponse> list() {
         return useCase.list().stream().map(this::toResponse).toList();

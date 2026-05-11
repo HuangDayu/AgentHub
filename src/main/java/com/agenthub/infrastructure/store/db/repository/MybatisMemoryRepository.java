@@ -24,7 +24,7 @@ public class MybatisMemoryRepository implements MemoryRepository {
     public Memory save(Memory memory) {
         MemoryEntity entity = toEntity(memory);
         mapper.insertOrUpdate(entity);
-        return memory;
+        return toDomain(entity);
     }
 
     @Override

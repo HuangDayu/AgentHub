@@ -2,19 +2,27 @@ package com.agenthub.application.usecase;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.SkillRequestCommand;
-import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.application.dto.SkillOutput;
 import com.agenthub.application.port.out.repositories.SkillRepository;
+import com.agenthub.application.port.out.tools.SkillToolScannerPort;
+import com.agenthub.common.exception.NotFoundException;
 import com.agenthub.domain.model.Skill;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+
+import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
 
 @Component
 @RequiredArgsConstructor
 public class SkillUseCase {
     private final SkillRepository repository;
+    private final SkillToolScannerPort skillToolScannerPort;
+
+    @Value("${agenthub.skills.share-path:${user.home}/.agents/skills}")
+    private String skillSharePath;
 
     public SkillOutput create(SkillRequestCommand command) {
         Skill skill = BeanUtil.copyProperties(command, Skill.class);
@@ -67,5 +75,13 @@ public class SkillUseCase {
                 skill.getSkillCode(), skill.getName(), skill.getDescription(),
                 skill.getSkillType(), skill.getSkillPath(), skill.getSkillFilesTree(),
                 skill.isEnabled(), skill.getCreatedAt(), skill.getUpdatedAt());
+    }
+
+    public void sync() {
+        List<Skill> skills = skillToolScannerPort.scanSkills(skillSharePath);
+        parallelStreamWithTtl(4, skills, skill -> {
+            repository.saveOrUpdate(skill);
+            return null;
+        });
     }
 }

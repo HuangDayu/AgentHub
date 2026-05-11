@@ -50,10 +50,11 @@ public class TenantContextFilter extends OncePerRequestFilter {
      * @return 租户线程上下文
      */
     public static TenantThreadContext buildContext(HttpServletRequest request) {
-        return TenantThreadContext.from(
+        return new TenantThreadContext(
                 request.getHeader(TenantContextHeaders.CONTEXT_TENANT_ID),
                 request.getHeader(TenantContextHeaders.CONTEXT_WORKSPACE_ID),
-                request.getHeader(TenantContextHeaders.CONTEXT_REQUEST_ID)
+                request.getHeader(TenantContextHeaders.CONTEXT_REQUEST_ID),
+                false
         );
     }
 }

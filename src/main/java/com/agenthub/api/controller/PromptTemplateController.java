@@ -8,7 +8,6 @@ import com.agenthub.application.command.PromptTemplateInfoCommand;
 import com.agenthub.application.dto.PromptTemplateOutput;
 import com.agenthub.application.dto.VariableOutput;
 import com.agenthub.application.usecase.PromptTemplateUseCase;
-import com.agenthub.domain.model.PromptTemplateInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +26,7 @@ public class PromptTemplateController {
     @ResponseStatus(HttpStatus.CREATED)
     public PromptTemplateResponse create(@PathVariable String workspaceId,
                                          @RequestBody CreatePromptTemplateRequest request) {
-        List<VariableOutput> vars = toVariableResults(request.variables());
+        List<VariableOutput> vars = toVariableResults(request.getVariables());
         PromptTemplateInfoCommand command = BeanUtil.copyProperties(request, PromptTemplateInfoCommand.class);
         command.setVariables(vars);
         PromptTemplateOutput result = useCase.create(command);
@@ -51,7 +50,7 @@ public class PromptTemplateController {
     @PutMapping("/{id}")
     public PromptTemplateResponse update(@PathVariable String workspaceId, @PathVariable String id,
                                          @RequestBody UpdatePromptTemplateRequest request) {
-        List<VariableOutput> vars = toVariableResultsFromUpdate(request.variables());
+        List<VariableOutput> vars = toVariableResultsFromUpdate(request.getVariables());
         PromptTemplateInfoCommand command = BeanUtil.copyProperties(request, PromptTemplateInfoCommand.class);
         command.setVariables(vars);
         PromptTemplateOutput result = useCase.update(id, command);
@@ -66,17 +65,17 @@ public class PromptTemplateController {
 
     private List<VariableOutput> toVariableResults(List<CreatePromptTemplateRequest.VariableDto> dtos) {
         if (dtos == null) return List.of();
-        return dtos.stream().map(v -> new VariableOutput(v.name(), v.description(), v.defaultValue(), v.required())).toList();
+        return dtos.stream().map(v -> BeanUtil.copyProperties(v, VariableOutput.class)).toList();
     }
 
     private List<VariableOutput> toVariableResultsFromUpdate(List<UpdatePromptTemplateRequest.VariableDto> dtos) {
         if (dtos == null) return List.of();
-        return dtos.stream().map(v -> new VariableOutput(v.name(), v.description(), v.defaultValue(), v.required())).toList();
+        return dtos.stream().map(v -> BeanUtil.copyProperties(v, VariableOutput.class)).toList();
     }
 
     private PromptTemplateResponse toResponse(PromptTemplateOutput template) {
         List<PromptTemplateResponse.VariableDto> vars = template.getVariables() != null
-                ? template.getVariables().stream().map(v -> BeanUtil.copyProperties(v,PromptTemplateResponse.VariableDto.class)).toList()
+                ? template.getVariables().stream().map(v -> BeanUtil.copyProperties(v, PromptTemplateResponse.VariableDto.class)).toList()
                 : List.of();
         PromptTemplateResponse promptTemplateOutput = BeanUtil.copyProperties(template, PromptTemplateResponse.class);
         promptTemplateOutput.setVariables(vars);

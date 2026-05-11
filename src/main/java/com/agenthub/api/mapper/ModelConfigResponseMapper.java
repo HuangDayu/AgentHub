@@ -1,9 +1,10 @@
 package com.agenthub.api.mapper;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.ModelConfigResponse;
 import com.agenthub.domain.model.ModelConfig;
-import com.agenthub.domain.model.ModelType;
 import com.agenthub.domain.model.ModelSupplier;
+import com.agenthub.domain.model.ModelType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -24,19 +25,7 @@ public class ModelConfigResponseMapper {
      * @return 模型配置响应DTO
      */
     public ModelConfigResponse toResponse(ModelConfig config) {
-        return new ModelConfigResponse(
-                config.id(),
-                config.name(),
-                toTypeName(config.type()),
-                toSupplierName(config.supplier()),
-                maskApiKey(config.apiKey()),
-                config.baseUrl(),
-                config.model(),
-                config.enabled(),
-                config.createdAt(),
-                config.updatedAt(),
-                config.createdBy()
-        );
+        return BeanUtil.copyProperties(config, ModelConfigResponse.class);
     }
 
     /**

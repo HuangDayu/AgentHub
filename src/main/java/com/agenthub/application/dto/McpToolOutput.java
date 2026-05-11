@@ -18,6 +18,7 @@ public class McpToolOutput {
     private String serverUrl;
     private String serverType;
     private String command;
+    private boolean async;
     private List<String> args;
     private Map<String, String> env;
     private boolean enabled;

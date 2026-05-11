@@ -1,9 +1,8 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.ModelConfigRepository;
 import com.agenthub.domain.model.ModelConfig;
-import com.agenthub.domain.model.ModelSupplier;
-import com.agenthub.domain.model.ModelType;
 import com.agenthub.infrastructure.store.db.entity.ModelConfigEntity;
 import com.agenthub.infrastructure.store.db.mapper.ModelConfigMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -21,35 +20,10 @@ import java.util.stream.Collectors;
 public class MybatisModelConfigRepository implements ModelConfigRepository {
 
     private static final Function<ModelConfigEntity, ModelConfig> PO_TO_DOMAIN = po ->
-            new ModelConfig(
-                    po.getId(),
-                    po.getName(),
-                    po.getType() != null ? ModelType.valueOf(po.getType()) : null,
-                    po.getSupplier() != null ? ModelSupplier.valueOf(po.getSupplier()) : null,
-                    po.getApiKey(),
-                    po.getBaseUrl(),
-                    po.getModel(),
-                    po.getEnabled(),
-                    po.getCreatedAt(),
-                    po.getUpdatedAt(),
-                    po.getCreatedBy()
-            );
+            BeanUtil.copyProperties(po, ModelConfig.class);
 
-    private static final Function<ModelConfig, ModelConfigEntity> DOMAIN_TO_PO = config -> {
-        ModelConfigEntity modelConfigEntity = new ModelConfigEntity();
-        modelConfigEntity.setId(config.id());
-        modelConfigEntity.setName(config.name());
-        modelConfigEntity.setType(config.type() != null ? config.type().name() : null);
-        modelConfigEntity.setSupplier(config.supplier() != null ? config.supplier().name() : null);
-        modelConfigEntity.setApiKey(config.apiKey());
-        modelConfigEntity.setBaseUrl(config.baseUrl());
-        modelConfigEntity.setModel(config.model());
-        modelConfigEntity.setEnabled(config.enabled());
-        modelConfigEntity.setCreatedAt(config.createdAt());
-        modelConfigEntity.setUpdatedAt(config.updatedAt());
-        modelConfigEntity.setCreatedBy(config.createdBy());
-        return modelConfigEntity;
-    };
+    private static final Function<ModelConfig, ModelConfigEntity> DOMAIN_TO_PO = config ->
+            BeanUtil.copyProperties(config, ModelConfigEntity.class);
 
     private final ModelConfigMybatisMapper mapper;
 
