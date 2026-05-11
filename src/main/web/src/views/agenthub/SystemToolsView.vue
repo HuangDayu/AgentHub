@@ -1,13 +1,23 @@
 <template>
   <section class="grid">
     <div class="page-header">
-      <div>
-        <h2>System Tools 管理</h2>
-        <p class="muted">管理系统工具函数，支持启用/禁用控制</p>
+      <div class="header-content">
+        <div class="header-text">
+          <h2>System Tools 管理</h2>
+          <p class="muted">管理系统工具函数，支持启用/禁用控制</p>
+        </div>
+        <div class="header-filters">
+          <select v-model="filterCategory" class="filter-select">
+            <option value="">全部分类</option>
+            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+          </select>
+          <select v-model="filterEnabled" class="filter-select">
+            <option value="">全部状态</option>
+            <option value="true">已启用</option>
+            <option value="false">已禁用</option>
+          </select>
+        </div>
       </div>
-      <button class="primary" type="button" :disabled="syncing || !selectionReady" @click="syncTools">
-        {{ syncing ? '同步中...' : '同步工具' }}
-      </button>
     </div>
 
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
@@ -15,20 +25,6 @@
 
     <template v-else>
       <article class="panel stack">
-        <div class="page-header">
-          <h3>工具列表</h3>
-          <div class="filter-row">
-            <select v-model="filterCategory" class="filter-select">
-              <option value="">全部分类</option>
-              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-            </select>
-            <select v-model="filterEnabled" class="filter-select">
-              <option value="">全部状态</option>
-              <option value="true">已启用</option>
-              <option value="false">已禁用</option>
-            </select>
-          </div>
-        </div>
 
         <div v-if="filteredTools.length === 0" class="empty-state">暂无工具数据</div>
 
@@ -59,9 +55,9 @@
               <td>{{ formatDateTime(tool.createdAt) }}</td>
               <td>
                 <div class="chip-row">
-                  <button 
-                    :class="['ghost', tool.enabled ? 'danger' : 'success']" 
-                    type="button" 
+                  <button
+                    :class="['ghost', tool.enabled ? 'danger' : 'success']"
+                    type="button"
                     @click="toggleEnabled(tool)"
                   >
                     {{ tool.enabled ? '禁用' : '启用' }}
@@ -78,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { formatDateTime } from '@/common/format'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { 
@@ -178,16 +174,40 @@ watch(() => store.workspaceId, () => {
   loadTools()
 })
 
+const handleGlobalSync = () => {
+  if (window.location.pathname.includes('system-tools')) {
+    syncTools()
+  }
+}
+
 onMounted(() => {
+  window.addEventListener('global-sync', handleGlobalSync)
   loadTools()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('global-sync', handleGlobalSync)
 })
 </script>
 
 <style scoped>
-.filter-row {
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.header-text {
+  flex: 0 0 auto;
+}
+
+.header-filters {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .filter-select {
@@ -197,6 +217,8 @@ onMounted(() => {
   background: var(--bg-color, white);
   font-size: 0.875rem;
   min-width: 150px;
+  flex: 1;
+  max-width: 200px;
 }
 
 .filter-select:focus {

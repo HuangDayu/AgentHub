@@ -5,10 +5,6 @@
       <p class="muted">管理多Agent协作团队</p>
     </div>
 
-    <div class="toolbar">
-      <button @click="showCreateDialog = true" class="btn-primary">新建团队</button>
-    </div>
-
     <div class="team-list">
       <table v-if="teams.length > 0">
         <thead>
@@ -46,42 +42,41 @@
     </div>
 
     <!-- 创建/编辑对话框 -->
-    <div v-if="showCreateDialog || showEditDialog" class="dialog-overlay">
-      <div class="dialog">
-        <h3>{{ showEditDialog ? '编辑团队' : '新建团队' }}</h3>
-        <form @submit.prevent="showEditDialog ? updateTeamHandler() : createTeamHandler()">
-          <div class="form-group">
-            <label>团队编码</label>
-            <input v-model="form.teamCode" :disabled="showEditDialog" required />
-          </div>
-          <div class="form-group">
-            <label>名称</label>
-            <input v-model="form.name" required />
-          </div>
-          <div class="form-group">
-            <label>描述</label>
-            <textarea v-model="form.description" rows="3"></textarea>
-          </div>
-          <div class="form-group">
-            <label>协调模式</label>
-            <select v-model="form.coordinationMode" required>
-              <option value="SEQUENTIAL">顺序执行</option>
-              <option value="PARALLEL">并行执行</option>
-              <option value="HIERARCHICAL">层级协调</option>
-              <option value="CONSENSUS">共识决策</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>成员配置 (JSON)</label>
-            <textarea v-model="form.memberConfig" rows="5"></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="button" @click="closeDialog" class="btn-secondary">取消</button>
-            <button type="submit" class="btn-primary">{{ showEditDialog ? '更新' : '创建' }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ModalDialog
+      v-model:visible="showCreateDialog"
+      :title="editingTeamId ? '编辑团队' : '新建团队'"
+      @close="closeDialog"
+      @confirm="editingTeamId ? updateTeamHandler() : createTeamHandler()"
+      :confirm-text="editingTeamId ? '更新' : '创建'"
+    >
+      <form class="field-grid">
+        <label class="field">
+          <span>团队编码 *</span>
+          <input v-model="form.teamCode" :disabled="!!editingTeamId" required />
+        </label>
+        <label class="field">
+          <span>名称 *</span>
+          <input v-model="form.name" required />
+        </label>
+        <label class="field">
+          <span>描述</span>
+          <textarea v-model="form.description" rows="3"></textarea>
+        </label>
+        <label class="field">
+          <span>协调模式 *</span>
+          <select v-model="form.coordinationMode" required>
+            <option value="SEQUENTIAL">顺序执行</option>
+            <option value="PARALLEL">并行执行</option>
+            <option value="HIERARCHICAL">层级协调</option>
+            <option value="CONSENSUS">共识决策</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>成员配置 (JSON)</span>
+          <textarea v-model="form.memberConfig" rows="5"></textarea>
+        </label>
+      </form>
+    </ModalDialog>
   </section>
 </template>
 
@@ -97,7 +92,6 @@ import CustomButton from '@/components/CustomButton.vue'
 const store = useWorkspaceStore()
 const teams = ref<AgentTeam[]>([])
 const showCreateDialog = ref(false)
-const showEditDialog = ref(false)
 const editingTeamId = ref('')
 
 const form = ref({
@@ -114,13 +108,12 @@ const selection = () => ({
 })
 
 onMounted(async () => {
-
-// 监听全局新增事件
-onMounted(() => {
+  // 监听全局新增事件
   window.addEventListener('global-add', () => {
-    showCreateForm.value = true
+    editingTeamId.value = ''
+    resetForm()
+    showCreateDialog.value = true
   })
-})
   await loadTeams()
 })
 
@@ -185,13 +178,17 @@ function editTeam(team: AgentTeam) {
     coordinationMode: team.coordinationMode,
     memberConfig: team.memberConfig
   }
-  showEditDialog.value = true
+  showCreateDialog.value = true
+}
+
+function resetForm() {
+  form.value = { teamCode: '', name: '', description: '', coordinationMode: 'SEQUENTIAL', memberConfig: '{}' }
 }
 
 function closeDialog() {
   showCreateDialog.value = false
-  showEditDialog.value = false
-  form.value = { teamCode: '', name: '', description: '', coordinationMode: 'SEQUENTIAL', memberConfig: '{}' }
+  editingTeamId.value = ''
+  resetForm()
 }
 
 function formatDate(date: string): string {
@@ -214,10 +211,6 @@ function getStatusClass(status: string): string {
 
 .page-header {
   margin-bottom: 2rem;
-}
-
-.toolbar {
-  margin-bottom: 1.5rem;
 }
 
 .btn-primary {
@@ -268,47 +261,6 @@ th, td {
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid #ddd;
-}
-
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dialog {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  min-width: 400px;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 0.5rem;
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
 }
 
 .empty-state {

@@ -6,7 +6,7 @@
     </div>
 
     <div class="toolbar">
-      <button @click="showCreateDialog = true" class="btn-primary">新建技能</button>
+      
     </div>
 
     <div class="skill-list">
@@ -48,11 +48,15 @@
     </div>
 
     <!-- 创建/编辑对话框 -->
-    <div v-if="showCreateDialog || showEditDialog" class="dialog-overlay">
-      <div class="dialog">
-        <h3>{{ showEditDialog ? '编辑技能' : '新建技能' }}</h3>
-        <form @submit.prevent="showEditDialog ? updateSkillHandler() : createSkillHandler()">
-          <div class="form-group">
+    <ModalDialog
+      v-model:visible="showCreateDialog"
+      :title="showEditDialog ? '编辑技能' : '新建技能'"
+      @confirm="showEditDialog ? updateSkillHandler() : createSkillHandler()"
+      @close="closeDialog"
+      :confirm-text="showEditDialog ? '更新' : '创建'"
+    >
+      <form>
+<div class="form-group">
             <label>技能编码</label>
             <input v-model="form.skillCode" :disabled="showEditDialog" required />
           </div>
@@ -76,20 +80,15 @@
             <label>定义 (JSON)</label>
             <textarea v-model="form.definition" rows="5"></textarea>
           </div>
-          <div class="form-actions">
-            <button type="button" @click="closeDialog" class="btn-secondary">取消</button>
-            <button type="submit" class="btn-primary">{{ showEditDialog ? '更新' : '创建' }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </ModalDialog>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
-import { listSkills, createSkill, updateSkill, enableSkill, disableSkill, deleteSkill } from '@/api/skill-api'
+import { listSkills, createSkill, updateSkill, enableSkill, disableSkill, deleteSkill, syncSkills } from '@/api/skill-api'
 import type { Skill } from '@/types/memory'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
@@ -114,15 +113,27 @@ const selection = () => ({
   workspaceId: store.workspaceId
 })
 
-onMounted(async () => {
-
 // 监听全局新增事件
+const handleGlobalAdd = () => {
+  editingSkillId.value = ''
+  showCreateDialog.value = true
+}
+
+const handleGlobalSync = () => {
+  if (window.location.pathname.includes('skill')) {
+    syncSkillsHandler()
+  }
+}
+
 onMounted(() => {
-  window.addEventListener('global-add', () => {
-    showCreateForm.value = true
-  })
+  window.addEventListener('global-add', handleGlobalAdd)
+  window.addEventListener('global-sync', handleGlobalSync)
+  loadSkills()
 })
-  await loadSkills()
+
+onUnmounted(() => {
+  window.removeEventListener('global-add', handleGlobalAdd)
+  window.removeEventListener('global-sync', handleGlobalSync)
 })
 
 async function loadSkills() {
@@ -130,6 +141,15 @@ async function loadSkills() {
     skills.value = await listSkills(selection())
   } catch (e) {
     console.error('Failed to load skills', e)
+  }
+}
+
+async function syncSkillsHandler() {
+  try {
+    await syncSkills(selection())
+    await loadSkills()
+  } catch (e) {
+    console.error('Failed to sync skills', e)
   }
 }
 
@@ -186,6 +206,7 @@ function editSkill(skill: Skill) {
     skillType: skill.skillType,
     definition: skill.definition
   }
+  showCreateDialog.value = true
   showEditDialog.value = true
 }
 

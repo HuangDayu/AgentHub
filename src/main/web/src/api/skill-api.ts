@@ -86,3 +86,11 @@ export async function deleteSkill(selection: Selection, skillId: string): Promis
     headers: buildHeaders(selection),
   })
 }
+
+export async function syncSkills(selection: Selection): Promise<void> {
+  return requestJson<void>(`/api/v1/workspaces/${selection.workspaceId}/skills/sync`, {
+    baseUrl: runtimeConfig.agentApiBase,
+    method: 'POST',
+    headers: buildHeaders(selection),
+  })
+}

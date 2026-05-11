@@ -1,16 +1,16 @@
 <template>
   <section class="settings-page fade-in glass-float">
     <div class="page-header">
+      <div>
+        <h2>设置</h2>
+        <p class="muted">管理您的AgentHub配置和功能模块</p>
+      </div>
       <CustomButton type="ghost" class="back-btn" @click="goBack">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
         返回
       </CustomButton>
-      <div>
-        <h2>设置</h2>
-        <p class="muted">管理您的AgentHub配置和功能模块</p>
-      </div>
     </div>
 
     <div class="settings-grid">
@@ -47,6 +47,23 @@
         </svg>
       </article>
 
+      <!-- 记忆管理 -->
+      <article class="settings-card" @click="navigateTo('memories')">
+        <div class="card-icon float-effect">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+        </div>
+        <div class="card-content float-effect">
+          <h3>记忆管理</h3>
+          <p class="muted">管理对话记忆和上下文</p>
+        </div>
+        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </article>
+
       <!-- Agent管理 -->
       <article class="settings-card" @click="navigateTo('agents')">
         <div class="card-icon float-effect">
@@ -76,6 +93,25 @@
         <div class="card-content float-effect">
           <h3>Agent配置</h3>
           <p class="muted">配置Agent参数和行为</p>
+        </div>
+        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </article>
+
+      <!-- Agent团队 -->
+      <article class="settings-card" @click="navigateTo('teams')">
+        <div class="card-icon float-effect">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="card-content float-effect">
+          <h3>Agent团队</h3>
+          <p class="muted">管理多Agent协作团队</p>
         </div>
         <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 18l6-6-6-6"/>
@@ -136,22 +172,6 @@
         </svg>
       </article>
 
-      <!-- MCP工具 -->
-      <article class="settings-card" @click="navigateTo('mcp-tools')">
-        <div class="card-icon float-effect">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-3.77 3.77a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-3.77 3.77a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0"/>
-          </svg>
-        </div>
-        <div class="card-content float-effect">
-          <h3>MCP工具</h3>
-          <p class="muted">管理MCP工具集成</p>
-        </div>
-        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 18l6-6-6-6"/>
-        </svg>
-      </article>
-
       <!-- 提示词模板 -->
       <article class="settings-card" @click="navigateTo('prompt-templates')">
         <div class="card-icon float-effect">
@@ -163,39 +183,6 @@
         <div class="card-content float-effect">
           <h3>提示词模板</h3>
           <p class="muted">管理提示词模板库</p>
-        </div>
-        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 18l6-6-6-6"/>
-        </svg>
-      </article>
-
-      <!-- 记忆管理 -->
-      <article class="settings-card" @click="navigateTo('memories')">
-        <div class="card-icon float-effect">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-          </svg>
-        </div>
-        <div class="card-content float-effect">
-          <h3>记忆管理</h3>
-          <p class="muted">管理对话记忆和上下文</p>
-        </div>
-        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 18l6-6-6-6"/>
-        </svg>
-      </article>
-
-      <!-- 技能管理 -->
-      <article class="settings-card" @click="navigateTo('skills')">
-        <div class="card-icon float-effect">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-        </div>
-        <div class="card-content float-effect">
-          <h3>技能管理</h3>
-          <p class="muted">管理Agent技能和能力</p>
         </div>
         <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 18l6-6-6-6"/>
@@ -218,35 +205,32 @@
         </svg>
       </article>
 
-      <!-- Agent团队 -->
-      <article class="settings-card" @click="navigateTo('teams')">
+      <!-- MCP工具 -->
+      <article class="settings-card" @click="navigateTo('mcp-tools')">
         <div class="card-icon float-effect">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-3.77 3.77a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-3.77 3.77a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0"/>
           </svg>
         </div>
         <div class="card-content float-effect">
-          <h3>Agent团队</h3>
-          <p class="muted">管理多Agent协作团队</p>
+          <h3>MCP工具</h3>
+          <p class="muted">管理MCP工具集成</p>
         </div>
         <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </article>
 
-      <!-- 安全策略 -->
-      <article class="settings-card" @click="navigateTo('security-policies')">
+      <!-- 技能管理 -->
+      <article class="settings-card" @click="navigateTo('skills')">
         <div class="card-icon float-effect">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
           </svg>
         </div>
         <div class="card-content float-effect">
-          <h3>安全策略</h3>
-          <p class="muted">配置安全和访问策略</p>
+          <h3>技能管理</h3>
+          <p class="muted">管理Agent技能和能力</p>
         </div>
         <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 18l6-6-6-6"/>
@@ -282,22 +266,6 @@
         <div class="card-content float-effect">
           <h3>定时任务</h3>
           <p class="muted">定时任务调度管理</p>
-        </div>
-        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 18l6-6-6-6"/>
-        </svg>
-      </article>
-      <article class="settings-card" @click="navigateTo('system-tools')">
-        <div class="card-icon float-effect">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-            <line x1="8" y1="21" x2="16" y2="21"/>
-            <line x1="12" y1="17" x2="12" y2="21"/>
-          </svg>
-        </div>
-        <div class="card-content float-effect">
-          <h3>系统工具</h3>
-          <p class="muted">系统工具和实用功能</p>
         </div>
         <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 18l6-6-6-6"/>

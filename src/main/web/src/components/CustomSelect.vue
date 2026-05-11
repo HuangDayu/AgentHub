@@ -152,7 +152,7 @@ const vClickOutside = {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: 100%;
+  width: 150px;
 }
 
 .select-label {

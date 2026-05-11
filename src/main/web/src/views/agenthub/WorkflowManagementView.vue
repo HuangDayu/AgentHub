@@ -5,10 +5,6 @@
       <p class="muted">管理Agent的工作流图定义</p>
     </div>
 
-    <div class="toolbar">
-      <button @click="showCreateDialog = true" class="btn-primary">新建工作流</button>
-    </div>
-
     <div class="workflow-list">
       <table v-if="workflows.length > 0">
         <thead>
@@ -46,33 +42,32 @@
     </div>
 
     <!-- 创建/编辑对话框 -->
-    <div v-if="showCreateDialog || showEditDialog" class="dialog-overlay">
-      <div class="dialog">
-        <h3>{{ showEditDialog ? '编辑工作流' : '新建工作流' }}</h3>
-        <form @submit.prevent="showEditDialog ? updateWorkflowHandler() : createWorkflowHandler()">
-          <div class="form-group">
-            <label>工作流编码</label>
-            <input v-model="form.workflowCode" :disabled="showEditDialog" required />
-          </div>
-          <div class="form-group">
-            <label>名称</label>
-            <input v-model="form.name" required />
-          </div>
-          <div class="form-group">
-            <label>描述</label>
-            <textarea v-model="form.description" rows="3"></textarea>
-          </div>
-          <div class="form-group">
-            <label>图定义 (JSON/DAG)</label>
-            <textarea v-model="form.graphDefinition" rows="8"></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="button" @click="closeDialog" class="btn-secondary">取消</button>
-            <button type="submit" class="btn-primary">{{ showEditDialog ? '更新' : '创建' }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ModalDialog
+      v-model:visible="showCreateDialog"
+      :title="editingWorkflowId ? '编辑工作流' : '新建工作流'"
+      @close="closeDialog"
+      @confirm="editingWorkflowId ? updateWorkflowHandler() : createWorkflowHandler()"
+      :confirm-text="editingWorkflowId ? '更新' : '创建'"
+    >
+      <form class="field-grid">
+        <label class="field">
+          <span>工作流编码 *</span>
+          <input v-model="form.workflowCode" :disabled="!!editingWorkflowId" required />
+        </label>
+        <label class="field">
+          <span>名称 *</span>
+          <input v-model="form.name" required />
+        </label>
+        <label class="field">
+          <span>描述</span>
+          <textarea v-model="form.description" rows="3"></textarea>
+        </label>
+        <label class="field">
+          <span>图定义 (JSON/DAG)</span>
+          <textarea v-model="form.graphDefinition" rows="8"></textarea>
+        </label>
+      </form>
+    </ModalDialog>
   </section>
 </template>
 
@@ -88,7 +83,6 @@ import CustomButton from '@/components/CustomButton.vue'
 const store = useWorkspaceStore()
 const workflows = ref<Workflow[]>([])
 const showCreateDialog = ref(false)
-const showEditDialog = ref(false)
 const editingWorkflowId = ref('')
 
 const form = ref({
@@ -104,13 +98,12 @@ const selection = () => ({
 })
 
 onMounted(async () => {
-
-// 监听全局新增事件
-onMounted(() => {
+  // 监听全局新增事件
   window.addEventListener('global-add', () => {
-    showCreateForm.value = true
+    editingWorkflowId.value = ''
+    resetForm()
+    showCreateDialog.value = true
   })
-})
   await loadWorkflows()
 })
 
@@ -174,13 +167,17 @@ function editWorkflow(workflow: Workflow) {
     description: workflow.description,
     graphDefinition: workflow.graphDefinition
   }
-  showEditDialog.value = true
+  showCreateDialog.value = true
+}
+
+function resetForm() {
+  form.value = { workflowCode: '', name: '', description: '', graphDefinition: '{}' }
 }
 
 function closeDialog() {
   showCreateDialog.value = false
-  showEditDialog.value = false
-  form.value = { workflowCode: '', name: '', description: '', graphDefinition: '{}' }
+  editingWorkflowId.value = ''
+  resetForm()
 }
 
 function formatDate(date: string): string {
@@ -195,10 +192,6 @@ function formatDate(date: string): string {
 
 .page-header {
   margin-bottom: 2rem;
-}
-
-.toolbar {
-  margin-bottom: 1.5rem;
 }
 
 .btn-primary {
@@ -245,46 +238,6 @@ th, td {
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid #ddd;
-}
-
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dialog {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  min-width: 400px;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 0.5rem;
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
 }
 
 .empty-state {

@@ -11,7 +11,7 @@
             <p class="muted">管理定时执行的任务调度</p>
           </div>
           <div class="header-right">
-            <CustomButton type="primary" @click="showCreateDialog = true">新建任务</CustomButton>
+            
           </div>
         </div>
       </article>
@@ -73,51 +73,50 @@
       </article>
 
       <!-- Create/Edit Dialog -->
-      <div v-if="showCreateDialog || showEditDialog" class="dialog-overlay" @click.self="closeDialog">
-        <div class="dialog">
-          <h3>{{ showEditDialog ? '编辑任务' : '新建任务' }}</h3>
-          <form @submit.prevent="showEditDialog ? updateTaskHandler() : createTaskHandler()">
-            <div class="form-group">
-              <label>任务编码</label>
-              <input v-model="form.taskCode" :disabled="showEditDialog" required />
-            </div>
-            <div class="form-group">
-              <label>名称</label>
-              <input v-model="form.name" required />
-            </div>
-            <div class="form-group">
-              <label>描述</label>
-              <textarea v-model="form.description" rows="3"></textarea>
-            </div>
-            <div class="form-group">
-              <label>任务类型</label>
-              <select v-model="form.taskType" required :disabled="showEditDialog">
-                <option value="AGENT_CALL">Agent调用</option>
-                <option value="WORKFLOW">工作流</option>
-                <option value="DATA_SYNC">数据同步</option>
-                <option value="CLEANUP">清理任务</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Cron表达式</label>
-              <input v-model="form.cronExpression" required placeholder="0 0 2 * * ?" />
-              <small class="hint">示例: 0 0 2 * * ? (每天凌晨2点执行)</small>
-            </div>
-            <div class="form-group">
-              <label>执行器配置 (JSON)</label>
-              <textarea v-model="form.executorConfig" rows="3" placeholder='{"agentId": "xxx"}'></textarea>
-            </div>
-            <div class="form-group">
-              <label>Prompt提示词</label>
-              <textarea v-model="form.prompt" rows="5" placeholder="输入任务执行的提示词..."></textarea>
-            </div>
-            <div class="form-actions">
-              <button type="button" class="btn-secondary" @click="closeDialog">取消</button>
-              <button type="submit" class="btn-primary">{{ showEditDialog ? '更新' : '创建' }}</button>
-            </div>
-          </form>
+      <ModalDialog
+      v-model:visible="showCreateDialog"
+      :title="showEditDialog ? '编辑任务' : '新建任务'"
+      @confirm="showEditDialog ? updateTaskHandler() : createTaskHandler()"
+      @close="closeDialog"
+      :confirm-text="showEditDialog ? '更新' : '创建'"
+    >
+      <form>
+        <div class="form-group">
+          <label>任务编码</label>
+          <input v-model="form.taskCode" :disabled="showEditDialog" required />
         </div>
-      </div>
+        <div class="form-group">
+          <label>名称</label>
+          <input v-model="form.name" required />
+        </div>
+        <div class="form-group">
+          <label>描述</label>
+          <textarea v-model="form.description" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>任务类型</label>
+          <select v-model="form.taskType" required :disabled="showEditDialog">
+            <option value="AGENT_CALL">Agent调用</option>
+            <option value="WORKFLOW">工作流</option>
+            <option value="DATA_SYNC">数据同步</option>
+            <option value="CLEANUP">清理任务</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cron表达式</label>
+          <input v-model="form.cronExpression" required placeholder="0 0 2 * * ?" />
+          <small class="hint">示例: 0 0 2 * * ? (每天凌晨2点执行)</small>
+        </div>
+        <div class="form-group">
+          <label>执行器配置 (JSON)</label>
+          <textarea v-model="form.executorConfig" rows="3" placeholder='{"agentId": "xxx"}'></textarea>
+        </div>
+        <div class="form-group">
+          <label>Prompt提示词</label>
+          <textarea v-model="form.prompt" rows="5" placeholder="输入任务执行的提示词..."></textarea>
+        </div>
+      </form>
+    </ModalDialog>
     </template>
   </section>
 </template>
@@ -179,7 +178,7 @@ async function loadTasks() {
   if (!selectionReady.value) return
   loading.value = true
   try {
-    tasks.value = await listScheduledTasks(getSelection())
+    tasks.value = await listScheduledTasks(getSelection().workspaceId)
   } catch (error) {
     console.error('Failed to load tasks:', error)
   } finally {
@@ -217,6 +216,7 @@ function editTask(task: ScheduledTask) {
     executorConfig: task.executorConfig,
     prompt: task.prompt
   }
+  showCreateDialog.value = true
   showEditDialog.value = true
 }
 
@@ -291,7 +291,8 @@ onMounted(loadTasks)
 
   // 监听全局新增事件
   window.addEventListener('global-add', () => {
-    showCreateForm.value = true
+    editingTaskId.value = ''
+    showCreateDialog.value = true
   })
 watch(() => [store.tenantId, store.workspaceId], loadTasks)
 </script>

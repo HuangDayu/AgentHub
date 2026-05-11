@@ -12,6 +12,9 @@
           </div>
           <div class="header-right">
             <CustomSelect v-model="selectedAgentId" :options="agentsOptions" placeholder="请选择Agent" />
+            <CustomSelect v-model="selectedCategory" :options="configTypesOptionsWithAll" placeholder="全部类别" />
+            <CustomSelect v-model="selectedType" :options="typesForFilterOptionsWithAll" placeholder="全部类型" />
+            <CustomSelect v-model="cardSize" :options="cardSizeOptions" placeholder="卡片大小" />
           </div>
         </div>
         <p v-if="error" class="status">{{ error }}</p>
@@ -19,22 +22,6 @@
 
       <!-- 配置列表 -->
       <article v-if="selectedAgentId" class="panel">
-        <div class="panel-header">
-          <h3>{{ selectedAgentName }} - 配置列表</h3>
-          <div class="header-controls">
-            <CustomSelect v-model="selectedCategory" :options="configTypesOptions" placeholder="全部类别" />
-            <CustomSelect v-model="selectedType" :options="typesForFilterOptions" placeholder="全部类型" />
-            <select v-model="cardSize" class="size-select">
-              <option :value="1">大小: 1级</option>
-              <option :value="2">大小: 2级</option>
-              <option :value="3">大小: 3级</option>
-              <option :value="4">大小: 4级</option>
-              <option :value="5">大小: 5级</option>
-            </select>
-            <CustomButton type="secondary" @click="handleSync" :disabled="loading || !selectedAgentId">同步</CustomButton>
-            
-          </div>
-        </div>
 
         <!-- 配置方块网格 -->
         <div v-if="filteredConfigs.length === 0" class="empty-hint">
@@ -133,13 +120,13 @@
             </label>
             <label class="form-field">
               <span>类型 *</span>
-              <CustomSelect v-model="form.type" :options="typesForFilterOptions" placeholder="请选择类型" disabled required />
+              <CustomSelect v-model="form.type" :options="typesForCategoryOptions" placeholder="请选择类型" :disabled="!form.category" required />
             </label>
           </div>
           <div class="form-row">
             <label class="form-field">
               <span>配置项 *</span>
-              <CustomSelect v-model="form.configId" :options="availableConfigsForTypeOptions" placeholder="请选择配置" disabled required />
+              <CustomSelect v-model="form.configId" :options="availableConfigsForTypeOptions" placeholder="请选择配置" :disabled="!form.type" required />
             </label>
             <label class="form-field">
               <span>优先级</span>
@@ -154,9 +141,9 @@
             <span>描述</span>
             <input v-model="form.description" type="text" placeholder="输入配置描述..." />
           </label>
-          <label class="form-field checkbox-field">
-            <input v-model="form.enabled" type="checkbox" />
+          <label class="form-field">
             <span>启用此配置</span>
+            <CustomSelect v-model="form.enabled" :options="enabledOptions" placeholder="请选择" />
           </label>
       </form>
     </ModalDialog>
@@ -165,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import {useWorkspaceStore} from '@/store/workspace-store'
 import {type Agent, listAgents} from '@/api/agent-api'
@@ -204,9 +191,30 @@ const showDetailModal = ref(false)
 const detailConfig = ref<AgentConfig | null>(null)
 const agentsOptions = computed(() => agents.value.map(agent => ({ value: agent.id, label: agent.name })))
 const configTypesOptions = computed(() => configTypes.value.map(ct => ({ value: ct.category, label: ct.displayName })))
+const configTypesOptionsWithAll = computed(() => [
+  { value: '', label: '全部类别' },
+  ...configTypesOptions.value
+])
 const typesForFilterOptions = computed(() => typesForFilter.value.map(t => ({ value: t.type, label: t.displayName })))
+const typesForFilterOptionsWithAll = computed(() => [
+  { value: '', label: '全部类型' },
+  ...typesForFilterOptions.value
+])
+const cardSizeOptions = computed(() => [
+  { value: 1, label: '大小: 1级' },
+  { value: 2, label: '大小: 2级' },
+  { value: 3, label: '大小: 3级' },
+  { value: 4, label: '大小: 4级' },
+  { value: 5, label: '大小: 5级' }
+])
+
+const enabledOptions = computed(() => [
+  { value: true, label: '是' },
+  { value: false, label: '否' }
+])
+
 const availableConfigsForTypeOptions = computed(() => {
-  const ac = availableConfigs.value.get(selectedType.value)
+  const ac = availableConfigs.value.get(form.value.type)
   return ac?.map(c => ({ value: c.id, label: c.name })) || []
 })
 
@@ -230,6 +238,10 @@ const selectedAgentName = computed(() => {
 const typesForCategory = computed(() => {
   const ct = configTypes.value.find(c => c.category === form.value.category)
   return ct?.types || []
+})
+
+const typesForCategoryOptions = computed(() => {
+  return typesForCategory.value.map(t => ({ value: t.type, label: t.displayName }))
 })
 
 const typesForFilter = computed(() => {
@@ -268,24 +280,37 @@ const filteredConfigs = computed(() => {
   return result
 })
 
-onMounted(() => {
-
 // 监听全局新增事件
+const handleGlobalAdd = () => {
+  showAddForm.value = true
+}
+
+const handleGlobalSync = () => {
+  if (window.location.pathname.includes('agent-configs') && selectedAgentId.value) {
+    handleSync()
+  }
+}
+
 onMounted(() => {
-  window.addEventListener('global-add', () => {
-    showAddForm.value = true
-  })
-})
+  window.addEventListener('global-add', handleGlobalAdd)
+  window.addEventListener('global-sync', handleGlobalSync)
+
   if (selectionReady.value) {
     loadAgents()
     loadConfigTypes()
   }
-  // 从URL参数读取agentId
-  const agentIdFromQuery = route.query.agentId as string
-  if (agentIdFromQuery) {
-    selectedAgentId.value = agentIdFromQuery
-  }
 })
+
+onUnmounted(() => {
+  window.removeEventListener('global-add', handleGlobalAdd)
+  window.removeEventListener('global-sync', handleGlobalSync)
+})
+
+// 从URL参数读取agentId
+const agentIdFromQuery = route.query.agentId as string
+if (agentIdFromQuery) {
+  selectedAgentId.value = agentIdFromQuery
+}
 
 watch(() => [store.tenantId, store.workspaceId], () => {
   if (selectionReady.value) {
@@ -316,7 +341,8 @@ watch(() => form.value.configId, (newConfigId) => {
   if (newConfigId) {
     const config = availableConfigsForType.value.find(c => c.id === newConfigId)
     if (config) {
-      form.value.description = config.name
+      form.value.name = config.name
+      form.value.description = config.description || ''
     }
   }
 })
@@ -543,6 +569,8 @@ async function handleSync() {
 
 .header-panel {
   padding: 1.25rem;
+  position: relative;
+  z-index: 10;
 }
 
 .header-row {

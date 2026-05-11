@@ -29,7 +29,6 @@ const agentHubRoutes = {
     { path: 'skills', component: () => import('@/views/agenthub/SkillManagementView.vue') },
     { path: 'workflows', component: () => import('@/views/agenthub/WorkflowManagementView.vue') },
     { path: 'teams', component: () => import('@/views/agenthub/AgentTeamManagementView.vue') },
-    { path: 'security-policies', component: () => import('@/views/agenthub/SecurityPolicyManagementView.vue') },
     { path: 'system-tools', component: () => import('@/views/agenthub/SystemToolsView.vue') },
     { path: 'scheduled-tasks', component: () => import('@/views/agenthub/ScheduledTaskView.vue') },
   ],

@@ -33,8 +33,9 @@
     <!-- 悬浮设置按钮 -->
     <FloatingSettingsButton />
   </div>
-    <FloatingEffectButton />
-    <FloatingAddButton v-if="showAddButton" @add="handleAdd" />
+    <FloatingEffectButton :bottom="buttonPositions.effect" />
+    <FloatingSyncButton v-if="showSyncButton" :bottom="buttonPositions.sync" @sync="handleSync" />
+    <FloatingAddButton v-if="showAddButton" :bottom="buttonPositions.add" @add="handleAdd" />
 </template>
 
 <script setup lang="ts">
@@ -47,6 +48,7 @@ import FloatingSettingsButton from './FloatingSettingsButton.vue'
 
 import FloatingEffectButton from './FloatingEffectButton.vue'
 import FloatingAddButton from './FloatingAddButton.vue'
+import FloatingSyncButton from './FloatingSyncButton.vue'
 const store = useWorkspaceStore()
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -59,20 +61,26 @@ const showAddButton = computed(() => {
   return path.includes('strategies') ||
          path.includes('agents') ||
          path.includes('workspace') ||
-         path.includes('vector-stores') || 
-         path.includes('models') || 
+         path.includes('vector-stores') ||
+         path.includes('models') ||
          path.includes('agent-configs') ||
          path.includes('knowledge') ||
          path.includes('retrieval') ||
          path.includes('strategy') ||
          path.includes('mcp-tool') ||
          path.includes('prompt-template') ||
-         path.includes('memory') ||
+         path.includes('memories') ||
          path.includes('skill') ||
          path.includes('workflow') ||
-         path.includes('agent-team') ||
+         path.includes('teams') ||
          path.includes('security-policy') ||
          path.includes('scheduled-task')
+})
+
+// 判断是否显示同步按钮
+const showSyncButton = computed(() => {
+  const path = route.path
+  return path.includes('skill') || path.includes('system-tools') || path.includes('agent-configs')
 })
 
 // 处理新增按钮点击
@@ -80,6 +88,46 @@ const handleAdd = () => {
   // 触发全局事件，让各个页面监听
   window.dispatchEvent(new CustomEvent('global-add'))
 }
+
+// 处理同步按钮点击
+const handleSync = () => {
+  // 触发全局事件，让各个页面监听
+  window.dispatchEvent(new CustomEvent('global-sync'))
+}
+
+// 计算按钮位置
+const buttonPositions = computed(() => {
+  const BUTTON_HEIGHT = 48
+  const BUTTON_GAP = 8
+  const BASE_BOTTOM = 24
+
+  let currentBottom = BASE_BOTTOM
+  const positions = {
+    settings: currentBottom,
+    effect: 0,
+    sync: 0,
+    add: 0
+  }
+
+  // 设置按钮：24px
+  currentBottom += BUTTON_HEIGHT + BUTTON_GAP
+  // 主题按钮
+  positions.effect = currentBottom
+
+  // 如果有同步按钮
+  if (showSyncButton.value) {
+    currentBottom += BUTTON_HEIGHT + BUTTON_GAP
+    positions.sync = currentBottom
+  }
+
+  // 如果有新增按钮
+  if (showAddButton.value) {
+    currentBottom += BUTTON_HEIGHT + BUTTON_GAP
+    positions.add = currentBottom
+  }
+
+  return positions
+})
 const router = useRouter()
 
 // 初始化租户ID

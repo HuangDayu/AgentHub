@@ -9,12 +9,12 @@
     </div>
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     <template v-else>
-      <article v-show="showCreateForm || editingId" class="panel stack">
-        <div class="page-header">
-          <h3 style="margin: 0">{{ editingId ? '编辑MCP工具' : '创建MCP工具' }}</h3>
-          <CustomButton type="ghost" @click="cancelForm">取消</CustomButton>
-        </div>
-        <form class="field-grid" @submit.prevent="submitConfig">
+      <ModalDialog
+      v-model:visible="showCreateForm" :title="editingId ? '编辑MCP工具' : '创建MCP工具'" @close="cancelForm"
+      @confirm="submitConfig"
+      :confirm-text="editingId ? '更新' : '创建'"
+    >
+        <form class="field-grid">
           <label class="field">
             <span>名称 *</span>
             <input v-model="form.name" required placeholder="工具名称" />
@@ -61,14 +61,10 @@
               <option :value="false">禁用</option>
             </select>
           </label>
-          <CustomButton type="primary" native-type="submit">{{ editingId ? '更新' : '创建' }}</CustomButton>
-        </form>      </article>
+        </form>
+      </ModalDialog>
 
       <article class="table-card">
-        <div class="page-header">
-          <h3 style="margin: 0">工具列表</h3>
-          <CustomButton type="primary" @click="showCreateForm = true">新建工具</CustomButton>
-        </div>
         <table>
           <thead>
             <tr>
@@ -140,6 +136,7 @@ onMounted(loadTools)
 
   // 监听全局新增事件
   window.addEventListener('global-add', () => {
+    editingId.value = null
     showCreateForm.value = true
   })
 watch(() => [store.tenantId, store.workspaceId], loadTools)
@@ -160,6 +157,7 @@ function startEdit(httpTool: McpTool) {
   form.envInput = httpTool.env ? Object.entries(httpTool.env).map(([k, v]) => `${k}=${v}`).join('\n') : ''
   form.async = httpTool.async
   form.enabled = httpTool.enabled
+  showCreateForm.value = true
 }
 
 function cancelForm() {

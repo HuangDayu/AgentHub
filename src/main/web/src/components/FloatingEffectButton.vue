@@ -1,6 +1,6 @@
 <template>
-  <div class="floating-button-container">
-    <button 
+  <div class="floating-button-container" :style="{ bottom: `${bottom}px` }">
+    <button
       class="floating-btn"
       @click="showDialog = true"
       @mouseenter="showTooltip = true"
@@ -35,6 +35,10 @@ import { ref } from 'vue'
 import ModalDialog from '@/components/ModalDialog.vue'
 import EffectToggle from '@/components/EffectToggle.vue'
 
+const props = defineProps<{
+  bottom: number
+}>()
+
 const showDialog = ref(false)
 const showTooltip = ref(false)
 </script>
@@ -42,7 +46,6 @@ const showTooltip = ref(false)
 <style scoped>
 .floating-button-container {
   position: fixed;
-  bottom: 84px;
   right: 24px;
   z-index: 1000;
 }

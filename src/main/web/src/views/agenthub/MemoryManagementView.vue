@@ -1,23 +1,18 @@
 <template>
   <section class="memory-management glass-float">
     <div class="page-header">
-      <h2>记忆管理</h2>
-      <p class="muted">管理Agent的长期记忆存储</p>
+      <div>
+        <h2>记忆管理</h2>
+        <p class="muted">管理Agent的长期记忆存储</p>
+      </div>
+      <div class="header-right">
+          <CustomSelect v-model="selectedAgentId"  :options="agentsOptions" placeholder="请选择Agent" />
+      </div>
     </div>
 
-    <div class="toolbar">
-      <select v-model="selectedAgentId" class="agent-select">
-        <option value="">选择Agent</option>
-        <option v-for="agent in agents" :key="agent.id" :value="agent.id">
-          {{ agent.name }}
-        </option>
-      </select>
-      <button @click="showCreateDialog = true" :disabled="!selectedAgentId" class="btn-primary">
-        新建记忆
-      </button>
-    </div>
+    <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
 
-    <div class="memory-list">
+    <div class="memory-list" v-else>
       <table v-if="memories.length > 0">
         <thead>
           <tr>
@@ -36,7 +31,7 @@
             <td>{{ formatDate(memory.createdAt) }}</td>
             <td>
               <button @click="editMemory(memory)" class="btn-small">编辑</button>
-              <button @click="deleteMemory(memory.id)" class="btn-small btn-danger">删除</button>
+              <button @click="deleteMemoryHandler(memory.id)" class="btn-small btn-danger">删除</button>
             </td>
           </tr>
         </tbody>
@@ -47,38 +42,37 @@
     </div>
 
     <!-- 创建/编辑对话框 -->
-    <div v-if="showCreateDialog || showEditDialog" class="dialog-overlay">
-      <div class="dialog">
-        <h3>{{ showEditDialog ? '编辑记忆' : '新建记忆' }}</h3>
-        <form @submit.prevent="showEditDialog ? updateMemoryHandler() : createMemoryHandler()">
-          <div class="form-group">
-            <label>记忆类型</label>
-            <select v-model="form.memoryType" required>
-              <option value="EPISODIC">情景记忆</option>
-              <option value="SEMANTIC">语义记忆</option>
-              <option value="PROCEDURAL">程序记忆</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>内容</label>
-            <textarea v-model="form.content" rows="5" required></textarea>
-          </div>
-          <div class="form-group">
-            <label>重要性 (0-1)</label>
-            <input type="number" v-model.number="form.importance" min="0" max="1" step="0.1" required />
-          </div>
-          <div class="form-actions">
-            <button type="button" @click="closeDialog" class="btn-secondary">取消</button>
-            <button type="submit" class="btn-primary">{{ showEditDialog ? '更新' : '创建' }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ModalDialog
+      v-model:visible="showCreateDialog"
+      :title="showEditDialog ? '编辑记忆' : '新建记忆'"
+      @confirm="showEditDialog ? updateMemoryHandler() : createMemoryHandler()"
+      @close="closeDialog"
+      :confirm-text="showEditDialog ? '更新' : '创建'"
+    >
+      <form>
+        <div class="form-group">
+          <label>记忆类型</label>
+          <select v-model="form.memoryType" required>
+            <option value="EPISODIC">情景记忆</option>
+            <option value="SEMANTIC">语义记忆</option>
+            <option value="PROCEDURAL">程序记忆</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>内容</label>
+          <textarea v-model="form.content" rows="5" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>重要性 (0-1)</label>
+          <input type="number" v-model.number="form.importance" min="0" max="1" step="0.1" required />
+        </div>
+      </form>
+    </ModalDialog>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listMemoriesByAgent, createMemory, updateMemory, deleteMemory } from '@/api/memory-api'
 import { listAgents } from '@/api/agent-api'
@@ -95,6 +89,7 @@ const selectedAgentId = ref('')
 const showCreateDialog = ref(false)
 const showEditDialog = ref(false)
 const editingMemoryId = ref('')
+const agentsOptions = computed(() => agents.value.map(agent => ({ value: agent.id, label: agent.name })))
 
 const form = ref({
   memoryType: 'EPISODIC',
@@ -107,20 +102,54 @@ const selection = () => ({
   workspaceId: store.workspaceId
 })
 
-onMounted(async () => {
+const selectionReady = computed(() => Boolean(store.tenantId && store.workspaceId))
 
-// 监听全局新增事件
-onMounted(() => {
+onMounted(async () => {
+  // 监听全局新增事件
   window.addEventListener('global-add', () => {
-    showCreateForm.value = true
+    if (!selectedAgentId.value) {
+      alert('请先选择一个Agent')
+      return
+    }
+    openCreateDialog()
   })
+
+  // 加载Agent列表
+  await loadAgents()
 })
+
+// 监听租户和工作区变化
+watch(() => [store.tenantId, store.workspaceId], async () => {
+  await loadAgents()
+})
+
+async function loadAgents() {
+  if (!selectionReady.value) {
+    agents.value = []
+    return
+  }
+
   try {
     agents.value = await listAgents(selection())
+    // 默认选中第一个Agent
+    if (agents.value.length > 0 && !selectedAgentId.value) {
+      selectedAgentId.value = agents.value[0].id
+    }
   } catch (e) {
     console.error('Failed to load agents', e)
   }
-})
+}
+
+function openCreateDialog() {
+  editingMemoryId.value = ''
+  showEditDialog.value = false
+  form.value = {
+    memoryType: 'EPISODIC',
+    content: '',
+    importance: 0.5
+  }
+  showCreateDialog.value = true
+}
 
 watch(selectedAgentId, async (newId) => {
   if (newId) {
@@ -135,6 +164,11 @@ watch(selectedAgentId, async (newId) => {
 })
 
 async function createMemoryHandler() {
+  if (!selectionReady.value) return
+  if (!selectedAgentId.value) {
+    alert('请先选择一个Agent')
+    return
+  }
   try {
     await createMemory(selection(), selectedAgentId.value, form.value.memoryType, form.value.content, '{}', form.value.importance)
     memories.value = await listMemoriesByAgent(selection(), selectedAgentId.value)
@@ -145,6 +179,7 @@ async function createMemoryHandler() {
 }
 
 async function updateMemoryHandler() {
+  if (!selectionReady.value) return
   try {
     await updateMemory(selection(), editingMemoryId.value, form.value.content, '{}', form.value.importance)
     memories.value = await listMemoriesByAgent(selection(), selectedAgentId.value)
@@ -155,6 +190,7 @@ async function updateMemoryHandler() {
 }
 
 async function deleteMemoryHandler(id: string) {
+  if (!selectionReady.value) return
   if (confirm('确定删除此记忆？')) {
     try {
       await deleteMemory(selection(), id)
@@ -163,15 +199,14 @@ async function deleteMemoryHandler(id: string) {
       console.error('Failed to delete memory', e)
     }
   }
-}
-
-function editMemory(memory: Memory) {
+}function editMemory(memory: Memory) {
   editingMemoryId.value = memory.id
   form.value = {
     memoryType: memory.memoryType,
     content: memory.content,
     importance: memory.importance
   }
+  showCreateDialog.value = true
   showEditDialog.value = true
 }
 
@@ -196,30 +231,41 @@ function formatDate(date: string): string {
 }
 
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
 }
 
-.toolbar {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
 .agent-select {
-  padding: 0.5rem;
+  width: auto;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 0.9rem;
   min-width: 200px;
 }
 
-.btn-primary {
+.memory-list {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.btn {
   padding: 0.5rem 1rem;
-  background: #007bff;
-  color: white;
-  border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
 
+.btn-primary {
+  background: #007bff;
+  color: white;
+  border: none;
+}
+
 .btn-secondary {
-  padding: 0.5rem 1rem;
   background: #6c757d;
   color: white;
   border: none;

@@ -32,7 +32,7 @@
           <div class="sidebar-header">
             <h3>会话管理</h3>
           </div>
-          
+
           <!-- Agent 选择 -->
           <div class="sidebar-section">
             <label class="section-label">选择 Agent</label>
@@ -68,8 +68,8 @@
               </button>
             </div>
             <div class="session-list">
-              <div 
-                v-for="session in sessions" 
+              <div
+                v-for="session in sessions"
                 :key="session.sessionId"
                 :class="['session-item', { 'active': session.sessionId === selectedSessionId }]"
               >
@@ -94,6 +94,27 @@
                 <p class="hint">点击"新建"创建会话</p>
               </div>
             </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- 左侧：运行时管理 -->
+      <aside :class="['runtime-sidebar', { 'collapsed': !runtimeExpanded }]">
+        <div v-if="runtimeExpanded" class="runtime-content">
+          <div class="sidebar-header">
+            <h3>运行时管理</h3>
+          </div>
+
+          <!-- 运行时管理内容 - 待实现 -->
+          <div class="runtime-placeholder">
+            <div class="placeholder-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+            </div>
+            <p>运行时管理功能</p>
+            <p class="hint">待后端接口实现</p>
           </div>
         </div>
       </aside>
@@ -198,10 +219,23 @@
       </article>
     </div>
 
+    <!-- 左下角：运行时管理展开/收起按钮 -->
+    <button class="toggle-runtime-fab" @click="toggleRuntime" :title="runtimeExpanded ? '收起运行时管理' : '展开运行时管理'">
+      <svg v-if="runtimeExpanded" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+      <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </button>
+
     <!-- 左下角：会话管理展开/收起按钮 -->
     <button class="toggle-sidebar-fab" @click="toggleSidebar" :title="sidebarExpanded ? '收起会话管理' : '展开会话管理'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg v-if="sidebarExpanded" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M15 18l-6-6 6-6"/>
+      </svg>
+      <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6"/>
       </svg>
     </button>
   </section>
@@ -223,6 +257,7 @@ const error = ref('')
 
 // Sidebar state
 const sidebarExpanded = ref(true)
+const runtimeExpanded = ref(false)
 
 // Agent
 const agents = ref<Agent[]>([])
@@ -257,6 +292,19 @@ function getSelection() {
 // Toggle sidebar
 function toggleSidebar() {
   sidebarExpanded.value = !sidebarExpanded.value
+  // 如果展开会话管理，则收起运行时管理
+  if (sidebarExpanded.value) {
+    runtimeExpanded.value = false
+  }
+}
+
+// Toggle runtime panel
+function toggleRuntime() {
+  runtimeExpanded.value = !runtimeExpanded.value
+  // 如果展开运行时管理，则收起会话管理
+  if (runtimeExpanded.value) {
+    sidebarExpanded.value = false
+  }
 }
 
 // Load agents
@@ -284,6 +332,11 @@ async function loadSessions() {
   error.value = ''
   try {
     sessions.value = await listSessions(getSelection(), selectedAgentId.value)
+    // 默认选中第一个会话
+    if (sessions.value.length > 0 && !selectedSessionId.value) {
+      selectedSessionId.value = sessions.value[0].sessionId
+      await loadMessages()
+    }
   } catch (e: any) {
     error.value = e.message || '加载会话失败'
   }
@@ -1169,6 +1222,40 @@ onMounted(() => {
 }
 
 /* Toggle Sidebar FAB */
+.toggle-runtime-fab {
+  position: fixed;
+  bottom: 80px;
+  left: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #6c757d, #7a8288);
+  color: white;
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.toggle-runtime-fab svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}
+
+.toggle-runtime-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+}
+
+.toggle-runtime-fab:active {
+  transform: translateY(0);
+}
+
 .toggle-sidebar-fab {
   position: fixed;
   bottom: 24px;
@@ -1203,8 +1290,58 @@ onMounted(() => {
   transform: translateY(0);
 }
 
-.sidebar.collapsed ~ .toggle-sidebar-fab svg {
-  transform: rotate(180deg);
+.runtime-sidebar {
+  width: 320px;
+  background: var(--bg-color, #ffffff);
+  border-right: 1px solid var(--border-color, #e5e7eb);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  overflow: hidden;
+}
+
+.runtime-sidebar.collapsed {
+  width: 0;
+  border-right: none;
+}
+
+.runtime-content {
+  width: 320px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.runtime-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-muted, #6b7280);
+}
+
+.runtime-placeholder .placeholder-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.runtime-placeholder .placeholder-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.runtime-placeholder p {
+  margin: 0.5rem 0;
+}
+
+.runtime-placeholder .hint {
+  font-size: 0.875rem;
+  opacity: 0.7;
 }
 
 /* Animations */

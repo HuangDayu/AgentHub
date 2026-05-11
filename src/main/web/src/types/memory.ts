@@ -53,21 +53,3 @@ export interface AgentTeam {
   createdAt: string
   updatedAt: string
 }
-
-export interface SecurityPolicy {
-  id: string
-  tenantId: string
-  workspaceId: string
-  name: string
-  description: string
-  inputValidation: boolean
-  outputFiltering: boolean
-  rateLimitEnabled: boolean
-  rateLimitPerMinute: number
-  contentModeration: boolean
-  piiDetection: boolean
-  allowedDomains?: string
-  blockedPatterns?: string
-  createdAt: string
-  updatedAt: string
-}

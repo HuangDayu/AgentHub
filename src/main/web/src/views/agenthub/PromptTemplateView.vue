@@ -9,12 +9,12 @@
     </div>
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     <template v-else>
-      <article v-show="showCreateForm || editingId" class="panel stack">
-        <div class="page-header">
-          <h3 style="margin: 0">{{ editingId ? '编辑提示词' : '创建提示词' }}</h3>
-          <CustomButton type="ghost" @click="cancelForm">取消</CustomButton>
-        </div>
-        <form class="field-grid" @submit.prevent="submitConfig">
+      <ModalDialog
+      v-model:visible="showCreateForm" :title="editingId ? '编辑提示词' : '创建提示词'" @close="cancelForm"
+      @confirm="submitConfig"
+      :confirm-text="editingId ? '更新' : '创建'"
+    >
+        <form class="field-grid">
           <label class="field">
             <span>名称 *</span>
             <input v-model="form.name" required placeholder="system-prompt" />
@@ -22,10 +22,10 @@
           <label class="field">
             <span>分类</span>
             <select v-model="form.category">
-              <option value="system">System</option>
-              <option value="user">User</option>
-              <option value="assistant">Assistant</option>
-              <option value="general">General</option>
+              <option value="system">SYSTEM</option>
+              <option value="user">USER</option>
+              <option value="assistant">ASSISTANT</option>
+              <option value="general">GENERAL</option>
             </select>
           </label>
           <label class="field">
@@ -43,15 +43,10 @@
               <option :value="false">禁用</option>
             </select>
           </label>
-          <CustomButton type="primary" native-type="submit">{{ editingId ? '更新' : '创建' }}</CustomButton>
         </form>
-      </article>
+      </ModalDialog>
 
       <article class="table-card">
-        <div class="page-header">
-          <h3 style="margin: 0">模板列表</h3>
-          <CustomButton type="primary" @click="showCreateForm = true">新建模板</CustomButton>
-        </div>
         <table>
           <thead>
             <tr>
@@ -120,6 +115,7 @@ onMounted(loadTemplates)
 
   // 监听全局新增事件
   window.addEventListener('global-add', () => {
+    editingId.value = null
     showCreateForm.value = true
   })
 watch(() => [store.tenantId, store.workspaceId], loadTemplates)
@@ -136,6 +132,7 @@ function startEdit(tpl: PromptTemplate) {
   form.category = tpl.category
   form.content = tpl.content
   form.isActive = tpl.isActive
+  showCreateForm.value = true
 }
 
 function cancelForm() {
