@@ -1,4 +1,4 @@
-package com.agenthub.common.exception;
+package com.agenthub.api.dto;
 
 import java.time.Instant;
 

@@ -1,6 +1,6 @@
-package com.agenthub.infrastructure.web;
+package com.agenthub.api.handler;
 
-import com.agenthub.common.exception.ErrorResponse;
+import com.agenthub.api.dto.ErrorResponse;
 import com.agenthub.common.exception.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
