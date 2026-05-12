@@ -20,23 +20,30 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/tenants")
 public class TenantController {
-
     private final CreateTenantUseCase createTenantUseCase;
+    private final ListTenantsUseCase listTenantsUseCase;
     private final GetTenantUseCase getTenantUseCase;
     private final PatchTenantUseCase patchTenantUseCase;
-    private final ListTenantsUseCase listTenantsUseCase;
     private final WorkspaceUseCase workspaceUseCase;
 
-    public TenantController(
-            CreateTenantUseCase createTenantUseCase,
-            GetTenantUseCase getTenantUseCase,
-            PatchTenantUseCase patchTenantUseCase,
-            ListTenantsUseCase listTenantsUseCase,
-            WorkspaceUseCase workspaceUseCase) {
+    /**
+     * 构造租户控制器。
+     *
+     * @param createTenantUseCase 创建租户用例
+     * @param listTenantsUseCase  列出租户用例
+     * @param getTenantUseCase    获取租户用例
+     * @param patchTenantUseCase  更新租户用例
+     * @param workspaceUseCase    工作空间用例
+     */
+    public TenantController(CreateTenantUseCase createTenantUseCase,
+                            ListTenantsUseCase listTenantsUseCase,
+                            GetTenantUseCase getTenantUseCase,
+                            PatchTenantUseCase patchTenantUseCase,
+                            WorkspaceUseCase workspaceUseCase) {
         this.createTenantUseCase = createTenantUseCase;
+        this.listTenantsUseCase = listTenantsUseCase;
         this.getTenantUseCase = getTenantUseCase;
         this.patchTenantUseCase = patchTenantUseCase;
-        this.listTenantsUseCase = listTenantsUseCase;
         this.workspaceUseCase = workspaceUseCase;
     }
 
@@ -104,7 +111,7 @@ public class TenantController {
     @ResponseStatus(HttpStatus.CREATED)
     public WorkspaceResponse createWorkspaceUnderTenant(@PathVariable String tenantId,
                                                         @RequestBody CreateWorkspaceRequest request) {
-        var workspace = workspaceUseCase.execute(BeanUtil.copyProperties(request, WorkspaceCommand.class));
+        var workspace = workspaceUseCase.executeWithTenantValidation(tenantId, BeanUtil.copyProperties(request, WorkspaceCommand.class));
         return WorkspaceResponse.from(workspace);
     }
 

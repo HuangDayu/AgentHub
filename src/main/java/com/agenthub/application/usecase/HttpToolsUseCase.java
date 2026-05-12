@@ -45,9 +45,12 @@ public class HttpToolsUseCase {
     }
 
     public HttpToolView updateTool(String toolId, UpdateToolCommand command) {
-        HttpTool updated = BeanUtil.copyProperties(command, HttpTool.class);
-        updated.setId(toolId);
-        HttpTool saved = repository.save(updated);
+        HttpTool existing = requireTool(toolId);
+        if (command.getName() != null) existing.setName(command.getName());
+        if (command.getDescription() != null) existing.setDescription(command.getDescription());
+        if (command.getEnabled() != null) existing.setEnabled(command.getEnabled());
+        // Update existing tool
+        HttpTool saved = repository.save(existing);
         return toView(saved);
     }
 

@@ -3,7 +3,7 @@ package com.agenthub.test.integration;
 import cn.hutool.core.io.FileUtil;
 import com.agenthub.infrastructure.tools.system_tools.SystemToolsFactory;
 import com.agenthub.test.TestAgentHubApplication;
-import com.agenthub.infrastructure.agents.ali.saver.PostgresSaver;
+import com.agenthub.infrastructure.agents.ali.saver.AgentHubPostgresSaver;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
@@ -70,7 +70,7 @@ public class SpringAiAlibabaReActAgentIntegrationTest {
 //                .outputType(StreamingOutput.class)
                 .tools(new ArrayList<>(systemToolsFactory.getAllToolCallbacks()))
                 .systemPrompt(systemPrompt)
-                .saver(PostgresSaver.builder().datasource(dataSource).createTables(false).dropTablesFirst(false).build())
+                .saver(AgentHubPostgresSaver.builder().datasource(dataSource).createTables(false).dropTablesFirst(false).build())
                 .hooks(new LoggingHook())
                 .interceptors(new ToolMonitoringInterceptor())
                 .build();

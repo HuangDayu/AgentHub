@@ -33,8 +33,11 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 
-public class PostgresSaver extends MemorySaver {
-    private static final Logger log = LoggerFactory.getLogger(PostgresSaver.class);
+/**
+ * copy to com.alibaba.cloud.ai.graph.checkpoint.savers.postgresql.PostgresSaver
+ */
+public class AgentHubPostgresSaver extends MemorySaver {
+    private static final Logger log = LoggerFactory.getLogger(AgentHubPostgresSaver.class);
     /**
      * Datasource used to create the store
      */
@@ -42,7 +45,7 @@ public class PostgresSaver extends MemorySaver {
 
     private final StateSerializer stateSerializer;
 
-    protected PostgresSaver(Builder builder) throws SQLException {
+    protected AgentHubPostgresSaver(Builder builder) throws SQLException {
         this.datasource = builder.datasource;
         this.stateSerializer = builder.stateSerializer;
         initTable(builder.dropTablesFirst, builder.createTables);
@@ -486,7 +489,7 @@ public class PostgresSaver extends MemorySaver {
             return value;
         }
 
-        public PostgresSaver build() {
+        public AgentHubPostgresSaver build() {
             if (stateSerializer == null) {
                 log.info("No StateSerializer for saver provided, using default SpringAiJacksonStateSerializer, please make sure saver uses the same serializer of the graph.");
                 this.stateSerializer = StateGraph.DEFAULT_JACKSON_SERIALIZER;
@@ -508,7 +511,7 @@ public class PostgresSaver extends MemorySaver {
             createTables = createTables || dropTablesFirst;
 
             try {
-                return new PostgresSaver(this);
+                return new AgentHubPostgresSaver(this);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

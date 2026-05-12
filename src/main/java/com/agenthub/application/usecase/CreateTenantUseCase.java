@@ -9,6 +9,8 @@ import com.agenthub.domain.model.Tenant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+
 /**
  * 创建租户用例.
  * <p>
@@ -32,7 +34,12 @@ public class CreateTenantUseCase {
         Tenant.IsolationLevel level = parseIsolationLevel(command.getIsolationLevel());
         // 使用ID生成器创建租户
         Tenant tenant = BeanUtil.copyProperties(command, Tenant.class);
+        tenant.setId(idGenerator.nextId());
         tenant.setIsolationLevel(level);
+        tenant.setStatus(Tenant.TenantStatus.ACTIVE);
+        Instant now = timeProvider.now();
+        tenant.setCreatedAt(now);
+        tenant.setUpdatedAt(now);
         return tenantRepository.save(tenant);
     }
 

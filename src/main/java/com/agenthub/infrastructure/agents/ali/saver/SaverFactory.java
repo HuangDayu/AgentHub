@@ -15,7 +15,7 @@ public class SaverFactory {
     private final DataSource dataSource;
 
     public BaseCheckpointSaver postgresSaver() {
-        return PostgresSaver.builder().datasource(dataSource).createTables(true).dropTablesFirst(false).build();
+        return AgentHubPostgresSaver.builder().datasource(dataSource).createTables(true).dropTablesFirst(false).build();
     }
 
 }

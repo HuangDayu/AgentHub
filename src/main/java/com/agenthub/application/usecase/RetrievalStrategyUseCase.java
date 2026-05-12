@@ -22,9 +22,18 @@ public class RetrievalStrategyUseCase {
 
 
     public RetrievalStrategy update(String id, UpdateRetrievalStrategyCommand command) {
-        RetrievalStrategy retrievalStrategy = new RetrievalStrategy();
-        BeanUtil.copyProperties(command, retrievalStrategy);
-        retrievalStrategy.setId(id);
+        RetrievalStrategy retrievalStrategy = get(id);
+        if (command.getName() != null) retrievalStrategy.setName(command.getName());
+        if (command.getDescription() != null) retrievalStrategy.setDescription(command.getDescription());
+        if (command.getTopK() != null) retrievalStrategy.setTopK(command.getTopK());
+        if (command.getScoreThreshold() != null) retrievalStrategy.setScoreThreshold(command.getScoreThreshold());
+        if (command.getEnableRerank() != null) retrievalStrategy.setEnableRerank(command.getEnableRerank());
+        if (command.getEnableQueryRewrite() != null) retrievalStrategy.setEnableQueryRewrite(command.getEnableQueryRewrite());
+        if (command.getEnableTextSearch() != null) retrievalStrategy.setEnableTextSearch(command.getEnableTextSearch());
+        if (command.getEnableVectorSearch() != null) retrievalStrategy.setEnableVectorSearch(command.getEnableVectorSearch());
+        if (command.getRerankModel() != null) retrievalStrategy.setRerankModel(command.getRerankModel());
+        if (command.getVectorWeight() != null) retrievalStrategy.setVectorWeight(command.getVectorWeight());
+        if (command.getKeywordWeight() != null) retrievalStrategy.setKeywordWeight(command.getKeywordWeight());
         return repository.save(retrievalStrategy);
     }
 

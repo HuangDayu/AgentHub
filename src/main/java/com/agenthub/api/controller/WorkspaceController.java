@@ -64,6 +64,20 @@ public class WorkspaceController {
         return WorkspaceResponse.from(workspace);
     }
 
+    /**
+     * 在指定租户下创建新工作空间（租户路径参数）。
+     *
+     * @param tenantId 租户ID（路径参数）
+     * @param request  创建工作空间请求
+     * @return 创建的工作空间响应
+     */
+    @PostMapping("/tenants/{tenantId}/workspaces")
+    @ResponseStatus(HttpStatus.CREATED)
+    public WorkspaceResponse createWorkspaceForTenant(@PathVariable String tenantId,
+                                                       @RequestBody CreateWorkspaceRequest request) {
+        var workspace = workspaceUseCase.executeWithTenantValidation(tenantId, BeanUtil.copyProperties(request, WorkspaceCommand.class));
+        return WorkspaceResponse.from(workspace);
+    }
 
     @PatchMapping("/{id}")
     public void update(@PathVariable String id, @RequestBody UpdateWorkspaceRequest updateWorkspaceRequest) {

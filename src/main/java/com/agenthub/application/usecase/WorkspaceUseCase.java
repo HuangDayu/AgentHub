@@ -11,6 +11,7 @@ import com.agenthub.domain.model.Workspace;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -35,7 +36,37 @@ public class WorkspaceUseCase {
      * @throws NotFoundException 当租户不存在时抛出
      */
     public Workspace execute(WorkspaceCommand command) {
-        return workspaceRepository.save(BeanUtil.copyProperties(command, Workspace.class));
+        Workspace workspace = BeanUtil.copyProperties(command, Workspace.class);
+        workspace.setId(idGenerator.nextId());
+        workspace.setStatus(Workspace.WorkspaceStatus.ACTIVE);
+        Instant now = timeProvider.now();
+        workspace.setCreatedAt(now);
+        workspace.setUpdatedAt(now);
+        return workspaceRepository.save(workspace);
+    }
+
+    /**
+     * 在指定租户下创建工作空间（验证租户存在）。
+     *
+     * @param tenantId 租户ID
+     * @param command 工作空间命令
+     * @return 创建的工作空间
+     * @throws NotFoundException 当租户不存在时抛出
+     */
+    public Workspace executeWithTenantValidation(String tenantId, WorkspaceCommand command) {
+        // 验证租户是否存在
+        tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new NotFoundException("Tenant not found: " + tenantId));
+        
+        // 创建工作空间并设置租户ID
+        Workspace workspace = BeanUtil.copyProperties(command, Workspace.class);
+        workspace.setId(idGenerator.nextId());
+        workspace.setTenantId(tenantId);
+        workspace.setStatus(Workspace.WorkspaceStatus.ACTIVE);
+        Instant now = timeProvider.now();
+        workspace.setCreatedAt(now);
+        workspace.setUpdatedAt(now);
+        return workspaceRepository.save(workspace);
     }
 
     /**
