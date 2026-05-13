@@ -1,6 +1,6 @@
 -- =========================================================
 -- AgentHub - Auto-generated Schema
--- Generated: 2026-05-07T09:26:56.077622500Z
+-- Generated: 2026-05-11T15:46:02.051581300Z
 -- Source: MyBatis-Plus Entity Classes
 -- =========================================================
 
@@ -20,7 +20,7 @@ SET search_path TO app, public;
 -- DROP TABLE IF EXISTS app.system_tools CASCADE;
 -- DROP TABLE IF EXISTS app.skill CASCADE;
 -- DROP TABLE IF EXISTS app.session CASCADE;
--- DROP TABLE IF EXISTS app.security_policy CASCADE;
+-- DROP TABLE IF EXISTS app.scheduled_task CASCADE;
 -- DROP TABLE IF EXISTS app.retrieval_policy CASCADE;
 -- DROP TABLE IF EXISTS app.prompt_template CASCADE;
 -- DROP TABLE IF EXISTS app.model_policy CASCADE;
@@ -335,23 +335,26 @@ CREATE TABLE IF NOT EXISTS app.retrieval_policy (
   PRIMARY KEY (id)
 );
 
--- Table: app.security_policy
-CREATE TABLE IF NOT EXISTS app.security_policy (
+-- Table: app.scheduled_task
+CREATE TABLE IF NOT EXISTS app.scheduled_task (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
+  task_code varchar(255),
   name varchar(255),
   description text,
-  input_validation boolean,
-  output_filtering boolean,
-  rate_limit_enabled boolean,
-  rate_limit_per_minute integer,
-  content_moderation boolean,
-  pii_detection boolean,
-  allowed_domains varchar(255),
-  blocked_patterns varchar(255),
+  task_type varchar(255),
+  cron_expression varchar(255),
+  executor_config varchar(255),
+  prompt varchar(255),
+  enabled boolean,
+  last_execute_time timestamptz,
+  next_execute_time timestamptz,
+  status varchar(255),
   created_at timestamptz,
   updated_at timestamptz,
+  created_by varchar(255),
+  updated_by varchar(255),
   PRIMARY KEY (id)
 );
 
@@ -546,8 +549,8 @@ CREATE INDEX IF NOT EXISTS idx_prompt_template_workspace_id ON app.prompt_templa
 CREATE INDEX IF NOT EXISTS idx_retrieval_policy_tenant_id ON app.retrieval_policy(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_retrieval_policy_workspace_id ON app.retrieval_policy(workspace_id);
 
-CREATE INDEX IF NOT EXISTS idx_security_policy_tenant_id ON app.security_policy(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_security_policy_workspace_id ON app.security_policy(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_scheduled_task_tenant_id ON app.scheduled_task(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_scheduled_task_workspace_id ON app.scheduled_task(workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_session_agent_id ON app.session(agent_id);
 CREATE INDEX IF NOT EXISTS idx_session_tenant_id ON app.session(tenant_id);

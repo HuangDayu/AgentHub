@@ -224,7 +224,6 @@ div, section, article, aside, main, nav,
 11. **SkillManagementView** - 技能管理
 12. **WorkflowManagementView** - 工作流管理
 13. **AgentTeamManagementView** - Agent团队管理
-14. **SecurityPolicyManagementView** - 安全策略管理
 15. **ScheduledTaskView** - 定时任务管理
 
 ### 改造步骤

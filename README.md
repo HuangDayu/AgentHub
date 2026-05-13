@@ -2,26 +2,25 @@
 
 这个一个 AI Agent Hub 项目，用于管理 AI Agent 和 AI Agent Team 的全生命周期。
 
-
 ## 技术栈
 
-| 基线项 | 技术选型 |
-|-------|---------|
-| 架构模式 | 整洁架构 |
-| 设计原则 | SOLID |
-| 开发流程 | TDD（Red → Green → Refactor） |
-| 后端框架 | Spring Boot 4.0+ / Java 21 |
-| AI 框架 | Spring AI |
-| ORM | MyBatis-Plus（强制） |
-| 服务间调用 | OpenFeign（强制） |
-| 向量数据库 | Qdrant |
-| 消息队列 | Kafka |
-| 缓存 | Redis |
-| 关系数据库 | PostgreSQL |
-| 构建工具 | Gradle（Groovy DSL） |
-| 前端框架 | Vue 3 |
-| 编码规范 | 阿里巴巴 P3C（强制） |
-| 方法行数 | 单方法不超过 10 行 |
+| 基线项   | 技术选型                        |
+|-------|-----------------------------|
+| 架构模式  | 整洁架构                        |
+| 设计原则  | SOLID                       |
+| 开发流程  | TDD（Red → Green → Refactor） |
+| 后端框架  | Spring Boot 4.0+ / Java 21  |
+| AI 框架 | Spring AI                   |
+| ORM   | MyBatis-Plus（强制）            |
+| 服务间调用 | OpenFeign（强制）               |
+| 向量数据库 | Qdrant                      |
+| 消息队列  | Kafka                       |
+| 缓存    | Redis                       |
+| 关系数据库 | PostgreSQL                  |
+| 构建工具  | Gradle（Groovy DSL）          |
+| 前端框架  | Vue 3                       |
+| 编码规范  | 阿里巴巴 P3C（强制）                |
+| 方法行数  | 单方法不超过 10 行                 |
 
 ---
 
@@ -34,6 +33,8 @@
 - 每次开发完成，都必须用Gradle Test进行测试并确保ArchUnit测试和集成测试都全部通过
 - 所需要的外部组件和中间件通过WSL Docker部署，通常情况下已经搭建部署好了
 - 禁止写伪代码，sleep等伪代码
+- 提倡使用lombok，禁止使用record类
+- 方法的参数不得超过3个
 
 ---
 
@@ -90,6 +91,7 @@ api → application → domain ← infrastructure
 ```
 
 **规则说明**：
+
 1. `api` 可依赖 `application`
 2. `application` 可依赖 `domain`
 3. `infrastructure` 可依赖 `domain` 和 `application`（实现 Port）
@@ -99,16 +101,16 @@ api → application → domain ← infrastructure
 
 ### 命名约定
 
-| 类型 | 命名规则 | 位置 |
-|------|----------|------|
-| Controller | `*Controller` | `api/controller/` |
-| UseCase | `*UseCase` | `application/usecase/` |
-| Repository接口 | `*Repository` | `domain/` 或 `application/port/out/repositories/` |
-| Repository实现 | `Mybatis*Repository` | `infrastructure/store/repository/` |
-| Entity | `*Entity` | `infrastructure/store/entity/` |
-| Mapper | `*Mapper` | `infrastructure/store/mapper/` |
-| Request DTO | `*Request` | `api/dto/` |
-| Response DTO | `*Response` | `api/dto/` |
-| 领域模型 | 领域名词 | `domain/model/` |
-| 命令对象 | `*Command` | `application/retrievalCommand/` |
-| 查询对象 | `*Query` | `application/query/` |
+| 类型           | 命名规则                 | 位置                                               |
+|--------------|----------------------|--------------------------------------------------|
+| Controller   | `*Controller`        | `api/controller/`                                |
+| UseCase      | `*UseCase`           | `application/usecase/`                           |
+| Repository接口 | `*Repository`        | `domain/` 或 `application/port/out/repositories/` |
+| Repository实现 | `Mybatis*Repository` | `infrastructure/store/repository/`               |
+| Entity       | `*Entity`            | `infrastructure/store/entity/`                   |
+| Mapper       | `*Mapper`            | `infrastructure/store/mapper/`                   |
+| Request DTO  | `*Request`           | `api/dto/`                                       |
+| Response DTO | `*Response`          | `api/dto/`                                       |
+| 领域模型         | 领域名词                 | `domain/model/`                                  |
+| 命令对象         | `*Command`           | `application/retrievalCommand/`                  |
+| 查询对象         | `*Query`             | `application/query/`                             |

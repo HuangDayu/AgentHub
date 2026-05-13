@@ -31,6 +31,6 @@ services/monolith-service/src/main/resources/static/
 .vscode/
 .**/
 src/main/resources/static/
-CLAUDE.md
-CLAUDE_ZH.md
 key.txt
+**/*.bak
+token.txt

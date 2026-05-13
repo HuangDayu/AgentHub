@@ -1,6 +1,6 @@
 -- =========================================================
 -- Schema Change Checklist
--- Generated: 2026-05-07T09:26:56.133624900Z
+-- Generated: 2026-05-11T15:46:02.102268800Z
 -- Description: Incremental changes from previous schema
 -- =========================================================
 
@@ -194,25 +194,6 @@ CREATE TABLE IF NOT EXISTS app.knowledge_base (
   chat_model_config_id varchar(255),
   PRIMARY KEY (id)
 );
--- New table: app.security_policy
-CREATE TABLE IF NOT EXISTS app.security_policy (
-  id varchar(64) NOT NULL,
-  tenant_id varchar(255),
-  workspace_id varchar(255),
-  name varchar(255),
-  description text,
-  input_validation boolean,
-  output_filtering boolean,
-  rate_limit_enabled boolean,
-  rate_limit_per_minute integer,
-  content_moderation boolean,
-  pii_detection boolean,
-  allowed_domains varchar(255),
-  blocked_patterns varchar(255),
-  created_at timestamptz,
-  updated_at timestamptz,
-  PRIMARY KEY (id)
-);
 -- New table: app.tool_policy_binding
 CREATE TABLE IF NOT EXISTS app.tool_policy_binding (
   id varchar(64) NOT NULL,
@@ -313,6 +294,28 @@ CREATE TABLE IF NOT EXISTS app.ingestion_document (
   size bigint,
   storage_path varchar(255),
   status varchar(255),
+  PRIMARY KEY (id)
+);
+-- New table: app.scheduled_task
+CREATE TABLE IF NOT EXISTS app.scheduled_task (
+  id varchar(64) NOT NULL,
+  tenant_id varchar(255),
+  workspace_id varchar(255),
+  task_code varchar(255),
+  name varchar(255),
+  description text,
+  task_type varchar(255),
+  cron_expression varchar(255),
+  executor_config varchar(255),
+  prompt varchar(255),
+  enabled boolean,
+  last_execute_time timestamptz,
+  next_execute_time timestamptz,
+  status varchar(255),
+  created_at timestamptz,
+  updated_at timestamptz,
+  created_by varchar(255),
+  updated_by varchar(255),
   PRIMARY KEY (id)
 );
 -- New table: app.app_user
