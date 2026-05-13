@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.agents;
 
+import com.agenthub.domain.model.MultiAgentTeamType;
 import com.agenthub.domain.model.ReActAgentContext;
-import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import reactor.core.publisher.Flux;
 
@@ -10,20 +10,16 @@ import java.util.List;
 /**
  * @author huangdayu
  */
-public abstract class AbstractReActAgent {
+public abstract class AbstractTeamAgent {
 
     public abstract String getName();
+
+    public abstract MultiAgentTeamType getAgentTeamType();
 
     public abstract ReActAgentContext getContext();
 
     public abstract Flux<Message> streamMessages(String userMessage);
 
-    public abstract AssistantMessage call(String userMessage);
-
-    public abstract void interrupt();
-
-    public abstract List<AbstractTeamAgent> teams();
-
-    public abstract void addTeam(AbstractTeamAgent teamAgent);
+    public abstract List<AbstractReActAgent> followers();
 
 }

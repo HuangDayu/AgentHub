@@ -2,12 +2,17 @@ package com.agenthub.infrastructure.agents.ali;
 
 import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.infrastructure.agents.AbstractReActAgent;
+import com.agenthub.infrastructure.agents.AbstractTeamAgent;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import reactor.core.publisher.Flux;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * 单个Agent运行时，封装ReactAgent的创建与执行。
@@ -15,7 +20,9 @@ import reactor.core.publisher.Flux;
 public class AliReActAgent extends AbstractReActAgent {
 
     private final ReActAgentContext context;
+    @Getter
     private final ReactAgent agent;
+    private final List<AbstractTeamAgent> teams = new LinkedList<>();
 
     public AliReActAgent(ReActAgentContext context, ReactAgent agent) {
         this.context = context;
@@ -47,4 +54,15 @@ public class AliReActAgent extends AbstractReActAgent {
     public void interrupt() {
         agent.interrupt(RunnableConfig.builder().build());
     }
+
+    @Override
+    public List<AbstractTeamAgent> teams() {
+        return teams;
+    }
+
+    @Override
+    public void addTeam(AbstractTeamAgent teamAgent) {
+        teams.add(teamAgent);
+    }
+
 }

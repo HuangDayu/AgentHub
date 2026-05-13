@@ -27,18 +27,12 @@ public class ReActAgentManager {
     private final ReActAgentFactory agentFactory;
     private final AgentRepository agentRepository;
     private final AgentConfigRepository agentConfigRepository;
-    private final McpToolRepository mcpToolRepository;
-    private final HttpToolRepository httpToolRepository;
-    private final SystemToolsRepository systemToolsRepository;
-    private final SkillRepository skillRepository;
-    private final KnowledgeBaseRepository knowledgeBaseRepository;
     private final PromptTemplateRepository promptTemplateRepository;
     private final ModelStrategyRepository modelStrategyRepository;
     private final RetrievalStrategyRepository retrievalStrategyRepository;
     private final ToolStrategyRepository toolStrategyRepository;
     private final GuardrailStrategyRepository guardrailStrategyRepository;
     private final WorkspaceRepository workspaceRepository;
-    private final SystemToolsFactory systemToolsFactory;
 
     public AbstractReActAgent getAgent(String agentId) {
         return AGENT_POOL.computeIfAbsent(agentId, id -> agentFactory.create(createContext(agentId)));
