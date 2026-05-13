@@ -28,6 +28,7 @@ services/monolith-service/src/main/resources/static/
 .jlsp
 .junie
 .arts/
+keys/
 .vscode/
 .**/
 src/main/resources/static/

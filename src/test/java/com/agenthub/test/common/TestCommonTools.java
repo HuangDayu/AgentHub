@@ -13,7 +13,7 @@ import static com.agenthub.infrastructure.context.TenantContextHeaders.*;
  */
 public class TestCommonTools {
 
-    public static final String token = FileUtil.readUtf8String(System.getProperty("user.dir") + "/token.txt");
+    public static final String token = FileUtil.readUtf8String(System.getProperty("user.dir") + "/keys/token.txt");
 
     public static String getConfigTestLocation() {
         String property = System.getProperty("user.dir");
