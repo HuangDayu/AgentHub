@@ -131,4 +131,9 @@ public class SessionController {
         return agentChatUseCase.streamChat(agentId, sessionId, request.getContent());
     }
 
+    @DeleteMapping("/{sessionId}")
+    public void deleteSession(@PathVariable String sessionId){
+        sessionUseCase.deleteSession(sessionId);
+    }
+
 }

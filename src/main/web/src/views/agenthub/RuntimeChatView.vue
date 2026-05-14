@@ -144,10 +144,10 @@
           <div
             v-for="(msg, index) in messages"
             :key="msg.messageId"
-            :class="['message', msg.role, {'fade-in': index === messages.length - 1}]"
+            :class="['message', msg.role.toLowerCase(), msg.messageType?.toLowerCase(), {'fade-in': index === messages.length - 1}]"
           >
-            <div class="message-avatar" :class="msg.role">
-              <svg v-if="msg.role === 'user'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="message-avatar" :class="msg.role.toLowerCase()">
+              <svg v-if="msg.role === 'USER'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
@@ -159,12 +159,52 @@
             </div>
             <div class="message-body">
               <div class="message-header">
-                <span class="message-role">{{ msg.role === 'user' ? '用户' : '助手' }}</span>
+                <span class="message-role">{{ getMessageRoleLabel(msg) }}</span>
                 <span class="message-time">{{ formatTime(msg.createdAt) }}</span>
               </div>
               <div class="message-content">
-                <MarkdownRenderer v-if="msg.role === 'assistant'" :content="msg.content" />
-                <template v-else>{{ msg.content }}</template>
+                <!-- 用户消息 -->
+                <template v-if="msg.role === 'USER'">{{ msg.content }}</template>
+                
+                <!-- 系统消息（错误消息） -->
+                <template v-else-if="msg.role === 'SYSTEM'">
+                  <div class="system-message">{{ msg.content }}</div>
+                </template>
+                
+                <!-- 助手文本消息 -->
+                <template v-else-if="msg.role === 'ASSISTANT' && (!msg.messageType || msg.messageType === 'ASSISTANT')">
+                  <MarkdownRenderer v-if="msg.content" :content="msg.content" />
+                  <!-- 工具调用 -->
+                  <div v-if="msg.toolCalls && msg.toolCalls.length > 0" class="tool-calls-container">
+                    <ToolCallMessage
+                      v-for="toolCall in msg.toolCalls"
+                      :key="toolCall.id"
+                      :tool-call="toolCall"
+                    />
+                  </div>
+                </template>
+                
+                <!-- 工具结果消息 -->
+                <template v-else-if="msg.role === 'TOOL' || msg.messageType === 'TOOL'">
+                  <div v-if="msg.toolResponses && msg.toolResponses.length > 0" class="tool-results-container">
+                    <ToolResultMessage
+                      v-for="response in msg.toolResponses"
+                      :key="response.id"
+                      :response="response"
+                    />
+                  </div>
+                </template>
+                
+                <!-- 技能消息 -->
+                <template v-else-if="msg.messageType === 'SKILL'">
+                  <div v-if="msg.toolResponses && msg.toolResponses.length > 0" class="skill-container">
+                    <SkillMessage
+                      v-for="response in msg.toolResponses"
+                      :key="response.id"
+                      :response="response"
+                    />
+                  </div>
+                </template>
               </div>
             </div>
           </div>
@@ -247,9 +287,12 @@ import { useRouter } from 'vue-router'
 import { listAgents } from '@/api/agent-api'
 import { createSession, deleteSession, listMessages, listSessions, sendMessage, sendMessageStream } from '@/api/runtime-api'
 import { formatDateTime } from '@/common/format'
-import type { Agent, ChatMessage, ChatSession } from '@/domain/types'
+import type { Agent, ChatMessage, ChatSession, StreamMessage } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import ToolCallMessage from '@/components/ToolCallMessage.vue'
+import ToolResultMessage from '@/components/ToolResultMessage.vue'
+import SkillMessage from '@/components/SkillMessage.vue'
 
 const router = useRouter()
 const store = useWorkspaceStore()
@@ -385,7 +428,33 @@ async function loadMessages() {
   if (!selectedSessionId.value || !selectedAgentId.value) return
   error.value = ''
   try {
-    messages.value = await listMessages(getSelection(), selectedAgentId.value, selectedSessionId.value)
+    const rawMessages = await listMessages(getSelection(), selectedAgentId.value, selectedSessionId.value)
+    // 解析消息内容
+    messages.value = rawMessages.map(msg => {
+      const parsedMsg = { ...msg }
+      
+      // 解析工具调用
+      if (msg.role === 'ASSISTANT' && msg.content && msg.content.startsWith('[{')) {
+        try {
+          parsedMsg.toolCalls = JSON.parse(msg.content)
+          parsedMsg.content = '' // 清空content，避免重复显示
+        } catch (e) {
+          console.error('Failed to parse tool calls:', e)
+        }
+      }
+      
+      // 解析工具响应
+      if (msg.role === 'TOOL' && msg.content && msg.content.startsWith('[{')) {
+        try {
+          parsedMsg.toolResponses = JSON.parse(msg.content)
+          parsedMsg.content = '' // 清空content，避免重复显示
+        } catch (e) {
+          console.error('Failed to parse tool responses:', e)
+        }
+      }
+      
+      return parsedMsg
+    })
     scrollToBottom()
   } catch (e: any) {
     error.value = e.message || '加载消息失败'
@@ -405,7 +474,7 @@ async function handleSend() {
   const userMessage: ChatMessage = {
     messageId: Date.now().toString(),
     sessionId: selectedSessionId.value,
-    role: 'user',
+    role: 'USER',
     content,
     createdAt: new Date().toISOString()
   }
@@ -422,24 +491,26 @@ async function handleSend() {
         selectedSessionId.value,
         content,
         {
-          onToken: (chunk) => {
-            streamingContent.value += chunk
+          onMessage: (streamMsg: StreamMessage) => {
+            handleStreamMessage(streamMsg)
             scrollToBottom()
           },
           onDone: () => {
-            // 流式完成后，将内容添加为助手消息
-            if (streamingContent.value) {
+            // 流式完成后，如果有剩余内容，添加为助手消息
+            if (streamingContent.value.trim()) {
               const assistantMessage: ChatMessage = {
                 messageId: (Date.now() + 1).toString(),
                 sessionId: selectedSessionId.value,
-                role: 'assistant',
+                role: 'ASSISTANT',
                 content: streamingContent.value,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                messageType: 'ASSISTANT'
               }
               messages.value.push(assistantMessage)
-              streamingContent.value = ''
-              scrollToBottom()
             }
+            // 无论是否有内容，都清空streamingContent
+            streamingContent.value = ''
+            scrollToBottom()
           },
           onError: (err) => {
             error.value = err.message || '发送消息失败'
@@ -466,6 +537,74 @@ async function handleSend() {
   }
 }
 
+// 处理流式消息
+function handleStreamMessage(streamMsg: StreamMessage) {
+  if (streamMsg.messageType === 'ASSISTANT') {
+    // 助手消息：累积文本内容
+    if (streamMsg.text) {
+      streamingContent.value += streamMsg.text
+    }
+    // 如果有工具调用，先保存当前的助手消息，然后添加工具调用消息
+    if (streamMsg.toolCalls && streamMsg.toolCalls.length > 0) {
+      // 先保存累积的助手消息
+      if (streamingContent.value.trim()) {
+        const assistantMessage: ChatMessage = {
+          messageId: `assistant-${Date.now()}`,
+          sessionId: selectedSessionId.value,
+          role: 'ASSISTANT',
+          content: streamingContent.value,
+          createdAt: new Date().toISOString(),
+          messageType: 'ASSISTANT'
+        }
+        messages.value.push(assistantMessage)
+        streamingContent.value = '' // 清空累积内容
+      }
+      
+      // 然后保存工具调用消息
+      const toolCallMessage: ChatMessage = {
+        messageId: `toolcall-${Date.now()}`,
+        sessionId: selectedSessionId.value,
+        role: 'ASSISTANT',
+        content: '',
+        createdAt: new Date().toISOString(),
+        messageType: 'ASSISTANT',
+        toolCalls: streamMsg.toolCalls
+      }
+      messages.value.push(toolCallMessage)
+    }
+  } else if (streamMsg.messageType === 'TOOL') {
+    // 工具消息：处理工具响应
+    if (streamMsg.responses && streamMsg.responses.length > 0) {
+      for (const response of streamMsg.responses) {
+        // 判断是否是技能读取
+        const isSkill = response.name === 'read_skill' || response.name === 'apply_skill'
+        
+        const toolResultMessage: ChatMessage = {
+          messageId: `toolresult-${Date.now()}-${response.id}`,
+          sessionId: selectedSessionId.value,
+          role: 'TOOL',
+          content: '',
+          createdAt: new Date().toISOString(),
+          messageType: isSkill ? 'SKILL' : 'TOOL',
+          toolResponses: [response]
+        }
+        messages.value.push(toolResultMessage)
+      }
+    }
+  } else if (streamMsg.messageType === 'SYSTEM') {
+    // 系统消息：通常是错误消息
+    const systemMessage: ChatMessage = {
+      messageId: `system-${Date.now()}`,
+      sessionId: selectedSessionId.value,
+      role: 'SYSTEM',
+      content: streamMsg.text || '',
+      createdAt: new Date().toISOString(),
+      messageType: 'SYSTEM'
+    }
+    messages.value.push(systemMessage)
+  }
+}
+
 // Handle keydown
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter' && !e.shiftKey) {
@@ -489,6 +628,39 @@ function formatTime(dateStr: string) {
   return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
 }
 
+// Get message role label
+function getMessageRoleLabel(msg: ChatMessage): string {
+  if (msg.role === 'USER') return '用户'
+  if (msg.role === 'SYSTEM') return '系统'
+  
+  // 根据消息类型返回不同的标签
+  switch (msg.role) {
+    case 'TOOL':
+      // 显示工具名称
+      if (msg.toolResponses && msg.toolResponses.length > 0) {
+        return `工具: ${msg.toolResponses[0].name}`
+      }
+      return '工具'
+    case 'ASSISTANT':
+      // 如果有工具调用，显示工具名称
+      if (msg.toolCalls && msg.toolCalls.length > 0) {
+        return `调用: ${msg.toolCalls[0].name}`
+      }
+      return '助手'
+    default:
+      // 检查messageType
+      if (msg.messageType === 'SKILL') {
+        if (msg.toolResponses && msg.toolResponses.length > 0) {
+          const skillName = msg.toolResponses[0].name === 'read_skill' ? '读取技能' : 
+                           msg.toolResponses[0].name === 'apply_skill' ? '应用技能' : 
+                           msg.toolResponses[0].name
+          return `技能: ${skillName}`
+        }
+        return '技能'
+      }
+      return '助手'
+  }
+}
 // Agent change
 function onAgentChange() {
   selectedSessionId.value = ''
@@ -1029,7 +1201,6 @@ onMounted(() => {
 .message-role {
   font-size: 0.7rem;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #264266;
 }
@@ -1072,6 +1243,34 @@ onMounted(() => {
 .message.assistant .message-content {
   background: rgba(248, 250, 255, 0.95);
   border: 1px solid rgba(38, 66, 102, 0.1);
+}
+
+.message.system .message-content {
+  background: rgba(201, 74, 53, 0.1);
+  border: 1px solid rgba(201, 74, 53, 0.3);
+  color: #c94a35;
+}
+
+.system-message {
+  font-weight: 500;
+}
+
+/* Tool and Skill message styles */
+.message.tool .message-content,
+.message.skill .message-content {
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 100%;
+}
+
+.tool-calls-container,
+.tool-results-container,
+.skill-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
 }
 
 .cursor {

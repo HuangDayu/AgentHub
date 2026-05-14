@@ -1,8 +1,8 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.dto.SessionOutput;
-import com.agenthub.application.port.out.repositories.StudioSessionRepository;
+import com.agenthub.application.port.out.repositories.SessionRepository;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.ChatMessage;
 import com.agenthub.domain.model.Session;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SessionUseCase {
 
-    private final StudioSessionRepository studioSessionRepository;
+    private final SessionRepository sessionRepository;
     private final AgentUseCase agentUseCase;
 
 
@@ -30,7 +30,7 @@ public class SessionUseCase {
     public List<SessionOutput> list(String agentId) {
         // Verify agent exists
         agentUseCase.get(agentId);
-        return studioSessionRepository.findByAgentId(agentId).stream()
+        return sessionRepository.findByAgentId(agentId).stream()
                 .map(s -> new SessionOutput(s.getId(), s.getAgentId(), s.getCreatedAt()))
                 .toList();
     }
@@ -52,7 +52,7 @@ public class SessionUseCase {
      * 查找并验证会话归属。
      */
     private Session findAndValidateSession(String agentId, String sessionId) {
-        Session session = studioSessionRepository.findById(sessionId)
+        Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new NotFoundException("Session not found: " + sessionId));
         if (!session.getAgentId().equals(agentId)) {
             throw new NotFoundException("Session not owned by agent: " + agentId);
@@ -68,12 +68,13 @@ public class SessionUseCase {
      * @return 创建的会话输出DTO
      */
     public SessionOutput create(String agentId) {
-        // Verify agent exists
         agentUseCase.get(agentId);
-
         Session session = Session.create(agentId, null, null);
-        Session saved = studioSessionRepository.save(session);
+        Session saved = sessionRepository.save(session);
         return new SessionOutput(saved.getId(), saved.getAgentId(), saved.getCreatedAt());
     }
 
+    public void deleteSession(String sessionId) {
+        sessionRepository.delete(sessionId);
+    }
 }

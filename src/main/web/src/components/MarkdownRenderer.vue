@@ -28,30 +28,30 @@ const renderedContent = computed(() => {
 
 <style scoped>
 .markdown-content {
-  line-height: 1.6;
+  line-height: 1.4;
   word-break: break-word;
 }
 
 .markdown-content :deep(h1) {
   font-size: 1.5em;
-  margin: 0.5em 0;
+  margin: 0.3em 0;
   font-weight: 600;
 }
 
 .markdown-content :deep(h2) {
   font-size: 1.3em;
-  margin: 0.5em 0;
+  margin: 0.3em 0;
   font-weight: 600;
 }
 
 .markdown-content :deep(h3) {
   font-size: 1.1em;
-  margin: 0.5em 0;
+  margin: 0.3em 0;
   font-weight: 600;
 }
 
 .markdown-content :deep(p) {
-  margin: 0.5em 0;
+  margin: 0.3em 0;
 }
 
 .markdown-content :deep(code) {
@@ -64,10 +64,10 @@ const renderedContent = computed(() => {
 
 .markdown-content :deep(pre) {
   background: rgba(22, 33, 50, 0.06);
-  padding: 12px;
+  padding: 10px;
   border-radius: 6px;
   overflow-x: auto;
-  margin: 0.5em 0;
+  margin: 0.3em 0;
 }
 
 .markdown-content :deep(pre code) {
@@ -77,14 +77,14 @@ const renderedContent = computed(() => {
 
 .markdown-content :deep(ul),
 .markdown-content :deep(ol) {
-  margin: 0.5em 0;
+  margin: 0.3em 0;
   padding-left: 1.5em;
 }
 
 .markdown-content :deep(blockquote) {
   border-left: 3px solid #3a8ad6;
   padding-left: 12px;
-  margin: 0.5em 0;
+  margin: 0.3em 0;
   color: #666;
 }
 
@@ -100,13 +100,13 @@ const renderedContent = computed(() => {
 .markdown-content :deep(table) {
   border-collapse: collapse;
   width: 100%;
-  margin: 0.5em 0;
+  margin: 0.3em 0;
 }
 
 .markdown-content :deep(th),
 .markdown-content :deep(td) {
   border: 1px solid rgba(22, 33, 50, 0.1);
-  padding: 8px;
+  padding: 6px;
   text-align: left;
 }
 

@@ -1,5 +1,5 @@
 import { runtimeConfig } from '../common/runtime-config'
-import type { ChatMessage, ChatSession, SelectionState } from '../domain/types'
+import type { ChatMessage, ChatSession, SelectionState, StreamMessage } from '../domain/types'
 import { scopedHeaders } from '../services/workspace-service'
 import { requestJson } from './http'
 
@@ -89,8 +89,8 @@ export function sendMessage(selection: SelectionState, agentId: string, sessionI
 
 /**
  * 流式发送消息并通过 EventSource / ReadableStream 接收 SSE。
- * Backend endpoint: POST /api/v1/workspaces/${selection.workspaceId}/agents/{agentId}/sessions/{sessionId}/messages/stream
- * 回调 onToken 接收每个增量 token，onDone 在流结束时调用。
+ * Backend endpoint: POST /api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/messages/stream
+ * 回调 onMessage 接收每个消息对象，onDone 在流结束时调用。
  */
 export async function sendMessageStream(
   selection: SelectionState,
@@ -98,12 +98,11 @@ export async function sendMessageStream(
   sessionId: string,
   content: string,
   callbacks: {
-    onToken: (token: string) => void
+    onMessage: (message: StreamMessage) => void
     onDone: () => void
     onError: (error: Error) => void
   },
-): Promise<void> {
-  const headers: Record<string, string> = {
+): Promise<void> {  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'text/event-stream',
   }
@@ -168,9 +167,9 @@ export async function sendMessageStream(
             return
           }
           // 解析Message对象并提取内容
-          const messageContent = parseMessageContent(data)
-          if (messageContent) {
-            callbacks.onToken(messageContent)
+          const streamMessage = parseStreamMessage(data)
+          if (streamMessage) {
+            callbacks.onMessage(streamMessage)
           }
         } else if (trimmed.startsWith('event: done')) {
           callbacks.onDone()
@@ -190,22 +189,22 @@ export async function sendMessageStream(
 }
 
 /**
- * 解析Message对象并提取内容
+ * 解析流式消息对象
  */
-function parseMessageContent(data: string): string | null {
+function parseStreamMessage(data: string): StreamMessage | null {
   try {
     const message = JSON.parse(data)
-    // 根据messageType提取内容
-    if (message.messageType === 'ASSISTANT' || message.messageType === 'USER') {
-      return message.text || message.content || ''
+    // 返回完整的消息对象
+    return {
+      messageType: message.messageType,
+      text: message.text || message.content || '',
+      toolCalls: message.toolCalls,
+      responses: message.responses,
+      metadata: message.metadata,
     }
-    // 兼容其他格式
-    if (message.text) return message.text
-    if (message.content) return message.content
-    return data
   } catch {
-    // 如果不是JSON，直接返回原始数据
-    return data
+    // 如果不是JSON，返回null
+    return null
   }
 }
 

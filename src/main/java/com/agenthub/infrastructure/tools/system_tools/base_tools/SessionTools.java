@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.tools.system_tools.base_tools;
 
-import com.agenthub.application.port.out.repositories.StudioSessionRepository;
+import com.agenthub.application.port.out.repositories.SessionRepository;
 import com.agenthub.domain.model.RuntimeMessage;
 import com.agenthub.domain.model.Session;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
@@ -18,7 +18,7 @@ import java.util.List;
 @AgentTools(name = "SessionTools", description = "会话工具，提供会话状态查询、历史记录、列表和消息发送功能")
 public class SessionTools {
 
-    private final StudioSessionRepository sessionRepository;
+    private final SessionRepository sessionRepository;
 
     @Tool(description = "获取会话状态")
     public Session sessionStatus(@ToolParam String sessionId) {

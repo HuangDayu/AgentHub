@@ -30,7 +30,7 @@ public class RagChatUseCase {
     private final AgentUseCase agentUseCase;
     private final StrategyUseCase strategyUseCase;
     private final AgentConfigRepository agentConfigRepository;
-    private final StudioSessionRepository studioSessionRepository;
+    private final SessionRepository sessionRepository;
     private final RetrievalAugmentedGenerationPort retrievalAugmentedGenerationPort;
     private final RetrievalStrategyRepository retrievalStrategyRepository;
     private final ModelStrategyRepository modelStrategyRepository;
@@ -54,10 +54,13 @@ public class RagChatUseCase {
         validatePublished(agent);
         ValidationOutput validation = validateInput(agentId, userPrompt);
         if (!validation.isValid()) return "输入验证失败";
+        ArrayList<ChatMessage> messages = new ArrayList<>();
+        messages.add(ChatMessage.user(sessionId, userPrompt));
         String response = retrievalAugmentedGenerationPort.ragChat(buildRagCommand(agentId, sessionId, userPrompt));
         ValidationOutput outputValidation = validateOutput(agentId, response);
         if (!outputValidation.isValid()) return "输出验证失败";
-        saveSession(sessionId, agentId, new ArrayList<>(), response);
+        messages.add(ChatMessage.assistant(sessionId, response));
+        saveSession(sessionId, agentId, messages, response);
         return response;
     }
 
@@ -108,8 +111,7 @@ public class RagChatUseCase {
 
 
     private void saveSession(String sessionId, String agentId, List<ChatMessage> messages, String response) {
-        messages.add(ChatMessage.assistant(response));
-        studioSessionRepository.addMessage(new Session(sessionId, agentId, null, null, Instant.now(), messages));
+        sessionRepository.saveMessages(messages);
     }
 
 }

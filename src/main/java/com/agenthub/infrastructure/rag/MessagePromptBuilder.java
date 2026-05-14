@@ -31,18 +31,18 @@ public class MessagePromptBuilder {
      * @param chunks     检索到的文档片段
      * @return 组装后的完整 Prompt
      */
-    public List<ChatMessage> build(String template, String userPrompt, List<RetrievalChunk> chunks) {
+    public List<ChatMessage> build(String sessionId, String template, String userPrompt, List<RetrievalChunk> chunks) {
         List<ChatMessage> chatMessages = new LinkedList<>();
         String assistantPromptTemplate = resolveTemplate(template);
         if (chunks == null || chunks.isEmpty()) {
-            chatMessages.add(ChatMessage.assistant(assistantPromptTemplate));
-            chatMessages.add(ChatMessage.user(userPrompt));
+            chatMessages.add(ChatMessage.assistant(sessionId, assistantPromptTemplate));
+            chatMessages.add(ChatMessage.user(sessionId, userPrompt));
             return chatMessages;
         }
         String context = buildContext(chunks);
         String assistantPrompt = applyTemplate(assistantPromptTemplate, context, userPrompt);
-        chatMessages.add(ChatMessage.assistant(assistantPrompt));
-        chatMessages.add(ChatMessage.user(userPrompt));
+        chatMessages.add(ChatMessage.assistant(sessionId, assistantPrompt));
+        chatMessages.add(ChatMessage.user(sessionId, userPrompt));
         return chatMessages;
     }
 

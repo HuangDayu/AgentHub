@@ -2,14 +2,23 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.application.port.out.agent.AgentPort;
 import com.agenthub.application.port.out.repositories.AgentRepository;
-import com.agenthub.application.port.out.repositories.StudioSessionRepository;
+import com.agenthub.application.port.out.repositories.SessionRepository;
 import com.agenthub.domain.exception.NotFoundException;
+import com.agenthub.domain.model.ChatMessage;
 import com.agenthub.domain.model.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import static com.agenthub.domain.model.ChatMessage.*;
+import static org.springframework.ai.util.json.JsonParser.toJson;
 
 /**
  * Agent对话用例，处理Agent对话和Session管理。
@@ -22,25 +31,20 @@ public class AgentChatUseCase {
 
     private final AgentPort agentPort;
     private final AgentRepository agentRepository;
-    private final StudioSessionRepository sessionRepository;
+    private final SessionRepository sessionRepository;
 
-    /**
-     * 创建新会话。
-     */
-    public String createSession(String agentId) {
-        validateAgentExists(agentId);
-        Session session = Session.create(agentId, null, null);
-        Session saved = sessionRepository.save(session);
-        return saved.getId();
-    }
 
     /**
      * 同步对话。
      */
     public String chat(String agentId, String sessionId, String userMessage) {
         validateSession(sessionId, agentId);
+        List<ChatMessage> messages = new LinkedList<>();
+        messages.add(user(sessionId, userMessage));
         AssistantMessage response = agentPort.call(agentId, sessionId, userMessage);
-        return saveMessages(sessionId, userMessage, response);
+        messages.add(assistant(sessionId, response.getText()));
+        sessionRepository.saveMessages(messages);
+        return response.getText();
     }
 
     /**
@@ -48,42 +52,63 @@ public class AgentChatUseCase {
      */
     public Flux<Message> streamChat(String agentId, String sessionId, String userMessage) {
         validateSession(sessionId, agentId);
-        saveUserMessage(sessionId, userMessage);
         StringBuilder responseBuilder = new StringBuilder();
+        List<ChatMessage> messages = new LinkedList<>();
+        messages.add(user(sessionId, userMessage));
         return agentPort.streamMessages(agentId, sessionId, userMessage)
-                .doOnNext(msg -> appendResponse(responseBuilder, msg))
-                .doOnComplete(() -> saveAssistantMessage(sessionId, responseBuilder));
+                .doOnNext(msg -> appendMessages(sessionId, messages, responseBuilder, msg))
+                .onErrorResume(throwable -> {
+                    String errorMessage = "对话过程中发生错误: " + throwable.getMessage();
+                    messages.add(system(sessionId, errorMessage));
+                    return Flux.just(new SystemMessage(errorMessage));
+                })
+                .doFinally(signal -> saveMessages(messages));
     }
 
-    /**
-     * 保存用户消息。
-     */
-    private void saveUserMessage(String sessionId, String userMessage) {
-        Session session = sessionRepository.findById(sessionId).orElse(null);
-        if (session != null) {
-            session.addUserMessage(userMessage);
-            sessionRepository.addMessage(session);
-        }
-    }
 
     /**
      * 追加响应内容。
      */
-    private void appendResponse(StringBuilder builder, Message message) {
-        if (message instanceof AssistantMessage am) {
-            builder.append(am.getText());
+    private void appendMessages(String sessionId, List<ChatMessage> messages, StringBuilder builder, Message message) {
+        if (message instanceof AssistantMessage assistantMessage) {
+            if (assistantMessage.getText() != null) {
+                builder.append(assistantMessage.getText());
+            }
+            if (!assistantMessage.getToolCalls().isEmpty()) {
+                appendMessage(sessionId, messages, builder);
+                messages.add(assistant(sessionId, toJson(assistantMessage.getToolCalls())));
+            }
+            if ("STOP".equalsIgnoreCase((String) assistantMessage.getMetadata().getOrDefault("finishReason", ""))) {
+                appendMessage(sessionId, messages, builder);
+            }
         }
+        if (message instanceof ToolResponseMessage toolResponseMessage) {
+            messages.add(tool(sessionId, toJson(toolResponseMessage.getResponses())));
+        }
+        if (message instanceof SystemMessage systemMessage) {
+            messages.add(system(sessionId, systemMessage.getText()));
+        }
+    }
+
+    private void appendMessage(String sessionId, List<ChatMessage> messages, StringBuilder builder) {
+        String text = builder.toString();
+        if (!text.isEmpty() && !"\n".equals(text)) {
+            if (text.startsWith("\n")) {
+                text = text.replaceFirst("\n", "");
+            }
+            if (text.endsWith("\n")) {
+                text = text.substring(0, text.length() - 1);
+            }
+            messages.add(assistant(sessionId, text));
+        }
+        builder.delete(0, builder.length());
     }
 
     /**
      * 保存助手消息。
      */
-    private void saveAssistantMessage(String sessionId, StringBuilder builder) {
-        Session session = sessionRepository.findById(sessionId).orElse(null);
-        if (session != null && builder.length() > 0) {
-            session.addAssistantMessage(builder.toString());
-            sessionRepository.addMessage(session);
-        }
+    private void saveMessages(List<ChatMessage> messages) {
+        sessionRepository.saveMessages(messages);
     }
 
     /**
@@ -112,16 +137,5 @@ public class AgentChatUseCase {
         }
     }
 
-    /**
-     * 保存消息到会话。
-     */
-    private String saveMessages(String sessionId, String userMessage, AssistantMessage response) {
-        Session session = sessionRepository.findById(sessionId).orElse(null);
-        if (session == null) return response.getText();
 
-        session.addUserMessage(userMessage);
-        session.addAssistantMessage(response.getText());
-        sessionRepository.addMessage(session);
-        return response.getText();
-    }
 }

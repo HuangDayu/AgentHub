@@ -1,20 +1,28 @@
 package com.agenthub.domain.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.annotations.Arg;
+
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
  * 会话聚合根，管理会话内的消息历史。
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Session {
-    private final String id;
-    private final String agentId;
-    private final String tenantId;
-    private final String workspaceId;
-    private final Instant createdAt;
-    private final List<ChatMessage> messages;
+    private String id;
+    private String agentId;
+    private String tenantId;
+    private String workspaceId;
+    private Instant createdAt;
+    private List<ChatMessage> messages;
 
     public Session(String id, String agentId, String tenantId, String workspaceId, Instant createdAt) {
         this.id = id;
@@ -23,15 +31,6 @@ public class Session {
         this.workspaceId = workspaceId;
         this.createdAt = createdAt;
         this.messages = new ArrayList<>();
-    }
-
-    public Session(String id, String agentId, String tenantId, String workspaceId, Instant createdAt, List<ChatMessage> messages) {
-        this.id = id;
-        this.agentId = agentId;
-        this.tenantId = tenantId;
-        this.workspaceId = workspaceId;
-        this.createdAt = createdAt;
-        this.messages = messages;
     }
 
     /**
@@ -46,45 +45,5 @@ public class Session {
         return new Session(null, agentId, tenantId, workspaceId, Instant.now());
     }
 
-    public String getId() {
-        return id;
-    }
 
-    public String getAgentId() {
-        return agentId;
-    }
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public String getWorkspaceId() {
-        return workspaceId;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public List<ChatMessage> getMessages() {
-        return Collections.unmodifiableList(messages);
-    }
-
-    /**
-     * 向会话添加用户消息。
-     *
-     * @param content 消息内容
-     */
-    public void addUserMessage(String content) {
-        messages.add(ChatMessage.user(content).withSessionId(this.id));
-    }
-
-    /**
-     * 向会话添加助手回复消息。
-     *
-     * @param content 回复内容
-     */
-    public void addAssistantMessage(String content) {
-        messages.add(ChatMessage.assistant(content).withSessionId(this.id));
-    }
 }

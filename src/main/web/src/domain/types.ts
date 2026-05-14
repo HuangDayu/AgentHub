@@ -234,12 +234,47 @@ export interface ChatSession {
   createdAt: string
 }
 
+// ── Stream Message Types ───────────────────────────────
+
+export type MessageRole = 'USER' | 'ASSISTANT' | 'SYSTEM' | 'TOOL'
+export type MessageType = 'ASSISTANT' | 'USER' | 'TOOL' | 'SKILL' | 'SYSTEM'
+
+export interface ToolCall {
+  id: string
+  type: 'function'
+  name: string
+  arguments: string
+}
+
+export interface ToolResponse {
+  id: string
+  name: string
+  responseData: string
+}
+
+export interface StreamMessage {
+  messageType: MessageType
+  text?: string
+  toolCalls?: ToolCall[]
+  responses?: ToolResponse[]
+  metadata?: {
+    role?: string
+    finishReason?: string
+    [key: string]: unknown
+  }
+}
+
 export interface ChatMessage {
   messageId: string
   sessionId: string
-  role: 'user' | 'assistant' | 'system'
+  role: MessageRole
   content: string
   createdAt: string
+  // 扩展字段用于流式消息
+  messageType?: MessageType
+  toolCalls?: ToolCall[]
+  toolResponses?: ToolResponse[]
+  isExpanded?: boolean // 用于工具调用展开/折叠
 }
 
 // ── User Console Types ─────────────────────────────────

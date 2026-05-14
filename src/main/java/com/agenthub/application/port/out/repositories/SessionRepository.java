@@ -1,5 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
+import com.agenthub.domain.model.ChatMessage;
 import com.agenthub.domain.model.Session;
 
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.Optional;
 /**
  * 会话仓储接口，定义会话的持久化操作。
  */
-public interface StudioSessionRepository {
+public interface SessionRepository {
 
     Session save(Session session);
 
@@ -16,5 +17,8 @@ public interface StudioSessionRepository {
 
     List<Session> findByAgentId(String agentId);
 
-    void addMessage(Session session);
+    void saveMessages(List<ChatMessage> messages);
+
+    void delete(String sessionId);
+
 }
