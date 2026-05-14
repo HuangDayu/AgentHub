@@ -6,7 +6,7 @@ import com.agenthub.application.port.out.IdGenerator;
 import com.agenthub.application.port.out.TimeProvider;
 import com.agenthub.application.port.out.repositories.TenantRepository;
 import com.agenthub.application.port.out.repositories.WorkspaceRepository;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.Workspace;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

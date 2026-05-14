@@ -4,12 +4,11 @@ import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.MemoryCommand;
 import com.agenthub.application.dto.MemoryOutput;
 import com.agenthub.application.port.out.repositories.MemoryRepository;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.Memory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
 import java.util.List;
 
 @Component

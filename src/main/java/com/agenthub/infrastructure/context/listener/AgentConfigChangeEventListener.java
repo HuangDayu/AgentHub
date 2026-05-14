@@ -26,21 +26,20 @@ public class AgentConfigChangeEventListener {
     private final AgentConfigRepository agentConfigRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Async
+    @Async("ttlExecutorService")
     @EventListener
     public void handleDataChange(AgentConfigChangedEvent event) {
         log.info("【Agent配置改变】实体: {}, 操作: {}, IDs: {}", event.getEntityType(), event.getChangeType(), event.getPrimaryKeys());
         ConfigChangeListenerEntity entityAnnotation = event.getEntityAnnotation();
-        for (String primaryKey : event.getPrimaryKeys()) {
-            List<AgentConfig> agentConfigs = agentConfigRepository.findAgentConfigs(entityAnnotation.category(), entityAnnotation.type(), primaryKey);
+        if (event.getPrimaryKeys() != null && !event.getPrimaryKeys().isEmpty()) {
+            List<AgentConfig> agentConfigs = agentConfigRepository.findAgentConfigs(entityAnnotation.category(), entityAnnotation.type(), event.getPrimaryKeys());
             if (agentConfigs != null && !agentConfigs.isEmpty()) {
-                for (AgentConfig agentConfig : agentConfigs) {
-                    if (event.getChangeType() == AgentConfigChangedEvent.ChangeType.DELETE) {
-                        eventPublisher.publishEvent(new AgentConfigDeletedEvent(agentConfig.getAgentId(), entityAnnotation.category(), entityAnnotation.type(), agentConfig.getId()));
-                        agentConfigRepository.deleteById(agentConfig.getId());
-                    } else {
-                        eventPublisher.publishEvent(new AgentConfigUpdatedEvent(agentConfig.getAgentId(), entityAnnotation.category(), entityAnnotation.type(), agentConfig.getId()));
-                    }
+                if (event.getChangeType() == AgentConfigChangedEvent.ChangeType.DELETE) {
+                    eventPublisher.publishEvent(new AgentConfigDeletedEvent(agentConfigs, entityAnnotation.category(), entityAnnotation.type()));
+                    agentConfigRepository.deleteByIds(agentConfigs.stream().map(AgentConfig::getId).toList());
+                } else {
+                    // TODO 同步更新配置数据中冗余的名称和描述
+                    eventPublisher.publishEvent(new AgentConfigUpdatedEvent(agentConfigs, entityAnnotation.category(), entityAnnotation.type()));
                 }
             }
         }

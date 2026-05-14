@@ -1,7 +1,7 @@
 package com.agenthub.application.usecase;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.command.CreateRetrievalStrategyCommand;
 import com.agenthub.application.command.UpdateRetrievalStrategyCommand;
 import com.agenthub.application.port.out.repositories.RetrievalStrategyRepository;

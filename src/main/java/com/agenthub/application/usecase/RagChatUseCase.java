@@ -6,7 +6,7 @@ import com.agenthub.application.dto.MessageOutput;
 import com.agenthub.application.dto.ValidationOutput;
 import com.agenthub.application.port.out.rag.RetrievalAugmentedGenerationPort;
 import com.agenthub.application.port.out.repositories.*;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

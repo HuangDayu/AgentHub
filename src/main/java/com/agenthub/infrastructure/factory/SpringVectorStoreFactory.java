@@ -3,7 +3,7 @@ package com.agenthub.infrastructure.factory;
 import com.agenthub.application.dto.VectorStoreTestOutput;
 import com.agenthub.application.port.out.VectorPoolManagerPort;
 import com.agenthub.application.port.out.repositories.VectorStoreConfigRepository;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.VectorStoreConfig;
 import com.agenthub.infrastructure.vector.VectorStoreFactory;
 import com.agenthub.infrastructure.vector.VectorStoreFactoryRegistry;

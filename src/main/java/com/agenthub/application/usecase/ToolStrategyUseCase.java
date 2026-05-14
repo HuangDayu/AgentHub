@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.CreateToolStrategyCommand;
 import com.agenthub.application.command.UpdateToolStrategyCommand;
 import com.agenthub.application.port.out.repositories.ToolStrategyRepository;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.ToolStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

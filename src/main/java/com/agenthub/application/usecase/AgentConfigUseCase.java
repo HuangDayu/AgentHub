@@ -8,7 +8,7 @@ import com.agenthub.application.port.out.repositories.McpToolRepository;
 import com.agenthub.application.port.out.repositories.SystemToolsRepository;
 import com.agenthub.application.port.out.tools.SkillToolScannerPort;
 import com.agenthub.application.port.out.tools.SystemToolScannerPort;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

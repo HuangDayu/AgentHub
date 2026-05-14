@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.agents;
 
-import com.agenthub.domain.model.MultiAgentTeamType;
+import com.agenthub.domain.model.AgentTeamType;
 import com.agenthub.domain.model.ReActAgentContext;
 
 /**
@@ -8,6 +8,6 @@ import com.agenthub.domain.model.ReActAgentContext;
  */
 public interface TeamAgentFactory {
 
-    AbstractTeamAgent create(MultiAgentTeamType agentTeamType, ReActAgentContext leader, ReActAgentContext... followers);
+    AbstractTeamAgent create(AgentTeamType agentTeamType, ReActAgentContext leader, ReActAgentContext... followers);
 
 }

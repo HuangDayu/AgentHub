@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.factory;
 
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.port.out.repositories.KnowledgeBaseRepository;
 import com.agenthub.application.port.out.repositories.ModelStrategyRepository;
 import com.agenthub.domain.model.KnowledgeBase;

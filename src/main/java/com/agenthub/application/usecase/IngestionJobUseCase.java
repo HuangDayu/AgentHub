@@ -1,6 +1,6 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.common.exception.JobNotFoundException;
+import com.agenthub.domain.exception.JobNotFoundException;
 import com.agenthub.application.command.CreateIngestionJobCommand;
 import com.agenthub.application.dto.IngestionJobOutput;
 import com.agenthub.application.port.in.CreateIngestionJobUseCase;

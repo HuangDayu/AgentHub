@@ -22,7 +22,7 @@ public interface AgentConfigRepository {
 
     AgentConfig findOneAgentConfig(String agentId, AgentConfigCategory category, AgentConfigType type);
 
-    List<AgentConfig> findAgentConfigs(AgentConfigCategory category, AgentConfigType type, String configId);
+    List<AgentConfig> findAgentConfigs(AgentConfigCategory category, AgentConfigType type, List<String> configIds);
 
     void deleteById(String id);
 
@@ -31,4 +31,7 @@ public interface AgentConfigRepository {
     AgentConfig update(AgentConfig config);
 
     String getConfigId(String agentId, AgentConfigCategory category, AgentConfigType type);
+
+    void deleteByIds(List<String> ids);
+
 }

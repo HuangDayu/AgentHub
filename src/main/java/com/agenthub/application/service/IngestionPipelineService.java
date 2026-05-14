@@ -7,7 +7,7 @@ import com.agenthub.application.port.out.etl.ExtractTransformLoadPort;
 import com.agenthub.application.port.out.repositories.IngestionDocumentChunkRepository;
 import com.agenthub.application.port.out.repositories.IngestionDocumentRepository;
 import com.agenthub.application.port.out.repositories.IngestionJobRepository;
-import com.agenthub.common.exception.JobNotFoundException;
+import com.agenthub.domain.exception.JobNotFoundException;
 import com.agenthub.domain.model.DocumentChunk;
 import com.agenthub.domain.model.IngestionDocument;
 import com.agenthub.domain.model.IngestionJob;

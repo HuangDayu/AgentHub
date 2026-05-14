@@ -45,7 +45,7 @@ public class HttpToolsFactory implements AbstractToolsFactory {
 
     @Override
     public Set<ToolCallback> getToolCallbacks(List<AgentToolInfo> toolIds) {
-        List<String> list = toolIds.stream().map(AgentToolInfo::getId).toList();
+        List<String> list = toolIds.stream().map(AgentToolInfo::getConfigId).toList();
         List<HttpTool> httpTools = httpToolRepository.findByIds(list);
         return httpToolCallbackProvider.getToolCallbacks(httpTools);
     }

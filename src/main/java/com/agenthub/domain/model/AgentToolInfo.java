@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class AgentToolInfo {
 
     private AgentToolType type;
-    private String id;
+    private String configId;
     private String name;
     private String description;
     private boolean enabled;

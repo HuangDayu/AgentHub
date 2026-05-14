@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.etl;
 
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.port.out.etl.EtlDocumentChunkStorePort;
 import com.agenthub.domain.model.DocumentChunk;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;

@@ -3,8 +3,7 @@ package com.agenthub.application.usecase;
 import com.agenthub.application.port.out.agent.AgentPort;
 import com.agenthub.application.port.out.repositories.AgentRepository;
 import com.agenthub.application.port.out.repositories.StudioSessionRepository;
-import com.agenthub.common.exception.NotFoundException;
-import com.agenthub.domain.model.ChatMessage;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -14,17 +13,17 @@ import reactor.core.publisher.Flux;
 
 /**
  * Agent对话用例，处理Agent对话和Session管理。
- * 
+ *
  * @author huangdayu
  */
 @Component
 @RequiredArgsConstructor
 public class AgentChatUseCase {
-    
+
     private final AgentPort agentPort;
     private final AgentRepository agentRepository;
     private final StudioSessionRepository sessionRepository;
-    
+
     /**
      * 创建新会话。
      */
@@ -34,16 +33,16 @@ public class AgentChatUseCase {
         Session saved = sessionRepository.save(session);
         return saved.getId();
     }
-    
+
     /**
      * 同步对话。
      */
     public String chat(String agentId, String sessionId, String userMessage) {
         validateSession(sessionId, agentId);
-        AssistantMessage response = agentPort.call(agentId, userMessage);
+        AssistantMessage response = agentPort.call(agentId, sessionId, userMessage);
         return saveMessages(sessionId, userMessage, response);
     }
-    
+
     /**
      * 流式对话。
      */
@@ -51,11 +50,11 @@ public class AgentChatUseCase {
         validateSession(sessionId, agentId);
         saveUserMessage(sessionId, userMessage);
         StringBuilder responseBuilder = new StringBuilder();
-        return agentPort.streamMessages(agentId, userMessage)
+        return agentPort.streamMessages(agentId, sessionId, userMessage)
                 .doOnNext(msg -> appendResponse(responseBuilder, msg))
                 .doOnComplete(() -> saveAssistantMessage(sessionId, responseBuilder));
     }
-    
+
     /**
      * 保存用户消息。
      */
@@ -66,7 +65,7 @@ public class AgentChatUseCase {
             sessionRepository.addMessage(session);
         }
     }
-    
+
     /**
      * 追加响应内容。
      */
@@ -75,7 +74,7 @@ public class AgentChatUseCase {
             builder.append(am.getText());
         }
     }
-    
+
     /**
      * 保存助手消息。
      */
@@ -86,14 +85,14 @@ public class AgentChatUseCase {
             sessionRepository.addMessage(session);
         }
     }
-    
+
     /**
      * 中断Agent执行。
      */
     public void interrupt(String agentId) {
         agentPort.interrupt(agentId);
     }
-    
+
     /**
      * 验证Agent存在。
      */
@@ -101,7 +100,7 @@ public class AgentChatUseCase {
         agentRepository.findById(agentId)
                 .orElseThrow(() -> new NotFoundException("Agent not found: " + agentId));
     }
-    
+
     /**
      * 验证会话归属。
      */
@@ -112,14 +111,14 @@ public class AgentChatUseCase {
             throw new NotFoundException("Session not owned by agent: " + agentId);
         }
     }
-    
+
     /**
      * 保存消息到会话。
      */
     private String saveMessages(String sessionId, String userMessage, AssistantMessage response) {
         Session session = sessionRepository.findById(sessionId).orElse(null);
         if (session == null) return response.getText();
-        
+
         session.addUserMessage(userMessage);
         session.addAssistantMessage(response.getText());
         sessionRepository.addMessage(session);

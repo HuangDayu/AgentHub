@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.AgentTeamCommand;
 import com.agenthub.application.dto.AgentTeamOutput;
 import com.agenthub.application.port.out.repositories.AgentTeamRepository;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.AgentTeam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

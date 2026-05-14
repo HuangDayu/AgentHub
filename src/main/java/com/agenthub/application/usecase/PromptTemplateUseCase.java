@@ -5,7 +5,7 @@ import com.agenthub.application.command.PromptTemplateInfoCommand;
 import com.agenthub.application.dto.PromptTemplateOutput;
 import com.agenthub.application.dto.VariableOutput;
 import com.agenthub.application.port.out.repositories.PromptTemplateRepository;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.PromptTemplateInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

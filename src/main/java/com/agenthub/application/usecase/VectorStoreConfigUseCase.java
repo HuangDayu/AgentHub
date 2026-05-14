@@ -1,8 +1,8 @@
 package com.agenthub.application.usecase;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.agenthub.common.exception.ConflictException;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.ConflictException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.command.CreateVectorStoreConfigCommand;
 import com.agenthub.application.command.UpdateVectorStoreConfigCommand;
 import com.agenthub.application.dto.VectorStoreTestOutput;

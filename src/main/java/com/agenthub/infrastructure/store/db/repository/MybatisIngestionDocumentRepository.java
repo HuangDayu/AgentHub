@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.port.out.repositories.IngestionDocumentRepository;
 import com.agenthub.domain.model.IngestionDocument;
 import com.agenthub.infrastructure.store.db.entity.IngestionDocumentEntity;

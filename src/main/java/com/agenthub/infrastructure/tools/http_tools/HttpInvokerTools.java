@@ -4,7 +4,7 @@ import com.agenthub.application.command.InvokeToolCommand;
 import com.agenthub.application.port.out.HttpToolInvoker;
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
 import com.agenthub.domain.model.HttpTool;
-import com.agenthub.common.exception.ToolNotFoundException;
+import com.agenthub.domain.exception.ToolNotFoundException;
 import com.agenthub.domain.model.HttpToolInvocationResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

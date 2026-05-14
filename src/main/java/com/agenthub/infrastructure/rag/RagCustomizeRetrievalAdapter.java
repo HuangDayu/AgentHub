@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.rag;
 
 import com.agenthub.application.command.RetrievalCommand;
 import com.agenthub.application.port.out.rag.*;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.dto.CitationOutput;
 import com.agenthub.application.dto.RetrievalOutput;
 import com.agenthub.application.dto.RetrievalResultOutput;

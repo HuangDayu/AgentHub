@@ -7,7 +7,7 @@ import com.agenthub.application.command.UpdateToolCommand;
 import com.agenthub.application.port.out.HttpToolInvoker;
 import com.agenthub.application.port.out.IdempotencyCachePort;
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
-import com.agenthub.common.exception.ToolNotFoundException;
+import com.agenthub.domain.exception.ToolNotFoundException;
 import com.agenthub.domain.model.HttpTool;
 import com.agenthub.domain.model.HttpToolInvocationResult;
 import com.agenthub.domain.model.HttpToolInvokeView;

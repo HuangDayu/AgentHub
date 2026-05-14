@@ -91,9 +91,9 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
     }
 
     @Override
-    public List<AgentConfig> findAgentConfigs(AgentConfigCategory category, AgentConfigType type, String configId) {
+    public List<AgentConfig> findAgentConfigs(AgentConfigCategory category, AgentConfigType type, List<String> configIds) {
         LambdaQueryWrapper<AgentConfigEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(AgentConfigEntity::getConfigId, configId);
+        queryWrapper.in(AgentConfigEntity::getConfigId, configIds);
         queryWrapper.eq(AgentConfigEntity::getCategory, category.name());
         queryWrapper.eq(AgentConfigEntity::getType, type.name());
         List<AgentConfigEntity> entities = mapper.selectList(queryWrapper);
@@ -124,6 +124,11 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
             throw new IllegalStateException("未找到对应的配置");
         }
         return config.getConfigId();
+    }
+
+    @Override
+    public void deleteByIds(List<String> ids) {
+        mapper.deleteByIds(ids);
     }
 
     private AgentConfigEntity toEntity(AgentConfig config) {

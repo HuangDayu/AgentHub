@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.agents;
 
-import com.agenthub.domain.model.MultiAgentTeamType;
+import com.agenthub.domain.model.AgentTeamType;
 import com.agenthub.domain.model.ReActAgentContext;
 import org.springframework.ai.chat.messages.Message;
 import reactor.core.publisher.Flux;
@@ -14,7 +14,7 @@ public abstract class AbstractTeamAgent {
 
     public abstract String getName();
 
-    public abstract MultiAgentTeamType getAgentTeamType();
+    public abstract AgentTeamType getAgentTeamType();
 
     public abstract ReActAgentContext getContext();
 

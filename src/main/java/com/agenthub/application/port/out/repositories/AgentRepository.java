@@ -19,4 +19,7 @@ public interface AgentRepository {
     void deleteById(String agentId);
 
     List<Agent> findByTenantIdAndWorkspaceId(String tenantId, String workspaceId);
+
+    Agent findByName(String name);
+
 }

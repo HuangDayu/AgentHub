@@ -23,6 +23,9 @@ public class MybatisAgentRepository implements AgentRepository {
     @Override
     public Agent save(Agent agent) {
         AgentEntity entity = toEntity(agent);
+        if (entity.getId() == null && findByName(agent.getName()) != null) {
+            throw new RuntimeException("Agent name already exists");
+        }
         mapper.insertOrUpdate(entity);
         return toDomain(entity);
     }
@@ -51,7 +54,18 @@ public class MybatisAgentRepository implements AgentRepository {
         return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public Agent findByName(String name) {
+        LambdaQueryWrapper<AgentEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AgentEntity::getName, name);
+        AgentEntity agentEntity = mapper.selectOne(queryWrapper);
+        return toDomain(agentEntity);
+    }
+
     private AgentEntity toEntity(Agent agent) {
+        if (agent == null) {
+            return null;
+        }
         AgentEntity entity = new AgentEntity();
         entity.setId(agent.getId());
         entity.setTenantId(agent.getTenantId());
@@ -69,6 +83,9 @@ public class MybatisAgentRepository implements AgentRepository {
     }
 
     private Agent toDomain(AgentEntity entity) {
+        if (entity == null) {
+            return null;
+        }
         Agent agent = new Agent();
         agent.setId(entity.getId());
         agent.setTenantId(entity.getTenantId());

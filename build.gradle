@@ -63,6 +63,11 @@ dependencies {
     implementation 'org.springframework.retry:spring-retry:2.0.11'
 
     implementation 'com.alibaba.cloud.ai:spring-ai-alibaba-agent-framework'
+    implementation ('com.alibaba.cloud.ai:spring-ai-alibaba-studio'){
+        exclude group: 'org.springframework.boot', module: '*'
+        exclude group: 'com.alibaba.cloud.ai', module: 'spring-ai-alibaba-autoconfigure-dashscope'
+        exclude group: 'com.alibaba.cloud.ai', module: 'spring-ai-alibaba-starter-dashscope'
+    }
     implementation 'io.agentscope:agentscope:1.0.12'
 
     implementation "com.baomidou:mybatis-plus-spring-boot4-starter:${mybatisPlusVersion}"

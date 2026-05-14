@@ -1,6 +1,7 @@
 package com.agenthub.application.service;
 
-import com.agenthub.common.exception.InvalidRefreshTokenException;
+import com.agenthub.domain.exception.InvalidCredentialsException;
+import com.agenthub.domain.exception.InvalidRefreshTokenException;
 import com.agenthub.domain.model.AccessToken;
 import com.agenthub.domain.model.AuthTokens;
 import com.agenthub.domain.model.RefreshTokenSession;
@@ -60,11 +61,11 @@ public class AuthApplicationService {
      * @param username 用户名
      * @param password 密码
      * @return 认证令牌（访问令牌和刷新令牌）
-     * @throws com.agenthub.common.exception.InvalidCredentialsException 凭据无效时抛出
+     * @throws InvalidCredentialsException 凭据无效时抛出
      */
     public AuthTokens login(String username, String password) {
         if (!credentialVerifier.verify(username, password)) {
-            throw new com.agenthub.common.exception.InvalidCredentialsException("Invalid username or password");
+            throw new InvalidCredentialsException("Invalid username or password");
         }
         return issueTokens(username);
     }

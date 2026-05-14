@@ -45,7 +45,7 @@ public class McpToolsFactory implements AbstractToolsFactory {
 
     @Override
     public Set<ToolCallback> getToolCallbacks(List<AgentToolInfo> toolIds) {
-        List<String> list = toolIds.parallelStream().map(AgentToolInfo::getId).toList();
+        List<String> list = toolIds.parallelStream().map(AgentToolInfo::getConfigId).toList();
         List<McpTool> mcpTools = mcpToolRepository.findByIds(list);
         return mcpToolCallbackProvider.getToolCallbacks(mcpTools);
     }

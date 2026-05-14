@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.vector;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.agenthub.common.exception.VectorStoreException;
+import com.agenthub.domain.exception.VectorStoreException;
 import com.agenthub.domain.model.VectorStoreConfig;
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;

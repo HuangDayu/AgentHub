@@ -20,8 +20,6 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static com.agenthub.common.utils.RandomUtils.randomId;
-
 /**
  * 技能文件管理器，负责技能路径下的文件扫描、网络压缩包的下载解压。
  *
@@ -84,7 +82,6 @@ public class SkillFileManager implements SkillToolScannerPort {
 
     private Skill createSkill(String skillCode, String name, String description, String path, String skillFilesTree) {
         Skill skill = new Skill();
-        skill.setId(randomId());
         skill.setSkillCode(skillCode);
         skill.setName(name);
         skill.setDescription(description);

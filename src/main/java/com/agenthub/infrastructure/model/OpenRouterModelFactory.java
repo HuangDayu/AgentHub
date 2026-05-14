@@ -66,6 +66,7 @@ public class OpenRouterModelFactory implements ModelFactory {
                 ? config.getBaseUrl() : DEFAULT_BASE_URL;
 
         return OpenAiApi.builder()
+                .completionsPath("/chat/completions")
                 .apiKey(config.getApiKey())
                 .baseUrl(baseUrl)
                 .build();

@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.McpToolCommand;
 import com.agenthub.application.dto.McpToolOutput;
 import com.agenthub.application.port.out.repositories.McpToolRepository;
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.McpTool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

@@ -1,6 +1,6 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.common.exception.NotFoundException;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.dto.SessionOutput;
 import com.agenthub.application.port.out.repositories.StudioSessionRepository;
 import com.agenthub.domain.model.ChatMessage;
