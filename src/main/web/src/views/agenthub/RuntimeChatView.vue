@@ -1225,9 +1225,7 @@ onMounted(() => {
 .message-content {
   padding: 10px 14px;
   border-radius: 12px;
-  white-space: pre-wrap;
   word-break: break-word;
-  line-height: 1.4;
   font-size: 0.85rem;
   display: inline-block;
   width: fit-content;
