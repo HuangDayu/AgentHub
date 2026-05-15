@@ -120,7 +120,9 @@ public class KnowledgeBaseController {
             @PathVariable String kbId,
             @RequestBody SearchRequest request
     ) {
-        RetrievalOutput result = ragRetrievalPort.retrieve(BeanUtil.copyProperties(request, RetrievalCommand.class));
+        RetrievalCommand retrievalCommand = BeanUtil.copyProperties(request, RetrievalCommand.class);
+        retrievalCommand.setKbId(kbId);
+        RetrievalOutput result = ragRetrievalPort.retrieve(retrievalCommand);
         return toSearchResponse(result);
     }
 

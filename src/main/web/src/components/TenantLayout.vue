@@ -34,6 +34,7 @@
     <FloatingSettingsButton />
   </div>
     <FloatingEffectButton :bottom="buttonPositions.effect" />
+    <FloatingHomeButton v-if="showHomeButton" :bottom="buttonPositions.home" />
     <FloatingSyncButton v-if="showSyncButton" :bottom="buttonPositions.sync" @sync="handleSync" />
     <FloatingAddButton v-if="showAddButton" :bottom="buttonPositions.add" @add="handleAdd" />
 </template>
@@ -49,6 +50,7 @@ import FloatingSettingsButton from './FloatingSettingsButton.vue'
 import FloatingEffectButton from './FloatingEffectButton.vue'
 import FloatingAddButton from './FloatingAddButton.vue'
 import FloatingSyncButton from './FloatingSyncButton.vue'
+import FloatingHomeButton from './FloatingHomeButton.vue'
 const store = useWorkspaceStore()
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -83,6 +85,13 @@ const showSyncButton = computed(() => {
   return path.includes('skill') || path.includes('system-tools') || path.includes('agent-configs')
 })
 
+// 判断是否显示返回首页按钮（非首页时显示）
+const showHomeButton = computed(() => {
+  const path = route.path
+  // 首页路径是 /agenthub
+  return path !== '/agenthub'
+})
+
 // 处理新增按钮点击
 const handleAdd = () => {
   // 触发全局事件，让各个页面监听
@@ -105,6 +114,7 @@ const buttonPositions = computed(() => {
   const positions = {
     settings: currentBottom,
     effect: 0,
+    home: 0,
     sync: 0,
     add: 0
   }
@@ -113,6 +123,12 @@ const buttonPositions = computed(() => {
   currentBottom += BUTTON_HEIGHT + BUTTON_GAP
   // 主题按钮
   positions.effect = currentBottom
+
+  // 返回首页按钮（在主题按钮上面）
+  if (showHomeButton.value) {
+    currentBottom += BUTTON_HEIGHT + BUTTON_GAP
+    positions.home = currentBottom
+  }
 
   // 如果有同步按钮
   if (showSyncButton.value) {

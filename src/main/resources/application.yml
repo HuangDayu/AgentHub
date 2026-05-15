@@ -95,11 +95,11 @@ agenthub:
       secret-key: minioadmin
       bucket: agenthub
   rag:
-    impl-type: spring
+    impl-type: customize
     reranker:
       type: keyword
   etl:
-    impl-type: spring
+    impl-type: customize
 
 
 management:

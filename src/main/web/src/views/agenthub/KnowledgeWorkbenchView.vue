@@ -29,30 +29,27 @@
           </label>
           <label class="field">
             <span>向量数据库配置</span>
-            <select v-model="form.vectorStoreConfigId">
-              <option value="">不绑定</option>
-              <option v-for="config in vectorStoreConfigs" :key="config.id" :value="config.id">
-                {{ config.name }} ({{ config.type }})
-              </option>
-            </select>
+            <CustomSelect
+              v-model="form.vectorStoreConfigId"
+              :options="vectorStoreConfigOptions"
+              placeholder="不绑定"
+            />
           </label>
           <label class="field">
             <span>嵌入模型配置</span>
-            <select v-model="form.embeddingModelConfigId">
-              <option value="">不绑定</option>
-              <option v-for="config in modelConfigs.filter(c => c.type === 'EMBEDDING')" :key="config.id" :value="config.id">
-                {{ config.name }} ({{ config.supplier }} - {{ config.model }})
-              </option>
-            </select>
+            <CustomSelect
+              v-model="form.embeddingModelConfigId"
+              :options="embeddingModelConfigOptions"
+              placeholder="不绑定"
+            />
           </label>
           <label class="field">
             <span>对话模型配置</span>
-            <select v-model="form.chatModelConfigId">
-              <option value="">不绑定</option>
-              <option v-for="config in modelConfigs.filter(c => c.type === 'CHAT')" :key="config.id" :value="config.id">
-                {{ config.name }} ({{ config.supplier }} - {{ config.model }})
-              </option>
-            </select>
+            <CustomSelect
+              v-model="form.chatModelConfigId"
+              :options="chatModelConfigOptions"
+              placeholder="不绑定"
+            />
           </label>
           <label class="field" style="grid-column: 1 / -1">
             <span>描述</span>
@@ -79,30 +76,27 @@
           </label>
           <label class="field">
             <span>向量数据库配置</span>
-            <select v-model="editForm.vectorStoreConfigId">
-              <option value="">不绑定</option>
-              <option v-for="config in vectorStoreConfigs" :key="config.id" :value="config.id">
-                {{ config.name }} ({{ config.type }})
-              </option>
-            </select>
+            <CustomSelect
+              v-model="editForm.vectorStoreConfigId"
+              :options="vectorStoreConfigOptions"
+              placeholder="不绑定"
+            />
           </label>
           <label class="field">
             <span>嵌入模型配置</span>
-            <select v-model="editForm.embeddingModelConfigId">
-              <option value="">不绑定</option>
-              <option v-for="config in modelConfigs.filter(c => c.type === 'EMBEDDING')" :key="config.id" :value="config.id">
-                {{ config.name }} ({{ config.supplier }} - {{ config.model }})
-              </option>
-            </select>
+            <CustomSelect
+              v-model="editForm.embeddingModelConfigId"
+              :options="embeddingModelConfigOptions"
+              placeholder="不绑定"
+            />
           </label>
           <label class="field">
             <span>对话模型配置</span>
-            <select v-model="editForm.chatModelConfigId">
-              <option value="">不绑定</option>
-              <option v-for="config in modelConfigs.filter(c => c.type === 'CHAT')" :key="config.id" :value="config.id">
-                {{ config.name }} ({{ config.supplier }} - {{ config.model }})
-              </option>
-            </select>
+            <CustomSelect
+              v-model="editForm.chatModelConfigId"
+              :options="chatModelConfigOptions"
+              placeholder="不绑定"
+            />
           </label>
           <label class="field" style="grid-column: 1 / -1">
             <span>描述</span>
@@ -131,7 +125,8 @@
               <td>
                 <div class="chip-row">
                   <CustomButton type="secondary" @click="openEditForm(item)">编辑</CustomButton>
-                  <CustomButton type="secondary" @click="openDocPanel(item.id)">文档管理</CustomButton>
+                  <CustomButton type="secondary" @click="openDocPanel(item)">文档管理</CustomButton>
+                  <CustomButton type="secondary" @click="openRetrievalDialog(item)">检索</CustomButton>
                   <CustomButton type="ghost" @click="handleDeleteKb(item.id)">删除</CustomButton>
                 </div>
               </td>
@@ -140,18 +135,17 @@
         </table>
       </article>
 
-      <!-- 文档管理面板 -->
-      <article v-if="activeDocKbId" class="panel stack">
-        <div class="page-header">
-          <div>
-            <h3 style="margin: 0">文档管理 · {{ activeDocKbId }}</h3>
-            <p class="muted">上传文档到知识库，查看已有文档列表。</p>
-          </div>
-          <CustomButton type="ghost" @click="activeDocKbId = ''">关闭</CustomButton>
-        </div>
+      <!-- 文档管理弹窗 -->
+      <ModalDialog
+        v-model:visible="showDocPanel"
+        :title="`文档管理 · ${activeDocKbName}`"
+        @close="closeDocPanel"
+        size="xlarge"
+        :show-footer="false"
+      >
         <!-- 上传 -->
-        <form class="field-grid" @submit.prevent>
-          <label class="field" style="grid-column: 1 / -1">
+        <form @submit.prevent style="display: flex; gap: 16px; align-items: flex-end; margin-bottom: 24px;">
+          <label class="field" style="flex: 1;">
             <span>选择文件上传</span>
             <input type="file" @change="onFileSelected" />
           </label>
@@ -185,15 +179,47 @@
                 <td><span class="tag">{{ doc.status }}</span></td>
                 <td>{{ formatDateTime(doc.createdAt) }}</td>
                 <td>
-                  <CustomButton type="secondary" @click="handleVectorizeDoc(doc.docId)" :disabled="vectorizingDocId === doc.docId">{{ vectorizingDocId === doc.docId ? "向量化中..." : "向量化" }}</CustomButton>
-                  <CustomButton type="ghost" @click="handleDeleteDoc(doc.docId)">删除</CustomButton>
+                  <CustomButton type="secondary" @click="openEditDocForm(doc)" size="small">编辑</CustomButton>
+                  <CustomButton type="secondary" @click="handleVectorizeDoc(doc.docId)" :disabled="vectorizingDocId === doc.docId" size="small">{{ vectorizingDocId === doc.docId ? "向量化中..." : "向量化" }}</CustomButton>
+                  <CustomButton type="ghost" @click="handleDeleteDoc(doc.docId)" size="small">删除</CustomButton>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
         <div v-else class="empty-state">暂无文档，请上传文件。</div>
-      </article>
+      </ModalDialog>
+
+      <!-- 文档编辑弹窗 -->
+      <ModalDialog
+        v-model:visible="showEditDocForm"
+        title="编辑文档"
+        @confirm="submitEditDoc"
+        @close="showEditDocForm = false"
+        confirm-text="保存"
+      >
+        <form>
+          <label class="field">
+            <span>文件名</span>
+            <input v-model="editDocForm.fileName" required placeholder="文件名" />
+          </label>
+          <label class="field">
+            <span>文档类型</span>
+            <input v-model="editDocForm.contentType" required placeholder="文档类型" />
+          </label>
+          <label class="field" style="grid-column: 1 / -1">
+            <span>描述</span>
+            <textarea v-model="editDocForm.description" rows="3" placeholder="文档描述"></textarea>
+          </label>
+        </form>
+      </ModalDialog>
+
+      <!-- 知识库检索弹窗 -->
+      <KnowledgeRetrievalDialog
+        v-model:visible="showRetrievalDialog"
+        :kb-id="retrievalKbId"
+        :kb-name="retrievalKbName"
+      />
     </template>
   </section>
 </template>
@@ -216,6 +242,7 @@ import { useWorkspaceStore } from '@/store/workspace-store'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
+import KnowledgeRetrievalDialog from '@/components/KnowledgeRetrievalDialog.vue'
 
 const store = useWorkspaceStore()
 const selectionReady = computed(() => !!store.tenantId && !!store.workspaceId)
@@ -226,6 +253,32 @@ const vectorStoreConfigs = ref<VectorStoreConfig[]>([])
 const error = ref('')
 const showCreateForm = ref(false)
 const showEditForm = ref(false)
+
+// 下拉框选项计算属性
+const vectorStoreConfigOptions = computed(() => {
+  return vectorStoreConfigs.value.map(config => ({
+    value: config.id,
+    label: `${config.name} (${config.type})`
+  }))
+})
+
+const embeddingModelConfigOptions = computed(() => {
+  return modelConfigs.value
+    .filter(c => c.type === 'EMBEDDING')
+    .map(config => ({
+      value: config.id,
+      label: `${config.name} (${config.supplier} - ${config.model})`
+    }))
+})
+
+const chatModelConfigOptions = computed(() => {
+  return modelConfigs.value
+    .filter(c => c.type === 'CHAT')
+    .map(config => ({
+      value: config.id,
+      label: `${config.name} (${config.supplier} - ${config.model})`
+    }))
+})
 
 const form = reactive({
   name: '',
@@ -246,20 +299,39 @@ const editForm = reactive({
 })
 
 // 文档管理
+const showDocPanel = ref(false)
 const activeDocKbId = ref('')
+const activeDocKbName = ref('')
 const documents = ref<any[]>([])
 const selectedFile = ref<File | null>(null)
 const uploading = ref(false)
 const vectorizingDocId = ref<string | null>(null)
+
+// 文档编辑
+const showEditDocForm = ref(false)
+const editDocForm = reactive({
+  docId: '',
+  fileName: '',
+  contentType: '',
+  description: '',
+})
+
+// 知识库检索
+const showRetrievalDialog = ref(false)
+const retrievalKbId = ref('')
+const retrievalKbName = ref('')
 
 // 监听全局新增事件
 onMounted(() => {
   loadVectorStoreConfigs()
   loadModelConfigs()
   if (selectionReady.value) loadKnowledgeBases()
-  
+
   // 监听全局新增事件
-  window.addEventListener('global-add', () => {
+  window.addEventListener('global-add', async () => {
+    // 刷新配置列表
+    await loadVectorStoreConfigs()
+    await loadModelConfigs()
     showCreateForm.value = true
   })
 })
@@ -324,7 +396,12 @@ function resetForm() {
   form.chatModelConfigId = ''
 }
 
-function openEditForm(kb: KnowledgeBase) {
+async function openEditForm(kb: KnowledgeBase) {
+  // 刷新配置列表
+  await loadVectorStoreConfigs()
+  await loadModelConfigs()
+
+  // 填充表单数据
   editForm.kbId = kb.id
   editForm.name = kb.name
   editForm.description = kb.description || ''
@@ -359,11 +436,21 @@ async function handleDeleteKb(kbId: string) {
 }
 
 // 文档管理
-async function openDocPanel(kbId: string) {
-  activeDocKbId.value = kbId
+async function openDocPanel(kb: KnowledgeBase) {
+  activeDocKbId.value = kb.id
+  activeDocKbName.value = kb.name
   documents.value = []
   selectedFile.value = null
+  showDocPanel.value = true
   await loadDocuments()
+}
+
+function closeDocPanel() {
+  showDocPanel.value = false
+  activeDocKbId.value = ''
+  activeDocKbName.value = ''
+  documents.value = []
+  selectedFile.value = null
 }
 
 function onFileSelected(event: Event) {
@@ -426,6 +513,42 @@ async function handleDeleteDoc(docId: string) {
     )
     await loadDocuments()
   })
+}
+
+// 文档编辑
+function openEditDocForm(doc: any) {
+  editDocForm.docId = doc.docId
+  editDocForm.fileName = doc.fileName || ''
+  editDocForm.contentType = doc.contentType || ''
+  editDocForm.description = doc.description || ''
+  showEditDocForm.value = true
+}
+
+async function submitEditDoc() {
+  if (!activeDocKbId.value) return
+  await execute(async () => {
+    // 这里需要调用更新文档的API
+    // 由于API中可能没有更新文档的接口，这里先注释
+    // await updateDocument(
+    //   { tenantId: store.tenantId, workspaceId: store.workspaceId },
+    //   activeDocKbId.value,
+    //   editDocForm.docId,
+    //   {
+    //     fileName: editDocForm.fileName,
+    //     contentType: editDocForm.contentType,
+    //     description: editDocForm.description,
+    //   }
+    // )
+    showEditDocForm.value = false
+    await loadDocuments()
+  })
+}
+
+// 知识库检索
+function openRetrievalDialog(kb: KnowledgeBase) {
+  retrievalKbId.value = kb.id
+  retrievalKbName.value = kb.name
+  showRetrievalDialog.value = true
 }
 
 function formatSize(bytes: number): string {
