@@ -9,7 +9,9 @@ import com.alibaba.cloud.ai.graph.store.stores.BaseStore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 
 import java.util.List;
@@ -22,6 +24,8 @@ public class AliReActAgentConfig {
 
     private Agent agent;
     private ChatModel chatModel;
+    private Advisor[] advisors;
+    private ChatOptions chatOptions;
     private String systemPrompt;
     private List<ToolCallback> tools;
     private List<Hook> hooks;

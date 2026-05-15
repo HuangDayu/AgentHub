@@ -1,28 +1,26 @@
 package com.agenthub.infrastructure.store.db.entity;
-import com.agenthub.common.annotations.ConfigChangeListenerEntity;
-import lombok.Data;
 
+import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.time.Instant;
 
 import static com.agenthub.domain.model.AgentConfigCategory.MODEL;
-import static com.agenthub.domain.model.AgentConfigCategory.PROMPT;
-import static com.agenthub.domain.model.AgentConfigType.CHAT_MODEL;
-import static com.agenthub.domain.model.AgentConfigType.SYSTEM_PROMPT;
+import static com.agenthub.domain.model.AgentConfigType.ALL_TYPE;
 
 /**
  * 模型配置持久化对象（PO），映射 model_config 表。
  */
 @Data
 @TableName("app.model_config")
-@ConfigChangeListenerEntity(category = MODEL, type = CHAT_MODEL)
+@ConfigChangeListenerEntity(category = MODEL, type = ALL_TYPE)
 public class ModelConfigEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    @TableField(value = "tenant_id",fill = FieldFill.INSERT)
+    @TableField(value = "tenant_id", fill = FieldFill.INSERT)
     private String tenantId;
 
     @TableField(value = "workspace_id", fill = FieldFill.INSERT)
@@ -49,10 +47,10 @@ public class ModelConfigEntity {
     @TableField("enabled")
     private Boolean enabled;
 
-    @TableField(value = "created_at",fill = FieldFill.INSERT)
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
 
-    @TableField(value = "updated_at",fill = FieldFill.UPDATE)
+    @TableField(value = "updated_at", fill = FieldFill.UPDATE)
     private Instant updatedAt;
 
     @TableField("created_by")

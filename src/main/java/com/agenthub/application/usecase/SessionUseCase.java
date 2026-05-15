@@ -52,7 +52,7 @@ public class SessionUseCase {
      * 查找并验证会话归属。
      */
     private Session findAndValidateSession(String agentId, String sessionId) {
-        Session session = sessionRepository.findById(sessionId)
+        Session session = sessionRepository.findSessionMessageById(sessionId)
                 .orElseThrow(() -> new NotFoundException("Session not found: " + sessionId));
         if (!session.getAgentId().equals(agentId)) {
             throw new NotFoundException("Session not owned by agent: " + agentId);

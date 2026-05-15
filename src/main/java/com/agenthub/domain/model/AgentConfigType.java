@@ -8,6 +8,7 @@ import lombok.Getter;
 @Getter
 public enum AgentConfigType {
 
+    ALL_TYPE("所有类型", "所有类型配置"),
     RETRIEVAL_STRATEGY("检索策略", "知识检索策略配置"),      // 检索策略
     TOOL_STRATEGY("工具策略", "工具调用策略配置"),  // 工具策略
     MODEL_STRATEGY("模型策略", "模型调用策略配置"), // 模型策略

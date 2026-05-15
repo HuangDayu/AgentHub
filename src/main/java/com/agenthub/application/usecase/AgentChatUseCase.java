@@ -38,7 +38,7 @@ public class AgentChatUseCase {
      * 同步对话。
      */
     public String chat(String agentId, String sessionId, String userMessage) {
-        validateSession(sessionId, agentId);
+        sessionRepository.existSession(sessionId, agentId);
         List<ChatMessage> messages = new LinkedList<>();
         messages.add(user(sessionId, userMessage));
         AssistantMessage response = agentPort.call(agentId, sessionId, userMessage);
@@ -51,7 +51,7 @@ public class AgentChatUseCase {
      * 流式对话。
      */
     public Flux<Message> streamChat(String agentId, String sessionId, String userMessage) {
-        validateSession(sessionId, agentId);
+        sessionRepository.existSession(sessionId, agentId);
         StringBuilder responseBuilder = new StringBuilder();
         List<ChatMessage> messages = new LinkedList<>();
         messages.add(user(sessionId, userMessage));
@@ -126,16 +126,7 @@ public class AgentChatUseCase {
                 .orElseThrow(() -> new NotFoundException("Agent not found: " + agentId));
     }
 
-    /**
-     * 验证会话归属。
-     */
-    private void validateSession(String sessionId, String agentId) {
-        Session session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new NotFoundException("Session not found: " + sessionId));
-        if (!session.getAgentId().equals(agentId)) {
-            throw new NotFoundException("Session not owned by agent: " + agentId);
-        }
-    }
+
 
 
 }

@@ -66,6 +66,9 @@ public class WorkspacesContextLineHandler implements TenantLineHandler {
      */
     @Override
     public boolean ignoreTable(String tableName) {
+        if (tenantContextGetter.isIgnoreTenantContext()) {
+            return true;
+        }
         return MAP.computeIfAbsent(tableName, k -> ignoreTable(tableName, getTenantIdColumn()));
     }
 

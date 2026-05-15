@@ -13,7 +13,7 @@ public interface SessionRepository {
 
     Session save(Session session);
 
-    Optional<Session> findById(String sessionId);
+    Optional<Session> findSessionMessageById(String sessionId);
 
     List<Session> findByAgentId(String agentId);
 
@@ -21,4 +21,5 @@ public interface SessionRepository {
 
     void delete(String sessionId);
 
+    Session existSession(String sessionId, String agentId);
 }

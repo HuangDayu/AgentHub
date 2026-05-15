@@ -87,17 +87,10 @@ public class AgentHubWebFilter implements Filter {
         return uri.startsWith("/api/") ||
                 uri.startsWith("/actuator") ||
                 uri.startsWith("/assets/") ||
-                isStaticResource(uri) ||
-                isAlibabaAiStudio(uri);
+                isStaticResource(uri);
     }
 
-    private boolean isAlibabaAiStudio(String uri) {
-        return uri.startsWith("/chatui/") ||
-                uri.startsWith("/apps") ||
-                uri.startsWith("/run_sse") ||
-                uri.startsWith("/list-apps") ||
-                uri.startsWith("/resume_sse");
-    }
+
 
     /**
      * 判断是否是静态资源请求。

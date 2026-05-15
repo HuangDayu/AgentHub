@@ -95,7 +95,9 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
         LambdaQueryWrapper<AgentConfigEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(AgentConfigEntity::getConfigId, configIds);
         queryWrapper.eq(AgentConfigEntity::getCategory, category.name());
-        queryWrapper.eq(AgentConfigEntity::getType, type.name());
+        if (!AgentConfigType.ALL_TYPE.equals(type)) {
+            queryWrapper.eq(AgentConfigEntity::getType, type.name());
+        }
         List<AgentConfigEntity> entities = mapper.selectList(queryWrapper);
         return entities.stream().map(this::toDomain).toList();
     }

@@ -22,7 +22,7 @@ public class SessionTools {
 
     @Tool(description = "获取会话状态")
     public Session sessionStatus(@ToolParam String sessionId) {
-        return sessionRepository.findById(sessionId).orElse(null);
+        return sessionRepository.findSessionMessageById(sessionId).orElse(null);
     }
 
     @Tool(description = "获取会话历史消息")

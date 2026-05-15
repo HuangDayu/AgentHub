@@ -2,6 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.SessionRepository;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.ChatMessage;
 import com.agenthub.domain.model.Session;
 import com.agenthub.infrastructure.store.db.entity.ChatMessageEntity;
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,7 +41,7 @@ public class MybatisSessionRepository implements SessionRepository {
     }
 
     @Override
-    public Optional<Session> findById(String sessionId) {
+    public Optional<Session> findSessionMessageById(String sessionId) {
         SessionEntity sessionEntity = sessionMapper.selectById(sessionId);
         if (sessionEntity == null) {
             return Optional.empty();
@@ -74,6 +76,16 @@ public class MybatisSessionRepository implements SessionRepository {
         LambdaQueryWrapper<ChatMessageEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ChatMessageEntity::getSessionId, sessionId);
         messageMapper.delete(queryWrapper);
+    }
+
+
+    @Override
+    public Session existSession(String sessionId, String agentId) {
+        SessionEntity sessionEntity = sessionMapper.selectById(sessionId);
+        if (sessionEntity == null || !sessionEntity.getAgentId().equals(agentId)) {
+            throw new NotFoundException("Session not owned by agent: " + agentId);
+        }
+        return toSession(sessionEntity, new ArrayList<>());
     }
 
     private SessionEntity toSessionPo(Session session) {

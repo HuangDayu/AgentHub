@@ -1,7 +1,9 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
+import com.agenthub.common.utils.TtlUtils;
 import com.agenthub.domain.model.AgentToolInfo;
 import com.agenthub.domain.model.AgentToolType;
+import com.agenthub.domain.model.ModelStrategy;
 import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.infrastructure.agents.AbstractReActAgent;
 import com.agenthub.infrastructure.agents.ReActAgentFactory;
@@ -18,10 +20,19 @@ import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.checkpoint.BaseCheckpointSaver;
 import com.alibaba.cloud.ai.graph.store.stores.DatabaseStore;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.model.tool.DefaultToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +57,7 @@ public class AliReActAgentFactory implements ReActAgentFactory {
     private final SpringShareObjectFactory springShareObjectFactory;
     private final AgentToolsFactory agentToolsFactory;
     private final GraphToolsFactory graphToolsFactory;
+    private final JdbcChatMemoryRepository jdbcChatMemoryRepository;
 
 
     @Override
@@ -55,10 +67,41 @@ public class AliReActAgentFactory implements ReActAgentFactory {
         return new AliReActAgent(reActAgentContext, aliReActAgentConfig, agent);
     }
 
+    private ReactAgent buildReactAgent(AliReActAgentConfig config) {
+        Builder builder = ReactAgent.builder()
+                .name(config.getAgent().getName())
+                .description(config.getAgent().getDescription())
+                .toolContext(config.getToolContext())
+                .tools(config.getTools())
+                .chatClient(buildChatClient(config))
+                .executor(TtlUtils.getTtlExecutorService())
+                .maxParallelTools(5)
+                .parallelToolExecution(true)
+                .releaseThread(true);
+        applySystemPrompt(builder, config);
+        applySaver(builder, config);
+        applyHooks(builder, config);
+        applyInterceptors(builder, config);
+        return builder.build();
+    }
+
+    private ChatClient buildChatClient(AliReActAgentConfig config) {
+        ChatClient.Builder builder = ChatClient.builder(config.getChatModel());
+        if (config.getChatOptions() != null) {
+            builder.defaultOptions(config.getChatOptions());
+        }
+        if (config.getAdvisors() != null && config.getAdvisors().length > 0) {
+            builder.defaultAdvisors(config.getAdvisors());
+        }
+        return builder.build();
+    }
+
     private AliReActAgentConfig buildAliReActAgentConfig(ReActAgentContext context) {
         return new AliReActAgentConfig(
                 context.getAgent(),
                 resolveChatModel(context),
+                resolveAdvisors(context),
+                resolveChatOptions(context),
                 context.getSystemPrompt(),
                 resolveTools(context),
                 resolveHooks(context),
@@ -70,12 +113,33 @@ public class AliReActAgentFactory implements ReActAgentFactory {
         );
     }
 
+    private Advisor[] resolveAdvisors(ReActAgentContext context) {
+        MessageWindowChatMemory memory = MessageWindowChatMemory.builder()
+                .chatMemoryRepository(jdbcChatMemoryRepository)
+                .maxMessages(context.getModelStrategy().getMaxMessages()).build();
+        return new Advisor[]{MessageChatMemoryAdvisor.builder(memory).build()};
+    }
+
+    private ChatOptions resolveChatOptions(ReActAgentContext context) {
+        ModelStrategy modelStrategy = context.getModelStrategy();
+        DefaultToolCallingChatOptions options = new DefaultToolCallingChatOptions();
+        options.setTemperature(modelStrategy.getTemperature());
+        options.setTopK(modelStrategy.getTopK());
+        options.setTopP(modelStrategy.getTopP());
+        options.setMaxTokens(modelStrategy.getMaxTokens());
+        options.setInternalToolExecutionEnabled(true);
+        return options;
+    }
+
     private RunnableConfig resolveRunnableConfig(ReActAgentContext context) {
         return RunnableConfig.builder().addMetadata(AGENT_CONTEXT_KEY, context).build();
     }
 
     private Map<String, Object> resolveToolsContext(ReActAgentContext context) {
-        return Map.of(AGENT_CONTEXT_KEY, context);
+        Map<String, Object> map = new HashMap<>();
+        map.put(AGENT_CONTEXT_KEY, context);
+        map.put(ChatMemory.CONVERSATION_ID, context.getAgent().getId());
+        return map;
     }
 
     private ChatModel resolveChatModel(ReActAgentContext context) {
@@ -156,22 +220,6 @@ public class AliReActAgentFactory implements ReActAgentFactory {
 
     private DatabaseStore resolveStore() {
         return storeFactory.databaseStore();
-    }
-
-
-    private ReactAgent buildReactAgent(AliReActAgentConfig config) {
-        Builder builder = ReactAgent.builder()
-                .name(config.getAgent().getName())
-                .description(config.getAgent().getDescription())
-                .model(config.getChatModel())
-                .toolContext(config.getToolContext())
-                .tools(config.getTools())
-                .releaseThread(true);
-        applySystemPrompt(builder, config);
-        applySaver(builder, config);
-        applyHooks(builder, config);
-        applyInterceptors(builder, config);
-        return builder.build();
     }
 
     private void applySystemPrompt(Builder builder, AliReActAgentConfig config) {

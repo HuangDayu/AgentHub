@@ -53,9 +53,8 @@ public class AgentConfigChangeInterceptor implements InnerInterceptor {
 
     private Class<?> extractEntityClass(MappedStatement ms) {
         try {
-            String mapperName = getMapperClassName(ms.getId());
-            return Class.forName(mapperName);
-        } catch (ClassNotFoundException e) {
+            return ms.getParameterMap().getType();
+        } catch (Exception e) {
             log.warn("提取实体类失败: {}", e.getMessage());
             return null;
         }

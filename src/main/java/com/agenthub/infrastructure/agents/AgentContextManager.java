@@ -2,24 +2,16 @@ package com.agenthub.infrastructure.agents;
 
 import com.agenthub.application.port.out.repositories.*;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.event.AgentConfigDeletedEvent;
-import com.agenthub.domain.event.AgentConfigUpdatedEvent;
 import com.agenthub.domain.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * @author huangdayu
@@ -27,7 +19,6 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class AgentContextManager {
-    public static final Map<String, ReActAgentContext> CONTEXT_POOL = new ConcurrentHashMap<>();
     private final AgentRepository agentRepository;
     private final AgentConfigRepository agentConfigRepository;
     private final PromptTemplateRepository promptTemplateRepository;
@@ -38,34 +29,9 @@ public class AgentContextManager {
     private final WorkspaceRepository workspaceRepository;
 
     public ReActAgentContext buildContext(String agentId) {
-        return CONTEXT_POOL.computeIfAbsent(agentId, id -> {
-            Agent agent = agentRepository.findById(agentId).orElseThrow(() -> new NotFoundException("Agent not found: " + agentId));
-            List<AgentConfig> configs = agentConfigRepository.findByAgentIdAndEnabled(agentId);
-            return buildContext(agent, configs, agent.getWorkspaceId());
-        });
-    }
-
-
-    @Async("ttlExecutorService")
-    @EventListener
-    public void handleConfigDeletedEvent(AgentConfigDeletedEvent event) {
-        event.getConfigs().stream().collect(Collectors.groupingBy(
-                AgentConfig::getAgentId,
-                Collectors.mapping(v -> v, Collectors.toList())
-        )).forEach((key, value) -> {
-            ReActAgentContext context = CONTEXT_POOL.get(key);
-            if (context != null) {
-                Set<String> collect = value.stream().map(AgentConfig::getConfigId).collect(Collectors.toSet());
-                context.getAgentConfigs().removeIf(c -> collect.contains(c.getConfigId()));
-                context.getTools().removeIf(t -> collect.contains(t.getConfigId()));
-            }
-        });
-    }
-
-    @Async("ttlExecutorService")
-    @EventListener
-    public void handleConfigUpdatedEvent(AgentConfigUpdatedEvent event) {
-
+        Agent agent = agentRepository.findById(agentId).orElseThrow(() -> new NotFoundException("Agent not found: " + agentId));
+        List<AgentConfig> configs = agentConfigRepository.findByAgentIdAndEnabled(agentId);
+        return buildContext(agent, configs, agent.getWorkspaceId());
     }
 
 
