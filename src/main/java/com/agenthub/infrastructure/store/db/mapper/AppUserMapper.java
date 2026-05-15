@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * 应用用户数据映射器.
  * <p>
- * 提供对app.app_user表的CRUD操作。
+ * 提供对app_user表的CRUD操作。
  * </p>
  */
 @Mapper

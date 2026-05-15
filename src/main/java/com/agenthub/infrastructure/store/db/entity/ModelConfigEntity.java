@@ -13,7 +13,7 @@ import static com.agenthub.domain.model.AgentConfigType.ALL_TYPE;
  * 模型配置持久化对象（PO），映射 model_config 表。
  */
 @Data
-@TableName("app.model_config")
+@TableName("model_config")
 @ConfigChangeListenerEntity(category = MODEL, type = ALL_TYPE)
 public class ModelConfigEntity {
 

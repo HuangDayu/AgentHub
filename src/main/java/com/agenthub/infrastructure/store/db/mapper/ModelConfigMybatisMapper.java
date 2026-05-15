@@ -15,25 +15,25 @@ import java.util.List;
 @Mapper
 public interface ModelConfigMybatisMapper extends BaseMapper<ModelConfigEntity> {
 
-    @Select("SELECT * FROM app.model_config WHERE id = #{id} AND tenant_id = #{tenantId}")
+    @Select("SELECT * FROM model_config WHERE id = #{id} AND tenant_id = #{tenantId}")
     ModelConfigEntity selectByIdAndTenant(@Param("id") String id, @Param("tenantId") String tenantId);
 
-    @Select("SELECT * FROM app.model_config WHERE tenant_id = #{tenantId} ORDER BY created_at DESC")
+    @Select("SELECT * FROM model_config WHERE tenant_id = #{tenantId} ORDER BY created_at DESC")
     List<ModelConfigEntity> selectByTenant(@Param("tenantId") String tenantId);
 
-    @Select("SELECT * FROM app.model_config WHERE tenant_id = #{tenantId} AND type = #{type} ORDER BY created_at DESC")
+    @Select("SELECT * FROM model_config WHERE tenant_id = #{tenantId} AND type = #{type} ORDER BY created_at DESC")
     List<ModelConfigEntity> selectByTenantAndType(@Param("tenantId") String tenantId, @Param("type") String type);
 
-    @Select("SELECT * FROM app.model_config WHERE type = #{type} ORDER BY created_at DESC")
+    @Select("SELECT * FROM model_config WHERE type = #{type} ORDER BY created_at DESC")
     List<ModelConfigEntity> selectByType(@Param("type") String type);
 
 
-    @Select("SELECT * FROM app.model_config WHERE tenant_id = #{tenantId} AND enabled = #{enabled} ORDER BY created_at DESC")
+    @Select("SELECT * FROM model_config WHERE tenant_id = #{tenantId} AND enabled = #{enabled} ORDER BY created_at DESC")
     List<ModelConfigEntity> selectByTenantAndEnabled(@Param("tenantId") String tenantId, @Param("enabled") Boolean enabled);
 
-    @Delete("DELETE FROM app.model_config WHERE id = #{id} AND tenant_id = #{tenantId}")
+    @Delete("DELETE FROM model_config WHERE id = #{id} AND tenant_id = #{tenantId}")
     int deleteByIdAndTenant(@Param("id") String id, @Param("tenantId") String tenantId);
 
-    @Select("SELECT * FROM app.model_config WHERE enabled = #{enabled} ORDER BY created_at DESC")
+    @Select("SELECT * FROM model_config WHERE enabled = #{enabled} ORDER BY created_at DESC")
     List<ModelConfigEntity> selectByEnabled(@Param("enabled") Boolean enabled);
 }

@@ -12,11 +12,11 @@ import static com.agenthub.domain.model.AgentConfigType.KNOWLEDGE_BASE;
 /**
  * 知识库数据库实体。
  * <p>
- * 映射到 app.knowledge_base 表，存储知识库的元数据和索引版本信息。
+ * 映射到 knowledge_base 表，存储知识库的元数据和索引版本信息。
  * </p>
  */
 @Data
-@TableName(value = "app.knowledge_base", autoResultMap = true)
+@TableName(value = "knowledge_base", autoResultMap = true)
 @ConfigChangeListenerEntity(category = KNOWLEDGE, type = KNOWLEDGE_BASE)
 public class KnowledgeBaseEntity {
 

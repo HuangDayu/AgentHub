@@ -11,7 +11,7 @@ import static com.agenthub.domain.model.AgentConfigType.HTTP_TOOL;
 import static com.agenthub.domain.model.AgentConfigType.SKILL_TOOL;
 
 @Data
-@TableName("app.skill")
+@TableName("skill")
 @ConfigChangeListenerEntity(category = TOOL, type = SKILL_TOOL)
 public class SkillEntity {
     @TableId(type = IdType.ASSIGN_ID)

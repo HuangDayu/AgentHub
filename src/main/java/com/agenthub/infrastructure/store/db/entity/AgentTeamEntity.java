@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.time.Instant;
 
 @Data
-@TableName("app.agent_team")
+@TableName("agent_team")
 public class AgentTeamEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

@@ -10,7 +10,7 @@ import static com.agenthub.domain.model.AgentConfigCategory.PROMPT;
 import static com.agenthub.domain.model.AgentConfigType.SYSTEM_PROMPT;
 
 @Data
-@TableName(value = "app.prompt_template", autoResultMap = true)
+@TableName(value = "prompt_template")
 @ConfigChangeListenerEntity(category = PROMPT, type = SYSTEM_PROMPT)
 public class PromptTemplateEntity {
     @TableId(type = IdType.ASSIGN_ID)

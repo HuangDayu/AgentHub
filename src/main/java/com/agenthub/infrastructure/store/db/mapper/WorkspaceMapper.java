@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * 工作空间数据映射器.
  * <p>
- * 提供对app.workspace表的CRUD操作。
+ * 提供对workspace表的CRUD操作。
  * </p>
  */
 @Mapper

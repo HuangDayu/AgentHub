@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * 租户数据映射器.
  * <p>
- * 提供对app.tenant表的CRUD操作。
+ * 提供对tenant表的CRUD操作。
  * </p>
  */
 @Mapper

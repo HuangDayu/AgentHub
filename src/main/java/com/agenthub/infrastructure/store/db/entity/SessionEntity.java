@@ -9,7 +9,7 @@ import java.time.Instant;
  * 会话持久化对象。
  */
 @Data
-@TableName("app.session")
+@TableName("session")
 public class SessionEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

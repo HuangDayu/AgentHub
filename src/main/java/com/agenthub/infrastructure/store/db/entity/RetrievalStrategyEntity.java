@@ -11,7 +11,7 @@ import static com.agenthub.domain.model.AgentConfigType.GUARDRAIL_STRATEGY;
 import static com.agenthub.domain.model.AgentConfigType.RETRIEVAL_STRATEGY;
 
 @Data
-@TableName("app.retrieval_policy")
+@TableName("retrieval_policy")
 @ConfigChangeListenerEntity(category = STRATEGY, type = RETRIEVAL_STRATEGY)
 public class RetrievalStrategyEntity {
     @TableId(type = IdType.ASSIGN_ID)

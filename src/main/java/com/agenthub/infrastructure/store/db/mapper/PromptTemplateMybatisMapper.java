@@ -8,9 +8,9 @@ import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 public interface PromptTemplateMybatisMapper extends BaseMapper<PromptTemplateEntity> {
-    @Select("SELECT * FROM app.prompt_template WHERE workspace_id = #{workspaceId} ORDER BY created_at DESC")
+    @Select("SELECT * FROM prompt_template WHERE workspace_id = #{workspaceId} ORDER BY created_at DESC")
     List<PromptTemplateEntity> selectByWorkspaceId(@Param("workspaceId") String workspaceId);
 
-    @Select("SELECT * FROM app.prompt_template WHERE workspace_id = #{workspaceId} AND category = #{category} ORDER BY created_at DESC")
+    @Select("SELECT * FROM prompt_template WHERE workspace_id = #{workspaceId} AND category = #{category} ORDER BY created_at DESC")
     List<PromptTemplateEntity> selectByWorkspaceIdAndCategory(@Param("workspaceId") String workspaceId, @Param("category") String category);
 }

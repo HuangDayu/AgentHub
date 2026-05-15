@@ -8,11 +8,11 @@ import java.time.Instant;
 /**
  * 向量库配置数据库持久化对象。
  * <p>
- * 映射到 app.vector_store_config 表。
+ * 映射到 vector_store_config 表。
  * </p>
  */
 @Data
-@TableName("app.vector_store_config")
+@TableName("vector_store_config")
 public class VectorStoreConfigEntity {
 
     @TableId(type = IdType.ASSIGN_ID)

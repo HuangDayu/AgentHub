@@ -7,10 +7,10 @@ import java.time.Instant;
 
 /**
  * 工作区持久化实体。
- * 对应数据库表 app.workspace。
+ * 对应数据库表 workspace。
  */
 @Data
-@TableName("app.workspace")
+@TableName("workspace")
 public class WorkspaceEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

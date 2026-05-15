@@ -11,7 +11,7 @@ import static com.agenthub.domain.model.AgentConfigType.GUARDRAIL_STRATEGY;
 import static com.agenthub.domain.model.AgentConfigType.MODEL_STRATEGY;
 
 @Data
-@TableName("app.model_policy")
+@TableName("model_policy")
 @ConfigChangeListenerEntity(category = STRATEGY, type = MODEL_STRATEGY)
 public class ModelStrategyEntity {
     @TableId(type = IdType.ASSIGN_ID)

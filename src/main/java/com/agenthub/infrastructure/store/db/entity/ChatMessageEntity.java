@@ -9,7 +9,7 @@ import java.time.Instant;
  * 聊天消息持久化对象。
  */
 @Data
-@TableName("app.chat_message")
+@TableName("chat_message")
 public class ChatMessageEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

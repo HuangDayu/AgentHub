@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </p>
  */
 public class TenantContextLineHandler implements TenantLineHandler {
-    private static final String TABLE_START = "app.";
+    private static final String TABLE_START = "";
     private static final Map<String, Boolean> MAP = new ConcurrentHashMap<>();
 
     /**

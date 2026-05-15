@@ -9,10 +9,10 @@ import java.time.Instant;
 
 /**
  * 租户持久化实体。
- * 对应数据库表 app.tenant。
+ * 对应数据库表 tenant。
  */
 @Data
-@TableName("app.tenant")
+@TableName("tenant")
 public class TenantEntity {
     /** 租户ID（主键） */
     @TableId(type = IdType.INPUT)

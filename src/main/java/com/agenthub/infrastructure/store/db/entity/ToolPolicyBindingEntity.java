@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.time.Instant;
 
 @Data
-@TableName("app.tool_policy_binding")
+@TableName("tool_policy_binding")
 public class ToolPolicyBindingEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

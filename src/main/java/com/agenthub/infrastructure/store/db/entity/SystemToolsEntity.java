@@ -10,7 +10,7 @@ import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
 import static com.agenthub.domain.model.AgentConfigType.SYSTEM_TOOL;
 
 @Data
-@TableName("app.system_tools")
+@TableName("system_tools")
 @ConfigChangeListenerEntity(category = TOOL, type = SYSTEM_TOOL)
 public class SystemToolsEntity {
     @TableId(type = IdType.ASSIGN_ID)

@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.time.Instant;
 
 @Data
-@TableName("app.workflow")
+@TableName("workflow")
 public class WorkflowEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

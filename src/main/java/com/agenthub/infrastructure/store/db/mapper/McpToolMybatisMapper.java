@@ -11,6 +11,6 @@ import java.util.List;
 @Mapper
 public interface McpToolMybatisMapper extends BaseMapper<McpToolEntity> {
     
-    @Select("SELECT * FROM app.mcp_tool WHERE workspace_id = #{workspaceId} ORDER BY created_at DESC")
+    @Select("SELECT * FROM mcp_tool WHERE workspace_id = #{workspaceId} ORDER BY created_at DESC")
     List<McpToolEntity> selectByWorkspaceId(@Param("workspaceId") String workspaceId);
 }

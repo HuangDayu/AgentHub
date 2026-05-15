@@ -6,8 +6,8 @@
 
 BEGIN;
 
--- New table: app.model_policy
-CREATE TABLE IF NOT EXISTS app.model_policy (
+-- New table: model_policy
+CREATE TABLE IF NOT EXISTS model_policy (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS app.model_policy (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.retrieval_policy
-CREATE TABLE IF NOT EXISTS app.retrieval_policy (
+-- New table: retrieval_policy
+CREATE TABLE IF NOT EXISTS retrieval_policy (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS app.retrieval_policy (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.memory
-CREATE TABLE IF NOT EXISTS app.memory (
+-- New table: memory
+CREATE TABLE IF NOT EXISTS memory (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -58,8 +58,8 @@ CREATE TABLE IF NOT EXISTS app.memory (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.model_config
-CREATE TABLE IF NOT EXISTS app.model_config (
+-- New table: model_config
+CREATE TABLE IF NOT EXISTS model_config (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -75,8 +75,8 @@ CREATE TABLE IF NOT EXISTS app.model_config (
   created_by varchar(255),
   PRIMARY KEY (id)
 );
--- New table: app.tool_policy
-CREATE TABLE IF NOT EXISTS app.tool_policy (
+-- New table: tool_policy
+CREATE TABLE IF NOT EXISTS tool_policy (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -90,8 +90,8 @@ CREATE TABLE IF NOT EXISTS app.tool_policy (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.agent
-CREATE TABLE IF NOT EXISTS app.agent (
+-- New table: agent
+CREATE TABLE IF NOT EXISTS agent (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -106,8 +106,8 @@ CREATE TABLE IF NOT EXISTS app.agent (
   updated_by varchar(255),
   PRIMARY KEY (id)
 );
--- New table: app.session
-CREATE TABLE IF NOT EXISTS app.session (
+-- New table: session
+CREATE TABLE IF NOT EXISTS session (
   id varchar(64) NOT NULL,
   agent_id varchar(255),
   tenant_id varchar(255),
@@ -115,8 +115,8 @@ CREATE TABLE IF NOT EXISTS app.session (
   created_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.workflow
-CREATE TABLE IF NOT EXISTS app.workflow (
+-- New table: workflow
+CREATE TABLE IF NOT EXISTS workflow (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -129,8 +129,8 @@ CREATE TABLE IF NOT EXISTS app.workflow (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.tenant
-CREATE TABLE IF NOT EXISTS app.tenant (
+-- New table: tenant
+CREATE TABLE IF NOT EXISTS tenant (
   id varchar(64) NOT NULL,
   tenant_code varchar(255),
   name varchar(255),
@@ -142,8 +142,8 @@ CREATE TABLE IF NOT EXISTS app.tenant (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.chat_message
-CREATE TABLE IF NOT EXISTS app.chat_message (
+-- New table: chat_message
+CREATE TABLE IF NOT EXISTS chat_message (
   id varchar(64) NOT NULL,
   session_id varchar(255),
   role varchar(255),
@@ -151,8 +151,8 @@ CREATE TABLE IF NOT EXISTS app.chat_message (
   created_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.mcp_tool
-CREATE TABLE IF NOT EXISTS app.mcp_tool (
+-- New table: mcp_tool
+CREATE TABLE IF NOT EXISTS mcp_tool (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -169,15 +169,15 @@ CREATE TABLE IF NOT EXISTS app.mcp_tool (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.iam_refresh_token_session
-CREATE TABLE IF NOT EXISTS app.iam_refresh_token_session (
+-- New table: iam_refresh_token_session
+CREATE TABLE IF NOT EXISTS iam_refresh_token_session (
   token varchar(255) NOT NULL,
   subject varchar(255),
   expires_at timestamptz,
   PRIMARY KEY (token)
 );
--- New table: app.knowledge_base
-CREATE TABLE IF NOT EXISTS app.knowledge_base (
+-- New table: knowledge_base
+CREATE TABLE IF NOT EXISTS knowledge_base (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -194,8 +194,8 @@ CREATE TABLE IF NOT EXISTS app.knowledge_base (
   chat_model_config_id varchar(255),
   PRIMARY KEY (id)
 );
--- New table: app.tool_policy_binding
-CREATE TABLE IF NOT EXISTS app.tool_policy_binding (
+-- New table: tool_policy_binding
+CREATE TABLE IF NOT EXISTS tool_policy_binding (
   id varchar(64) NOT NULL,
   tool_policy_id varchar(255),
   tool_id varchar(255),
@@ -204,8 +204,8 @@ CREATE TABLE IF NOT EXISTS app.tool_policy_binding (
   created_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.ingestion_job
-CREATE TABLE IF NOT EXISTS app.ingestion_job (
+-- New table: ingestion_job
+CREATE TABLE IF NOT EXISTS ingestion_job (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -226,8 +226,8 @@ CREATE TABLE IF NOT EXISTS app.ingestion_job (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.guardrail_policy
-CREATE TABLE IF NOT EXISTS app.guardrail_policy (
+-- New table: guardrail_policy
+CREATE TABLE IF NOT EXISTS guardrail_policy (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -244,8 +244,8 @@ CREATE TABLE IF NOT EXISTS app.guardrail_policy (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.agent_config
-CREATE TABLE IF NOT EXISTS app.agent_config (
+-- New table: agent_config
+CREATE TABLE IF NOT EXISTS agent_config (
   id varchar(64) NOT NULL,
   agent_id varchar(255),
   category varchar(255),
@@ -259,8 +259,8 @@ CREATE TABLE IF NOT EXISTS app.agent_config (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.http_tools
-CREATE TABLE IF NOT EXISTS app.http_tools (
+-- New table: http_tools
+CREATE TABLE IF NOT EXISTS http_tools (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -274,8 +274,8 @@ CREATE TABLE IF NOT EXISTS app.http_tools (
   created_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.document_chunk
-CREATE TABLE IF NOT EXISTS app.document_chunk (
+-- New table: document_chunk
+CREATE TABLE IF NOT EXISTS document_chunk (
   id varchar(64) NOT NULL,
   chunk_id varchar(255),
   document_id varchar(255),
@@ -284,8 +284,8 @@ CREATE TABLE IF NOT EXISTS app.document_chunk (
   token_count integer,
   PRIMARY KEY (id)
 );
--- New table: app.ingestion_document
-CREATE TABLE IF NOT EXISTS app.ingestion_document (
+-- New table: ingestion_document
+CREATE TABLE IF NOT EXISTS ingestion_document (
   id varchar(64) NOT NULL,
   kb_id varchar(255),
   job_id varchar(255),
@@ -296,8 +296,8 @@ CREATE TABLE IF NOT EXISTS app.ingestion_document (
   status varchar(255),
   PRIMARY KEY (id)
 );
--- New table: app.scheduled_task
-CREATE TABLE IF NOT EXISTS app.scheduled_task (
+-- New table: scheduled_task
+CREATE TABLE IF NOT EXISTS scheduled_task (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -318,8 +318,8 @@ CREATE TABLE IF NOT EXISTS app.scheduled_task (
   updated_by varchar(255),
   PRIMARY KEY (id)
 );
--- New table: app.app_user
-CREATE TABLE IF NOT EXISTS app.app_user (
+-- New table: app_user
+CREATE TABLE IF NOT EXISTS app_user (
   id varchar(64) NOT NULL,
   username varchar(255),
   password_hash varchar(255),
@@ -332,8 +332,8 @@ CREATE TABLE IF NOT EXISTS app.app_user (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.agent_team
-CREATE TABLE IF NOT EXISTS app.agent_team (
+-- New table: agent_team
+CREATE TABLE IF NOT EXISTS agent_team (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -347,8 +347,8 @@ CREATE TABLE IF NOT EXISTS app.agent_team (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.skill
-CREATE TABLE IF NOT EXISTS app.skill (
+-- New table: skill
+CREATE TABLE IF NOT EXISTS skill (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -363,8 +363,8 @@ CREATE TABLE IF NOT EXISTS app.skill (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.system_tools
-CREATE TABLE IF NOT EXISTS app.system_tools (
+-- New table: system_tools
+CREATE TABLE IF NOT EXISTS system_tools (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -379,8 +379,8 @@ CREATE TABLE IF NOT EXISTS app.system_tools (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.vector_store_config
-CREATE TABLE IF NOT EXISTS app.vector_store_config (
+-- New table: vector_store_config
+CREATE TABLE IF NOT EXISTS vector_store_config (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -396,8 +396,8 @@ CREATE TABLE IF NOT EXISTS app.vector_store_config (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.prompt_template
-CREATE TABLE IF NOT EXISTS app.prompt_template (
+-- New table: prompt_template
+CREATE TABLE IF NOT EXISTS prompt_template (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_id varchar(255),
@@ -411,8 +411,8 @@ CREATE TABLE IF NOT EXISTS app.prompt_template (
   updated_at timestamptz,
   PRIMARY KEY (id)
 );
--- New table: app.workspace
-CREATE TABLE IF NOT EXISTS app.workspace (
+-- New table: workspace
+CREATE TABLE IF NOT EXISTS workspace (
   id varchar(64) NOT NULL,
   tenant_id varchar(255),
   workspace_code varchar(255),

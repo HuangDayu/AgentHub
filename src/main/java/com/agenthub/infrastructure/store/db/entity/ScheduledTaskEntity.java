@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.time.Instant;
 
 @Data
-@TableName("app.scheduled_task")
+@TableName("scheduled_task")
 public class ScheduledTaskEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

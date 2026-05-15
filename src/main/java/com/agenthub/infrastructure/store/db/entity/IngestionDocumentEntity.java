@@ -8,11 +8,11 @@ import com.baomidou.mybatisplus.annotation.TableName;
 /**
  * 入库文档数据库实体。
  * <p>
- * 映射到 app.ingestion_document 表，存储文档的元数据和处理状态。
+ * 映射到 ingestion_document 表，存储文档的元数据和处理状态。
  * </p>
  */
 @Data
-@TableName("app.ingestion_document")
+@TableName("ingestion_document")
 public class IngestionDocumentEntity {
 
     @TableId(type = IdType.ASSIGN_ID)

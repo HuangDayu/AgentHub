@@ -10,7 +10,7 @@ import static com.agenthub.domain.model.AgentConfigCategory.STRATEGY;
 import static com.agenthub.domain.model.AgentConfigType.GUARDRAIL_STRATEGY;
 
 @Data
-@TableName("app.guardrail_policy")
+@TableName("guardrail_policy")
 @ConfigChangeListenerEntity(category = STRATEGY, type = GUARDRAIL_STRATEGY)
 public class GuardrailStrategyEntity {
     @TableId(type = IdType.ASSIGN_ID)

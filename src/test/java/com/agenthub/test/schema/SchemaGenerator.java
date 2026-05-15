@@ -25,7 +25,9 @@ public class SchemaGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(SchemaGenerator.class);
 
-    /** Schema文件头部模板 */
+    /**
+     * Schema文件头部模板
+     */
     private static final String SCHEMA_HEADER = """
             -- =========================================================
             -- AgentHub - Auto-generated Schema
@@ -39,7 +41,9 @@ public class SchemaGenerator {
             
             """;
 
-    /** Checklist文件头部模板 */
+    /**
+     * Checklist文件头部模板
+     */
     private static final String CHECKLIST_HEADER = """
             -- =========================================================
             -- Schema Change Checklist
@@ -243,8 +247,8 @@ public class SchemaGenerator {
      * 规范化表名。
      */
     private String normalizeTableName(String tableName) {
-        if (!tableName.startsWith("app.")) {
-            return "app." + tableName;
+        if (tableName.startsWith("app.")) {
+            return tableName.replace("app.", "");
         }
         return tableName;
     }
@@ -366,7 +370,7 @@ public class SchemaGenerator {
      * 追加索引SQL。
      */
     private void appendIndexSQL(StringBuilder sb, TableDefinition table, ColumnDefinition column) {
-        String indexName = "idx_" + table.tableName.replace("app.", "") + "_" + column.columnName;
+        String indexName = "idx_" + table.tableName + "_" + column.columnName;
         sb.append(String.format("CREATE INDEX IF NOT EXISTS %s ON %s(%s);\n",
                 indexName, table.tableName, column.columnName));
     }

@@ -19,7 +19,7 @@ import static com.agenthub.domain.model.AgentConfigType.HTTP_TOOL;
  * @since 1.0.0
  */
 @Data
-@TableName("app.http_tools")
+@TableName("http_tools")
 @ConfigChangeListenerEntity(category = TOOL, type = HTTP_TOOL)
 public class HttpToolsEntity {
     @TableId(type = IdType.ASSIGN_ID)

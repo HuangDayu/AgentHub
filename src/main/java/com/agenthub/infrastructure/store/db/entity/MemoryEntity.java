@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.time.Instant;
 
 @Data
-@TableName("app.memory")
+@TableName("memory")
 public class MemoryEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

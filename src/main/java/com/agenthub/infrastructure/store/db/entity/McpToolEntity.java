@@ -10,7 +10,7 @@ import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
 import static com.agenthub.domain.model.AgentConfigType.MCP_TOOL;
 
 @Data
-@TableName(value = "app.mcp_tool", autoResultMap = true)
+@TableName(value = "mcp_tool", autoResultMap = true)
 @ConfigChangeListenerEntity(category = TOOL, type = MCP_TOOL)
 public class McpToolEntity {
     @TableId(type = IdType.ASSIGN_ID)

@@ -11,7 +11,7 @@ import static com.agenthub.domain.model.AgentConfigType.MODEL_STRATEGY;
 import static com.agenthub.domain.model.AgentConfigType.TOOL_STRATEGY;
 
 @Data
-@TableName("app.tool_policy")
+@TableName("tool_policy")
 @ConfigChangeListenerEntity(category = STRATEGY, type = TOOL_STRATEGY)
 public class ToolStrategyEntity {
     @TableId(type = IdType.ASSIGN_ID)

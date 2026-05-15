@@ -8,11 +8,11 @@ import com.baomidou.mybatisplus.annotation.TableName;
 /**
  * 文档分块数据库实体。
  * <p>
- * 映射到 app.document_chunk 表，存储文档分块的内容和向量嵌入。
+ * 映射到 document_chunk 表，存储文档分块的内容和向量嵌入。
  * </p>
  */
 @Data
-@TableName("app.document_chunk")
+@TableName("document_chunk")
 public class DocumentChunkEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

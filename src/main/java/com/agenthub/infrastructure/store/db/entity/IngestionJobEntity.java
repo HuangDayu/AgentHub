@@ -8,11 +8,11 @@ import java.time.Instant;
 /**
  * 入库任务数据库实体。
  * <p>
- * 映射到 app.ingestion_job 表，存储任务的状态和元数据。
+ * 映射到 ingestion_job 表，存储任务的状态和元数据。
  * </p>
  */
 @Data
-@TableName("app.ingestion_job")
+@TableName("ingestion_job")
 public class IngestionJobEntity {
 
     @TableId(type = IdType.ASSIGN_ID)

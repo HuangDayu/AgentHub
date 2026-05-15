@@ -13,7 +13,7 @@ import java.time.Instant;
  * </p>
  */
 @Data
-@TableName("app.iam_refresh_token_session")
+@TableName("iam_refresh_token_session")
 public class RefreshTokenSessionEntity {
     /** 刷新令牌（主键） */
     @TableId

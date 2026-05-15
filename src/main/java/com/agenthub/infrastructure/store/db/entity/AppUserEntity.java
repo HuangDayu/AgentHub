@@ -9,10 +9,10 @@ import java.time.Instant;
 
 /**
  * 应用用户持久化实体。
- * 对应数据库表 app.app_user。
+ * 对应数据库表 app_user。
  */
 @Data
-@TableName("app.app_user")
+@TableName("app_user")
 public class AppUserEntity {
     /**
      * 用户ID（主键）
