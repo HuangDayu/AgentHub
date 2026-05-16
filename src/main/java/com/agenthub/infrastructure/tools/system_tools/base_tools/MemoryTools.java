@@ -2,12 +2,16 @@ package com.agenthub.infrastructure.tools.system_tools.base_tools;
 
 import com.agenthub.application.port.out.repositories.MemoryRepository;
 import com.agenthub.domain.model.Memory;
+import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
 import java.util.List;
+
+import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
 
 /**
  * @author huangdayu
@@ -24,14 +28,16 @@ public class MemoryTools {
     }
 
     @Tool(description = "搜索记忆，根据智能体ID查找相关记忆")
-    public List<Memory> memorySearch(@ToolParam String agentId) {
-        return memoryRepository.findByAgentId(agentId);
+    public List<Memory> memorySearch(ToolContext toolContext) {
+        ReActAgentContext context = (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
+        return memoryRepository.findByAgentId(context.getAgent().getId());
     }
 
     @Tool(description = "保存记忆")
-    public Memory memorySave(@ToolParam String agentId, @ToolParam String content, @ToolParam String memoryType) {
+    public Memory memorySave(ToolContext toolContext, @ToolParam String content, @ToolParam String memoryType) {
+        ReActAgentContext context = (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
         Memory memory = new Memory();
-        memory.setAgentId(agentId);
+        memory.setAgentId(context.getAgent().getId());
         memory.setContent(content);
         memory.setMemoryType(memoryType);
         return memoryRepository.save(memory);

@@ -28,16 +28,17 @@ public class AgentContextManager {
     private final GuardrailStrategyRepository guardrailStrategyRepository;
     private final WorkspaceRepository workspaceRepository;
 
-    public ReActAgentContext buildContext(String agentId) {
+    public ReActAgentContext buildContext(String agentId, String sessionId) {
         Agent agent = agentRepository.findById(agentId).orElseThrow(() -> new NotFoundException("Agent not found: " + agentId));
         List<AgentConfig> configs = agentConfigRepository.findByAgentIdAndEnabled(agentId);
-        return buildContext(agent, configs, agent.getWorkspaceId());
+        return buildContext(agent, sessionId, configs, agent.getWorkspaceId());
     }
 
 
-    private ReActAgentContext buildContext(Agent agent, List<AgentConfig> configs, String workspaceId) {
+    private ReActAgentContext buildContext(Agent agent, String sessionId, List<AgentConfig> configs, String workspaceId) {
         return ReActAgentContext.builder()
                 .agent(agent)
+                .sessionId(sessionId)
                 .chatModelId(resolveChatModelId(configs))
                 .systemPrompt(resolveSystemPrompt(configs))
                 .tools(resolveTools(configs))

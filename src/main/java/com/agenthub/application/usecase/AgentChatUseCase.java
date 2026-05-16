@@ -5,7 +5,6 @@ import com.agenthub.application.port.out.repositories.AgentRepository;
 import com.agenthub.application.port.out.repositories.SessionRepository;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.ChatMessage;
-import com.agenthub.domain.model.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -114,8 +113,8 @@ public class AgentChatUseCase {
     /**
      * 中断Agent执行。
      */
-    public void interrupt(String agentId) {
-        agentPort.interrupt(agentId);
+    public void interrupt(String agentId, String sessionId) {
+        agentPort.interrupt(agentId, sessionId);
     }
 
     /**
@@ -125,8 +124,6 @@ public class AgentChatUseCase {
         agentRepository.findById(agentId)
                 .orElseThrow(() -> new NotFoundException("Agent not found: " + agentId));
     }
-
-
 
 
 }

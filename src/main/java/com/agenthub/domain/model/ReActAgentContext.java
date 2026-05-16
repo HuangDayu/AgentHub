@@ -17,6 +17,7 @@ import java.util.List;
 public class ReActAgentContext {
 
     private Agent agent;
+    private String sessionId;
     private String chatModelId;
     private String systemPrompt;
     private List<AgentToolInfo> tools;

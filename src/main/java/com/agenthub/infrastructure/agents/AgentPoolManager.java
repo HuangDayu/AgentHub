@@ -1,5 +1,7 @@
 package com.agenthub.infrastructure.agents;
 
+import cn.hutool.core.map.multi.RowKeyTable;
+import cn.hutool.core.map.multi.Table;
 import com.agenthub.domain.event.AgentConfigDeletedEvent;
 import com.agenthub.domain.event.AgentConfigUpdatedEvent;
 import com.agenthub.domain.model.Agent;
@@ -28,33 +30,41 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AgentPoolManager {
 
-    private static final Map<String, AbstractReActAgent> AGENT_POOL = new ConcurrentHashMap<>();
-    private static final Map<String, ReActAgentContext> CONTEXT_POOL = new ConcurrentHashMap<>();
+    private static final Table<String, String, AbstractReActAgent> AGENT_POOL = new RowKeyTable<>(new ConcurrentHashMap<>(), ConcurrentHashMap::new);
+    private static final Table<String, String, ReActAgentContext> CONTEXT_POOL = new RowKeyTable<>(new ConcurrentHashMap<>(), ConcurrentHashMap::new);
     private final ReActAgentFactory agentFactory;
     private final AgentContextManager agentContextManager;
     private static final Set<String> agentIds = new HashSet<>();
 
-    public AbstractReActAgent getAgent(Agent agent) {
-        return AGENT_POOL.computeIfAbsent(agent.getId(), id -> agentFactory.create(getReActAgentContext(agent.getId())));
+    public AbstractReActAgent getAgent(Agent agent, String sessionId) {
+        return getAgent(agent.getId(), sessionId);
     }
 
-    public AbstractReActAgent getAgent(String agentId) {
-        return AGENT_POOL.computeIfAbsent(agentId, id -> agentFactory.create(getReActAgentContext(agentId)));
-    }
-
-    private ReActAgentContext getReActAgentContext(String agentId) {
-        return CONTEXT_POOL.computeIfAbsent(agentId, id -> agentContextManager.buildContext(agentId));
-    }
-
-    private AbstractReActAgent reloadAgent(String agentId) {
-        if (AGENT_POOL.containsKey(agentId)) {
-            AGENT_POOL.remove(agentId);
-            CONTEXT_POOL.remove(agentId);
-            AbstractReActAgent agent = getAgent(agentId);
-            agent.init();
-            return agent;
+    public AbstractReActAgent getAgent(String agentId, String sessionId) {
+        AbstractReActAgent agent = AGENT_POOL.get(sessionId, agentId);
+        if (agent == null) {
+            agent = agentFactory.create(getReActAgentContext(agentId, sessionId));
+            AGENT_POOL.put(sessionId, agentId, agent);
         }
-        return null;
+        return agent;
+    }
+
+    private ReActAgentContext getReActAgentContext(String agentId, String sessionId) {
+        ReActAgentContext context = CONTEXT_POOL.get(sessionId, agentId);
+        if (context == null) {
+            context = agentContextManager.buildContext(agentId, sessionId);
+            CONTEXT_POOL.put(sessionId, agentId, context);
+        }
+        return context;
+    }
+
+    private void reloadAgent(String agentId) {
+        for (Map.Entry<String, AbstractReActAgent> entry : AGENT_POOL.getColumn(agentId).entrySet()) {
+            AGENT_POOL.remove(entry.getKey(), agentId);
+            CONTEXT_POOL.remove(entry.getKey(), agentId);
+            AbstractReActAgent agent = getAgent(entry.getKey(), agentId);
+            agent.init();
+        }
     }
 
     @Async("ttlExecutorService")

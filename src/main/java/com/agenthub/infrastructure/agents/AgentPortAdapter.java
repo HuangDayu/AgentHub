@@ -19,32 +19,26 @@ public class AgentPortAdapter implements AgentPort {
     private final AgentPoolManager agentPoolManager;
 
     @Override
-    public String getName(String agentId) {
-        AbstractReActAgent agent = getAgent(agentId);
-        return agent != null ? agent.getName() : null;
-    }
-
-    @Override
     public Flux<Message> streamMessages(String agentId, String sessionId, String userMessage) {
-        AbstractReActAgent agent = getAgent(agentId);
+        AbstractReActAgent agent = getAgent(agentId, sessionId);
         if (agent == null) return Flux.empty();
         return agent.streamMessages(sessionId, userMessage);
     }
 
     @Override
     public AssistantMessage call(String agentId, String sessionId, String userMessage) {
-        AbstractReActAgent agent = getAgent(agentId);
+        AbstractReActAgent agent = getAgent(agentId, sessionId);
         if (agent == null) return null;
         return agent.call(sessionId, userMessage);
     }
 
     @Override
-    public void interrupt(String agentId) {
-        AbstractReActAgent agent = getAgent(agentId);
+    public void interrupt(String agentId, String sessionId) {
+        AbstractReActAgent agent = getAgent(agentId, sessionId);
         if (agent != null) agent.interrupt();
     }
 
-    private AbstractReActAgent getAgent(String agentId) {
-        return agentPoolManager.getAgent(agentId);
+    private AbstractReActAgent getAgent(String agentId, String sessionId) {
+        return agentPoolManager.getAgent(agentId, sessionId);
     }
 }

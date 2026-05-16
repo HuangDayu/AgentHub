@@ -117,7 +117,7 @@ public class AliReActAgentFactory implements ReActAgentFactory {
         MessageWindowChatMemory memory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(jdbcChatMemoryRepository)
                 .maxMessages(context.getModelStrategy().getMaxMessages()).build();
-        return new Advisor[]{MessageChatMemoryAdvisor.builder(memory).build()};
+        return new Advisor[]{MessageChatMemoryAdvisor.builder(memory).conversationId(context.getSessionId()).build()};
     }
 
     private ChatOptions resolveChatOptions(ReActAgentContext context) {
@@ -132,7 +132,7 @@ public class AliReActAgentFactory implements ReActAgentFactory {
     }
 
     private RunnableConfig resolveRunnableConfig(ReActAgentContext context) {
-        return RunnableConfig.builder().addMetadata(AGENT_CONTEXT_KEY, context).build();
+        return RunnableConfig.builder().addMetadata(AGENT_CONTEXT_KEY, context).threadId(context.getSessionId()).build();
     }
 
     private Map<String, Object> resolveToolsContext(ReActAgentContext context) {

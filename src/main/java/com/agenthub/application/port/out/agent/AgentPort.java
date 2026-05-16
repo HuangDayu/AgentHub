@@ -12,11 +12,6 @@ import reactor.core.publisher.Flux;
 public interface AgentPort {
 
     /**
-     * 获取Agent名称。
-     */
-    String getName(String agentId);
-
-    /**
      * 流式对话。
      */
     Flux<Message> streamMessages(String agentId, String sessionId, String userMessage);
@@ -29,5 +24,5 @@ public interface AgentPort {
     /**
      * 中断Agent执行。
      */
-    void interrupt(String agentId);
+    void interrupt(String agentId, String sessionId);
 }
