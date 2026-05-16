@@ -8,5 +8,5 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateSessionRequest {
-    private String title;
+    private String name;
 }

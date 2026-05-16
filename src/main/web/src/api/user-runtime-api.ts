@@ -11,7 +11,7 @@ export interface Session {
   id: string
   agentId: string
   agentName: string
-  title: string
+  name: string
   createdAt: string
   updatedAt: string
 }
@@ -26,7 +26,7 @@ export interface Message {
 
 export interface CreateSessionRequest {
   agentId: string
-  title?: string
+  name?: string
 }
 
 export interface SendMessageRequest {
@@ -62,6 +62,7 @@ export function createSession(req: CreateSessionRequest) {
   return requestJson<Session>(`/api/v1/agents/${req.agentId}/sessions`, {
     baseUrl: runtimeConfig.userApiBase,
     method: 'POST',
+    body: JSON.stringify({ name: req.name }),
   })
 }
 

@@ -92,6 +92,7 @@ public class MybatisSessionRepository implements SessionRepository {
         SessionEntity po = new SessionEntity();
         po.setId(session.getId());
         po.setAgentId(session.getAgentId());
+        po.setName(session.getName());
         po.setTenantId(session.getTenantId());
         po.setWorkspaceId(session.getWorkspaceId());
         po.setCreatedAt(session.getCreatedAt());

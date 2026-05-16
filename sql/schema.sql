@@ -266,6 +266,7 @@ CREATE TABLE IF NOT EXISTS memory
     tenant_id    varchar(255),
     workspace_id varchar(255),
     agent_id     varchar(255),
+    name         varchar(255),
     memory_type  varchar(255),
     content      text,
     metadata     varchar(255),
@@ -382,6 +383,7 @@ CREATE TABLE IF NOT EXISTS session
 (
     id           varchar(64) NOT NULL,
     agent_id     varchar(255),
+    name         varchar(255),
     tenant_id    varchar(255),
     workspace_id varchar(255),
     created_at   timestamptz,

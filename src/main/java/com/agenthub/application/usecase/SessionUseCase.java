@@ -31,7 +31,7 @@ public class SessionUseCase {
         // Verify agent exists
         agentUseCase.get(agentId);
         return sessionRepository.findByAgentId(agentId).stream()
-                .map(s -> new SessionOutput(s.getId(), s.getAgentId(), s.getCreatedAt()))
+                .map(s -> new SessionOutput(s.getId(), s.getAgentId(), s.getName(), s.getCreatedAt()))
                 .toList();
     }
 
@@ -65,13 +65,14 @@ public class SessionUseCase {
      * 为指定智能体创建新会话，先验证智能体存在。
      *
      * @param agentId 智能体ID
+     * @param name    会话名称
      * @return 创建的会话输出DTO
      */
-    public SessionOutput create(String agentId) {
+    public SessionOutput create(String agentId, String name) {
         agentUseCase.get(agentId);
-        Session session = Session.create(agentId, null, null);
+        Session session = Session.create(agentId, name, null, null);
         Session saved = sessionRepository.save(session);
-        return new SessionOutput(saved.getId(), saved.getAgentId(), saved.getCreatedAt());
+        return new SessionOutput(saved.getId(), saved.getAgentId(), saved.getName(), saved.getCreatedAt());
     }
 
     public void deleteSession(String sessionId) {

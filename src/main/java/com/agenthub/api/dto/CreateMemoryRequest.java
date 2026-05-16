@@ -13,6 +13,7 @@ public class CreateMemoryRequest {
     private String tenantId;
     private String workspaceId;
     private String agentId;
+    private String name;
     private String memoryType;
     private String content;
     private String metadata;

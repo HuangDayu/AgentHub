@@ -16,6 +16,7 @@ public class MemoryEntity {
     private String workspaceId;
     @TableField(value = "agent_id")
     private String agentId;
+    private String name;
     @TableField(value = "memory_type")
     private String memoryType;
     private String content;

@@ -11,6 +11,6 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class RuntimeSession {
     private String id;
-    private String title;
+    private String name;
     private Instant createdAt;
 }

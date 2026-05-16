@@ -231,6 +231,7 @@ export interface RetrievalResponse {
 export interface ChatSession {
   sessionId: string
   agentId: string
+  name?: string
   createdAt: string
 }
 

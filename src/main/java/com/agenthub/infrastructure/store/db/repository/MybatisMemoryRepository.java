@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import com.agenthub.domain.model.MemoryType;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.MemoryRepository;
 import com.agenthub.domain.model.Memory;
@@ -65,7 +66,7 @@ public class MybatisMemoryRepository implements MemoryRepository {
         entity.setTenantId(memory.getTenantId());
         entity.setWorkspaceId(memory.getWorkspaceId());
         entity.setAgentId(memory.getAgentId());
-        entity.setMemoryType(memory.getMemoryType());
+        entity.setMemoryType(memory.getMemoryType().name());
         entity.setContent(memory.getContent());
         entity.setMetadata(memory.getMetadata());
         entity.setImportance(memory.getImportance());
@@ -81,7 +82,7 @@ public class MybatisMemoryRepository implements MemoryRepository {
         memory.setTenantId(entity.getTenantId());
         memory.setWorkspaceId(entity.getWorkspaceId());
         memory.setAgentId(entity.getAgentId());
-        memory.setMemoryType(entity.getMemoryType());
+        memory.setMemoryType(MemoryType.valueOf(entity.getMemoryType()));
         memory.setContent(entity.getContent());
         memory.setMetadata(entity.getMetadata());
         memory.setImportance(entity.getImportance());

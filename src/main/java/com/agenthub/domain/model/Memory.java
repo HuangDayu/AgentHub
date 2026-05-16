@@ -12,7 +12,8 @@ public class Memory {
     private String tenantId;
     private String workspaceId;
     private String agentId;
-    private String memoryType;
+    private String name;
+    private MemoryType memoryType;
     private String content;
     private String metadata;
     private double importance;
@@ -23,14 +24,15 @@ public class Memory {
     public Memory() {
     }
 
-    private Memory(String id, String tenantId, String workspaceId, String agentId,
+    private Memory(String id, String tenantId, String workspaceId, String agentId, String name,
                    String memoryType, String content, String metadata,
                    double importance, Instant expiresAt, Instant createdAt) {
         this.id = id;
         this.tenantId = tenantId;
         this.workspaceId = workspaceId;
         this.agentId = agentId;
-        this.memoryType = memoryType;
+        this.name = name;
+        this.memoryType = MemoryType.valueOf(memoryType);
         this.content = content;
         this.metadata = metadata;
         this.importance = importance;
@@ -39,10 +41,10 @@ public class Memory {
         this.updatedAt = createdAt;
     }
 
-    public static Memory create(String tenantId, String workspaceId, String agentId,
+    public static Memory create(String tenantId, String workspaceId, String agentId, String name,
                                 String memoryType, String content, String metadata,
                                 double importance, Instant expiresAt) {
-        return new Memory(randomId(), tenantId, workspaceId, agentId,
+        return new Memory(randomId(), tenantId, workspaceId, agentId, name,
                 memoryType, content, metadata, importance, expiresAt, Instant.now());
     }
 
@@ -70,7 +72,11 @@ public class Memory {
         return agentId;
     }
 
-    public String getMemoryType() {
+    public String getName() {
+        return name;
+    }
+
+    public MemoryType getMemoryType() {
         return memoryType;
     }
 
@@ -114,7 +120,11 @@ public class Memory {
         this.agentId = agentId;
     }
 
-    public void setMemoryType(String memoryType) {
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setMemoryType(MemoryType memoryType) {
         this.memoryType = memoryType;
     }
 

@@ -3,6 +3,7 @@ export interface Memory {
   tenantId: string
   workspaceId: string
   agentId: string
+  name?: string
   memoryType: string
   content: string
   metadata: string

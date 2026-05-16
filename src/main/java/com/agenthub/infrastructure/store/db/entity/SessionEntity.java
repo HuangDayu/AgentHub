@@ -14,6 +14,7 @@ public class SessionEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
     private String agentId;
+    private String name;
     @TableField(value = "tenant_id",fill = FieldFill.INSERT)
     private String tenantId;
     @TableField(value = "workspace_id", fill = FieldFill.INSERT)

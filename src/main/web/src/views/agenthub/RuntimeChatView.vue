@@ -35,7 +35,6 @@
 
           <!-- Agent 选择 -->
           <div class="sidebar-section">
-            <label class="section-label">选择 Agent</label>
             <div class="agent-selector">
               <select v-model="selectedAgentId" @change="onAgentChange">
                 <option disabled value="">请选择 Agent</option>
@@ -60,12 +59,6 @@
           <div class="sidebar-section flex-grow">
             <div class="section-header">
               <label class="section-label">会话列表</label>
-              <button class="new-session-btn" :disabled="!selectedAgentId" @click="createNewSession">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 5v14M5 12h14"/>
-                </svg>
-                新建
-              </button>
             </div>
             <div class="session-list">
               <div
@@ -79,7 +72,7 @@
                   </svg>
                 </div>
                 <div class="session-info" @click="selectSession(session.sessionId)">
-                  <div class="session-id">{{ session.sessionId.slice(0, 8) }}...</div>
+                  <div class="session-name">{{ session.name || session.sessionId.slice(0, 8) + '...' }}</div>
                   <div class="session-time">{{ formatDateTime(session.createdAt) }}</div>
                 </div>
                 <button class="delete-btn" @click.stop="handleDeleteSession(session.sessionId)" title="删除会话">
@@ -91,7 +84,7 @@
               </div>
               <div v-if="!sessions.length && selectedAgentId" class="empty-sessions">
                 <p>暂无会话</p>
-                <p class="hint">点击"新建"创建会话</p>
+                <p class="hint">发送消息将自动创建新会话</p>
               </div>
             </div>
           </div>
@@ -278,6 +271,13 @@
         <path d="M9 18l6-6-6-6"/>
       </svg>
     </button>
+
+    <!-- 右下角：新增会话按钮 -->
+    <button class="new-session-fab" @click="createNewSession" :disabled="!selectedAgentId" title="新建会话">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>
   </section>
 </template>
 
@@ -310,6 +310,7 @@ const loadingAgents = ref(false)
 // Session
 const sessions = ref<ChatSession[]>([])
 const selectedSessionId = ref('')
+const pendingSessionName = ref('') // 临时会话的名称，用于创建时使用
 
 // Messages
 const messages = ref<ChatMessage[]>([])
@@ -386,31 +387,47 @@ async function loadSessions() {
 }
 
 // Create new session
-async function createNewSession() {
+function createNewSession() {
   if (!selectedAgentId.value) return
   error.value = ''
-  try {
-    const session = await createSession(getSelection(), selectedAgentId.value)
-    sessions.value.unshift(session)
-    selectedSessionId.value = session.sessionId
-    messages.value = []
-  } catch (e: any) {
-    error.value = e.message || '创建会话失败'
+
+  // 创建临时会话（不发送请求）
+  const tempSessionId = 'temp-' + Date.now()
+  const tempSession: ChatSession = {
+    sessionId: tempSessionId,
+    agentId: selectedAgentId.value,
+    name: '新会话',
+    createdAt: new Date().toISOString()
   }
+
+  sessions.value.unshift(tempSession)
+  selectedSessionId.value = tempSessionId
+  pendingSessionName.value = '新会话'
+  messages.value = []
 }
 
 // Delete session
 async function handleDeleteSession(sessionId: string) {
   if (!selectedAgentId.value) return
   if (!confirm('确定要删除这个会话吗？')) return
-  
+
   error.value = ''
   try {
-    await deleteSession(getSelection(), selectedAgentId.value, sessionId)
-    sessions.value = sessions.value.filter(s => s.sessionId !== sessionId)
-    if (selectedSessionId.value === sessionId) {
-      selectedSessionId.value = ''
-      messages.value = []
+    // 如果是临时会话，直接从列表中移除
+    if (sessionId.startsWith('temp-')) {
+      sessions.value = sessions.value.filter(s => s.sessionId !== sessionId)
+      if (selectedSessionId.value === sessionId) {
+        selectedSessionId.value = ''
+        pendingSessionName.value = ''
+        messages.value = []
+      }
+    } else {
+      await deleteSession(getSelection(), selectedAgentId.value, sessionId)
+      sessions.value = sessions.value.filter(s => s.sessionId !== sessionId)
+      if (selectedSessionId.value === sessionId) {
+        selectedSessionId.value = ''
+        messages.value = []
+      }
     }
   } catch (e: any) {
     error.value = e.message || '删除会话失败'
@@ -463,32 +480,74 @@ async function loadMessages() {
 
 // Send message
 async function handleSend() {
-  if (!selectedSessionId.value || !selectedAgentId.value || !inputContent.value.trim() || sending.value) return
-  
+  if (!selectedAgentId.value || !inputContent.value.trim() || sending.value) return
+
   const content = inputContent.value.trim()
   inputContent.value = ''
   sending.value = true
   error.value = ''
-  
+
+  let currentSessionId = selectedSessionId.value
+
+  // 如果是临时会话，先创建真正的会话
+  if (currentSessionId.startsWith('temp-')) {
+    try {
+      // 使用用户输入的前20个字符作为会话名称
+      const sessionName = content.slice(0, 20) + (content.length > 20 ? '...' : '')
+      const session = await createSession(getSelection(), selectedAgentId.value, sessionName)
+
+      // 替换临时会话
+      const tempIndex = sessions.value.findIndex(s => s.sessionId === currentSessionId)
+      if (tempIndex !== -1) {
+        sessions.value[tempIndex] = session
+      } else {
+        sessions.value.unshift(session)
+      }
+
+      currentSessionId = session.sessionId
+      selectedSessionId.value = session.sessionId
+      pendingSessionName.value = ''
+    } catch (e: any) {
+      error.value = e.message || '创建会话失败'
+      sending.value = false
+      return
+    }
+  } else if (!currentSessionId) {
+    // 如果没有选中的会话，先创建一个新会话
+    try {
+      // 使用用户输入的前20个字符作为会话名称
+      const sessionName = content.slice(0, 20) + (content.length > 20 ? '...' : '')
+      const session = await createSession(getSelection(), selectedAgentId.value, sessionName)
+      sessions.value.unshift(session)
+      currentSessionId = session.sessionId
+      selectedSessionId.value = session.sessionId
+      messages.value = []
+    } catch (e: any) {
+      error.value = e.message || '创建会话失败'
+      sending.value = false
+      return
+    }
+  }
+
   // 立即添加用户消息
   const userMessage: ChatMessage = {
     messageId: Date.now().toString(),
-    sessionId: selectedSessionId.value,
+    sessionId: currentSessionId,
     role: 'USER',
     content,
     createdAt: new Date().toISOString()
   }
   messages.value.push(userMessage)
   scrollToBottom()
-  
+
   try {
     if (useStream.value) {
       streamingContent.value = ''
-      
+
       await sendMessageStream(
         getSelection(),
         selectedAgentId.value,
-        selectedSessionId.value,
+        currentSessionId,
         content,
         {
           onMessage: (streamMsg: StreamMessage) => {
@@ -500,7 +559,7 @@ async function handleSend() {
             if (streamingContent.value.trim()) {
               const assistantMessage: ChatMessage = {
                 messageId: (Date.now() + 1).toString(),
-                sessionId: selectedSessionId.value,
+                sessionId: currentSessionId,
                 role: 'ASSISTANT',
                 content: streamingContent.value,
                 createdAt: new Date().toISOString(),
@@ -522,7 +581,7 @@ async function handleSend() {
       const response = await sendMessage(
         getSelection(),
         selectedAgentId.value,
-        selectedSessionId.value,
+        currentSessionId,
         content
       )
       messages.value.push(response)
@@ -1036,7 +1095,7 @@ onMounted(() => {
   min-width: 0;
 }
 
-.session-id {
+.session-name {
   font-size: 0.85rem;
   font-weight: 500;
   color: #1a1e29;
@@ -1485,6 +1544,45 @@ onMounted(() => {
 
 .toggle-sidebar-fab:active {
   transform: translateY(0);
+}
+
+.new-session-fab {
+  position: fixed;
+  bottom: 140px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.new-session-fab svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}
+
+.new-session-fab:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.new-session-fab:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.new-session-fab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .runtime-sidebar {

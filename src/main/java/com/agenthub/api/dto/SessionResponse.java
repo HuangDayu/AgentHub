@@ -12,5 +12,6 @@ import lombok.AllArgsConstructor;
 public class SessionResponse {
     private String id;
     private String agentId;
+    private String name;
     private Instant createdAt;
 }

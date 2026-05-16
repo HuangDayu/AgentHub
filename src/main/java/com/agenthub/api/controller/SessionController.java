@@ -1,6 +1,7 @@
 package com.agenthub.api.controller;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.agenthub.api.dto.CreateSessionRequest;
 import com.agenthub.api.dto.MessageResponse;
 import com.agenthub.api.dto.SendMessageRequest;
 import com.agenthub.api.dto.SessionResponse;
@@ -55,11 +56,13 @@ public class SessionController {
      * 为智能体创建新会话。
      *
      * @param agentId 智能体ID
+     * @param request 创建会话请求（可选）
      * @return 创建的会话响应
      */
     @PostMapping
-    public ResponseEntity<SessionResponse> createSession(@PathVariable String agentId) {
-        SessionOutput output = sessionUseCase.create(agentId);
+    public ResponseEntity<SessionResponse> createSession(@PathVariable String agentId, @RequestBody(required = false) CreateSessionRequest request) {
+        String name = request != null ? request.getName() : null;
+        SessionOutput output = sessionUseCase.create(agentId, name);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(toResponse(output));
     }

@@ -2,6 +2,7 @@ package com.agenthub.infrastructure.tools.system_tools.base_tools;
 
 import com.agenthub.application.port.out.repositories.MemoryRepository;
 import com.agenthub.domain.model.Memory;
+import com.agenthub.domain.model.MemoryType;
 import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import lombok.RequiredArgsConstructor;
@@ -34,11 +35,12 @@ public class MemoryTools {
     }
 
     @Tool(description = "保存记忆")
-    public Memory memorySave(ToolContext toolContext, @ToolParam String content, @ToolParam String memoryType) {
+    public Memory memorySave(ToolContext toolContext, @ToolParam String content, @ToolParam String name, @ToolParam MemoryType memoryType) {
         ReActAgentContext context = (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
         Memory memory = new Memory();
         memory.setAgentId(context.getAgent().getId());
         memory.setContent(content);
+        memory.setName(name);
         memory.setMemoryType(memoryType);
         return memoryRepository.save(memory);
     }

@@ -25,6 +25,7 @@ export async function listMemoriesByAgent(selection: Selection, agentId: string)
 export async function createMemory(
   selection: Selection,
   agentId: string,
+  name: string,
   memoryType: string,
   content: string,
   metadata: string,
@@ -35,7 +36,7 @@ export async function createMemory(
     baseUrl: runtimeConfig.agentApiBase,
     method: 'POST',
     headers: buildHeaders(selection),
-    bodyJson: { tenantId: selection.tenantId, workspaceId: selection.workspaceId, agentId, memoryType, content, metadata, importance, expiresAt },
+    bodyJson: { tenantId: selection.tenantId, workspaceId: selection.workspaceId, agentId, name, memoryType, content, metadata, importance, expiresAt },
   })
 }
 

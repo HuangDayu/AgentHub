@@ -12,5 +12,6 @@ import lombok.AllArgsConstructor;
 public class SessionOutput {
     private /** 会话ID */String id;
     private /** 智能体ID */String agentId;
+    private /** 会话名称 */String name;
     private /** 创建时间 */Instant createdAt;
 }

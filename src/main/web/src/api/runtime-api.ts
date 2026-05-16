@@ -8,16 +8,18 @@ import { requestJson } from './http'
 /**
  * Create a new session for a specific agent.
  * Backend endpoint: POST /api/v1/workspaces/${selection.workspaceId}/agents/{agentId}/sessions
- * Backend returns { id, agentId, createdAt } → we map id → sessionId for frontend type.
+ * Backend returns { id, agentId, name, createdAt } → we map id → sessionId for frontend type.
  */
-export function createSession(selection: SelectionState, agentId: string) {
+export function createSession(selection: SelectionState, agentId: string, name?: string) {
   return requestJson<ChatSession>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions`, {
     baseUrl: runtimeConfig.runtimeApiBase,
     method: 'POST',
     headers: scopedHeaders(selection),
+    bodyJson: { name: name || null },
   }).then((raw) => ({
     sessionId: (raw as any).id ?? raw.sessionId,
     agentId: raw.agentId ?? agentId,
+    name: (raw as any).name,
     createdAt: raw.createdAt,
   }))
 }
@@ -35,6 +37,7 @@ export function listSessions(selection: SelectionState, agentId: string) {
     items.map((raw: any) => ({
       sessionId: raw.id ?? raw.sessionId,
       agentId: raw.agentId ?? agentId,
+      name: raw.name,
       createdAt: raw.createdAt,
     })),
   )
