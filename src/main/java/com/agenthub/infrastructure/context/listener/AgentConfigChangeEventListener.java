@@ -30,18 +30,19 @@ public class AgentConfigChangeEventListener {
     @EventListener
     public void handleDataChange(AgentConfigChangedEvent event) {
         log.info("【Agent配置改变】实体: {}, 操作: {}, IDs: {}", event.getEntityType(), event.getChangeType(), event.getPrimaryKeys());
-        ConfigChangeListenerEntity entityAnnotation = event.getEntityAnnotation();
-        if (event.getPrimaryKeys() != null && !event.getPrimaryKeys().isEmpty()) {
-            List<AgentConfig> agentConfigs = agentConfigRepository.findAgentConfigs(entityAnnotation.category(), entityAnnotation.type(), event.getPrimaryKeys());
-            if (agentConfigs != null && !agentConfigs.isEmpty()) {
-                if (event.getChangeType() == AgentConfigChangedEvent.ChangeType.DELETE) {
-                    eventPublisher.publishEvent(new AgentConfigDeletedEvent(agentConfigs, entityAnnotation.category(), entityAnnotation.type()));
-                    agentConfigRepository.deleteByIds(agentConfigs.stream().map(AgentConfig::getId).toList());
-                } else {
-                    // TODO 同步更新配置数据中冗余的名称和描述
-                    eventPublisher.publishEvent(new AgentConfigUpdatedEvent(agentConfigs, entityAnnotation.category(), entityAnnotation.type()));
-                }
-            }
+        List<String> pks = event.getPrimaryKeys();
+        if (pks == null || pks.isEmpty()) return;
+
+        ConfigChangeListenerEntity entity = event.getEntityAnnotation();
+        List<AgentConfig> configs = agentConfigRepository.findAgentConfigs(entity.category(), entity.type(), pks);
+        if (configs == null || configs.isEmpty()) return;
+
+        var ids = configs.stream().map(AgentConfig::getId).toList();
+        if (event.getChangeType() == AgentConfigChangedEvent.ChangeType.DELETE) {
+            eventPublisher.publishEvent(new AgentConfigDeletedEvent(configs, entity.category(), entity.type()));
+            agentConfigRepository.deleteByIds(ids);
+        } else {
+            eventPublisher.publishEvent(new AgentConfigUpdatedEvent(configs, entity.category(), entity.type()));
         }
     }
 

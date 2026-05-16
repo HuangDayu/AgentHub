@@ -21,6 +21,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static java.util.Map.entry;
+
 /**
  * @author huangdayu
  */
@@ -110,19 +112,21 @@ public class SystemToolsFactory implements AbstractToolsFactory, SystemToolScann
         );
     }
 
+    private static final Map<String, String> CATEGORY_MAP = Map.ofEntries(
+        entry("Runtime", "runtime"), entry("Fs", "filesystem"),
+        entry("Session", "session"), entry("Memory", "memory"),
+        entry("Web", "web"), entry("Browser", "browser"),
+        entry("Automation", "automation"), entry("Node", "node"),
+        entry("Media", "media"), entry("Agent", "agent")
+    );
+
     private String extractCategory(Object bean) {
         String name = bean.getClass().getSimpleName();
-        if (name.contains("Runtime")) return "runtime";
-        if (name.contains("Fs")) return "filesystem";
-        if (name.contains("Session")) return "session";
-        if (name.contains("Memory")) return "memory";
-        if (name.contains("Web")) return "web";
-        if (name.contains("Browser")) return "browser";
-        if (name.contains("Automation")) return "automation";
-        if (name.contains("Node")) return "node";
-        if (name.contains("Media")) return "media";
-        if (name.contains("Agent")) return "agent";
-        return "system";
+        return CATEGORY_MAP.entrySet().stream()
+                .filter(e -> name.contains(e.getKey()))
+                .findFirst()
+                .map(Map.Entry::getValue)
+                .orElse("system");
     }
 
     private int countToolMethods(Object bean) {

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * 护栏策略执行器 - 执行输入输出验证
@@ -73,11 +74,7 @@ public class GuardrailStrategyExecutor {
     }
 
     private boolean containsHarmfulContent(String text) {
-        String[] harmfulPatterns = {"暴力", "色情", "赌博", "毒品"};
-        for (String pattern : harmfulPatterns) {
-            if (text.contains(pattern)) return true;
-        }
-        return false;
+        return Stream.of("暴力", "色情", "赌博", "毒品").anyMatch(text::contains);
     }
 
     private boolean containsPii(String text) {
@@ -90,17 +87,8 @@ public class GuardrailStrategyExecutor {
     }
 
     private boolean containsPromptInjection(String text) {
-        String[] injectionPatterns = {
-                "ignore previous instructions",
-                "disregard all above",
-                "system:",
-                "override:"
-        };
-        String lowerText = text.toLowerCase();
-        for (String pattern : injectionPatterns) {
-            if (lowerText.contains(pattern)) return true;
-        }
-        return false;
+        return Stream.of("ignore previous instructions", "disregard all above", "system:", "override:")
+                .anyMatch(pattern -> text.toLowerCase().contains(pattern));
     }
 
     public static ValidationOutput valid() {

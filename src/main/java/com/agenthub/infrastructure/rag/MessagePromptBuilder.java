@@ -32,18 +32,9 @@ public class MessagePromptBuilder {
      * @return 组装后的完整 Prompt
      */
     public List<ChatMessage> build(String sessionId, String template, String userPrompt, List<RetrievalChunk> chunks) {
-        List<ChatMessage> chatMessages = new LinkedList<>();
-        String assistantPromptTemplate = resolveTemplate(template);
-        if (chunks == null || chunks.isEmpty()) {
-            chatMessages.add(ChatMessage.assistant(sessionId, assistantPromptTemplate));
-            chatMessages.add(ChatMessage.user(sessionId, userPrompt));
-            return chatMessages;
-        }
-        String context = buildContext(chunks);
-        String assistantPrompt = applyTemplate(assistantPromptTemplate, context, userPrompt);
-        chatMessages.add(ChatMessage.assistant(sessionId, assistantPrompt));
-        chatMessages.add(ChatMessage.user(sessionId, userPrompt));
-        return chatMessages;
+        String tpl = resolveTemplate(template);
+        String prompt = (chunks == null || chunks.isEmpty()) ? tpl : applyTemplate(tpl, buildContext(chunks), userPrompt);
+        return List.of(ChatMessage.assistant(sessionId, prompt), ChatMessage.user(sessionId, userPrompt));
     }
 
     /**

@@ -67,8 +67,7 @@ public class ModelConfigController {
     @GetMapping("/{id}")
     public ModelConfigResponse getById(
             @PathVariable String id) {
-        var config = appService.getById(id)
-                .orElseThrow(() -> new ModelNotFoundException("Model config not found: id=" + id));
+        var config = appService.getById(id);
         return responseMapper.toResponse(config);
     }
 
@@ -94,10 +93,7 @@ public class ModelConfigController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String id) {
-        boolean deleted = appService.deleteById(id);
-        if (!deleted) {
-            throw new ModelNotFoundException("Model config not found: id=" + id);
-        }
+        appService.deleteById(id);
     }
 
     /**

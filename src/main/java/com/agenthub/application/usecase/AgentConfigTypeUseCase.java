@@ -7,11 +7,12 @@ import com.agenthub.domain.model.AgentConfig;
 import com.agenthub.domain.model.AgentConfigCategory;
 import com.agenthub.domain.model.AgentConfigType;
 import com.agenthub.domain.model.ModelType;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
@@ -28,36 +29,58 @@ public class AgentConfigTypeUseCase {
     private final SystemToolsRepository systemToolsRepository;
     private final HttpToolRepository httpToolRepository;
 
+    private Map<AgentConfigCategory, Map<AgentConfigType, Function<String, List<AvailableConfigOutput>>>> dispatchMap;
+
+    @PostConstruct
+    public void init() {
+        this.dispatchMap = Map.of(
+            AgentConfigCategory.STRATEGY, strategyDispatch(),
+            AgentConfigCategory.TOOL, toolDispatch(),
+            AgentConfigCategory.PROMPT, promptDispatch(),
+            AgentConfigCategory.MODEL, modelDispatch()
+        );
+    }
+
     public List<AvailableConfigOutput> getAvailableConfigs(String category, String type, String workspaceId) {
         if (workspaceId == null) return List.of();
-        AgentConfigType value = AgentConfigType.valueOf(type);
-        return switch (AgentConfigCategory.valueOf(category)) {
-            case STRATEGY -> switch (value) {
-                case RETRIEVAL_STRATEGY -> getRetrievalStrategies(workspaceId);
-                case MODEL_STRATEGY -> getModelStrategies(workspaceId);
-                case TOOL_STRATEGY -> getToolStrategies(workspaceId);
-                case GUARDRAIL_STRATEGY -> getGuardrailStrategies(workspaceId);
-                default -> List.of();
-            };
-            case TOOL -> switch (value) {
-                case MCP_TOOL -> getMcpTools(workspaceId);
-                case SKILL_TOOL -> getSkillTools(workspaceId);
-                case SYSTEM_TOOL -> getSystemTools(workspaceId);
-                case HTTP_TOOL -> getHttpTools(workspaceId);
-                default -> List.of();
-            };
-            case PROMPT -> switch (value) {
-                case SYSTEM_PROMPT -> getPrompts(workspaceId, "system");
-                case ASSISTANT_PROMPT -> getPrompts(workspaceId, "assistant");
-                default -> List.of();
-            };
-            case MODEL -> switch (value) {
-                case CHAT_MODEL -> getModelConfigs(workspaceId, ModelType.CHAT);
-                case EMBEDDING_MODEL -> getModelConfigs(workspaceId, ModelType.EMBEDDING);
-                default -> List.of();
-            };
-            case KNOWLEDGE -> getKnowledgeBases(workspaceId);
-        };
+        var categoryDispatcher = dispatchMap.get(AgentConfigCategory.valueOf(category));
+        if (categoryDispatcher == null) {
+            return getKnowledgeBases(workspaceId);
+        }
+        var handler = categoryDispatcher.get(AgentConfigType.valueOf(type));
+        return handler != null ? handler.apply(workspaceId) : List.of();
+    }
+
+    private Map<AgentConfigType, Function<String, List<AvailableConfigOutput>>> strategyDispatch() {
+        return Map.of(
+            AgentConfigType.RETRIEVAL_STRATEGY, this::getRetrievalStrategies,
+            AgentConfigType.MODEL_STRATEGY, this::getModelStrategies,
+            AgentConfigType.TOOL_STRATEGY, this::getToolStrategies,
+            AgentConfigType.GUARDRAIL_STRATEGY, this::getGuardrailStrategies
+        );
+    }
+
+    private Map<AgentConfigType, Function<String, List<AvailableConfigOutput>>> toolDispatch() {
+        return Map.of(
+            AgentConfigType.MCP_TOOL, this::getMcpTools,
+            AgentConfigType.SKILL_TOOL, this::getSkillTools,
+            AgentConfigType.SYSTEM_TOOL, this::getSystemTools,
+            AgentConfigType.HTTP_TOOL, this::getHttpTools
+        );
+    }
+
+    private Map<AgentConfigType, Function<String, List<AvailableConfigOutput>>> promptDispatch() {
+        return Map.of(
+            AgentConfigType.SYSTEM_PROMPT, w -> getPrompts(w, "system"),
+            AgentConfigType.ASSISTANT_PROMPT, w -> getPrompts(w, "assistant")
+        );
+    }
+
+    private Map<AgentConfigType, Function<String, List<AvailableConfigOutput>>> modelDispatch() {
+        return Map.of(
+            AgentConfigType.CHAT_MODEL, w -> getModelConfigs(w, ModelType.CHAT),
+            AgentConfigType.EMBEDDING_MODEL, w -> getModelConfigs(w, ModelType.EMBEDDING)
+        );
     }
 
 

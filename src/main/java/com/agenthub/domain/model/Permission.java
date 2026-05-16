@@ -1,6 +1,9 @@
 package com.agenthub.domain.model;
 
+import java.util.Map;
 import java.util.Set;
+
+import static java.util.Set.of;
 
 /**
  * 权限定义.
@@ -62,7 +65,51 @@ public final class Permission {
     // 账单权限
     public static final String BILLING_READ = "billing:read";
     public static final String BILLING_UPDATE = "billing:update";
-    
+
+    private static final Map<String, Set<String>> ROLE_PERMISSIONS = Map.of(
+        "OWNER", of(
+            TENANT_READ, TENANT_UPDATE, TENANT_DELETE,
+            WORKSPACE_CREATE, WORKSPACE_READ, WORKSPACE_UPDATE, WORKSPACE_DELETE,
+            KNOWLEDGE_CREATE, KNOWLEDGE_READ, KNOWLEDGE_UPDATE, KNOWLEDGE_DELETE,
+            AGENT_CREATE, AGENT_READ, AGENT_UPDATE, AGENT_DELETE, AGENT_PUBLISH,
+            TOOL_CREATE, TOOL_READ, TOOL_UPDATE, TOOL_DELETE, TOOL_INVOKE,
+            STRATEGY_CREATE, STRATEGY_READ, STRATEGY_UPDATE, STRATEGY_DELETE,
+            MEMBER_CREATE, MEMBER_READ, MEMBER_UPDATE, MEMBER_DELETE,
+            AUDIT_READ, AUDIT_EXPORT,
+            BILLING_READ, BILLING_UPDATE
+        ),
+        "ADMIN", of(
+            WORKSPACE_READ, WORKSPACE_UPDATE,
+            KNOWLEDGE_CREATE, KNOWLEDGE_READ, KNOWLEDGE_UPDATE, KNOWLEDGE_DELETE,
+            AGENT_CREATE, AGENT_READ, AGENT_UPDATE, AGENT_DELETE, AGENT_PUBLISH,
+            TOOL_CREATE, TOOL_READ, TOOL_UPDATE, TOOL_DELETE, TOOL_INVOKE,
+            STRATEGY_CREATE, STRATEGY_READ, STRATEGY_UPDATE, STRATEGY_DELETE,
+            MEMBER_CREATE, MEMBER_READ, MEMBER_UPDATE, MEMBER_DELETE,
+            AUDIT_READ, AUDIT_EXPORT,
+            BILLING_READ
+        ),
+        "DEVELOPER", of(
+            WORKSPACE_READ,
+            KNOWLEDGE_CREATE, KNOWLEDGE_READ, KNOWLEDGE_UPDATE,
+            AGENT_CREATE, AGENT_READ, AGENT_UPDATE, AGENT_PUBLISH,
+            TOOL_READ, TOOL_INVOKE,
+            STRATEGY_CREATE, STRATEGY_READ, STRATEGY_UPDATE,
+            AUDIT_READ
+        ),
+        "VIEWER", of(
+            WORKSPACE_READ,
+            KNOWLEDGE_READ,
+            AGENT_READ,
+            TOOL_READ,
+            STRATEGY_READ,
+            AUDIT_READ
+        ),
+        "AUDITOR", of(
+            AUDIT_READ, AUDIT_EXPORT,
+            BILLING_READ
+        )
+    );
+
     /**
      * 获取角色对应的权限集合.
      *
@@ -70,49 +117,10 @@ public final class Permission {
      * @return 权限集合
      */
     public static Set<String> getPermissionsForRole(String roleCode) {
-        return switch (roleCode) {
-            case "OWNER" -> Set.of(
-                TENANT_READ, TENANT_UPDATE, TENANT_DELETE,
-                WORKSPACE_CREATE, WORKSPACE_READ, WORKSPACE_UPDATE, WORKSPACE_DELETE,
-                KNOWLEDGE_CREATE, KNOWLEDGE_READ, KNOWLEDGE_UPDATE, KNOWLEDGE_DELETE,
-                AGENT_CREATE, AGENT_READ, AGENT_UPDATE, AGENT_DELETE, AGENT_PUBLISH,
-                TOOL_CREATE, TOOL_READ, TOOL_UPDATE, TOOL_DELETE, TOOL_INVOKE,
-                STRATEGY_CREATE, STRATEGY_READ, STRATEGY_UPDATE, STRATEGY_DELETE,
-                MEMBER_CREATE, MEMBER_READ, MEMBER_UPDATE, MEMBER_DELETE,
-                AUDIT_READ, AUDIT_EXPORT,
-                BILLING_READ, BILLING_UPDATE
-            );
-            case "ADMIN" -> Set.of(
-                WORKSPACE_READ, WORKSPACE_UPDATE,
-                KNOWLEDGE_CREATE, KNOWLEDGE_READ, KNOWLEDGE_UPDATE, KNOWLEDGE_DELETE,
-                AGENT_CREATE, AGENT_READ, AGENT_UPDATE, AGENT_DELETE, AGENT_PUBLISH,
-                TOOL_CREATE, TOOL_READ, TOOL_UPDATE, TOOL_DELETE, TOOL_INVOKE,
-                STRATEGY_CREATE, STRATEGY_READ, STRATEGY_UPDATE, STRATEGY_DELETE,
-                MEMBER_CREATE, MEMBER_READ, MEMBER_UPDATE, MEMBER_DELETE,
-                AUDIT_READ, AUDIT_EXPORT,
-                BILLING_READ
-            );
-            case "DEVELOPER" -> Set.of(
-                WORKSPACE_READ,
-                KNOWLEDGE_CREATE, KNOWLEDGE_READ, KNOWLEDGE_UPDATE,
-                AGENT_CREATE, AGENT_READ, AGENT_UPDATE, AGENT_PUBLISH,
-                TOOL_READ, TOOL_INVOKE,
-                STRATEGY_CREATE, STRATEGY_READ, STRATEGY_UPDATE,
-                AUDIT_READ
-            );
-            case "VIEWER" -> Set.of(
-                WORKSPACE_READ,
-                KNOWLEDGE_READ,
-                AGENT_READ,
-                TOOL_READ,
-                STRATEGY_READ,
-                AUDIT_READ
-            );
-            case "AUDITOR" -> Set.of(
-                AUDIT_READ, AUDIT_EXPORT,
-                BILLING_READ
-            );
-            default -> throw new IllegalStateException("Unexpected value: " + roleCode);
-        };
+        Set<String> permissions = ROLE_PERMISSIONS.get(roleCode);
+        if (permissions == null) {
+            throw new IllegalStateException("Unexpected value: " + roleCode);
+        }
+        return permissions;
     }
 }

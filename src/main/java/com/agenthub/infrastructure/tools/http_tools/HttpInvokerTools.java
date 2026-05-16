@@ -81,17 +81,10 @@ public class HttpInvokerTools implements HttpToolInvoker {
     @Override
     public HttpToolInvocationResult invoke(HttpTool httpTool, Map<java.lang.String, Object> payload) {
         log.info("调用外部工具: toolId={}, endpoint={}, method={}", httpTool.getId(), httpTool.getEndpoint(), httpTool.getHttpMethod());
-        try {
-            return doInvoke(httpTool, payload);
-        } catch (HttpClientErrorException e) {
-            return handleClientError(httpTool, e);
-        } catch (HttpServerErrorException e) {
-            return handleServerError(httpTool, e);
-        } catch (ResourceAccessException e) {
-            return handleTimeout(httpTool, e);
-        } catch (Exception e) {
-            return handleGeneralError(httpTool, e);
-        }
+        try { return doInvoke(httpTool, payload); } catch (HttpClientErrorException e) { return handleClientError(httpTool, e);
+        } catch (HttpServerErrorException e) { return handleServerError(httpTool, e);
+        } catch (ResourceAccessException e) { return handleTimeout(httpTool, e);
+        } catch (Exception e) { return handleGeneralError(httpTool, e); }
     }
 
     /**
@@ -287,15 +280,10 @@ public class HttpInvokerTools implements HttpToolInvoker {
      * 解析 HTTP 响应体为 Map。
      */
     private Map<java.lang.String, Object> parseResponse(String body) {
-        if (body == null || body.isBlank()) {
-            return Map.of();
-        }
+        if (body == null || body.isBlank()) return Map.of();
         try {
             JsonNode node = objectMapper.readTree(body);
-            if (node.isObject()) {
-                return objectMapper.convertValue(node, MAP_TYPE_REF);
-            }
-            return Map.of("data", body);
+            return node.isObject() ? objectMapper.convertValue(node, MAP_TYPE_REF) : Map.of("data", body);
         } catch (JsonProcessingException e) {
             return Map.of("data", body);
         }

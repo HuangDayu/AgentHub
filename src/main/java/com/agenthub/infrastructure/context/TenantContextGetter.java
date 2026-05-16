@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * 租户上下文获取器。
@@ -58,16 +59,12 @@ public class TenantContextGetter {
      * 查找第一个有效的上下文数据对象
      */
     private TenantThreadContext findFirstTenantContext() {
-        for (TenantContextSupplier supplier : tenantContextSupplier) {
-            try {
-                TenantThreadContext tenantThreadContext = supplier.getTenantThreadContext();
-                if (tenantThreadContext != null) {
-                    return tenantThreadContext;
-                }
-            } catch (Exception e) {
-                log.warn("Failed to get tenant context from supplier: {}", supplier, e);
-            }
-        }
-        throw new IllegalStateException("No valid tenant context found");
+        return tenantContextSupplier.stream()
+                .flatMap(supplier -> {
+                    try { return Stream.ofNullable(supplier.getTenantThreadContext()); }
+                    catch (Exception e) { log.warn("Failed to get tenant context from supplier: {}", supplier, e); return Stream.empty(); }
+                })
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No valid tenant context found"));
     }
 }

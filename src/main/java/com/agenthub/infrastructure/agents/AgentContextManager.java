@@ -53,11 +53,8 @@ public class AgentContextManager {
     }
 
     private ReActAgentWorkspace resolveReActAgentWorkspace(String workspaceId) {
-        Optional<Workspace> optional = workspaceRepository.findById(workspaceId);
-        if (optional.isEmpty()) {
-            throw new NotFoundException("Workspace not found: " + workspaceId);
-        }
-        Workspace workspace = optional.get();
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("Workspace not found: " + workspaceId));
         return ReActAgentWorkspace.builder()
                 .workspace(workspace)
                 .rootPath(resolvePath(workspace, ""))

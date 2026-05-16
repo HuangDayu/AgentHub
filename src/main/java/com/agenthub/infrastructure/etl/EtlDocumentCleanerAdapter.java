@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -40,6 +41,11 @@ public class EtlDocumentCleanerAdapter implements EtlDocumentCleanerPort {
 
     /** HTML 实体 */
     private static final Pattern HTML_ENTITIES = Pattern.compile("&[a-zA-Z]+;|&#\\d+;");
+
+    private static final Map<String, String> HTML_ENTITY_MAP = Map.of(
+        "&nbsp;", " ", "&amp;", "&", "&lt;", "<",
+        "&gt;", ">", "&quot;", "\"", "&apos;", "'", "&#39;", "'"
+    );
 
     /**
      * 清洗文档内容。
@@ -85,19 +91,8 @@ public class EtlDocumentCleanerAdapter implements EtlDocumentCleanerPort {
      * 替换HTML实体。
      */
     private String replaceHtmlEntities(String text) {
-        return HTML_ENTITIES.matcher(text).replaceAll(match -> {
-            String entity = match.group();
-            return switch (entity) {
-                case "&nbsp;" -> " ";
-                case "&amp;" -> "&";
-                case "&lt;" -> "<";
-                case "&gt;" -> ">";
-                case "&quot;" -> "\"";
-                case "&apos;" -> "'";
-                case "&#39;" -> "'";
-                default -> "";
-            };
-        });
+        return HTML_ENTITIES.matcher(text).replaceAll(match ->
+                HTML_ENTITY_MAP.getOrDefault(match.group(), ""));
     }
 
     /**

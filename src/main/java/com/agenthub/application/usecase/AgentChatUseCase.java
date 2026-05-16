@@ -69,37 +69,30 @@ public class AgentChatUseCase {
      * 追加响应内容。
      */
     private void appendMessages(String sessionId, List<ChatMessage> messages, StringBuilder builder, Message message) {
-        if (message instanceof AssistantMessage assistantMessage) {
-            if (assistantMessage.getText() != null) {
-                builder.append(assistantMessage.getText());
-            }
-            if (!assistantMessage.getToolCalls().isEmpty()) {
-                appendMessage(sessionId, messages, builder);
-                messages.add(assistant(sessionId, toJson(assistantMessage.getToolCalls())));
-            }
-            if ("STOP".equalsIgnoreCase((String) assistantMessage.getMetadata().getOrDefault("finishReason", ""))) {
-                appendMessage(sessionId, messages, builder);
-            }
-        }
-        if (message instanceof ToolResponseMessage toolResponseMessage) {
-            messages.add(tool(sessionId, toJson(toolResponseMessage.getResponses())));
-        }
-        if (message instanceof SystemMessage systemMessage) {
-            messages.add(system(sessionId, systemMessage.getText()));
+        switch (message) {
+            case AssistantMessage msg -> handleAssistantMessage(sessionId, messages, builder, msg);
+            case ToolResponseMessage msg -> messages.add(tool(sessionId, toJson(msg.getResponses())));
+            case SystemMessage msg -> messages.add(system(sessionId, msg.getText()));
+            default -> {}
         }
     }
 
-    private void appendMessage(String sessionId, List<ChatMessage> messages, StringBuilder builder) {
-        String text = builder.toString();
-        if (!text.isEmpty() && !"\n".equals(text)) {
-            if (text.startsWith("\n")) {
-                text = text.replaceFirst("\n", "");
-            }
-            if (text.endsWith("\n")) {
-                text = text.substring(0, text.length() - 1);
-            }
-            messages.add(assistant(sessionId, text));
+    private void handleAssistantMessage(String sessionId, List<ChatMessage> messages, StringBuilder builder, AssistantMessage msg) {
+        if (msg.getText() != null) {
+            builder.append(msg.getText());
         }
+        if (!msg.getToolCalls().isEmpty()) {
+            flushPendingText(sessionId, messages, builder);
+            messages.add(assistant(sessionId, toJson(msg.getToolCalls())));
+        }
+        if ("STOP".equalsIgnoreCase((String) msg.getMetadata().getOrDefault("finishReason", ""))) {
+            flushPendingText(sessionId, messages, builder);
+        }
+    }
+
+    private void flushPendingText(String sessionId, List<ChatMessage> messages, StringBuilder builder) {
+        String text = builder.toString().strip().replaceFirst("^\n", "").replaceFirst("\n$", "");
+        if (!text.isEmpty()) messages.add(assistant(sessionId, text));
         builder.delete(0, builder.length());
     }
 

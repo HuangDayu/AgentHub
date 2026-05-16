@@ -6,6 +6,7 @@ import com.agenthub.application.command.UpdateModelConfigCommand;
 import com.agenthub.application.dto.ModelTestOutput;
 import com.agenthub.application.port.out.ModelPoolManagerPort;
 import com.agenthub.application.port.out.repositories.ModelConfigRepository;
+import com.agenthub.domain.exception.ModelNotFoundException;
 import com.agenthub.domain.model.ModelConfig;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -70,8 +71,9 @@ public class ModelConfigUseCase {
     /**
      * 根据 ID 获取模型配置。
      */
-    public Optional<ModelConfig> getById(String id) {
-        return modelConfigRepository.findById(id);
+    public ModelConfig getById(String id) {
+        return modelConfigRepository.findById(id)
+                .orElseThrow(() -> new ModelNotFoundException("Model config not found: id=" + id));
     }
 
     /**

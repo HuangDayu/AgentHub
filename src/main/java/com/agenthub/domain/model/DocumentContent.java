@@ -1,5 +1,6 @@
 package com.agenthub.domain.model;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -64,53 +65,45 @@ public final class DocumentContent {
         if (contentType == null && fileName == null) {
             return DocumentFormat.UNKNOWN;
         }
-
         if (contentType != null) {
-            return switch (contentType.toLowerCase()) {
-                case "application/pdf" -> DocumentFormat.PDF;
-                case "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                     "application/msword" -> DocumentFormat.WORD;
-                case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                     "application/vnd.ms-excel" -> DocumentFormat.EXCEL;
-                case "text/plain" -> DocumentFormat.TEXT;
-                case "text/markdown" -> DocumentFormat.MARKDOWN;
-                case "text/html" -> DocumentFormat.HTML;
-                default -> detectFormatByFileName(fileName);
-            };
+            DocumentFormat format = CONTENT_TYPE_MAP.get(contentType.toLowerCase());
+            if (format != null) return format;
         }
-
         return detectFormatByFileName(fileName);
     }
 
     private static DocumentFormat detectFormatByFileName(String fileName) {
-        if (fileName == null) {
-            return DocumentFormat.UNKNOWN;
-        }
-
-        String lowerName = fileName.toLowerCase();
-        if (lowerName.endsWith(".pdf")) {
-            return DocumentFormat.PDF;
-        }
-        if (lowerName.endsWith(".docx") || lowerName.endsWith(".doc")) {
-            return DocumentFormat.WORD;
-        }
-        if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")) {
-            return DocumentFormat.EXCEL;
-        }
-        if (lowerName.endsWith(".txt")) {
-            return DocumentFormat.TEXT;
-        }
-        if (lowerName.endsWith(".md")) {
-            return DocumentFormat.MARKDOWN;
-        }
-        if (lowerName.endsWith(".json")) {
-            return DocumentFormat.JSON;
-        }
-        if (lowerName.endsWith(".html") || lowerName.endsWith(".htm")) {
-            return DocumentFormat.HTML;
-        }
-        return DocumentFormat.UNKNOWN;
+        if (fileName == null) return DocumentFormat.UNKNOWN;
+        return EXTENSION_MAP.entrySet().stream()
+                .filter(e -> fileName.toLowerCase().endsWith(e.getKey()))
+                .findFirst()
+                .map(Map.Entry::getValue)
+                .orElse(DocumentFormat.UNKNOWN);
     }
+
+    private static final Map<String, DocumentFormat> CONTENT_TYPE_MAP = Map.of(
+        "application/pdf", DocumentFormat.PDF,
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", DocumentFormat.WORD,
+        "application/msword", DocumentFormat.WORD,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", DocumentFormat.EXCEL,
+        "application/vnd.ms-excel", DocumentFormat.EXCEL,
+        "text/plain", DocumentFormat.TEXT,
+        "text/markdown", DocumentFormat.MARKDOWN,
+        "text/html", DocumentFormat.HTML
+    );
+
+    private static final Map<String, DocumentFormat> EXTENSION_MAP = Map.of(
+        ".pdf", DocumentFormat.PDF,
+        ".docx", DocumentFormat.WORD,
+        ".doc", DocumentFormat.WORD,
+        ".xlsx", DocumentFormat.EXCEL,
+        ".xls", DocumentFormat.EXCEL,
+        ".txt", DocumentFormat.TEXT,
+        ".md", DocumentFormat.MARKDOWN,
+        ".json", DocumentFormat.JSON,
+        ".html", DocumentFormat.HTML,
+        ".htm", DocumentFormat.HTML
+    );
 
     /**
      * 返回带有清洗后内容的新实例。

@@ -177,25 +177,18 @@ public class EtlDocumentChunkerAdapter implements EtlDocumentChunkerPort {
         int start = 0;
         while (start < paragraph.length()) {
             int end = calculateChunkEnd(paragraph, start, chunkSize);
-            String sub = paragraph.substring(start, end).trim();
-            if (!sub.isEmpty()) {
-                result.add(sub);
-            }
+            var sub = paragraph.substring(start, end).trim();
+            if (!sub.isEmpty()) result.add(sub);
             start = Math.max(start + 1, end - overlap);
         }
         return result;
     }
 
-    /**
-     * 计算分块结束位置。
-     */
     private int calculateChunkEnd(String paragraph, int start, int chunkSize) {
         int end = Math.min(start + chunkSize, paragraph.length());
         if (end < paragraph.length()) {
             int sentenceEnd = findSentenceBoundary(paragraph, start, end);
-            if (sentenceEnd > start) {
-                return sentenceEnd;
-            }
+            if (sentenceEnd > start) return sentenceEnd;
         }
         return end;
     }

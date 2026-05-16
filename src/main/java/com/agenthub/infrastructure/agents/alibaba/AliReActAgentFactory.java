@@ -150,16 +150,11 @@ public class AliReActAgentFactory implements ReActAgentFactory {
 
     private List<ToolCallback> resolveTools(ReActAgentContext context) {
         List<ToolCallback> tools = new CopyOnWriteArrayList<>();
-        Map<AgentToolType, List<AgentToolInfo>> collect = context.getTools().stream().collect(Collectors.groupingBy(
-                AgentToolInfo::getType,
-                Collectors.mapping(v -> v, Collectors.toList())
-        ));
+        var collect = context.getTools().stream().collect(Collectors.groupingBy(AgentToolInfo::getType));
         parallelStreamWithTtl(4, collect.entrySet(), entry -> {
             if (!entry.getValue().isEmpty()) {
-                Set<ToolCallback> toolCallbacks = resolveToolCallbacks(entry.getKey(), entry.getValue());
-                if (!toolCallbacks.isEmpty()) {
-                    tools.addAll(toolCallbacks);
-                }
+                var toolCallbacks = resolveToolCallbacks(entry.getKey(), entry.getValue());
+                if (!toolCallbacks.isEmpty()) tools.addAll(toolCallbacks);
             }
             return null;
         });

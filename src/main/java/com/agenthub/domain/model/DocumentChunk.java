@@ -53,18 +53,9 @@ public final class DocumentChunk {
      * @return 新的DocumentChunk实例
      */
     public static DocumentChunk create(String documentId, String kbId, int chunkIndex, String content) {
-        Objects.requireNonNull(documentId, "documentId must not be null");
-        Objects.requireNonNull(kbId, "kbCode must not be null");
         Objects.requireNonNull(content, "content must not be null");
-        return new DocumentChunk(
-                UUID.randomUUID().toString(),
-                documentId,
-                kbId,
-                chunkIndex,
-                content,
-                estimateTokenCount(content),
-                null
-        );
+        return new DocumentChunk(UUID.randomUUID().toString(), documentId, kbId, chunkIndex, content,
+                estimateTokenCount(content), null);
     }
 
     /**

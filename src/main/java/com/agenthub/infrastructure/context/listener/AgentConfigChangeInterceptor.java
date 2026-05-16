@@ -28,22 +28,12 @@ public class AgentConfigChangeInterceptor implements InnerInterceptor {
 
     @Override
     public void beforeUpdate(Executor executor, MappedStatement ms, Object parameter) throws SQLException {
-        SqlCommandType commandType = ms.getSqlCommandType();
-        if (!isAuditCommand(commandType)) {
-            return;
-        }
-
+        if (!isAuditCommand(ms.getSqlCommandType())) return;
         Class<?> entityClass = extractEntityClass(ms);
-        if (!isAuditedEntity(entityClass)) {
-            return;
-        }
-
-        List<String> primaryKeys = extractPrimaryKeys(parameter, entityClass, commandType);
-        if (primaryKeys.isEmpty()) {
-            return;
-        }
-
-        publishAuditEvent(entityClass, commandType, primaryKeys);
+        if (!isAuditedEntity(entityClass)) return;
+        List<String> primaryKeys = extractPrimaryKeys(parameter, entityClass, ms.getSqlCommandType());
+        if (primaryKeys.isEmpty()) return;
+        publishAuditEvent(entityClass, ms.getSqlCommandType(), primaryKeys);
     }
 
     private boolean isAuditCommand(SqlCommandType commandType) {

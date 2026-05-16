@@ -93,13 +93,9 @@ public class MinioDocumentFileStorageAdapter implements DocumentFileStoragePort 
     @Override
     public String store(String path, InputStream content, long size) {
         try {
-            byte[] data = content.readAllBytes();
-            minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(bucket)
-                            .object(path)
-                            .stream(new ByteArrayInputStream(data), data.length, -1)
-                            .build());
+            var data = content.readAllBytes();
+            minioClient.putObject(PutObjectArgs.builder().bucket(bucket).object(path)
+                    .stream(new ByteArrayInputStream(data), data.length, -1).build());
             log.debug("文件已上传到 MinIO: {}/{}", bucket, path);
             return path;
         } catch (Exception e) {
