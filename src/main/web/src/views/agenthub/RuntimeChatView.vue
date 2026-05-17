@@ -75,6 +75,12 @@
                   <div class="session-name">{{ session.name || session.sessionId.slice(0, 8) + '...' }}</div>
                   <div class="session-time">{{ formatDateTime(session.createdAt) }}</div>
                 </div>
+                <!-- 正在处理的图标 -->
+                <div v-if="isSessionStreaming(session.sessionId)" class="streaming-indicator" title="正在处理中...">
+                  <svg class="spinner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                  </svg>
+                </div>
                 <button class="delete-btn" @click.stop="handleDeleteSession(session.sessionId)" title="删除会话">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"/>
@@ -312,7 +318,8 @@ const sessions = ref<ChatSession[]>([])
 const selectedSessionId = ref('')
 const pendingSessionName = ref('') // 临时会话的名称，用于创建时使用
 
-// Messages
+// Messages - 为每个会话维护独立的消息列表
+const sessionMessages = new Map<string, ChatMessage[]>()
 const messages = ref<ChatMessage[]>([])
 const messagesContainer = ref<HTMLElement | null>(null)
 
@@ -321,6 +328,57 @@ const inputContent = ref('')
 const sending = ref(false)
 const useStream = ref(true)
 const streamingContent = ref('')
+
+// 流消息状态管理 - 为每个会话维护独立的流消息状态
+const sessionStreamingStates = new Map<string, {
+  content: string
+  isStreaming: boolean
+  pendingMessages: ChatMessage[] // 暂存正在进行的stream的消息（用户消息 + 助手消息）
+  abortController?: AbortController
+}>()
+
+// 获取当前会话的流消息状态
+function getCurrentStreamingState() {
+  const sessionId = selectedSessionId.value
+  if (!sessionId) return null
+
+  if (!sessionStreamingStates.has(sessionId)) {
+    sessionStreamingStates.set(sessionId, {
+      content: '',
+      isStreaming: false
+    })
+  }
+  return sessionStreamingStates.get(sessionId)!
+}
+
+// 检查某个会话是否正在流式处理
+function isSessionStreaming(sessionId: string): boolean {
+  const state = sessionStreamingStates.get(sessionId)
+  return state?.isStreaming || false
+}
+
+// 监听selectedSessionId变化，恢复流消息状态和消息列表
+watch(selectedSessionId, (newSessionId) => {
+  if (newSessionId) {
+    // 恢复消息列表（所有消息都在sessionMessages中）
+    const msgs = sessionMessages.get(newSessionId) || []
+    messages.value = [...msgs]
+
+    // 恢复流消息状态
+    const state = sessionStreamingStates.get(newSessionId)
+    if (state) {
+      streamingContent.value = state.content
+      sending.value = state.isStreaming
+    } else {
+      streamingContent.value = ''
+      sending.value = false
+    }
+  } else {
+    messages.value = []
+    streamingContent.value = ''
+    sending.value = false
+  }
+})
 
 // Selection state
 const selectionReady = computed(() => store.tenantId && store.workspaceId)
@@ -447,9 +505,9 @@ async function loadMessages() {
   try {
     const rawMessages = await listMessages(getSelection(), selectedAgentId.value, selectedSessionId.value)
     // 解析消息内容
-    messages.value = rawMessages.map(msg => {
+    const parsedMessages = rawMessages.map(msg => {
       const parsedMsg = { ...msg }
-      
+
       // 解析工具调用
       if (msg.role === 'ASSISTANT' && msg.content && msg.content.startsWith('[{')) {
         try {
@@ -459,7 +517,7 @@ async function loadMessages() {
           console.error('Failed to parse tool calls:', e)
         }
       }
-      
+
       // 解析工具响应
       if (msg.role === 'TOOL' && msg.content && msg.content.startsWith('[{')) {
         try {
@@ -469,9 +527,31 @@ async function loadMessages() {
           console.error('Failed to parse tool responses:', e)
         }
       }
-      
+
       return parsedMsg
     })
+
+    // 保存到该会话的消息列表
+    // 注意：不要覆盖，而是合并暂存的消息
+    const existingMsgs = sessionMessages.get(selectedSessionId.value) || []
+    const existingIds = new Set(existingMsgs.map(m => m.messageId))
+
+    // 只添加后端返回的新消息（不在现有消息中的）
+    const newMsgs = parsedMessages.filter(m => !existingIds.has(m.messageId))
+
+    // 合并消息：后端消息 + 暂存消息
+    const allMsgs = [...parsedMessages]
+
+    // 添加暂存的消息（不在后端返回的消息中的）
+    const state = sessionStreamingStates.get(selectedSessionId.value)
+    if (state && state.pendingMessages.length > 0) {
+      const backendIds = new Set(parsedMessages.map(m => m.messageId))
+      const pendingMsgs = state.pendingMessages.filter(m => !backendIds.has(m.messageId))
+      allMsgs.push(...pendingMsgs)
+    }
+
+    sessionMessages.set(selectedSessionId.value, allMsgs)
+    messages.value = [...allMsgs]
     scrollToBottom()
   } catch (e: any) {
     error.value = e.message || '加载消息失败'
@@ -537,12 +617,35 @@ async function handleSend() {
     content,
     createdAt: new Date().toISOString()
   }
-  messages.value.push(userMessage)
-  scrollToBottom()
+
+  // 确保该会话的消息列表存在
+  if (!sessionMessages.has(currentSessionId)) {
+    sessionMessages.set(currentSessionId, [])
+  }
+
+  // 添加用户消息到sessionMessages
+  const sessionMsgs = sessionMessages.get(currentSessionId)!
+  sessionMsgs.push(userMessage)
 
   try {
     if (useStream.value) {
-      streamingContent.value = ''
+      // 初始化该会话的流消息状态
+      const streamState = sessionStreamingStates.get(currentSessionId) || {
+        content: '',
+        isStreaming: false,
+        pendingMessages: []
+      }
+      streamState.content = ''
+      streamState.isStreaming = true
+      streamState.pendingMessages = [userMessage] // 标记正在进行的消息
+      sessionStreamingStates.set(currentSessionId, streamState)
+
+      // 如果是当前会话，更新显示
+      if (selectedSessionId.value === currentSessionId) {
+        messages.value = [...sessionMsgs]
+        streamingContent.value = ''
+      }
+      scrollToBottom()
 
       await sendMessageStream(
         getSelection(),
@@ -551,46 +654,123 @@ async function handleSend() {
         content,
         {
           onMessage: (streamMsg: StreamMessage) => {
-            handleStreamMessage(streamMsg)
+            // 只有当前会话才处理流消息显示
+            if (selectedSessionId.value === currentSessionId) {
+              handleStreamMessage(streamMsg)
+            }
+            // 更新该会话的流消息状态
+            const state = sessionStreamingStates.get(currentSessionId)
+            if (state) {
+              state.content = streamingContent.value
+            }
             scrollToBottom()
           },
           onDone: () => {
             // 流式完成后，如果有剩余内容，添加为助手消息
-            if (streamingContent.value.trim()) {
+            const state = sessionStreamingStates.get(currentSessionId)
+            const finalContent = state?.content || streamingContent.value
+
+            if (finalContent.trim()) {
               const assistantMessage: ChatMessage = {
                 messageId: (Date.now() + 1).toString(),
                 sessionId: currentSessionId,
                 role: 'ASSISTANT',
-                content: streamingContent.value,
+                content: finalContent,
                 createdAt: new Date().toISOString(),
                 messageType: 'ASSISTANT'
               }
-              messages.value.push(assistantMessage)
+
+              // 确保sessionMessages存在
+              if (!sessionMessages.has(currentSessionId)) {
+                sessionMessages.set(currentSessionId, [])
+              }
+
+              // 添加到sessionMessages
+              const sessionMsgs = sessionMessages.get(currentSessionId)!
+              sessionMsgs.push(assistantMessage)
+
+              // 添加到暂存消息列表（用于标记）
+              if (state && state.pendingMessages) {
+                state.pendingMessages.push(assistantMessage)
+              }
+
+              // 如果是当前会话，更新显示
+              if (selectedSessionId.value === currentSessionId) {
+                messages.value = [...sessionMsgs]
+              }
             }
-            // 无论是否有内容，都清空streamingContent
-            streamingContent.value = ''
+
+            // 清空该会话的流消息状态
+            if (state) {
+              state.content = ''
+              state.isStreaming = false
+              state.pendingMessages = [] // 清空暂存标记
+            }
+            if (selectedSessionId.value === currentSessionId) {
+              streamingContent.value = ''
+            }
             scrollToBottom()
           },
           onError: (err) => {
             error.value = err.message || '发送消息失败'
-            streamingContent.value = ''
+            // 清空该会话的流消息状态
+            const state = sessionStreamingStates.get(currentSessionId)
+            if (state) {
+              state.content = ''
+              state.isStreaming = false
+              state.pendingMessages = []
+            }
+
+            // 从sessionMessages中移除失败的用户消息
+            const sessionMsgs = sessionMessages.get(currentSessionId)
+            if (sessionMsgs) {
+              const index = sessionMsgs.findIndex(m => m.messageId === userMessage.messageId)
+              if (index !== -1) {
+                sessionMsgs.splice(index, 1)
+              }
+            }
+
+            if (selectedSessionId.value === currentSessionId) {
+              streamingContent.value = ''
+              messages.value = [...(sessionMsgs || [])]
+            }
           }
         }
       )
     } else {
+      // 非流式消息：直接添加到历史消息
       const response = await sendMessage(
         getSelection(),
         selectedAgentId.value,
         currentSessionId,
         content
       )
-      messages.value.push(response)
+
+      // 添加到该会话的消息列表
+      const sessionMsgs = sessionMessages.get(currentSessionId)
+      if (sessionMsgs) {
+        sessionMsgs.push(userMessage)
+        sessionMsgs.push(response)
+        // 如果是当前会话，更新显示
+        if (selectedSessionId.value === currentSessionId) {
+          messages.value = [...sessionMsgs]
+        }
+      }
       scrollToBottom()
     }
   } catch (e: any) {
     error.value = e.message || '发送消息失败'
-    // 移除失败的用户消息
-    messages.value = messages.value.filter(m => m.messageId !== userMessage.messageId)
+    // 流式消息失败时，清空暂存消息
+    if (useStream.value) {
+      const state = sessionStreamingStates.get(currentSessionId)
+      if (state) {
+        state.pendingMessages = []
+      }
+      if (selectedSessionId.value === currentSessionId) {
+        const historyMsgs = sessionMessages.get(currentSessionId) || []
+        messages.value = historyMsgs
+      }
+    }
   } finally {
     sending.value = false
   }
@@ -598,10 +778,26 @@ async function handleSend() {
 
 // 处理流式消息
 function handleStreamMessage(streamMsg: StreamMessage) {
+  const currentSessionId = selectedSessionId.value
+  if (!currentSessionId) return
+
+  // 确保sessionMessages存在
+  if (!sessionMessages.has(currentSessionId)) {
+    sessionMessages.set(currentSessionId, [])
+  }
+  const sessionMsgs = sessionMessages.get(currentSessionId)!
+
+  // 获取流状态
+  const state = sessionStreamingStates.get(currentSessionId)
+
   if (streamMsg.messageType === 'ASSISTANT') {
     // 助手消息：累积文本内容
     if (streamMsg.text) {
       streamingContent.value += streamMsg.text
+      // 同步更新到流状态
+      if (state) {
+        state.content = streamingContent.value
+      }
     }
     // 如果有工具调用，先保存当前的助手消息，然后添加工具调用消息
     if (streamMsg.toolCalls && streamMsg.toolCalls.length > 0) {
@@ -609,27 +805,44 @@ function handleStreamMessage(streamMsg: StreamMessage) {
       if (streamingContent.value.trim()) {
         const assistantMessage: ChatMessage = {
           messageId: `assistant-${Date.now()}`,
-          sessionId: selectedSessionId.value,
+          sessionId: currentSessionId,
           role: 'ASSISTANT',
           content: streamingContent.value,
           createdAt: new Date().toISOString(),
           messageType: 'ASSISTANT'
         }
+        sessionMsgs.push(assistantMessage)
         messages.value.push(assistantMessage)
+
+        // 添加到pendingMessages
+        if (state && state.pendingMessages) {
+          state.pendingMessages.push(assistantMessage)
+        }
+
         streamingContent.value = '' // 清空累积内容
+        // 同步更新到流状态
+        if (state) {
+          state.content = ''
+        }
       }
-      
+
       // 然后保存工具调用消息
       const toolCallMessage: ChatMessage = {
         messageId: `toolcall-${Date.now()}`,
-        sessionId: selectedSessionId.value,
+        sessionId: currentSessionId,
         role: 'ASSISTANT',
         content: '',
         createdAt: new Date().toISOString(),
         messageType: 'ASSISTANT',
         toolCalls: streamMsg.toolCalls
       }
+      sessionMsgs.push(toolCallMessage)
       messages.value.push(toolCallMessage)
+
+      // 添加到pendingMessages
+      if (state && state.pendingMessages) {
+        state.pendingMessages.push(toolCallMessage)
+      }
     }
   } else if (streamMsg.messageType === 'TOOL') {
     // 工具消息：处理工具响应
@@ -637,30 +850,42 @@ function handleStreamMessage(streamMsg: StreamMessage) {
       for (const response of streamMsg.responses) {
         // 判断是否是技能读取
         const isSkill = response.name === 'read_skill' || response.name === 'apply_skill'
-        
+
         const toolResultMessage: ChatMessage = {
           messageId: `toolresult-${Date.now()}-${response.id}`,
-          sessionId: selectedSessionId.value,
+          sessionId: currentSessionId,
           role: 'TOOL',
           content: '',
           createdAt: new Date().toISOString(),
           messageType: isSkill ? 'SKILL' : 'TOOL',
           toolResponses: [response]
         }
+        sessionMsgs.push(toolResultMessage)
         messages.value.push(toolResultMessage)
+
+        // 添加到pendingMessages
+        if (state && state.pendingMessages) {
+          state.pendingMessages.push(toolResultMessage)
+        }
       }
     }
   } else if (streamMsg.messageType === 'SYSTEM') {
     // 系统消息：通常是错误消息
     const systemMessage: ChatMessage = {
       messageId: `system-${Date.now()}`,
-      sessionId: selectedSessionId.value,
+      sessionId: currentSessionId,
       role: 'SYSTEM',
       content: streamMsg.text || '',
       createdAt: new Date().toISOString(),
       messageType: 'SYSTEM'
     }
+    sessionMsgs.push(systemMessage)
     messages.value.push(systemMessage)
+
+    // 添加到pendingMessages
+    if (state && state.pendingMessages) {
+      state.pendingMessages.push(systemMessage)
+    }
   }
 }
 
@@ -1131,6 +1356,32 @@ onMounted(() => {
 
 .session-item:hover .delete-btn {
   opacity: 1;
+}
+
+.streaming-indicator {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.spinner-icon {
+  width: 18px;
+  height: 18px;
+  color: #3a8ad6;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .delete-btn:hover {

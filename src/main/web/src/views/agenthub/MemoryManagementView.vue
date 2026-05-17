@@ -16,6 +16,7 @@
       <table v-if="memories.length > 0">
         <thead>
           <tr>
+            <th>名称</th>
             <th>类型</th>
             <th>内容</th>
             <th>重要性</th>
@@ -25,6 +26,7 @@
         </thead>
         <tbody>
           <tr v-for="memory in memories" :key="memory.id">
+            <td>{{ memory.name || '-' }}</td>
             <td>{{ memory.memoryType }}</td>
             <td>{{ truncateContent(memory.content) }}</td>
             <td>{{ memory.importance.toFixed(2) }}</td>
@@ -50,6 +52,10 @@
       :confirm-text="showEditDialog ? '更新' : '创建'"
     >
       <form>
+        <div class="form-group">
+          <label>名称</label>
+          <input type="text" v-model="form.name" placeholder="请输入记忆名称" />
+        </div>
         <div class="form-group">
           <label>记忆类型</label>
           <select v-model="form.memoryType" required>
@@ -92,6 +98,7 @@ const editingMemoryId = ref('')
 const agentsOptions = computed(() => agents.value.map(agent => ({ value: agent.id, label: agent.name })))
 
 const form = ref({
+  name: '',
   memoryType: 'EPISODIC',
   content: '',
   importance: 0.5
@@ -144,6 +151,7 @@ function openCreateDialog() {
   editingMemoryId.value = ''
   showEditDialog.value = false
   form.value = {
+    name: '',
     memoryType: 'EPISODIC',
     content: '',
     importance: 0.5
@@ -170,7 +178,7 @@ async function createMemoryHandler() {
     return
   }
   try {
-    await createMemory(selection(), selectedAgentId.value, form.value.memoryType, form.value.content, '{}', form.value.importance)
+    await createMemory(selection(), selectedAgentId.value, form.value.name, form.value.memoryType, form.value.content, '{}', form.value.importance)
     memories.value = await listMemoriesByAgent(selection(), selectedAgentId.value)
     closeDialog()
   } catch (e) {
@@ -181,7 +189,7 @@ async function createMemoryHandler() {
 async function updateMemoryHandler() {
   if (!selectionReady.value) return
   try {
-    await updateMemory(selection(), editingMemoryId.value, form.value.content, '{}', form.value.importance)
+    await updateMemory(selection(), editingMemoryId.value, form.value.name, form.value.content, '{}', form.value.importance)
     memories.value = await listMemoriesByAgent(selection(), selectedAgentId.value)
     closeDialog()
   } catch (e) {
@@ -202,6 +210,7 @@ async function deleteMemoryHandler(id: string) {
 }function editMemory(memory: Memory) {
   editingMemoryId.value = memory.id
   form.value = {
+    name: memory.name || '',
     memoryType: memory.memoryType,
     content: memory.content,
     importance: memory.importance

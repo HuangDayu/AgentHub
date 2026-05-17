@@ -51,6 +51,7 @@ export async function getMemory(selection: Selection, memoryId: string): Promise
 export async function updateMemory(
   selection: Selection,
   memoryId: string,
+  name: string,
   content: string,
   metadata: string,
   importance: number,
@@ -60,7 +61,7 @@ export async function updateMemory(
     baseUrl: runtimeConfig.agentApiBase,
     method: 'PUT',
     headers: buildHeaders(selection),
-    bodyJson: { tenantId: selection.tenantId, workspaceId: selection.workspaceId, content, metadata, importance, expiresAt },
+    bodyJson: { tenantId: selection.tenantId, workspaceId: selection.workspaceId, name, content, metadata, importance, expiresAt },
   })
 }
 
