@@ -1,11 +1,11 @@
 package com.agenthub.infrastructure.store.db.repository;
 
-import com.agenthub.domain.model.MemoryType;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.MemoryRepository;
 import com.agenthub.domain.model.Memory;
 import com.agenthub.infrastructure.store.db.entity.MemoryEntity;
 import com.agenthub.infrastructure.store.db.mapper.MemoryMybatisMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +44,7 @@ public class MybatisMemoryRepository implements MemoryRepository {
     public List<Memory> findByTenantIdAndWorkspaceId(String tenantId, String workspaceId) {
         LambdaQueryWrapper<MemoryEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(MemoryEntity::getTenantId, tenantId)
-               .eq(MemoryEntity::getWorkspaceId, workspaceId);
+                .eq(MemoryEntity::getWorkspaceId, workspaceId);
         return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
     }
 
@@ -61,34 +61,10 @@ public class MybatisMemoryRepository implements MemoryRepository {
     }
 
     private MemoryEntity toEntity(Memory memory) {
-        MemoryEntity entity = new MemoryEntity();
-        entity.setId(memory.getId());
-        entity.setTenantId(memory.getTenantId());
-        entity.setWorkspaceId(memory.getWorkspaceId());
-        entity.setAgentId(memory.getAgentId());
-        entity.setMemoryType(memory.getMemoryType().name());
-        entity.setContent(memory.getContent());
-        entity.setMetadata(memory.getMetadata());
-        entity.setImportance(memory.getImportance());
-        entity.setExpiresAt(memory.getExpiresAt());
-        entity.setCreatedAt(memory.getCreatedAt());
-        entity.setUpdatedAt(memory.getUpdatedAt());
-        return entity;
+        return BeanUtil.copyProperties(memory, MemoryEntity.class);
     }
 
     private Memory toDomain(MemoryEntity entity) {
-        Memory memory = new Memory();
-        memory.setId(entity.getId());
-        memory.setTenantId(entity.getTenantId());
-        memory.setWorkspaceId(entity.getWorkspaceId());
-        memory.setAgentId(entity.getAgentId());
-        memory.setMemoryType(MemoryType.valueOf(entity.getMemoryType()));
-        memory.setContent(entity.getContent());
-        memory.setMetadata(entity.getMetadata());
-        memory.setImportance(entity.getImportance());
-        memory.setExpiresAt(entity.getExpiresAt());
-        memory.setCreatedAt(entity.getCreatedAt());
-        memory.setUpdatedAt(entity.getUpdatedAt());
-        return memory;
+        return BeanUtil.copyProperties(entity, Memory.class);
     }
 }

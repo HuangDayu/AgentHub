@@ -189,7 +189,7 @@ async function createMemoryHandler() {
 async function updateMemoryHandler() {
   if (!selectionReady.value) return
   try {
-    await updateMemory(selection(), editingMemoryId.value, form.value.name, form.value.content, '{}', form.value.importance)
+    await updateMemory(selection(), editingMemoryId.value, form.value.name, form.value.memoryType,form.value.content, '{}', form.value.importance)
     memories.value = await listMemoriesByAgent(selection(), selectedAgentId.value)
     closeDialog()
   } catch (e) {
