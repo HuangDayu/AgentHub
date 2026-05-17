@@ -3,18 +3,18 @@ package com.agenthub.infrastructure.rag;
 import com.agenthub.application.command.RagCommand;
 import com.agenthub.application.port.out.rag.RetrievalAugmentedGenerationPort;
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
-import com.agenthub.application.port.out.repositories.SystemToolsRepository;
-import com.agenthub.domain.model.SystemTool;
 import com.agenthub.domain.model.ModelStrategy;
+import com.agenthub.domain.model.RetrievalChunk;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
-import com.agenthub.infrastructure.tools.system_tools.SystemToolsFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.model.tool.DefaultToolCallingChatOptions;
+import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 import org.springframework.ai.rag.preretrieval.query.transformation.CompressionQueryTransformer;
@@ -24,17 +24,15 @@ import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQ
 import org.springframework.ai.rag.retrieval.join.ConcatenationDocumentJoiner;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
-import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.agenthub.domain.model.AgentConfigCategory.MODEL;
 import static com.agenthub.domain.model.AgentConfigType.CHAT_MODEL;
@@ -51,9 +49,37 @@ public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPor
 
     private final SpringShareObjectFactory springShareObjectFactory;
     private final AgentConfigRepository agentConfigRepository;
-    private final SystemToolsRepository systemToolsRepository;
-    private final SystemToolsFactory systemToolsFactory;
 
+
+    @Override
+    public List<RetrievalChunk> ragRetrieve(RagCommand ragCommand) {
+        List<RetrievalChunk> list = new ArrayList<>();
+        for (String kbId : ragCommand.getKbIds()) {
+            VectorStore vectorStore = springShareObjectFactory.getVectorStoreByKbId(kbId);
+            DocumentRetriever documentRetriever = buildDocumentRetriever(vectorStore, ragCommand);
+            List<Document> documents = documentRetriever.retrieve(new Query(ragCommand.getPrompt()));
+            if (!documents.isEmpty()) {
+                list.addAll(convertResults(kbId, documents));
+            }
+        }
+        return list;
+    }
+
+
+    private List<RetrievalChunk> convertResults(String kbId, List<Document> results) {
+        return results.stream()
+                .map(d -> toResult(kbId, d))
+                .filter(r -> r != null)
+                .toList();
+    }
+
+    private RetrievalChunk toResult(String kbId, Document doc) {
+        Map<String, Object> meta = doc.getMetadata();
+        String docId = meta != null ? String.valueOf(meta.getOrDefault("document_id", "")) : "";
+        String content = doc.getText() != null ? doc.getText() : "";
+        String id = doc.getId() != null ? doc.getId() : docId;
+        return new RetrievalChunk(content, null, docId, id, doc.getScore(), kbId);
+    }
 
     @Override
     public String ragChat(RagCommand ragCommand) {
@@ -83,17 +109,8 @@ public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPor
         options.setTopP(modelStrategy.getTopP());
         options.setMaxTokens(modelStrategy.getMaxTokens());
         options.setInternalToolExecutionEnabled(true);
-        options.setToolCallbacks(getSystemTools());
         options.setToolContext(Map.of(ragCommand.getAgentId(), ragCommand));
         return options;
-    }
-
-    private List<ToolCallback> getSystemTools() {
-        Set<String> functionSet = systemToolsRepository.findByEnabled(true).stream()
-                .map(SystemTool::getToolClassName).collect(Collectors.toSet());
-        return systemToolsFactory.getAllToolCallbacks().stream()
-                .filter(toolCallback -> functionSet.contains(toolCallback.getClass().getName()))
-                .collect(Collectors.toList());
     }
 
     private ChatModel getAgentChatModel(String agentId) {
@@ -107,10 +124,14 @@ public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPor
             ChatModel chatModel = springShareObjectFactory.getChatModelByKbId(kbId);
             VectorStore vectorStore = springShareObjectFactory.getVectorStoreByKbId(kbId);
             RetrievalAugmentationAdvisor advisor = RetrievalAugmentationAdvisor.builder()
-                    .queryTransformers(buildQueryTransformers(ragCommand, chatModel)) // 创建查询转换器,用于查询的压缩、重写、翻译
-                    .documentRetriever(buildDocumentRetriever(vectorStore, ragCommand)) // 创建向量存储文档检索器
-                    .documentJoiner(new ConcatenationDocumentJoiner()) // 文档连接器，用于连接检索到的文档
-                    .queryAugmenter(ContextualQueryAugmenter.builder().allowEmptyContext(true).build()) // 上下文查询增强器，允许空上下文
+                    // 预处理： 创建查询转换器,用于查询的压缩、重写、翻译
+                    .queryTransformers(buildQueryTransformers(ragCommand, chatModel))
+                    //检索： 创建向量存储文档检索器
+                    .documentRetriever(buildDocumentRetriever(vectorStore, ragCommand))
+                    // 后处理：文档连接器，用于连接检索到的文档
+                    .documentJoiner(new ConcatenationDocumentJoiner())
+                    // 生成： 上下文查询增强器，允许空上下文
+                    .queryAugmenter(ContextualQueryAugmenter.builder().allowEmptyContext(true).build())
                     .build();
             advisors.add(advisor);
         }

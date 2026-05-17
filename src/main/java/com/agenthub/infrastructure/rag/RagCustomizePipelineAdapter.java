@@ -32,6 +32,11 @@ public class RagCustomizePipelineAdapter implements RetrievalAugmentedGeneration
 
 
     @Override
+    public List<RetrievalChunk> ragRetrieve(RagCommand ragCommand) {
+        return ragRetrievalPort.retrieve(ragCommand);
+    }
+
+    @Override
     public String ragChat(RagCommand ragCommand) {
         return ragModelChatPort.chat(buildSessionMessage(ragCommand));
     }

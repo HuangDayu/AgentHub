@@ -87,5 +87,8 @@ public interface KnowledgeBaseRepository {
     boolean existsByKbCode(String kbCode);
 
     List<KnowledgeBase> findByWorkspace(String workspaceId);
+
+    List<KnowledgeBase> findByIds(List<String> knowledgeIds);
+
 }
 

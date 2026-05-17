@@ -150,6 +150,13 @@ public class MybatisKnowledgeBaseRepository implements KnowledgeBaseRepository {
         return mapper.selectList(query).stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public List<KnowledgeBase> findByIds(List<String> knowledgeIds) {
+        LambdaQueryWrapper<KnowledgeBaseEntity> query = new LambdaQueryWrapper<>();
+        query.in(KnowledgeBaseEntity::getId, knowledgeIds);
+        return mapper.selectList(query).stream().map(this::toDomain).toList();
+    }
+
     /**
      * 执行插入或更新操作，根据 kbCode 判断是否存在。
      *

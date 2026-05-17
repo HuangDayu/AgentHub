@@ -4,10 +4,12 @@ import com.agenthub.domain.model.ModelStrategy;
 import com.agenthub.domain.model.RetrievalStrategy;
 import java.util.List;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -1,15 +1,15 @@
 package com.agenthub.infrastructure.rag;
 
+import com.agenthub.application.command.RagCommand;
 import com.agenthub.application.command.RetrievalCommand;
-import com.agenthub.application.port.out.rag.*;
-import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.dto.CitationOutput;
 import com.agenthub.application.dto.RetrievalOutput;
 import com.agenthub.application.dto.RetrievalResultOutput;
+import com.agenthub.application.port.out.rag.*;
 import com.agenthub.application.port.out.repositories.KnowledgeBaseRepository;
-import com.agenthub.domain.model.RetrievalResult;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.RetrievalChunk;
-import com.agenthub.application.command.RagCommand;
+import com.agenthub.domain.model.RetrievalResult;
 import com.agenthub.domain.model.RetrievalStrategy;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -42,7 +42,10 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
     public List<RetrievalChunk> retrieve(RagCommand query) {
         List<RetrievalChunk> allChunks = new ArrayList<>();
         for (String kbId : query.getKbIds()) {
-            retrieveFromKnowledgeBase(kbId, query, allChunks);
+            List<RetrievalChunk> retrievalChunks = retrieveFromKnowledgeBase(kbId, query);
+            if (!retrievalChunks.isEmpty()) {
+                allChunks.addAll(retrievalChunks);
+            }
         }
         return sortAndLimit(allChunks, query.getStrategy().getTopK());
     }
@@ -50,27 +53,29 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
     /**
      * 从单个知识库检索并添加结果。
      */
-    private void retrieveFromKnowledgeBase(String kbId, RagCommand query, List<RetrievalChunk> allChunks) {
+    private List<RetrievalChunk> retrieveFromKnowledgeBase(String kbId, RagCommand query) {
         try {
             RetrievalStrategy strategy = query.getStrategy();
             RetrievalCommand retrievalCommand = new RetrievalCommand(kbId, query.getPrompt(), strategy.getTopK(), strategy.getScoreThreshold(),
                     strategy.isEnableQueryRewrite(), strategy.isEnableVectorSearch(), strategy.isEnableTextSearch(),
                     strategy.isEnableRerank(), strategy.getRerankModel(), strategy.getVectorWeight(), strategy.getKeywordWeight());
             RetrievalOutput result = retrieve(retrievalCommand);
-            addChunksToResult(allChunks, result, kbId);
+            return addChunksToResult(result, kbId);
         } catch (NotFoundException e) {
             log.warn("Knowledge base not found during retrieval: {}, skipping", kbId);
         } catch (Exception e) {
             log.error("Retrieval failed for knowledge base {}: {}", kbId, e.getMessage(), e);
         }
+        return new ArrayList<>();
     }
 
     /**
      * 添加检索结果到块列表。
      */
-    private void addChunksToResult(List<RetrievalChunk> allChunks, RetrievalOutput result, String kbId) {
+    private List<RetrievalChunk> addChunksToResult(RetrievalOutput result, String kbId) {
+        List<RetrievalChunk> chunks = new ArrayList<>();
         for (RetrievalResultOutput item : result.getResults()) {
-            allChunks.add(new RetrievalChunk(
+            chunks.add(new RetrievalChunk(
                     item.getContent(),
                     item.getDocumentId(),
                     item.getDocumentId(),
@@ -79,6 +84,7 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
                     kbId
             ));
         }
+        return chunks;
     }
 
     /**
