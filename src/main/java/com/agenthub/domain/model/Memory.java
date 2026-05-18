@@ -1,5 +1,7 @@
 package com.agenthub.domain.model;
 
+import com.agenthub.domain.enums.MemoryType;
+
 import java.time.Instant;
 
 import static com.agenthub.common.utils.RandomUtils.randomId;

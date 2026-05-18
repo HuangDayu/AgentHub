@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
-import com.agenthub.domain.model.AgentTeamType;
+import com.agenthub.domain.enums.AgentTeamType;
 import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.infrastructure.agents.AbstractTeamAgent;
 import com.agenthub.infrastructure.agents.TeamAgentFactory;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.agenthub.domain.model.AgentTeamType.*;
+import static com.agenthub.domain.enums.AgentTeamType.*;
 
 /**
  * @author huangdayu

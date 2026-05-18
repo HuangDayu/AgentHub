@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
-import com.agenthub.domain.model.AgentLifecycleState;
+import com.agenthub.domain.enums.AgentLifecycleState;
 import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.infrastructure.agents.AbstractReActAgent;
 import com.agenthub.infrastructure.agents.AbstractTeamAgent;

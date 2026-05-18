@@ -6,9 +6,8 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.time.Instant;
 
-import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
-import static com.agenthub.domain.model.AgentConfigType.HTTP_TOOL;
-import static com.agenthub.domain.model.AgentConfigType.SKILL_TOOL;
+import static com.agenthub.domain.enums.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.enums.AgentConfigType.SKILL_TOOL;
 
 @Data
 @TableName("skill")

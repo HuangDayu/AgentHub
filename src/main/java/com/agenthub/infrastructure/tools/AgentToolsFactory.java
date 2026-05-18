@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.tools;
 
 import com.agenthub.domain.model.AgentToolInfo;
-import com.agenthub.domain.model.AgentToolType;
+import com.agenthub.domain.enums.AgentToolType;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.ToolCallback;

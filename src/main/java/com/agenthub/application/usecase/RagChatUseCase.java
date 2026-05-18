@@ -6,6 +6,7 @@ import com.agenthub.application.dto.MessageOutput;
 import com.agenthub.application.dto.ValidationOutput;
 import com.agenthub.application.port.out.rag.RetrievalAugmentedGenerationPort;
 import com.agenthub.application.port.out.repositories.*;
+import com.agenthub.domain.enums.AgentConfigCategory;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.*;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.utils.RandomUtils.randomId;
-import static com.agenthub.domain.model.AgentConfigCategory.KNOWLEDGE;
-import static com.agenthub.domain.model.AgentConfigCategory.STRATEGY;
-import static com.agenthub.domain.model.AgentConfigType.*;
+import static com.agenthub.domain.enums.AgentConfigCategory.KNOWLEDGE;
+import static com.agenthub.domain.enums.AgentConfigCategory.STRATEGY;
+import static com.agenthub.domain.enums.AgentConfigType.*;
 
 
 @Component

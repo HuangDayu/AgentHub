@@ -1,7 +1,7 @@
 package com.agenthub.application.service;
 
 import com.agenthub.application.command.EtlCommand;
-import com.agenthub.application.dto.IngestionPipelineError;
+import com.agenthub.domain.exception.IngestionPipelineException;
 import com.agenthub.application.port.out.DocumentFileStoragePort;
 import com.agenthub.application.port.out.etl.ExtractTransformLoadPort;
 import com.agenthub.application.port.out.repositories.IngestionDocumentChunkRepository;
@@ -11,7 +11,7 @@ import com.agenthub.domain.exception.JobNotFoundException;
 import com.agenthub.domain.model.DocumentChunk;
 import com.agenthub.domain.model.IngestionDocument;
 import com.agenthub.domain.model.IngestionJob;
-import com.agenthub.domain.model.JobPhase;
+import com.agenthub.domain.enums.JobPhase;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -131,7 +131,7 @@ public class IngestionPipelineService {
         try (InputStream content = documentStorage.retrieve(document.getStoragePath())) {
             return extractTransformLoadPort.etl(new EtlCommand(job.getKbId(), document.getId(), content, document.getContentType(), document.getFileName()));
         } catch (Exception e) {
-            throw new IngestionPipelineError(
+            throw new IngestionPipelineException(
                     "Failed to parse document: " + document.getId(), e);
         }
     }
@@ -182,7 +182,7 @@ public class IngestionPipelineService {
             return jobRepository.save(job.markFailed(ex.getMessage().substring(0, Math.min(ex.getMessage().length(), 222))));
         } catch (Exception persistEx) {
             log.error("Job [{}]: failed to persist failure status", jobId, persistEx);
-            throw new IngestionPipelineError("Pipeline failed for job: " + jobId, ex);
+            throw new IngestionPipelineException("Pipeline failed for job: " + jobId, ex);
         }
     }
 

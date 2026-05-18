@@ -1,4 +1,4 @@
-package com.agenthub.domain.model;
+package com.agenthub.domain.enums;
 
 /**
  * Agent生命周期状态枚举

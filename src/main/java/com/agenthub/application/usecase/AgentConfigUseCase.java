@@ -8,6 +8,8 @@ import com.agenthub.application.port.out.repositories.McpToolRepository;
 import com.agenthub.application.port.out.repositories.SystemToolsRepository;
 import com.agenthub.application.port.out.tools.SkillToolScannerPort;
 import com.agenthub.application.port.out.tools.SystemToolScannerPort;
+import com.agenthub.domain.enums.AgentConfigCategory;
+import com.agenthub.domain.enums.AgentConfigType;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.*;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +19,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
-import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
-import static com.agenthub.domain.model.AgentConfigType.*;
+import static com.agenthub.domain.enums.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.enums.AgentConfigType.*;
 
 @Component
 @RequiredArgsConstructor

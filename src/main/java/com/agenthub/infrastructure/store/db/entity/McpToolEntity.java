@@ -6,8 +6,8 @@ import lombok.Data;
 
 import java.time.Instant;
 
-import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
-import static com.agenthub.domain.model.AgentConfigType.MCP_TOOL;
+import static com.agenthub.domain.enums.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.enums.AgentConfigType.MCP_TOOL;
 
 @Data
 @TableName(value = "mcp_tool", autoResultMap = true)

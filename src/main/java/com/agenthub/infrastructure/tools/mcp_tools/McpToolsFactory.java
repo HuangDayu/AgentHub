@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.agenthub.domain.model.AgentToolType.MCP_TOOL;
+import static com.agenthub.domain.enums.AgentToolType.MCP_TOOL;
 
 /**
  * MCP工具工厂，负责提供MCP工具的ToolCallback。

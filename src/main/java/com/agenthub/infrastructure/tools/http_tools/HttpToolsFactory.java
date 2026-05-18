@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.agenthub.domain.model.AgentToolType.HTTP_TOOL;
+import static com.agenthub.domain.enums.AgentToolType.HTTP_TOOL;
 
 /**
  * HTTP工具工厂，负责提供HTTP工具的ToolCallback。

@@ -6,9 +6,8 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.time.Instant;
 
-import static com.agenthub.domain.model.AgentConfigCategory.STRATEGY;
-import static com.agenthub.domain.model.AgentConfigType.GUARDRAIL_STRATEGY;
-import static com.agenthub.domain.model.AgentConfigType.MODEL_STRATEGY;
+import static com.agenthub.domain.enums.AgentConfigCategory.STRATEGY;
+import static com.agenthub.domain.enums.AgentConfigType.MODEL_STRATEGY;
 
 @Data
 @TableName("model_policy")

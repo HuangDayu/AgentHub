@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.agents;
 
-import com.agenthub.domain.model.AgentLifecycleState;
+import com.agenthub.domain.enums.AgentLifecycleState;
 import com.agenthub.domain.model.ReActAgentContext;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;

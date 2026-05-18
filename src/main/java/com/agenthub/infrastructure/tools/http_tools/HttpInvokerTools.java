@@ -5,7 +5,7 @@ import com.agenthub.application.port.out.HttpToolInvoker;
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
 import com.agenthub.domain.model.HttpTool;
 import com.agenthub.domain.exception.ToolNotFoundException;
-import com.agenthub.domain.model.HttpToolInvocationResult;
+import com.agenthub.domain.model.HttpToolInvokeResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -65,7 +65,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
 
 
     @Override
-    public HttpToolInvocationResult invoke(String toolId, InvokeToolCommand command) {
+    public HttpToolInvokeResult invoke(String toolId, InvokeToolCommand command) {
         HttpTool httpTool = requireTool(toolId);
         Map<java.lang.String, Object> payload = command.getPayload() == null ? Map.of() : command.getPayload();
         return invoke(httpTool, payload);
@@ -79,7 +79,7 @@ public class HttpInvokerTools implements HttpToolInvoker {
      * 调用外部工具。
      */
     @Override
-    public HttpToolInvocationResult invoke(HttpTool httpTool, Map<java.lang.String, Object> payload) {
+    public HttpToolInvokeResult invoke(HttpTool httpTool, Map<java.lang.String, Object> payload) {
         log.info("调用外部工具: toolId={}, endpoint={}, method={}", httpTool.getId(), httpTool.getEndpoint(), httpTool.getHttpMethod());
         try { return doInvoke(httpTool, payload); } catch (HttpClientErrorException e) { return handleClientError(httpTool, e);
         } catch (HttpServerErrorException e) { return handleServerError(httpTool, e);
@@ -90,48 +90,48 @@ public class HttpInvokerTools implements HttpToolInvoker {
     /**
      * 执行调用逻辑。
      */
-    private HttpToolInvocationResult doInvoke(HttpTool httpTool, Map<java.lang.String, Object> payload) {
+    private HttpToolInvokeResult doInvoke(HttpTool httpTool, Map<java.lang.String, Object> payload) {
         Map<java.lang.String, Object> filteredPayload = validateAndFilter(httpTool, payload);
         String resolvedUrl = resolveUrlVariables(httpTool.getEndpoint(), filteredPayload);
         ResponseEntity<java.lang.String> response = retryTemplate.execute(
                 context -> doHttpRequest(resolvedUrl, httpTool.getHttpMethod(), filteredPayload)
         );
         log.info("外部工具调用成功: toolId={}, status={}", httpTool.getId(), response.getStatusCode());
-        return new HttpToolInvocationResult(httpTool.getId(), "SUCCESS", parseResponse(response.getBody()));
+        return new HttpToolInvokeResult(httpTool.getId(), "SUCCESS", parseResponse(response.getBody()));
     }
 
     /**
      * 处理客户端错误。
      */
-    private HttpToolInvocationResult handleClientError(HttpTool httpTool, HttpClientErrorException e) {
+    private HttpToolInvokeResult handleClientError(HttpTool httpTool, HttpClientErrorException e) {
         log.warn("外部工具返回客户端错误: toolId={}, status={}", httpTool.getId(), e.getStatusCode());
-        return new HttpToolInvocationResult(httpTool.getId(), "FAILURE",
+        return new HttpToolInvokeResult(httpTool.getId(), "FAILURE",
                 Map.of("error", "CLIENT_ERROR:" + e.getStatusCode() + ":" + e.getResponseBodyAsString()));
     }
 
     /**
      * 处理服务端错误。
      */
-    private HttpToolInvocationResult handleServerError(HttpTool httpTool, HttpServerErrorException e) {
+    private HttpToolInvokeResult handleServerError(HttpTool httpTool, HttpServerErrorException e) {
         log.error("外部工具返回服务端错误: toolId={}, status={}", httpTool.getId(), e.getStatusCode());
-        return new HttpToolInvocationResult(httpTool.getId(), "FAILURE",
+        return new HttpToolInvokeResult(httpTool.getId(), "FAILURE",
                 Map.of("error", "SERVER_ERROR:" + e.getStatusCode() + ":" + e.getResponseBodyAsString()));
     }
 
     /**
      * 处理超时错误。
      */
-    private HttpToolInvocationResult handleTimeout(HttpTool httpTool, ResourceAccessException e) {
+    private HttpToolInvokeResult handleTimeout(HttpTool httpTool, ResourceAccessException e) {
         log.error("外部工具连接超时: toolId={}", httpTool.getId(), e);
-        return new HttpToolInvocationResult(httpTool.getId(), "FAILURE", Map.of("error", "TIMEOUT:" + e.getMessage()));
+        return new HttpToolInvokeResult(httpTool.getId(), "FAILURE", Map.of("error", "TIMEOUT:" + e.getMessage()));
     }
 
     /**
      * 处理一般错误。
      */
-    private HttpToolInvocationResult handleGeneralError(HttpTool httpTool, Exception e) {
+    private HttpToolInvokeResult handleGeneralError(HttpTool httpTool, Exception e) {
         log.error("外部工具调用异常: toolId={}", httpTool.getId(), e);
-        return new HttpToolInvocationResult(httpTool.getId(), "FAILURE", Map.of("error", "ERROR:" + e.getMessage()));
+        return new HttpToolInvokeResult(httpTool.getId(), "FAILURE", Map.of("error", "ERROR:" + e.getMessage()));
     }
 
     /**

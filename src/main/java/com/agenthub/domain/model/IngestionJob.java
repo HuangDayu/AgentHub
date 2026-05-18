@@ -1,5 +1,7 @@
 package com.agenthub.domain.model;
 
+import com.agenthub.domain.enums.JobStatus;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;

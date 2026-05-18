@@ -15,8 +15,8 @@ import reactor.core.publisher.Flux;
 
 import java.util.List;
 
-import static com.agenthub.domain.model.AgentConfigCategory.MODEL;
-import static com.agenthub.domain.model.AgentConfigType.CHAT_MODEL;
+import static com.agenthub.domain.enums.AgentConfigCategory.MODEL;
+import static com.agenthub.domain.enums.AgentConfigType.CHAT_MODEL;
 
 /**
  * @author huangdayu

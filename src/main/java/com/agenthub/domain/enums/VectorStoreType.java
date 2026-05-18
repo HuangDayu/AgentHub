@@ -1,4 +1,4 @@
-package com.agenthub.domain.model;
+package com.agenthub.domain.enums;
 
 /**
  * 向量数据库供应商类型枚举。

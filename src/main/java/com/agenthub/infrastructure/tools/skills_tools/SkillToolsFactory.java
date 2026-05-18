@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.agenthub.domain.model.AgentToolType.SKILL_TOOL;
+import static com.agenthub.domain.enums.AgentToolType.SKILL_TOOL;
 
 /**
  * @author huangdayu

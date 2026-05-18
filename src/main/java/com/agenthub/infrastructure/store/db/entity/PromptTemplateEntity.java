@@ -6,8 +6,8 @@ import lombok.Data;
 
 import java.time.Instant;
 
-import static com.agenthub.domain.model.AgentConfigCategory.PROMPT;
-import static com.agenthub.domain.model.AgentConfigType.SYSTEM_PROMPT;
+import static com.agenthub.domain.enums.AgentConfigCategory.PROMPT;
+import static com.agenthub.domain.enums.AgentConfigType.SYSTEM_PROMPT;
 
 @Data
 @TableName(value = "prompt_template")

@@ -1,4 +1,4 @@
-package com.agenthub.domain.model;
+package com.agenthub.domain.enums;
 
 /**
  * 租户套餐等级枚举。

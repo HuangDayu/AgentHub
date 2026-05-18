@@ -9,9 +9,9 @@ import com.agenthub.application.port.out.IdempotencyCachePort;
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
 import com.agenthub.domain.exception.ToolNotFoundException;
 import com.agenthub.domain.model.HttpTool;
-import com.agenthub.domain.model.HttpToolInvocationResult;
-import com.agenthub.domain.model.HttpToolInvokeView;
-import com.agenthub.domain.model.HttpToolView;
+import com.agenthub.domain.model.HttpToolInvokeResult;
+import com.agenthub.application.dto.HttpToolInvokeOutput;
+import com.agenthub.application.dto.HttpToolOutput;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -30,21 +30,21 @@ public class HttpToolsUseCase {
     private final IdempotencyCachePort idempotencyCache;
     private final ObjectMapper objectMapper;
 
-    public List<HttpToolView> listTools() {
+    public List<HttpToolOutput> listTools() {
         return repository.findAll().stream().map(this::toView).toList();
     }
 
-    public HttpToolView createTool(CreateHttpToolCommand command) {
+    public HttpToolOutput createTool(CreateHttpToolCommand command) {
         HttpTool httpTool = BeanUtil.copyProperties(command, HttpTool.class);
         HttpTool saved = repository.save(httpTool);
         return toView(saved);
     }
 
-    public HttpToolView getTool(String toolId) {
+    public HttpToolOutput getTool(String toolId) {
         return toView(requireTool(toolId));
     }
 
-    public HttpToolView updateTool(String toolId, UpdateToolCommand command) {
+    public HttpToolOutput updateTool(String toolId, UpdateToolCommand command) {
         HttpTool existing = requireTool(toolId);
         if (command.getName() != null) existing.setName(command.getName());
         if (command.getDescription() != null) existing.setDescription(command.getDescription());
@@ -54,7 +54,7 @@ public class HttpToolsUseCase {
         return toView(saved);
     }
 
-    public HttpToolInvokeView invokeTool(String toolId, InvokeToolCommand command) {
+    public HttpToolInvokeOutput invokeTool(String toolId, InvokeToolCommand command) {
         String idempotencyKey = command.getIdempotencyKey();
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
             return invokeWithIdempotency(toolId, command, idempotencyKey);
@@ -62,27 +62,27 @@ public class HttpToolsUseCase {
         return doInvoke(toolId, command);
     }
 
-    private HttpToolInvokeView invokeWithIdempotency(String toolId, InvokeToolCommand command, String key) {
+    private HttpToolInvokeOutput invokeWithIdempotency(String toolId, InvokeToolCommand command, String key) {
         return idempotencyCache.getCachedResult(key)
                 .map(this::parseCachedResult)
                 .orElseGet(() -> executeAndCache(toolId, command, key));
     }
 
-    private HttpToolInvokeView parseCachedResult(String cached) {
+    private HttpToolInvokeOutput parseCachedResult(String cached) {
         try {
-            return objectMapper.readValue(cached, HttpToolInvokeView.class);
+            return objectMapper.readValue(cached, HttpToolInvokeOutput.class);
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse cached result", e);
         }
     }
 
-    private HttpToolInvokeView executeAndCache(String toolId, InvokeToolCommand command, String key) {
-        HttpToolInvokeView result = doInvoke(toolId, command);
+    private HttpToolInvokeOutput executeAndCache(String toolId, InvokeToolCommand command, String key) {
+        HttpToolInvokeOutput result = doInvoke(toolId, command);
         cacheResult(key, result);
         return result;
     }
 
-    private void cacheResult(String key, HttpToolInvokeView result) {
+    private void cacheResult(String key, HttpToolInvokeOutput result) {
         try {
             String json = objectMapper.writeValueAsString(result);
             idempotencyCache.cacheResult(key, json, IDEMPOTENCY_TTL_SECONDS);
@@ -90,16 +90,16 @@ public class HttpToolsUseCase {
         }
     }
 
-    private HttpToolInvokeView doInvoke(String toolId, InvokeToolCommand command) {
-        HttpToolInvocationResult result = httpToolInvoker.invoke(toolId, command);
-        return BeanUtil.copyProperties(result, HttpToolInvokeView.class);
+    private HttpToolInvokeOutput doInvoke(String toolId, InvokeToolCommand command) {
+        HttpToolInvokeResult result = httpToolInvoker.invoke(toolId, command);
+        return BeanUtil.copyProperties(result, HttpToolInvokeOutput.class);
     }
 
     private HttpTool requireTool(String toolId) {
         return repository.findById(toolId).orElseThrow(() -> new ToolNotFoundException(toolId));
     }
 
-    private HttpToolView toView(HttpTool httpTool) {
-        return BeanUtil.copyProperties(httpTool, HttpToolView.class);
+    private HttpToolOutput toView(HttpTool httpTool) {
+        return BeanUtil.copyProperties(httpTool, HttpToolOutput.class);
     }
 }

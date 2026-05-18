@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.agents.alibaba;
 
 import com.agenthub.common.utils.TtlUtils;
 import com.agenthub.domain.model.AgentToolInfo;
-import com.agenthub.domain.model.AgentToolType;
+import com.agenthub.domain.enums.AgentToolType;
 import com.agenthub.domain.model.ModelStrategy;
 import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.infrastructure.agents.AbstractReActAgent;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
 import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
-import static com.agenthub.domain.model.AgentToolType.*;
+import static com.agenthub.domain.enums.AgentToolType.*;
 
 /**
  * Agent运行时工厂，根据配置创建AgentRuntime。

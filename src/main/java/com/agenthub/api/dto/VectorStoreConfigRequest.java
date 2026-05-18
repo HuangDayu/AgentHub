@@ -1,6 +1,6 @@
 package com.agenthub.api.dto;
 
-import com.agenthub.domain.model.VectorStoreType;
+import com.agenthub.domain.enums.VectorStoreType;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

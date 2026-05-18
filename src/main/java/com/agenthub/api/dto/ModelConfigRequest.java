@@ -1,7 +1,7 @@
 package com.agenthub.api.dto;
 
-import com.agenthub.domain.model.ModelSupplier;
-import com.agenthub.domain.model.ModelType;
+import com.agenthub.domain.enums.ModelSupplier;
+import com.agenthub.domain.enums.ModelType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 

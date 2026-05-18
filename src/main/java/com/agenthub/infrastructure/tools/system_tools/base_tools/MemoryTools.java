@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.tools.system_tools.base_tools;
 
 import com.agenthub.application.port.out.repositories.MemoryRepository;
 import com.agenthub.domain.model.Memory;
-import com.agenthub.domain.model.MemoryType;
+import com.agenthub.domain.enums.MemoryType;
 import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import lombok.RequiredArgsConstructor;

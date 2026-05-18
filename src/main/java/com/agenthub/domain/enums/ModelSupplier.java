@@ -1,4 +1,4 @@
-package com.agenthub.domain.model;
+package com.agenthub.domain.enums;
 
 /**
  * 模型供应商枚举，支持 OpenAI、Ollama、OpenRouter、DeepSeek。

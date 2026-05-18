@@ -1,7 +1,7 @@
 package com.agenthub.application.port.out.repositories;
 
 import com.agenthub.domain.model.ModelConfig;
-import com.agenthub.domain.model.ModelType;
+import com.agenthub.domain.enums.ModelType;
 
 import java.util.List;
 import java.util.Optional;

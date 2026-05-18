@@ -6,8 +6,8 @@ import lombok.Data;
 
 import java.time.Instant;
 
-import static com.agenthub.domain.model.AgentConfigCategory.KNOWLEDGE;
-import static com.agenthub.domain.model.AgentConfigType.KNOWLEDGE_BASE;
+import static com.agenthub.domain.enums.AgentConfigCategory.KNOWLEDGE;
+import static com.agenthub.domain.enums.AgentConfigType.KNOWLEDGE_BASE;
 
 /**
  * 知识库数据库实体。

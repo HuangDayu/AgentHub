@@ -34,8 +34,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static com.agenthub.domain.model.AgentConfigCategory.MODEL;
-import static com.agenthub.domain.model.AgentConfigType.CHAT_MODEL;
+import static com.agenthub.domain.enums.AgentConfigCategory.MODEL;
+import static com.agenthub.domain.enums.AgentConfigType.CHAT_MODEL;
 import static com.agenthub.infrastructure.rag.RagPromptTemplate.*;
 
 /**

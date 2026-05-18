@@ -8,8 +8,8 @@ import lombok.Data;
 
 import java.time.Instant;
 
-import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
-import static com.agenthub.domain.model.AgentConfigType.HTTP_TOOL;
+import static com.agenthub.domain.enums.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.enums.AgentConfigType.HTTP_TOOL;
 
 /**
  * 工具注册表 MyBatis 实体。

@@ -1,4 +1,4 @@
-package com.agenthub.domain.model;
+package com.agenthub.domain.enums;
 
 /**
  * 模型类型枚举，标识模型的用途。

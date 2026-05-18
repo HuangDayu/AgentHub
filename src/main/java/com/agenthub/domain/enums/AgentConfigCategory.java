@@ -1,8 +1,8 @@
-package com.agenthub.domain.model;
+package com.agenthub.domain.enums;
 
 import lombok.Getter;
 
-import static com.agenthub.domain.model.AgentConfigType.*;
+import static com.agenthub.domain.enums.AgentConfigType.*;
 
 /**
  * @author huangdayu

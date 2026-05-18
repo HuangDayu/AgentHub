@@ -1,7 +1,7 @@
 package com.agenthub.common.annotations;
 
-import com.agenthub.domain.model.AgentConfigCategory;
-import com.agenthub.domain.model.AgentConfigType;
+import com.agenthub.domain.enums.AgentConfigCategory;
+import com.agenthub.domain.enums.AgentConfigType;
 
 import java.lang.annotation.*;
 

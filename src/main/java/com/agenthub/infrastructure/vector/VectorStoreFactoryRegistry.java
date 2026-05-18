@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.vector;
 
-import com.agenthub.domain.model.VectorStoreType;
+import com.agenthub.domain.enums.VectorStoreType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

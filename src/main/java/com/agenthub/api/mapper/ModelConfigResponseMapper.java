@@ -3,8 +3,8 @@ package com.agenthub.api.mapper;
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.ModelConfigResponse;
 import com.agenthub.domain.model.ModelConfig;
-import com.agenthub.domain.model.ModelSupplier;
-import com.agenthub.domain.model.ModelType;
+import com.agenthub.domain.enums.ModelSupplier;
+import com.agenthub.domain.enums.ModelType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

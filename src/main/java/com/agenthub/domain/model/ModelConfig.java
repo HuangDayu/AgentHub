@@ -1,5 +1,7 @@
 package com.agenthub.domain.model;
 
+import com.agenthub.domain.enums.ModelSupplier;
+import com.agenthub.domain.enums.ModelType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

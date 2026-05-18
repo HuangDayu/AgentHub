@@ -4,7 +4,7 @@ import com.agenthub.application.dto.ModelTestOutput;
 import com.agenthub.application.port.out.ModelPoolManagerPort;
 import com.agenthub.domain.model.ModelConfig;
 import com.agenthub.application.port.out.repositories.ModelConfigRepository;
-import com.agenthub.domain.model.ModelType;
+import com.agenthub.domain.enums.ModelType;
 import com.agenthub.infrastructure.model.ModelFactoryRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

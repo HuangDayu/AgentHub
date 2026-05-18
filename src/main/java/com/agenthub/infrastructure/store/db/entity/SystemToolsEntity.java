@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.time.Instant;
 
-import static com.agenthub.domain.model.AgentConfigCategory.TOOL;
-import static com.agenthub.domain.model.AgentConfigType.SYSTEM_TOOL;
+import static com.agenthub.domain.enums.AgentConfigCategory.TOOL;
+import static com.agenthub.domain.enums.AgentConfigType.SYSTEM_TOOL;
 
 @Data
 @TableName("system_tools")

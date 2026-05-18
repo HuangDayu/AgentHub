@@ -6,8 +6,8 @@ import lombok.Data;
 
 import java.time.Instant;
 
-import static com.agenthub.domain.model.AgentConfigCategory.MODEL;
-import static com.agenthub.domain.model.AgentConfigType.ALL_TYPE;
+import static com.agenthub.domain.enums.AgentConfigCategory.MODEL;
+import static com.agenthub.domain.enums.AgentConfigType.ALL_TYPE;
 
 /**
  * 模型配置持久化对象（PO），映射 model_config 表。

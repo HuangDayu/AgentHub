@@ -2,7 +2,7 @@ package com.agenthub.application.port.out;
 
 import com.agenthub.application.command.InvokeToolCommand;
 import com.agenthub.domain.model.HttpTool;
-import com.agenthub.domain.model.HttpToolInvocationResult;
+import com.agenthub.domain.model.HttpToolInvokeResult;
 
 import java.util.Map;
 
@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public interface HttpToolInvoker {
 
-    HttpToolInvocationResult invoke(String toolId, InvokeToolCommand command);
+    HttpToolInvokeResult invoke(String toolId, InvokeToolCommand command);
 
     /**
      * 调用工具执行。
@@ -22,5 +22,5 @@ public interface HttpToolInvoker {
      * @param payload 调用参数
      * @return 工具调用结果
      */
-    HttpToolInvocationResult invoke(HttpTool httpTool, Map<String, Object> payload);
+    HttpToolInvokeResult invoke(HttpTool httpTool, Map<String, Object> payload);
 }

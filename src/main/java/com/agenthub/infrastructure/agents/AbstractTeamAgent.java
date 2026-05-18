@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.agents;
 
-import com.agenthub.domain.model.AgentTeamType;
+import com.agenthub.domain.enums.AgentTeamType;
 import com.agenthub.domain.model.ReActAgentContext;
 import org.springframework.ai.chat.messages.Message;
 import reactor.core.publisher.Flux;

@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.etl;
 
 import com.agenthub.application.command.EtlCommand;
-import com.agenthub.application.dto.IngestionPipelineError;
+import com.agenthub.domain.exception.IngestionPipelineException;
 import com.agenthub.application.port.out.etl.*;
 import com.agenthub.domain.model.DocumentChunk;
 import com.agenthub.domain.model.DocumentContent;
@@ -63,7 +63,7 @@ public class EtlCustomizePipelineAdapter implements ExtractTransformLoadPort {
         try (InputStream content = etlCommand.getInputStream()) {
             return documentParser.parse(etlCommand.getDocumentId(), content, etlCommand.getContentType(), etlCommand.getFileName());
         } catch (Exception e) {
-            throw new IngestionPipelineError("Failed to parse document: " + etlCommand.getDocumentId(), e);
+            throw new IngestionPipelineException("Failed to parse document: " + etlCommand.getDocumentId(), e);
         }
     }
 }

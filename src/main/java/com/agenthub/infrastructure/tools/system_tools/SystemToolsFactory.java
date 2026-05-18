@@ -3,7 +3,7 @@ package com.agenthub.infrastructure.tools.system_tools;
 import com.agenthub.application.port.out.repositories.SystemToolsRepository;
 import com.agenthub.application.port.out.tools.SystemToolScannerPort;
 import com.agenthub.domain.model.AgentToolInfo;
-import com.agenthub.domain.model.AgentToolType;
+import com.agenthub.domain.enums.AgentToolType;
 import com.agenthub.domain.model.SystemTool;
 import com.agenthub.infrastructure.tools.AbstractToolsFactory;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
