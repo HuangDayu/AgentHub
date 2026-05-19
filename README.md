@@ -1,10 +1,10 @@
-# AgentHub
-
 <div align="center">
 
-**企业级 AI Agent 全生命周期管理平台**
+<h1 align="center">AgentHub</h1>
 
-一站式管理 AI Agent 和 Agent Team 的创建、配置、运行、监控与协作
+<h3 align="center">企业级 AI Agent 全生命周期管理平台</h3>
+
+<h5 align="center">一站式管理 AI Agent 和 Agent Team 的创建、配置、运行、监控与协作</h5>
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0--M2-brightgreen)](https://spring.io/projects/spring-boot)
 [![Spring AI](https://img.shields.io/badge/Spring%20AI-2.0.0--M4-blue)](https://spring.io/projects/spring-ai)
@@ -12,6 +12,7 @@
 [![Vue](https://img.shields.io/badge/Vue-3.5-brightgreen)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build](https://img.shields.io/badge/build-Gradle-blue)](https://gradle.org/)
+
 
 </div>
 
@@ -30,7 +31,7 @@
 
 ## 项目简介
 
-AgentHub 是一个基于**整洁架构（Clean Architecture）**和 **TDD（测试驱动开发）** 流程构建的企业级 AI Agent 管理平台。它提供了完整的 AI Agent 生命周期管理能力，涵盖了从单个 Agent 的创建配置到多 Agent 团队协作的全场景需求。
+AgentHub 是一个基于 **整洁架构（Clean Architecture）** 和 **TDD（测试驱动开发）** 流程构建的企业级 AI Agent 管理平台。它提供了完整的 AI Agent 生命周期管理能力，涵盖了从单个 Agent 的创建配置到多 Agent 团队协作的全场景需求。
 
 平台集成了 **RAG 检索增强生成**、**多向量数据库**、**MCP 工具协议**、**工作流编排**等前沿技术，致力于为企业提供开箱即用的 AI Agent 基础设施。
 

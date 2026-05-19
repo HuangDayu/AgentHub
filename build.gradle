@@ -94,6 +94,7 @@ dependencies {
     implementation 'cn.hutool:hutool-core'
     implementation 'com.alibaba:transmittable-thread-local:2.14.4'
     implementation "jakarta.servlet:jakarta.servlet-api"
+    implementation 'org.aspectj:aspectjweaver:1.9.22.1'
     implementation 'org.jsoup:jsoup:1.17.2'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.springframework.security:spring-security-crypto:6.4.4'
@@ -102,6 +103,8 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     implementation 'org.reflections:reflections:0.10.2'
     implementation 'org.slf4j:slf4j-api'
+    implementation 'org.jgrapht:jgrapht-core:1.5.2'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
     compileOnly "org.projectlombok:lombok:1.18.46"
     annotationProcessor "org.projectlombok:lombok:1.18.46"
 
@@ -113,6 +116,7 @@ dependencies {
     testImplementation 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-test-autoconfigure'
+    testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
     testImplementation "com.tngtech.archunit:archunit-junit5:${archUnitVersion}"
 }
