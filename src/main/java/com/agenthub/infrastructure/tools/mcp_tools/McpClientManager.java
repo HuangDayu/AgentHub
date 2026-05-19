@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.tools.mcp_tools;
 
-import com.agenthub.domain.model.McpTool;
+import com.agenthub.domain.model.tools.McpTool;
 import io.modelcontextprotocol.client.McpAsyncClient;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;

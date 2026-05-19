@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.agent;
 
-import com.agenthub.domain.model.AgentMessage;
+import com.agenthub.domain.model.agent.AgentMessage;
 import reactor.core.publisher.Flux;
 
 /**

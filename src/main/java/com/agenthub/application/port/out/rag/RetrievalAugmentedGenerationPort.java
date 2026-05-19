@@ -1,7 +1,8 @@
 package com.agenthub.application.port.out.rag;
 
 import com.agenthub.application.command.RagCommand;
-import com.agenthub.domain.model.RetrievalChunk;
+import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.rag.RetrievalChunk;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -16,7 +17,7 @@ public interface RetrievalAugmentedGenerationPort {
 
     List<RetrievalChunk> ragRetrieve(RagCommand ragCommand);
 
-    String ragChat(RagCommand ragCommand);
+    AgentMessage ragChat(RagCommand ragCommand);
 
-    Flux<String> ragStream(RagCommand ragCommand);
+    Flux<AgentMessage> ragStream(RagCommand ragCommand);
 }

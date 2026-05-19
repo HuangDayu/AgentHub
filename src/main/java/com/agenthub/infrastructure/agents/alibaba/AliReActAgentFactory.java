@@ -1,11 +1,11 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
 import com.agenthub.common.utils.TtlUtils;
-import com.agenthub.domain.model.AgentToolInfo;
+import com.agenthub.domain.model.agent.AgentToolInfo;
 import com.agenthub.domain.enums.AgentToolType;
-import com.agenthub.domain.model.ModelStrategy;
-import com.agenthub.domain.model.ReActAgentContext;
-import com.agenthub.domain.model.AbstractReActAgent;
+import com.agenthub.domain.model.strategy.ModelStrategy;
+import com.agenthub.domain.model.agent.ReActAgentContext;
+import com.agenthub.domain.model.agent.AbstractReActAgent;
 import com.agenthub.application.factory.ReActAgentFactory;
 import com.agenthub.infrastructure.agents.alibaba.hook.AgentHookFactory;
 import com.agenthub.infrastructure.agents.alibaba.interceptor.InterceptorFactory;

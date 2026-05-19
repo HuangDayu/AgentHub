@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.tools.http_tools;
 
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
-import com.agenthub.domain.model.AgentToolInfo;
-import com.agenthub.domain.model.HttpTool;
+import com.agenthub.domain.model.agent.AgentToolInfo;
+import com.agenthub.domain.model.tools.HttpTool;
 import com.agenthub.infrastructure.tools.AbstractToolsFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.ToolCallback;

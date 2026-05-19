@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.IngestionDocumentChunkRepository;
-import com.agenthub.domain.model.DocumentChunk;
+import com.agenthub.domain.model.etl.DocumentChunk;
 import com.agenthub.infrastructure.store.db.entity.DocumentChunkEntity;
 import com.agenthub.infrastructure.store.db.mapper.DocumentChunkMapper;
 import org.springframework.context.annotation.Primary;

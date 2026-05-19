@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.TenantRepository;
-import com.agenthub.domain.model.Tenant;
+import com.agenthub.domain.model.auth.Tenant;
 import com.agenthub.infrastructure.store.db.entity.TenantEntity;
 import com.agenthub.infrastructure.store.db.mapper.TenantMapper;
 import org.springframework.context.annotation.Primary;

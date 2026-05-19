@@ -1,7 +1,7 @@
 package com.agenthub.application.port.out.etl;
 
 import com.agenthub.application.command.EtlCommand;
-import com.agenthub.domain.model.DocumentChunk;
+import com.agenthub.domain.model.etl.DocumentChunk;
 
 import java.util.List;
 

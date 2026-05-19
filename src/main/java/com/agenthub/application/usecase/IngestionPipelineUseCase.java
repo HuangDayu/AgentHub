@@ -8,9 +8,9 @@ import com.agenthub.application.port.out.repositories.IngestionDocumentChunkRepo
 import com.agenthub.application.port.out.repositories.IngestionDocumentRepository;
 import com.agenthub.application.port.out.repositories.IngestionJobRepository;
 import com.agenthub.domain.exception.JobNotFoundException;
-import com.agenthub.domain.model.DocumentChunk;
-import com.agenthub.domain.model.IngestionDocument;
-import com.agenthub.domain.model.IngestionJob;
+import com.agenthub.domain.model.etl.DocumentChunk;
+import com.agenthub.domain.model.etl.IngestionDocument;
+import com.agenthub.domain.model.etl.IngestionJob;
 import com.agenthub.domain.enums.JobPhase;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;

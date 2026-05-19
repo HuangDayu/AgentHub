@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.agents.alibaba.tools;
 
-import com.agenthub.domain.model.ReActAgentWorkspace;
+import com.agenthub.domain.model.agent.ReActAgentWorkspace;
 import com.alibaba.cloud.ai.graph.agent.tools.GlobSearchTool;
 import com.alibaba.cloud.ai.graph.agent.tools.GrepSearchTool;
 import com.alibaba.cloud.ai.graph.agent.tools.WriteTodosTool;

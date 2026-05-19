@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.ModelStrategyRepository;
-import com.agenthub.domain.model.ModelStrategy;
+import com.agenthub.domain.model.strategy.ModelStrategy;
 import com.agenthub.infrastructure.store.db.entity.ModelStrategyEntity;
 import com.agenthub.infrastructure.store.db.mapper.ModelStrategyMybatisMapper;
 import org.springframework.stereotype.Repository;

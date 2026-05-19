@@ -1,11 +1,11 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
 import com.agenthub.domain.enums.AgentTeamType;
-import com.agenthub.domain.model.AgentMessage;
-import com.agenthub.domain.model.ReActAgentContext;
-import com.agenthub.domain.model.AbstractReActAgent;
-import com.agenthub.domain.model.AbstractTeamAgent;
-import com.agenthub.infrastructure.agents.AgentMessageMapper;
+import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.agent.ReActAgentContext;
+import com.agenthub.domain.model.agent.AbstractReActAgent;
+import com.agenthub.domain.model.agent.AbstractTeamAgent;
+import com.agenthub.infrastructure.converter.AgentMessageConverter;
 import com.alibaba.cloud.ai.graph.agent.Agent;
 import lombok.SneakyThrows;
 import reactor.core.publisher.Flux;
@@ -48,7 +48,7 @@ public class AliTeamAgent extends AbstractTeamAgent {
     @Override
     public Flux<AgentMessage> streamMessages(String userMessage) {
         return leader.streamMessages(userMessage)
-                .map(AgentMessageMapper::fromMessage);
+                .map(AgentMessageConverter::fromMessage);
     }
 
     @Override

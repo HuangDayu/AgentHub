@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.DocumentChunk;
+import com.agenthub.domain.model.etl.DocumentChunk;
 
 import java.util.List;
 

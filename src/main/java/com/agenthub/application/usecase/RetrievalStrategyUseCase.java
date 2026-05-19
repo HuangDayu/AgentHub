@@ -5,7 +5,7 @@ import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.command.CreateRetrievalStrategyCommand;
 import com.agenthub.application.command.UpdateRetrievalStrategyCommand;
 import com.agenthub.application.port.out.repositories.RetrievalStrategyRepository;
-import com.agenthub.domain.model.RetrievalStrategy;
+import com.agenthub.domain.model.strategy.RetrievalStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

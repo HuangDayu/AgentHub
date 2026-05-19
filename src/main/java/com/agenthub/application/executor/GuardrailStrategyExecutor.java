@@ -1,7 +1,7 @@
 package com.agenthub.application.executor;
 
 import com.agenthub.application.dto.ValidationOutput;
-import com.agenthub.domain.model.GuardrailStrategy;
+import com.agenthub.domain.model.strategy.GuardrailStrategy;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

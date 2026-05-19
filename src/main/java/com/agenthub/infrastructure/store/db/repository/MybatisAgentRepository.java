@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import com.agenthub.application.port.out.repositories.AgentRepository;
-import com.agenthub.domain.model.Agent;
+import com.agenthub.domain.model.agent.Agent;
 import com.agenthub.infrastructure.store.db.entity.AgentEntity;
 import com.agenthub.infrastructure.store.db.mapper.AgentMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

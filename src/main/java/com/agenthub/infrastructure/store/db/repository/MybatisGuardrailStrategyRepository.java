@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.GuardrailStrategyRepository;
-import com.agenthub.domain.model.GuardrailStrategy;
+import com.agenthub.domain.model.strategy.GuardrailStrategy;
 import com.agenthub.infrastructure.store.db.entity.GuardrailStrategyEntity;
 import com.agenthub.infrastructure.store.db.mapper.GuardrailStrategyMybatisMapper;
 import org.springframework.stereotype.Repository;

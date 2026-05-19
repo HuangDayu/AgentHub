@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.GuardrailStrategy;
+import com.agenthub.domain.model.strategy.GuardrailStrategy;
 
 import java.util.List;
 import java.util.Optional;

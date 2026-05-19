@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.tools.skills_tools;
 
-import com.agenthub.domain.model.Skill;
+import com.agenthub.domain.model.tools.Skill;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

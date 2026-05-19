@@ -3,7 +3,7 @@ package com.agenthub.application.port.out.rag;
 import com.agenthub.application.command.RagCommand;
 import com.agenthub.application.command.RetrievalCommand;
 import com.agenthub.application.dto.RetrievalOutput;
-import com.agenthub.domain.model.RetrievalChunk;
+import com.agenthub.domain.model.rag.RetrievalChunk;
 
 import java.util.List;
 

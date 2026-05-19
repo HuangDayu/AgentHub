@@ -4,7 +4,7 @@ import com.agenthub.application.port.out.agent.AgentChatPort;
 import com.agenthub.domain.enums.workflow.NodeStatus;
 import com.agenthub.domain.enums.workflow.NodeType;
 import com.agenthub.domain.enums.workflow.WorkflowStatus;
-import com.agenthub.domain.model.AgentMessage;
+import com.agenthub.domain.model.agent.AgentMessage;
 import com.agenthub.domain.model.workflow.*;
 import com.agenthub.infrastructure.workflow.engine.DagBuilder;
 import com.agenthub.infrastructure.workflow.engine.WorkflowEngine;

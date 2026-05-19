@@ -32,8 +32,10 @@ public enum NodeType {
     /** 工具调用节点 */
     TOOL("工具调用节点"),
 
+    RETRIEVAL("检索节点"),
+
     /** 子工作流节点 */
-    SUBWORKFLOW("子工作流节点"),
+    SUB_WORKFLOW("子工作流节点"),
 
     /** 开始节点 */
     START("开始节点"),

@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.agents.alibaba.hook;
 
-import com.agenthub.domain.model.ReActAgentWorkspace;
+import com.agenthub.domain.model.agent.ReActAgentWorkspace;
 import com.alibaba.cloud.ai.graph.agent.hook.AgentHook;
 import com.alibaba.cloud.ai.graph.agent.hook.shelltool.ShellToolAgentHook;
 import com.alibaba.cloud.ai.graph.agent.hook.skills.SkillsAgentHook;

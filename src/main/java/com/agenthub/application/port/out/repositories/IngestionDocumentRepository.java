@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.IngestionDocument;
+import com.agenthub.domain.model.etl.IngestionDocument;
 
 import java.util.List;
 

@@ -5,7 +5,7 @@ import com.agenthub.application.command.CreateToolStrategyCommand;
 import com.agenthub.application.command.UpdateToolStrategyCommand;
 import com.agenthub.application.port.out.repositories.ToolStrategyRepository;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.ToolStrategy;
+import com.agenthub.domain.model.strategy.ToolStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

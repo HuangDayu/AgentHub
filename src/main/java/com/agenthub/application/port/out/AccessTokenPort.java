@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out;
 
-import com.agenthub.domain.model.AccessToken;
+import com.agenthub.domain.model.auth.AccessToken;
 
 /**
  * 访问令牌服务端口.

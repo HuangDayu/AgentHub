@@ -3,12 +3,11 @@ package com.agenthub.api.controller;
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.*;
 import com.agenthub.api.mapper.MessageResponseMapper;
-import com.agenthub.application.dto.MessageOutput;
 import com.agenthub.application.dto.SessionOutput;
 import com.agenthub.application.usecase.AgentChatUseCase;
 import com.agenthub.application.usecase.SessionUseCase;
-import com.agenthub.domain.model.AgentMessage;
-import com.agenthub.domain.model.ChatMessage;
+import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.agent.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,16 +36,6 @@ public class SessionController {
      */
     private static SessionResponse toResponse(SessionOutput output) {
         return BeanUtil.copyProperties(output, SessionResponse.class);
-    }
-
-    /**
-     * 将消息输出转换为响应DTO。
-     *
-     * @param output 消息输出DTO
-     * @return 消息响应DTO
-     */
-    private static MessageResponse toResponse(MessageOutput output) {
-        return BeanUtil.copyProperties(output, MessageResponse.class);
     }
 
     /**

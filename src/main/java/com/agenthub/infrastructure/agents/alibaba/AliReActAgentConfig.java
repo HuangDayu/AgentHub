@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
-import com.agenthub.domain.model.Agent;
+import com.agenthub.domain.model.agent.Agent;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.agent.hook.Hook;
 import com.alibaba.cloud.ai.graph.agent.interceptor.Interceptor;

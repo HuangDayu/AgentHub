@@ -11,7 +11,7 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.agenthub.application.port.out.rag.RagTextSearchPort;
-import com.agenthub.domain.model.RetrievalResult;
+import com.agenthub.domain.model.rag.RetrievalResult;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
@@ -197,7 +197,8 @@ public class RagElasticsearchTextSearchAdapter implements RagTextSearchPort {
                 null,
                 hit.id() != null ? hit.id() : "",
                 displayContent != null ? displayContent : "",
-                score
+                score,
+                source
         );
     }
 

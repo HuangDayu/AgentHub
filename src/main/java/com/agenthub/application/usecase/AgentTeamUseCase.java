@@ -5,7 +5,7 @@ import com.agenthub.application.command.AgentTeamCommand;
 import com.agenthub.application.dto.AgentTeamOutput;
 import com.agenthub.application.port.out.repositories.AgentTeamRepository;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.AgentTeam;
+import com.agenthub.domain.model.agent.AgentTeam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

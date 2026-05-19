@@ -3,7 +3,7 @@ package com.agenthub.application.usecase;
 import com.agenthub.application.dto.SystemToolOutput;
 import com.agenthub.application.port.out.repositories.SystemToolsRepository;
 import com.agenthub.application.port.out.tools.SystemToolScannerPort;
-import com.agenthub.domain.model.SystemTool;
+import com.agenthub.domain.model.tools.SystemTool;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

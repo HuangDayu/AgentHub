@@ -1,7 +1,7 @@
 package com.agenthub.api.dto;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.agenthub.domain.model.Tenant;
+import com.agenthub.domain.model.auth.Tenant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

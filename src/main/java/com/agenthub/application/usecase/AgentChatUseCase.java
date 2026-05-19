@@ -4,9 +4,9 @@ import com.agenthub.application.port.out.agent.AgentChatPort;
 import com.agenthub.application.port.out.repositories.AgentRepository;
 import com.agenthub.application.port.out.repositories.SessionRepository;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.AbstractReActAgent;
-import com.agenthub.domain.model.AgentMessage;
-import com.agenthub.domain.model.ChatMessage;
+import com.agenthub.domain.model.agent.AbstractReActAgent;
+import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.agent.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -14,7 +14,7 @@ import reactor.core.publisher.Flux;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.agenthub.domain.model.ChatMessage.*;
+import static com.agenthub.domain.model.agent.ChatMessage.*;
 import static org.springframework.ai.util.json.JsonParser.toJson;
 
 /**

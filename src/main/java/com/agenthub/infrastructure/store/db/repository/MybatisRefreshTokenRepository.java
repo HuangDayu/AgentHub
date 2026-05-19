@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
-import com.agenthub.domain.model.RefreshTokenSession;
+import com.agenthub.domain.model.auth.RefreshTokenSession;
 import com.agenthub.application.port.out.repositories.RefreshTokenRepository;
 import com.agenthub.infrastructure.store.db.entity.RefreshTokenSessionEntity;
 import com.agenthub.infrastructure.store.db.mapper.RefreshTokenSessionMapper;

@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.etl;
 
 import com.agenthub.application.port.out.etl.EtlDocumentVectorizationPort;
-import com.agenthub.domain.model.DocumentChunk;
+import com.agenthub.domain.model.etl.DocumentChunk;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

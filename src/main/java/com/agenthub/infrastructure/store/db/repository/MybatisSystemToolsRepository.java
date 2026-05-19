@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import com.agenthub.application.port.out.repositories.SystemToolsRepository;
-import com.agenthub.domain.model.SystemTool;
+import com.agenthub.domain.model.tools.SystemTool;
 import com.agenthub.infrastructure.store.db.entity.SystemToolsEntity;
 import com.agenthub.infrastructure.store.db.mapper.SystemToolsMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

@@ -1,6 +1,6 @@
 package com.agenthub.api.dto;
 
-import com.agenthub.domain.model.ChatMessage;
+import com.agenthub.domain.model.agent.ChatMessage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

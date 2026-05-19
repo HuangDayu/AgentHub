@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
 import com.agenthub.domain.enums.AgentTeamType;
-import com.agenthub.domain.model.ReActAgentContext;
-import com.agenthub.domain.model.AbstractTeamAgent;
+import com.agenthub.domain.model.agent.ReActAgentContext;
+import com.agenthub.domain.model.agent.AbstractTeamAgent;
 import com.agenthub.application.factory.TeamAgentFactory;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import com.alibaba.cloud.ai.graph.agent.Agent;

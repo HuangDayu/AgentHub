@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.IngestionJob;
+import com.agenthub.domain.model.etl.IngestionJob;
 
 import java.util.Optional;
 

@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.tools.mcp_tools;
 
 import com.agenthub.application.port.out.repositories.McpToolRepository;
-import com.agenthub.domain.model.AgentToolInfo;
-import com.agenthub.domain.model.McpTool;
+import com.agenthub.domain.model.agent.AgentToolInfo;
+import com.agenthub.domain.model.tools.McpTool;
 import com.agenthub.infrastructure.tools.AbstractToolsFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.ToolCallback;

@@ -3,8 +3,8 @@ package com.agenthub.application.usecase;
 import com.agenthub.application.dto.SessionOutput;
 import com.agenthub.application.port.out.repositories.SessionRepository;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.ChatMessage;
-import com.agenthub.domain.model.Session;
+import com.agenthub.domain.model.agent.ChatMessage;
+import com.agenthub.domain.model.agent.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.etl;
 
-import com.agenthub.domain.model.DocumentContent;
+import com.agenthub.domain.model.etl.DocumentContent;
 
 /**
  * 内容清洗端口接口。

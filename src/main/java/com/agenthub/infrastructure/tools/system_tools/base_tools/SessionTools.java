@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.tools.system_tools.base_tools;
 
 import com.agenthub.application.port.out.repositories.SessionRepository;
-import com.agenthub.domain.model.RuntimeMessage;
-import com.agenthub.domain.model.Session;
+import com.agenthub.domain.model.agent.Session;
+import com.agenthub.domain.model.agent.ChatMessage;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;
@@ -26,7 +26,7 @@ public class SessionTools {
     }
 
     @Tool(description = "获取会话历史消息")
-    public List<RuntimeMessage> sessionsHistory(@ToolParam String sessionId) {
+    public List<ChatMessage> sessionsHistory(@ToolParam String sessionId) {
         return null;
     }
 
@@ -36,8 +36,8 @@ public class SessionTools {
     }
 
     @Tool(description = "向会话发送消息")
-    public RuntimeMessage sessionsSend(@ToolParam String sessionId, @ToolParam String content, @ToolParam String role) {
-        RuntimeMessage message = new RuntimeMessage();
+    public ChatMessage sessionsSend(@ToolParam String sessionId, @ToolParam String content, @ToolParam String role) {
+        ChatMessage message = new ChatMessage();
         message.setSessionId(sessionId);
         message.setContent(content);
         message.setRole(role);

@@ -8,7 +8,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Component;
 
-import static com.agenthub.infrastructure.rag.RagPromptTemplate.REWRITE_PROMPT_TEMPLATE;
+import static com.agenthub.infrastructure.rag.RagContextPromptTemplater.REWRITE_PROMPT_TEMPLATE;
 
 /**
  * 基于 LLM 的查询改写适配器。

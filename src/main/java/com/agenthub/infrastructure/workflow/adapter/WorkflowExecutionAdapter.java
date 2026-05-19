@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.workflow.adapter;
 
+import com.agenthub.application.command.workflow.ExecutionCommand;
 import com.agenthub.application.port.out.workflow.WorkflowExecutionPort;
 import com.agenthub.domain.enums.workflow.WorkflowStatus;
 import com.agenthub.domain.model.workflow.NodeResult;
@@ -34,28 +35,27 @@ public class WorkflowExecutionAdapter implements WorkflowExecutionPort {
     /**
      * 初始化执行上下文。
      *
-     * @param workflowId 工作流ID
-     * @param input 输入参数
      * @return 执行上下文
      */
     @Override
-    public Mono<WorkflowContext> initializeContext(String workflowId, Map<String, Object> input) {
-        return Mono.fromSupplier(() -> createContext(workflowId, input))
+    public Mono<WorkflowContext> initializeContext(ExecutionCommand command) {
+        return Mono.fromSupplier(() -> createContext(command))
             .flatMap(context -> stateManager.saveContext(context).thenReturn(context));
     }
 
     /**
      * 创建执行上下文。
      *
-     * @param workflowId 工作流ID
-     * @param input 输入参数
      * @return 执行上下文
      */
-    private WorkflowContext createContext(String workflowId, Map<String, Object> input) {
-        WorkflowContext context = WorkflowContext.create(workflowId);
+    private WorkflowContext createContext(ExecutionCommand command) {
+        WorkflowContext context = WorkflowContext.create(command.getWorkflowId());
         context.setGraph(WorkflowGraph.empty());
-        if (input != null) {
-            input.forEach(context::setVariable);
+        context.setTenantId(command.getTenantId());
+        context.setWorkspaceId(command.getWorkspaceId());
+        context.setTriggeredBy(command.getTriggeredBy());
+        if (command.getInput() != null) {
+            command.getInput().forEach(context::setVariable);
         }
         return context;
     }

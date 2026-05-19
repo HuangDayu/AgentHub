@@ -4,7 +4,7 @@ import com.agenthub.application.command.PatchTenantCommand;
 import com.agenthub.application.port.out.TimeProvider;
 import com.agenthub.application.port.out.repositories.TenantRepository;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.Tenant;
+import com.agenthub.domain.model.auth.Tenant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

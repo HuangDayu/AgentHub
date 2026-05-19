@@ -4,7 +4,7 @@ import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.port.out.repositories.KnowledgeBaseRepository;
 import com.agenthub.application.port.out.repositories.ModelStrategyRepository;
 import com.agenthub.domain.model.KnowledgeBase;
-import com.agenthub.domain.model.SessionMessage;
+import com.agenthub.domain.model.rag.RagChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -43,12 +43,12 @@ public class SpringShareObjectFactory {
         return vectorStore;
     }
 
-    public ChatClient getChatClientBySessionId(SessionMessage sessionMessage) {
-        return CHAT_CLIENT_MAP.computeIfAbsent(sessionMessage.getSessionId(), key -> {
-            ChatModel chatModel = getChatModelByConfigId(sessionMessage.getChatModelConfigId());
+    public ChatClient getChatClientBySessionId(RagChatMessage ragChatMessage) {
+        return CHAT_CLIENT_MAP.computeIfAbsent(ragChatMessage.getSessionId(), key -> {
+            ChatModel chatModel = getChatModelByConfigId(ragChatMessage.getChatModelConfigId());
             MessageWindowChatMemory memory = MessageWindowChatMemory.builder()
                     .chatMemoryRepository(jdbcChatMemoryRepository)
-                    .maxMessages(sessionMessage.getStrategy().getMaxMessages()).build();
+                    .maxMessages(ragChatMessage.getStrategy().getMaxMessages()).build();
             return ChatClient.builder(chatModel)
                     .defaultAdvisors(MessageChatMemoryAdvisor.builder(memory).build()).build();
         });

@@ -33,7 +33,7 @@ public class WorkflowExecutionUseCase {
      * @return 执行输出
      */
     public Mono<ExecutionOutput> initialize(ExecutionCommand command) {
-        return executionPort.initializeContext(command.getWorkflowId(), command.getInput())
+        return executionPort.initializeContext(command)
                 .flatMap(statePort::saveContext)
                 .map(this::toOutput);
     }
@@ -45,7 +45,7 @@ public class WorkflowExecutionUseCase {
      * @return 节点执行结果流
      */
     public Flux<NodeResult> execute(ExecutionCommand command) {
-        return executionPort.initializeContext(command.getWorkflowId(), command.getInput())
+        return executionPort.initializeContext(command)
                 .flatMapMany(executionPort::executeWorkflow);
     }
 

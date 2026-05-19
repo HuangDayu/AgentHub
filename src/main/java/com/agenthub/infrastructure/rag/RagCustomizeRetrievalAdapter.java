@@ -8,9 +8,9 @@ import com.agenthub.application.dto.RetrievalResultOutput;
 import com.agenthub.application.port.out.rag.*;
 import com.agenthub.application.port.out.repositories.KnowledgeBaseRepository;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.RetrievalChunk;
-import com.agenthub.domain.model.RetrievalResult;
-import com.agenthub.domain.model.RetrievalStrategy;
+import com.agenthub.domain.model.rag.RetrievalChunk;
+import com.agenthub.domain.model.rag.RetrievalResult;
+import com.agenthub.domain.model.strategy.RetrievalStrategy;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,7 +181,7 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
      */
     private RetrievalOutput buildRetrievalOutput(String rewrittenQuery, List<RetrievalResult> results) {
         List<RetrievalResultOutput> outputResults = results.stream()
-                .map(r -> new RetrievalResultOutput(r.getDocumentId(), r.getChunkId(), r.getContent(), r.getScore()))
+                .map(r -> new RetrievalResultOutput(r.getDocumentId(), r.getChunkId(), r.getContent(), r.getScore(), r.getMetadata()))
                 .toList();
         List<CitationOutput> outputCitations = IntStream.range(0, results.size())
                 .mapToObj(i -> {

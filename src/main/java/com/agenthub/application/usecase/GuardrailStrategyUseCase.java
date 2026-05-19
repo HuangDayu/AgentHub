@@ -5,7 +5,7 @@ import com.agenthub.application.command.CreateGuardrailStrategyCommand;
 import com.agenthub.application.command.UpdateGuardrailStrategyCommand;
 import com.agenthub.application.port.out.repositories.GuardrailStrategyRepository;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.GuardrailStrategy;
+import com.agenthub.domain.model.strategy.GuardrailStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -1,7 +1,7 @@
 package com.agenthub.application.usecase;
 
 import com.agenthub.application.port.out.JwtTokenProviderPort;
-import com.agenthub.domain.model.UserInfo;
+import com.agenthub.domain.model.auth.UserInfo;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

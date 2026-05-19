@@ -1,5 +1,6 @@
 package com.agenthub.application.port.out.workflow;
 
+import com.agenthub.application.command.workflow.ExecutionCommand;
 import com.agenthub.domain.model.workflow.WorkflowContext;
 import com.agenthub.domain.model.workflow.NodeResult;
 import reactor.core.publisher.Flux;
@@ -16,11 +17,9 @@ public interface WorkflowExecutionPort {
     /**
      * 初始化执行上下文。
      *
-     * @param workflowId 工作流ID
-     * @param input 输入参数
      * @return 执行上下文
      */
-    Mono<WorkflowContext> initializeContext(String workflowId, java.util.Map<String, Object> input);
+    Mono<WorkflowContext> initializeContext(ExecutionCommand command);
 
     /**
      * 执行单个节点。

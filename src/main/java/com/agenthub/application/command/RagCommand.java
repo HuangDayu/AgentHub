@@ -1,7 +1,7 @@
 package com.agenthub.application.command;
 
-import com.agenthub.domain.model.ModelStrategy;
-import com.agenthub.domain.model.RetrievalStrategy;
+import com.agenthub.domain.model.strategy.ModelStrategy;
+import com.agenthub.domain.model.strategy.RetrievalStrategy;
 import java.util.List;
 
 import lombok.Builder;

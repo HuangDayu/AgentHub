@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.Tenant;
+import com.agenthub.domain.model.auth.Tenant;
 
 import java.util.List;
 import java.util.Optional;

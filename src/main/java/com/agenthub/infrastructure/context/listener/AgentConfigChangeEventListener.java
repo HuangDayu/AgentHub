@@ -5,7 +5,7 @@ import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import com.agenthub.domain.event.AgentConfigChangedEvent;
 import com.agenthub.domain.event.AgentConfigDeletedEvent;
 import com.agenthub.domain.event.AgentConfigUpdatedEvent;
-import com.agenthub.domain.model.AgentConfig;
+import com.agenthub.domain.model.agent.AgentConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;

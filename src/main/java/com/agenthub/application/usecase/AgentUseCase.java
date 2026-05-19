@@ -5,7 +5,7 @@ import com.agenthub.application.command.CreateAgentCommand;
 import com.agenthub.application.dto.AgentOutput;
 import com.agenthub.application.port.out.repositories.AgentRepository;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.Agent;
+import com.agenthub.domain.model.agent.Agent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

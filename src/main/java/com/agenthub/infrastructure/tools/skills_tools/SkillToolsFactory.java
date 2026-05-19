@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.tools.skills_tools;
 
 import com.agenthub.application.port.out.repositories.SkillRepository;
-import com.agenthub.domain.model.AgentToolInfo;
-import com.agenthub.domain.model.Skill;
+import com.agenthub.domain.model.agent.AgentToolInfo;
+import com.agenthub.domain.model.tools.Skill;
 import com.agenthub.infrastructure.tools.AbstractToolsFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.ToolCallback;

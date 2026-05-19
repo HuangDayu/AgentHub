@@ -1,7 +1,7 @@
 package com.agenthub.api.mapper;
 
 import com.agenthub.api.dto.MessageResponse;
-import com.agenthub.domain.model.ChatMessage;
+import com.agenthub.domain.model.agent.ChatMessage;
 
 /**
  * 消息响应映射器。

@@ -5,9 +5,10 @@ import com.agenthub.application.port.out.rag.RagModelChatPort;
 import com.agenthub.application.port.out.rag.RagRetrievalPort;
 import com.agenthub.application.port.out.rag.RetrievalAugmentedGenerationPort;
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
-import com.agenthub.domain.model.ChatMessage;
-import com.agenthub.domain.model.RetrievalChunk;
-import com.agenthub.domain.model.SessionMessage;
+import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.agent.ChatMessage;
+import com.agenthub.domain.model.rag.RetrievalChunk;
+import com.agenthub.domain.model.rag.RagChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -27,7 +28,7 @@ import static com.agenthub.domain.enums.AgentConfigType.CHAT_MODEL;
 public class RagCustomizePipelineAdapter implements RetrievalAugmentedGenerationPort {
     private final RagRetrievalPort ragRetrievalPort;
     private final RagModelChatPort ragModelChatPort;
-    private final MessagePromptBuilder messagePromptBuilder;
+    private final RagContextPromptBuilder ragContextPromptBuilder;
     private final AgentConfigRepository agentConfigRepository;
 
 
@@ -37,24 +38,24 @@ public class RagCustomizePipelineAdapter implements RetrievalAugmentedGeneration
     }
 
     @Override
-    public String ragChat(RagCommand ragCommand) {
+    public AgentMessage ragChat(RagCommand ragCommand) {
         return ragModelChatPort.chat(buildSessionMessage(ragCommand));
     }
 
     @Override
-    public Flux<String> ragStream(RagCommand ragCommand) {
+    public Flux<AgentMessage> ragStream(RagCommand ragCommand) {
         return ragModelChatPort.stream(buildSessionMessage(ragCommand));
     }
 
-    private SessionMessage buildSessionMessage(RagCommand ragCommand) {
+    private RagChatMessage buildSessionMessage(RagCommand ragCommand) {
         String modelId = agentConfigRepository.getConfigId(ragCommand.getAgentId(), MODEL, CHAT_MODEL);
         List<ChatMessage> chatMessages = buildMessages(ragCommand);
-        return new SessionMessage(ragCommand.getSessionId(), ragCommand.getAgentId(), modelId, ragCommand.getModelStrategy(), chatMessages);
+        return new RagChatMessage(ragCommand.getSessionId(), ragCommand.getAgentId(), modelId, ragCommand.getModelStrategy(), chatMessages);
     }
 
     public List<ChatMessage> buildMessages(RagCommand ragCommand) {
         List<RetrievalChunk> contexts = ragRetrievalPort.retrieve(ragCommand);
-        return messagePromptBuilder.build(ragCommand.getSessionId(), ragCommand.getPromptTemplate(), ragCommand.getPrompt(), contexts);
+        return ragContextPromptBuilder.build(ragCommand.getSessionId(), ragCommand.getPromptTemplate(), ragCommand.getPrompt(), contexts);
     }
 
 

@@ -2,8 +2,8 @@ package com.agenthub.infrastructure.etl;
 
 import com.agenthub.application.command.EtlCommand;
 import com.agenthub.application.port.out.etl.ExtractTransformLoadPort;
-import com.agenthub.domain.model.DocumentChunk;
-import com.agenthub.domain.model.DocumentContent;
+import com.agenthub.domain.model.etl.DocumentChunk;
+import com.agenthub.domain.model.etl.DocumentContent;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ChatModel;

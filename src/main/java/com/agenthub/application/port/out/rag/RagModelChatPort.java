@@ -1,6 +1,7 @@
 package com.agenthub.application.port.out.rag;
 
-import com.agenthub.domain.model.SessionMessage;
+import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.rag.RagChatMessage;
 import reactor.core.publisher.Flux;
 
 /**
@@ -11,7 +12,7 @@ public interface RagModelChatPort {
     /**
      * 发送聊天消息。
      */
-    String chat(SessionMessage sessionMessage);
+    AgentMessage chat(RagChatMessage ragChatMessage);
 
 
     /**
@@ -19,5 +20,5 @@ public interface RagModelChatPort {
      *
      * @return
      */
-    Flux<String> stream(SessionMessage sessionMessage);
+    Flux<AgentMessage> stream(RagChatMessage ragChatMessage);
 }

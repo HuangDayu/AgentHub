@@ -1,15 +1,34 @@
 package com.agenthub.application.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class RetrievalResultOutput {
-    private /** 文档ID */String documentId;
-    private /** 块ID */String chunkId;
-    private /** 内容 */String content;
-    private /** 分数 */double score;
+    /**
+     * 文档ID
+     */
+    private String documentId;
+    /**
+     * 块ID
+     */
+    private String chunkId;
+    /**
+     * 内容
+     */
+    private String content;
+    /**
+     * 分数
+     */
+    private double score;
+
+    /**
+     * 元数据
+     */
+    private Map<String, Object> metadata;
 }

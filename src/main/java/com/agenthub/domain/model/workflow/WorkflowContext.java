@@ -24,6 +24,9 @@ public class WorkflowContext {
     /** 工作流ID */
     private final String workflowId;
 
+    /** 工作空间ID */
+    private String workspaceId;
+
     /** 租户ID */
     private String tenantId;
 

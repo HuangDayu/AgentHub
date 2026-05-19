@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.tools.http_tools;
 
-import com.agenthub.domain.model.HttpTool;
+import com.agenthub.domain.model.tools.HttpTool;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.ToolCallback;

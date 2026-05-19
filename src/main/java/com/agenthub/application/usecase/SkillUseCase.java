@@ -6,7 +6,7 @@ import com.agenthub.application.dto.SkillOutput;
 import com.agenthub.application.port.out.repositories.SkillRepository;
 import com.agenthub.application.port.out.tools.SkillToolScannerPort;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.Skill;
+import com.agenthub.domain.model.tools.Skill;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

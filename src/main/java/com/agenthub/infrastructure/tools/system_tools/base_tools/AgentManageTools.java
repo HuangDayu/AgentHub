@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.tools.system_tools.base_tools;
 
 import com.agenthub.application.port.out.repositories.AgentRepository;
-import com.agenthub.domain.model.Agent;
+import com.agenthub.domain.model.agent.Agent;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;

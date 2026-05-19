@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.tools.skills_tools;
 
-import com.agenthub.domain.model.Skill;
+import com.agenthub.domain.model.tools.Skill;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.ToolCallback;

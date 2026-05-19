@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
-import com.agenthub.domain.model.HttpTool;
+import com.agenthub.domain.model.tools.HttpTool;
 import com.agenthub.infrastructure.store.db.entity.HttpToolsEntity;
 import com.agenthub.infrastructure.store.db.mapper.HttpToolMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

@@ -1,7 +1,7 @@
 package com.agenthub.application.usecase;
 
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.Tenant;
+import com.agenthub.domain.model.auth.Tenant;
 import com.agenthub.application.port.out.repositories.TenantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.tools;
 
-import com.agenthub.domain.model.AgentToolInfo;
+import com.agenthub.domain.model.agent.AgentToolInfo;
 import com.agenthub.domain.enums.AgentToolType;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

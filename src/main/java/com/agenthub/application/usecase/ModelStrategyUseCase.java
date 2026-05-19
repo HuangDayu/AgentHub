@@ -5,7 +5,7 @@ import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.command.CreateModelStrategyCommand;
 import com.agenthub.application.command.UpdateModelStrategyCommand;
 import com.agenthub.application.port.out.repositories.ModelStrategyRepository;
-import com.agenthub.domain.model.ModelStrategy;
+import com.agenthub.domain.model.strategy.ModelStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

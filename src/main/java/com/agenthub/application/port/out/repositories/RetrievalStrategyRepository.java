@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.RetrievalStrategy;
+import com.agenthub.domain.model.strategy.RetrievalStrategy;
 
 import java.util.List;
 import java.util.Optional;

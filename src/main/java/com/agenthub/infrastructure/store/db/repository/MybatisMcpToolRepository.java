@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.McpToolRepository;
-import com.agenthub.domain.model.McpTool;
+import com.agenthub.domain.model.tools.McpTool;
 import com.agenthub.infrastructure.store.db.entity.McpToolEntity;
 import com.agenthub.infrastructure.store.db.mapper.McpToolMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

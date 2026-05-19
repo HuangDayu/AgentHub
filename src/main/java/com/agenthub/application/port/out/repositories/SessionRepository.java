@@ -1,7 +1,7 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.ChatMessage;
-import com.agenthub.domain.model.Session;
+import com.agenthub.domain.model.agent.ChatMessage;
+import com.agenthub.domain.model.agent.Session;
 
 import java.util.List;
 import java.util.Optional;

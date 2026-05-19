@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.rag;
 
 import com.agenthub.application.port.out.rag.RagRerankerPort;
-import com.agenthub.domain.model.RetrievalResult;
+import com.agenthub.domain.model.rag.RetrievalResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

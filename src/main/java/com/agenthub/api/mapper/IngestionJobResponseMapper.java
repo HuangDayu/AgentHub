@@ -6,8 +6,8 @@ import com.agenthub.api.dto.DocumentResponse;
 import com.agenthub.api.dto.IngestionDocumentResponse;
 import com.agenthub.api.dto.IngestionJobResponse;
 import com.agenthub.application.dto.IngestionJobOutput;
-import com.agenthub.domain.model.IngestionDocument;
-import com.agenthub.domain.model.IngestionJob;
+import com.agenthub.domain.model.etl.IngestionDocument;
+import com.agenthub.domain.model.etl.IngestionJob;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;

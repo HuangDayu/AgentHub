@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.AgentConfig;
+import com.agenthub.domain.model.agent.AgentConfig;
 import com.agenthub.domain.enums.AgentConfigCategory;
 import com.agenthub.domain.enums.AgentConfigType;
 

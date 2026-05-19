@@ -1,7 +1,7 @@
 package com.agenthub.application.factory;
 
-import com.agenthub.domain.model.AbstractReActAgent;
-import com.agenthub.domain.model.Agent;
+import com.agenthub.domain.model.agent.AbstractReActAgent;
+import com.agenthub.domain.model.agent.Agent;
 
 /**
  * @author huangdayu

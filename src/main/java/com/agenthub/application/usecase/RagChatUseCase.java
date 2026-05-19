@@ -2,24 +2,26 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.application.command.RagCommand;
 import com.agenthub.application.dto.AgentOutput;
-import com.agenthub.application.dto.MessageOutput;
 import com.agenthub.application.dto.ValidationOutput;
 import com.agenthub.application.port.out.rag.RetrievalAugmentedGenerationPort;
 import com.agenthub.application.port.out.repositories.*;
 import com.agenthub.domain.enums.AgentConfigCategory;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.*;
+import com.agenthub.domain.model.PromptTemplateInfo;
+import com.agenthub.domain.model.agent.AgentConfig;
+import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.agent.ChatMessage;
+import com.agenthub.domain.model.strategy.ModelStrategy;
+import com.agenthub.domain.model.strategy.RetrievalStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.agenthub.common.utils.RandomUtils.randomId;
 import static com.agenthub.domain.enums.AgentConfigCategory.KNOWLEDGE;
 import static com.agenthub.domain.enums.AgentConfigCategory.STRATEGY;
 import static com.agenthub.domain.enums.AgentConfigType.*;
@@ -37,12 +39,8 @@ public class RagChatUseCase {
     private final ModelStrategyRepository modelStrategyRepository;
     private final PromptTemplateRepository promptTemplateRepository;
 
-    public MessageOutput sendChat(String agentId, String sessionId, String userPrompt) {
-        String message = chat(agentId, sessionId, userPrompt);
-        return new MessageOutput(randomId(), sessionId, "assistant", message, Instant.now());
-    }
 
-    public Flux<String> streamChat(String agentId, String sessionId, String userPrompt) {
+    public Flux<AgentMessage> streamChat(String agentId, String sessionId, String userPrompt) {
         AgentOutput agent = agentUseCase.get(agentId);
         validatePublished(agent);
         ValidationOutput validation = validateInput(agentId, userPrompt);
@@ -50,18 +48,18 @@ public class RagChatUseCase {
         return retrievalAugmentedGenerationPort.ragStream(buildRagCommand(agentId, sessionId, userPrompt));
     }
 
-    public String chat(String agentId, String sessionId, String userPrompt) {
+    public AgentMessage chat(String agentId, String sessionId, String userPrompt) {
         AgentOutput agent = agentUseCase.get(agentId);
         validatePublished(agent);
         ValidationOutput validation = validateInput(agentId, userPrompt);
-        if (!validation.isValid()) return "输入验证失败";
+        if (!validation.isValid()) return new AgentMessage(AgentMessage.MessageType.SYSTEM, "输入验证失败");
         ArrayList<ChatMessage> messages = new ArrayList<>();
         messages.add(ChatMessage.user(sessionId, userPrompt));
-        String response = retrievalAugmentedGenerationPort.ragChat(buildRagCommand(agentId, sessionId, userPrompt));
-        ValidationOutput outputValidation = validateOutput(agentId, response);
-        if (!outputValidation.isValid()) return "输出验证失败";
-        messages.add(ChatMessage.assistant(sessionId, response));
-        saveSession(sessionId, agentId, messages, response);
+        AgentMessage response = retrievalAugmentedGenerationPort.ragChat(buildRagCommand(agentId, sessionId, userPrompt));
+        ValidationOutput outputValidation = validateOutput(agentId, response.getText());
+        if (!outputValidation.isValid()) return new AgentMessage(AgentMessage.MessageType.SYSTEM, "输出验证失败");
+        messages.add(ChatMessage.assistant(sessionId, response.getText()));
+        saveSession(sessionId, agentId, messages, response.getText());
         return response;
     }
 
@@ -96,7 +94,7 @@ public class RagChatUseCase {
         }
     }
 
-    private Flux<String> createErrorFlux(ValidationOutput validation) {
+    private Flux<AgentMessage> createErrorFlux(ValidationOutput validation) {
         return Flux.error(new IllegalStateException(String.join(",", validation.getViolations())));
     }
 

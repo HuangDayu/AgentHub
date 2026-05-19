@@ -1,8 +1,8 @@
 package com.agenthub.application.port.out;
 
 import com.agenthub.application.command.InvokeToolCommand;
-import com.agenthub.domain.model.HttpTool;
-import com.agenthub.domain.model.HttpToolInvokeResult;
+import com.agenthub.domain.model.tools.HttpTool;
+import com.agenthub.domain.model.tools.HttpToolInvokeResult;
 
 import java.util.Map;
 

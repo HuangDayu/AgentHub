@@ -1,7 +1,7 @@
 package com.agenthub.api.mapper;
 
 import com.agenthub.api.dto.RetrievalStrategyResponse;
-import com.agenthub.domain.model.RetrievalStrategy;
+import com.agenthub.domain.model.strategy.RetrievalStrategy;
 
 /**
  * 检索策略响应映射器。

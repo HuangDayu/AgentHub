@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.RefreshTokenSession;
+import com.agenthub.domain.model.auth.RefreshTokenSession;
 
 import java.util.Optional;
 

@@ -3,8 +3,10 @@ package com.agenthub.infrastructure.rag;
 import com.agenthub.application.command.RagCommand;
 import com.agenthub.application.port.out.rag.RetrievalAugmentedGenerationPort;
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
-import com.agenthub.domain.model.ModelStrategy;
-import com.agenthub.domain.model.RetrievalChunk;
+import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.rag.RetrievalChunk;
+import com.agenthub.domain.model.strategy.ModelStrategy;
+import com.agenthub.infrastructure.converter.AgentMessageConverter;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
@@ -36,7 +38,7 @@ import java.util.Map;
 
 import static com.agenthub.domain.enums.AgentConfigCategory.MODEL;
 import static com.agenthub.domain.enums.AgentConfigType.CHAT_MODEL;
-import static com.agenthub.infrastructure.rag.RagPromptTemplate.*;
+import static com.agenthub.infrastructure.rag.RagContextPromptTemplater.*;
 
 /**
  * @author huangdayu
@@ -82,23 +84,24 @@ public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPor
     }
 
     @Override
-    public String ragChat(RagCommand ragCommand) {
+    public AgentMessage ragChat(RagCommand ragCommand) {
         return ChatClient.builder(getAgentChatModel(ragCommand.getAgentId())).build()
                 .prompt(ragCommand.getPrompt())
                 .options(getToolChatOptions(ragCommand))
                 .advisors(buildAdvisor(ragCommand))
                 .call()
-                .content();
+                .entity(AgentMessage.class);
     }
 
     @Override
-    public Flux<String> ragStream(RagCommand ragCommand) {
+    public Flux<AgentMessage> ragStream(RagCommand ragCommand) {
         return ChatClient.builder(getAgentChatModel(ragCommand.getAgentId())).build()
                 .prompt(ragCommand.getPrompt())
                 .options(getToolChatOptions(ragCommand))
                 .advisors(buildAdvisor(ragCommand))
                 .stream()
-                .content();
+                .chatResponse()
+                .map(v -> v.getResult() != null ? AgentMessageConverter.fromMessage(v.getResult().getOutput()) : new AgentMessage());
     }
 
     private ChatOptions getToolChatOptions(RagCommand ragCommand) {

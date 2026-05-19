@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.McpTool;
+import com.agenthub.domain.model.tools.McpTool;
 
 import java.util.List;
 import java.util.Optional;

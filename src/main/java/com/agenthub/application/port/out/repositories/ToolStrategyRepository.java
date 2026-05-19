@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.ToolStrategy;
+import com.agenthub.domain.model.strategy.ToolStrategy;
 
 import java.util.List;
 import java.util.Optional;

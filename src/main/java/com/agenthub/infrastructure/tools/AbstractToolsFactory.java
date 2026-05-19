@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.tools;
 
-import com.agenthub.domain.model.AgentToolInfo;
+import com.agenthub.domain.model.agent.AgentToolInfo;
 import org.springframework.ai.tool.ToolCallback;
 
 import java.util.List;

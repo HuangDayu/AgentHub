@@ -1,8 +1,10 @@
 package com.agenthub.infrastructure.rag;
 
 import com.agenthub.application.port.out.rag.RagModelChatPort;
-import com.agenthub.domain.model.ChatMessage;
-import com.agenthub.domain.model.SessionMessage;
+import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.agent.ChatMessage;
+import com.agenthub.domain.model.rag.RagChatMessage;
+import com.agenthub.infrastructure.converter.AgentMessageConverter;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,29 +29,30 @@ public class RagSpringModelChatAdapter implements RagModelChatPort {
     }
 
     @Override
-    public String chat(SessionMessage sessionMessage) {
-        return chat(getChatClient(sessionMessage), sessionMessage.getChatMessages());
+    public AgentMessage chat(RagChatMessage ragChatMessage) {
+        return chat(getChatClient(ragChatMessage), ragChatMessage.getChatMessages());
     }
 
     @Override
-    public Flux<String> stream(SessionMessage sessionMessage) {
-        return stream(getChatClient(sessionMessage), sessionMessage.getChatMessages());
+    public Flux<AgentMessage> stream(RagChatMessage ragChatMessage) {
+        return stream(getChatClient(ragChatMessage), ragChatMessage.getChatMessages());
     }
 
-    public Flux<String> stream(ChatClient chatClient, List<ChatMessage> messages) {
+    public Flux<AgentMessage> stream(ChatClient chatClient, List<ChatMessage> messages) {
         List<Message> promptMessages = buildPromptMessages(null, messages);
         Prompt prompt = new Prompt(promptMessages);
-        return chatClient.prompt(prompt).stream().content();
+        return chatClient.prompt(prompt).stream().chatResponse()
+                .map(v -> v.getResult() != null ? AgentMessageConverter.fromMessage(v.getResult().getOutput()) : new AgentMessage());
     }
 
-    public String chat(ChatClient chatClient, List<ChatMessage> messages) {
+    public AgentMessage chat(ChatClient chatClient, List<ChatMessage> messages) {
         List<Message> promptMessages = buildPromptMessages(null, messages);
         Prompt prompt = new Prompt(promptMessages);
-        return chatClient.prompt(prompt).call().content();
+        return chatClient.prompt(prompt).call().entity(AgentMessage.class);
     }
 
-    private ChatClient getChatClient(SessionMessage sessionMessage) {
-        return springShareObjectFactory.getChatClientBySessionId(sessionMessage);
+    private ChatClient getChatClient(RagChatMessage ragChatMessage) {
+        return springShareObjectFactory.getChatClientBySessionId(ragChatMessage);
     }
 
     private List<Message> buildPromptMessages(String systemPrompt, List<ChatMessage> messages) {

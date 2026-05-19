@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.etl;
 
 import com.agenthub.application.port.out.etl.EtlDocumentParserPort;
-import com.agenthub.domain.model.DocumentContent;
-import com.agenthub.domain.model.DocumentContent.DocumentFormat;
+import com.agenthub.domain.model.etl.DocumentContent;
+import com.agenthub.domain.model.etl.DocumentContent.DocumentFormat;
 import org.apache.tika.Tika;
 import org.apache.tika.io.TikaInputStream;
 import org.jsoup.Jsoup;

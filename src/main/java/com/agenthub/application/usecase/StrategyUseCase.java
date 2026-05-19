@@ -2,7 +2,7 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.application.dto.ValidationOutput;
 import com.agenthub.application.executor.GuardrailStrategyExecutor;
-import com.agenthub.domain.model.*;
+import com.agenthub.domain.model.strategy.GuardrailStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

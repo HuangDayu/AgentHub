@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
-import com.agenthub.domain.model.AgentConfig;
+import com.agenthub.domain.model.agent.AgentConfig;
 import com.agenthub.domain.enums.AgentConfigCategory;
 import com.agenthub.domain.enums.AgentConfigType;
 import com.agenthub.infrastructure.store.db.entity.AgentConfigEntity;

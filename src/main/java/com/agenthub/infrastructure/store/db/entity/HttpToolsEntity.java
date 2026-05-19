@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.store.db.entity;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.common.annotations.ConfigChangeListenerEntity;
-import com.agenthub.domain.model.HttpTool;
+import com.agenthub.domain.model.tools.HttpTool;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 

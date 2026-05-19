@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import com.agenthub.application.port.out.repositories.IngestionJobRepository;
-import com.agenthub.domain.model.IngestionJob;
+import com.agenthub.domain.model.etl.IngestionJob;
 import com.agenthub.infrastructure.store.db.entity.IngestionJobEntity;
 import com.agenthub.infrastructure.store.db.mapper.IngestionJobMapper;
 import org.springframework.context.annotation.Primary;

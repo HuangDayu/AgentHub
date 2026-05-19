@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.rag;
 
 import com.agenthub.application.port.out.rag.RagVectorSearchPort;
-import com.agenthub.domain.model.RetrievalResult;
+import com.agenthub.domain.model.rag.RetrievalResult;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +96,6 @@ public class RagCustomizeVectorSearchAdapter implements RagVectorSearchPort {
         String docId = meta != null ? String.valueOf(meta.getOrDefault("document_id", "")) : "";
         String content = doc.getText() != null ? doc.getText() : "";
         String id = doc.getId() != null ? doc.getId() : docId;
-        return new RetrievalResult(docId, null, id, content, doc.getScore());
+        return new RetrievalResult(docId, null, id, content, doc.getScore(), meta);
     }
 }

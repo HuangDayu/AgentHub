@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.Skill;
+import com.agenthub.domain.model.tools.Skill;
 
 import java.util.List;
 import java.util.Optional;

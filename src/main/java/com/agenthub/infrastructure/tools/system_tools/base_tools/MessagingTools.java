@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.tools.system_tools.base_tools;
 
-import com.agenthub.domain.model.RuntimeMessage;
+import com.agenthub.domain.model.agent.ChatMessage;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;
@@ -17,8 +17,8 @@ public class MessagingTools {
 
 
     @Tool(description = "发送消息")
-    public RuntimeMessage message(@ToolParam String sessionId, @ToolParam String content, @ToolParam String role) {
-        RuntimeMessage message = new RuntimeMessage();
+    public ChatMessage message(@ToolParam String sessionId, @ToolParam String content, @ToolParam String role) {
+        ChatMessage message = new ChatMessage();
         message.setSessionId(sessionId);
         message.setContent(content);
         message.setRole(role);

@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.rag;
 
-import com.agenthub.domain.model.RetrievalResult;
+import com.agenthub.domain.model.rag.RetrievalResult;
 
 import java.util.List;
 

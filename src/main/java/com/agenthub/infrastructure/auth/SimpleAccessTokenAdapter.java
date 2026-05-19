@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.auth;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.agenthub.domain.model.AccessToken;
+import com.agenthub.domain.model.auth.AccessToken;
 import com.agenthub.application.port.out.AccessTokenPort;
 import com.agenthub.infrastructure.store.db.entity.AppUserEntity;
 import com.agenthub.infrastructure.store.db.mapper.AppUserMapper;

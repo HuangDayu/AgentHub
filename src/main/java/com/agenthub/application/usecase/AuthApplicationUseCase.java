@@ -2,9 +2,9 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.domain.exception.InvalidCredentialsException;
 import com.agenthub.domain.exception.InvalidRefreshTokenException;
-import com.agenthub.domain.model.AccessToken;
-import com.agenthub.domain.model.AuthTokens;
-import com.agenthub.domain.model.RefreshTokenSession;
+import com.agenthub.domain.model.auth.AccessToken;
+import com.agenthub.domain.model.auth.AuthTokens;
+import com.agenthub.domain.model.auth.RefreshTokenSession;
 import com.agenthub.application.port.out.AccessTokenPort;
 import com.agenthub.application.port.out.CredentialVerifierPort;
 import com.agenthub.application.port.out.RefreshTokenGenerator;

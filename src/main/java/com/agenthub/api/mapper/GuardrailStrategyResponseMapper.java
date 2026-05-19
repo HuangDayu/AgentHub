@@ -1,7 +1,7 @@
 package com.agenthub.api.mapper;
 
 import com.agenthub.api.dto.GuardrailStrategyResponse;
-import com.agenthub.domain.model.GuardrailStrategy;
+import com.agenthub.domain.model.strategy.GuardrailStrategy;
 
 /**
  * 护栏策略响应映射器。

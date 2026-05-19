@@ -1,7 +1,7 @@
 package com.agenthub.api.mapper;
 
 import com.agenthub.api.dto.ToolStrategyResponse;
-import com.agenthub.domain.model.ToolStrategy;
+import com.agenthub.domain.model.strategy.ToolStrategy;
 
 /**
  * 工具策略响应映射器。

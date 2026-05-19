@@ -3,8 +3,8 @@ package com.agenthub.api.mapper;
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.AuthResponse;
 import com.agenthub.api.dto.UserInfoResponse;
-import com.agenthub.domain.model.AuthTokens;
-import com.agenthub.domain.model.UserInfo;
+import com.agenthub.domain.model.auth.AuthTokens;
+import com.agenthub.domain.model.auth.UserInfo;
 import org.springframework.stereotype.Component;
 
 /**

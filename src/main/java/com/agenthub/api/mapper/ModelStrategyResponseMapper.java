@@ -1,7 +1,7 @@
 package com.agenthub.api.mapper;
 
 import com.agenthub.api.dto.ModelStrategyResponse;
-import com.agenthub.domain.model.ModelStrategy;
+import com.agenthub.domain.model.strategy.ModelStrategy;
 
 /**
  * 模型策略响应映射器。
