@@ -48,25 +48,33 @@
       @close="closeDialog"
       @confirm="editingWorkflowId ? updateWorkflowHandler() : createWorkflowHandler()"
       :confirm-text="editingWorkflowId ? '更新' : '创建'"
+      width="1200px"
     >
-      <form class="field-grid">
-        <label class="field">
-          <span>工作流编码 *</span>
-          <input v-model="form.workflowCode" :disabled="!!editingWorkflowId" required />
-        </label>
-        <label class="field">
-          <span>名称 *</span>
-          <input v-model="form.name" required />
-        </label>
-        <label class="field">
-          <span>描述</span>
-          <textarea v-model="form.description" rows="3"></textarea>
-        </label>
-        <label class="field">
-          <span>图定义 (JSON/DAG)</span>
-          <textarea v-model="form.graphDefinition" rows="8"></textarea>
-        </label>
-      </form>
+      <div class="workflow-form-container">
+        <!-- 表单部分（上） -->
+        <form class="workflow-form">
+          <div class="form-row">
+            <label class="field">
+              <span>工作流编码 *</span>
+              <input v-model="form.workflowCode" :disabled="!!editingWorkflowId" required />
+            </label>
+            <label class="field">
+              <span>名称 *</span>
+              <input v-model="form.name" required />
+            </label>
+            <label class="field">
+              <span>描述</span>
+              <textarea v-model="form.description" rows="2"></textarea>
+            </label>
+          </div>
+        </form>
+
+        <!-- DAG编辑器部分（下） -->
+        <div class="dag-section">
+          <div class="dag-title">工作流DAG图</div>
+          <DagEditor v-model="form.graphDefinition" />
+        </div>
+      </div>
     </ModalDialog>
   </section>
 </template>
@@ -79,6 +87,7 @@ import type { Workflow } from '@/types/memory'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
+import DagEditor from '@/components/workflow/DagEditor.vue'
 
 const store = useWorkspaceStore()
 const workflows = ref<Workflow[]>([])
@@ -244,5 +253,37 @@ th, td {
   text-align: center;
   padding: 2rem;
   color: #6c757d;
+}
+
+.workflow-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.workflow-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row .field {
+  flex: 1;
+}
+
+.dag-section {
+  border-top: 1px solid #ddd;
+  padding-top: 1rem;
+}
+
+.dag-title {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #333;
 }
 </style>

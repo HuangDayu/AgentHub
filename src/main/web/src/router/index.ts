@@ -34,12 +34,40 @@ const agentHubRoutes = {
   ],
 }
 
+// ── Workflow ──────────────────────────────────────────────
+const workflowRoutes = {
+  path: '/workflow',
+  component: () => import('@/components/TenantLayout.vue'),
+  meta: { requiresAuth: true },
+  children: [
+    // 工作流列表
+    { 
+      path: '', 
+      component: () => import('@/views/workflow/WorkflowListView.vue'),
+      name: 'workflow-list'
+    },
+    // 工作流编辑器
+    { 
+      path: 'editor/:id?', 
+      component: () => import('@/views/workflow/WorkflowEditorView.vue'),
+      name: 'workflow-editor'
+    },
+    // 工作流执行
+    { 
+      path: 'execution/:id', 
+      component: () => import('@/views/workflow/WorkflowExecutionView.vue'),
+      name: 'workflow-execution'
+    },
+  ],
+}
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', redirect: '/login' },
     { path: '/login', component: LoginView },
     agentHubRoutes,
+    workflowRoutes,
     { path: '/:pathMatch(.*)*', redirect: '/login' },
   ],
 })

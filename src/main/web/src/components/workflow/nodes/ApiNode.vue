@@ -1,38 +1,166 @@
 <template>
-  <div class="api-node">
-    <Handle type="target" :position="Position.Left" />
-    <div class="node-content">
+  <div class="api-node" :class="{ selected: selected, disabled: data.disabled }">
+    <Handle type="target" :position="Position.Left" id="input" />
+    
+    <div class="node-header">
       <div class="node-icon">🌐</div>
-      <div class="node-label">API</div>
+      <div class="node-title">{{ data.label || 'API' }}</div>
+      <button v-if="!data.disabled" class="config-btn" @click="openConfig">⚙️</button>
     </div>
-    <Handle type="source" :position="Position.Right" />
+    
+    <div class="node-body">
+      <div class="config-info">
+        <div v-if="data.config?.method" class="info-item">
+          <span class="label">方法:</span>
+          <span class="value">{{ data.config.method }}</span>
+        </div>
+        <div v-if="data.config?.url" class="info-item">
+          <span class="label">URL:</span>
+          <span class="value">{{ truncateUrl(data.config.url) }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div v-if="data.status" class="node-status" :class="data.status">
+      {{ statusText }}
+    </div>
+    
+    <Handle type="source" :position="Position.Right" id="output" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Handle, Position } from '@vue-flow/core'
+
+const props = defineProps<{
+  data: any
+  selected?: boolean
+}>()
+
+const emit = defineEmits<{
+  'config': [nodeId: string]
+}>()
+
+const statusText = computed(() => {
+  switch (props.data.status) {
+    case 'running': return '运行中'
+    case 'success': return '成功'
+    case 'error': return '错误'
+    case 'waiting': return '等待'
+    default: return ''
+  }
+})
+
+function truncateUrl(url: string) {
+  return url.length > 20 ? url.substring(0, 20) + '...' : url
+}
+
+function openConfig() {
+  emit('config', props.data.id)
+}
 </script>
 
 <style scoped>
 .api-node {
-  background: #17a2b8;
-  color: white;
-  padding: 10px 20px;
+  background: white;
+  border: 2px solid #17a2b8;
   border-radius: 8px;
-  border: 2px solid #117a8b;
+  min-width: 150px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.node-content {
+.api-node.selected {
+  border-color: #0c5460;
+  box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
+}
+
+.api-node.disabled {
+  opacity: 0.6;
+}
+
+.node-header {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 12px;
+  background: #17a2b8;
+  color: white;
+  border-radius: 6px 6px 0 0;
 }
 
 .node-icon {
   font-size: 16px;
 }
 
-.node-label {
+.node-title {
+  flex: 1;
   font-weight: bold;
+  font-size: 14px;
+}
+
+.config-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  opacity: 0.8;
+}
+
+.config-btn:hover {
+  opacity: 1;
+}
+
+.node-body {
+  padding: 8px 12px;
+  background: white;
+}
+
+.config-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item {
+  display: flex;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.info-item .label {
+  color: #666;
+}
+
+.info-item .value {
+  color: #333;
+  font-weight: 500;
+}
+
+.node-status {
+  padding: 4px 12px;
+  font-size: 12px;
+  text-align: center;
+  border-radius: 0 0 6px 6px;
+}
+
+.node-status.running {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.node-status.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.node-status.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.node-status.waiting {
+  background: #e2e3e5;
+  color: #383d41;
 }
 </style>

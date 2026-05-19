@@ -19,59 +19,71 @@
       </div>
     </div>
 
-    <!-- VueFlow画布 -->
-    <div class="flow-container">
+    <!-- Vue Flow画布 -->
+    <div
+      class="flow-container"
+      @drop="onDrop"
+      @dragover="onDragOver"
+    >
       <VueFlow
         v-model:nodes="nodes"
         v-model:edges="edges"
         @nodes-change="onNodesChange"
         @edges-change="onEdgesChange"
         @connect="onConnect"
+        @node-click="onNodeClick"
+        @edge-click="onEdgeClick"
+        @pane-click="onPaneClick"
         :default-viewport="{ zoom: 1, x: 0, y: 0 }"
         :min-zoom="0.2"
         :max-zoom="4"
+        :snap-to-grid="true"
+        :snap-grid="[15, 15]"
         fit-view-on-init
         class="vue-flow-canvas"
+        :connection-mode="ConnectionMode.Loose"
+        :deleteKeyCode="'Delete'"
+        :multi-selectionKeyCode="'Shift'"
       >
         <!-- 背景 -->
         <Background pattern-color="#aaa" :gap="20" />
 
         <!-- 小地图 -->
-        <MiniMap />
+        <MiniMap v-if="showMiniMap" />
 
         <!-- 控制按钮 -->
         <Controls />
 
         <!-- 自定义节点 -->
         <template #node-start="nodeProps">
-          <StartNode :data="nodeProps.data" />
+          <StartNode :data="nodeProps.data" :selected="nodeProps.selected" />
         </template>
         <template #node-end="nodeProps">
-          <EndNode :data="nodeProps.data" />
+          <EndNode :data="nodeProps.data" :selected="nodeProps.selected" />
         </template>
         <template #node-llm="nodeProps">
-          <LLMNode :data="nodeProps.data" />
+          <LLMNode :data="nodeProps.data" :selected="nodeProps.selected" />
         </template>
         <template #node-api="nodeProps">
-          <ApiNode :data="nodeProps.data" />
+          <ApiNode :data="nodeProps.data" :selected="nodeProps.selected" />
         </template>
         <template #node-condition="nodeProps">
-          <ConditionNode :data="nodeProps.data" />
+          <ConditionNode :data="nodeProps.data" :selected="nodeProps.selected" />
         </template>
         <template #node-loop="nodeProps">
-          <LoopNode :data="nodeProps.data" />
+          <LoopNode :data="nodeProps.data" :selected="nodeProps.selected" />
         </template>
         <template #node-parallel="nodeProps">
-          <ParallelNode :data="nodeProps.data" />
+          <ParallelNode :data="nodeProps.data" :selected="nodeProps.selected" />
         </template>
         <template #node-variable="nodeProps">
-          <VariableNode :data="nodeProps.data" />
+          <VariableNode :data="nodeProps.data" :selected="nodeProps.selected" />
         </template>
         <template #node-code="nodeProps">
-          <CodeNode :data="nodeProps.data" />
+          <CodeNode :data="nodeProps.data" :selected="nodeProps.selected" />
         </template>
         <template #node-tool="nodeProps">
-          <ToolNode :data="nodeProps.data" />
+          <ToolNode :data="nodeProps.data" :selected="nodeProps.selected" />
         </template>
       </VueFlow>
     </div>
@@ -80,11 +92,12 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { VueFlow, useVueFlow, ConnectionMode } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
-import type { Node, Edge, Connection } from '@vue-flow/core'
+import type { Node, Edge, Connection, NodeChange, EdgeChange } from '@vue-flow/core'
+import { useWorkflowStore } from '@/stores/workflow-store'
 
 // 导入自定义节点组件
 import StartNode from './nodes/StartNode.vue'
@@ -100,13 +113,26 @@ import ToolNode from './nodes/ToolNode.vue'
 
 const props = defineProps<{
   modelValue: string
+  showMiniMap?: boolean
+  readOnly?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
+  'node-select': [node: Node]
+  'edge-select': [edge: Edge]
 }>()
 
-const { onConnect, addNodes } = useVueFlow()
+const workflowStore = useWorkflowStore()
+const { 
+  onConnect: handleConnect, 
+  addNodes, 
+  addEdges,
+  removeNodes,
+  removeEdges,
+  fitView,
+  project
+} = useVueFlow()
 
 // 节点类型定义
 const nodeTypes = [
@@ -156,26 +182,235 @@ function onDragStart(event: DragEvent, nodeType: any) {
   }
 }
 
+// 拖拽经过
+function onDragOver(event: DragEvent) {
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+// 放置节点
+function onDrop(event: DragEvent) {
+  if (props.readOnly) return
+  
+  const type = event.dataTransfer?.getData('application/vueflow')
+  if (!type) return
+
+  // 获取画布坐标
+  const bounds = (event.target as HTMLElement).getBoundingClientRect()
+  const position = project({
+    x: event.clientX - bounds.left,
+    y: event.clientY - bounds.top
+  })
+
+  // 创建新节点
+  const newNode: Node = {
+    id: `${type}-${Date.now()}`,
+    type,
+    position,
+    data: {
+      label: nodeTypes.find(n => n.type === type)?.label || type,
+      config: {}
+    }
+  }
+
+  addNodes([newNode])
+  
+  // 保存到历史记录
+  workflowStore.saveToHistory()
+}
+
 // 节点变化处理
-function onNodesChange(changes: any[]) {
-  // 自动处理节点变化
+function onNodesChange(changes: NodeChange[]) {
+  if (props.readOnly) return
+  
+  // 处理节点删除
+  const removedNodes = changes.filter(c => c.type === 'remove')
+  if (removedNodes.length > 0) {
+    workflowStore.saveToHistory()
+  }
 }
 
 // 边变化处理
-function onEdgesChange(changes: any[]) {
-  // 自动处理边变化
+function onEdgesChange(changes: EdgeChange[]) {
+  if (props.readOnly) return
+  
+  // 处理边删除
+  const removedEdges = changes.filter(c => c.type === 'remove')
+  if (removedEdges.length > 0) {
+    workflowStore.saveToHistory()
+  }
 }
 
 // 连接处理
-onConnect((params: Connection) => {
-  // 自动添加边
+handleConnect((params: Connection) => {
+  if (props.readOnly) return
+  
+  // 验证连接
+  if (!isValidConnection(params)) {
+    return
+  }
+
+  // 添加新边
+  const newEdge: Edge = {
+    id: `e${params.source}-${params.target}`,
+    source: params.source,
+    target: params.target,
+    sourceHandle: params.sourceHandle,
+    targetHandle: params.targetHandle
+  }
+  
+  addEdges([newEdge])
+  workflowStore.saveToHistory()
+})
+
+// 验证连接是否有效
+function isValidConnection(connection: Connection): boolean {
+  // 不能连接到自己
+  if (connection.source === connection.target) {
+    return false
+  }
+
+  // 检查是否已存在相同的连接
+  const existingEdge = edges.value.find(
+    e => e.source === connection.source && e.target === connection.target
+  )
+  if (existingEdge) {
+    return false
+  }
+
+  // 检查是否会形成循环（可选，根据业务需求）
+  // 这里简单起见，允许形成循环
+  
+  return true
+}
+
+// 节点点击
+function onNodeClick(event: any) {
+  const node = event.node
+  workflowStore.selectNode(node)
+  emit('node-select', node)
+}
+
+// 边点击
+function onEdgeClick(event: any) {
+  const edge = event.edge
+  workflowStore.selectEdge(edge)
+  emit('edge-select', edge)
+}
+
+// 画布点击
+function onPaneClick() {
+  workflowStore.selectNode(null)
+  workflowStore.selectEdge(null)
+}
+
+// 自动布局
+function autoLayout() {
+  // 简单的自动布局算法
+  const nodeWidth = 150
+  const nodeHeight = 80
+  const horizontalGap = 50
+  const verticalGap = 50
+  
+  // 按拓扑排序
+  const sortedNodes = topologicalSort(nodes.value, edges.value)
+  
+  // 计算每层节点
+  const layers: Node[][] = []
+  const nodeLayers = new Map<string, number>()
+  
+  sortedNodes.forEach(node => {
+    const inEdges = edges.value.filter(e => e.target === node.id)
+    if (inEdges.length === 0) {
+      nodeLayers.set(node.id, 0)
+      if (!layers[0]) layers[0] = []
+      layers[0].push(node)
+    } else {
+      const maxLayer = Math.max(
+        ...inEdges.map(e => nodeLayers.get(e.source) || 0)
+      )
+      const layer = maxLayer + 1
+      nodeLayers.set(node.id, layer)
+      if (!layers[layer]) layers[layer] = []
+      layers[layer].push(node)
+    }
+  })
+
+  // 设置节点位置
+  layers.forEach((layerNodes, layerIndex) => {
+    layerNodes.forEach((node, nodeIndex) => {
+      node.position = {
+        x: layerIndex * (nodeWidth + horizontalGap) + 50,
+        y: nodeIndex * (nodeHeight + verticalGap) + 50
+      }
+    })
+  })
+
+  // 适应视图
+  fitView()
+  workflowStore.saveToHistory()
+}
+
+// 拓扑排序
+function topologicalSort(nodes: Node[], edges: Edge[]): Node[] {
+  const result: Node[] = []
+  const visited = new Set<string>()
+  const visiting = new Set<string>()
+
+  function visit(node: Node) {
+    if (visited.has(node.id)) return
+    if (visiting.has(node.id)) return // 检测到循环
+
+    visiting.add(node.id)
+    
+    const outEdges = edges.filter(e => e.source === node.id)
+    outEdges.forEach(edge => {
+      const targetNode = nodes.find(n => n.id === edge.target)
+      if (targetNode) visit(targetNode)
+    })
+
+    visiting.delete(node.id)
+    visited.add(node.id)
+    result.unshift(node)
+  }
+
+  nodes.forEach(node => visit(node))
+  return result
+}
+
+// 删除选中的节点
+function deleteSelectedNodes() {
+  const selectedNodes = nodes.value.filter(n => n.selected)
+  if (selectedNodes.length > 0) {
+    removeNodes(selectedNodes.map(n => n.id))
+    workflowStore.saveToHistory()
+  }
+}
+
+// 删除选中的边
+function deleteSelectedEdges() {
+  const selectedEdges = edges.value.filter(e => e.selected)
+  if (selectedEdges.length > 0) {
+    removeEdges(selectedEdges.map(e => e.id))
+    workflowStore.saveToHistory()
+  }
+}
+
+// 暴露方法给父组件
+defineExpose({
+  autoLayout,
+  deleteSelectedNodes,
+  deleteSelectedEdges,
+  fitView
 })
 </script>
 
 <style scoped>
 .dag-editor {
   display: flex;
-  height: 500px;
+  height: 100%;
   border: 1px solid #ddd;
   border-radius: 4px;
   overflow: hidden;
@@ -216,6 +451,10 @@ onConnect((params: Connection) => {
 .node-type-item:hover {
   border-color: #007bff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.node-type-item:active {
+  cursor: grabbing;
 }
 
 .node-icon {
