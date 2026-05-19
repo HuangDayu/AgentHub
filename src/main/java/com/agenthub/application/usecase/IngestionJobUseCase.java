@@ -9,7 +9,6 @@ import com.agenthub.application.port.in.UploadDocumentsUseCase;
 import com.agenthub.application.port.out.DocumentFileStoragePort;
 import com.agenthub.application.port.out.repositories.IngestionDocumentRepository;
 import com.agenthub.application.port.out.repositories.IngestionJobRepository;
-import com.agenthub.application.service.IngestionPipelineService;
 import com.agenthub.domain.model.IngestionDocument;
 import com.agenthub.domain.model.IngestionJob;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +36,7 @@ public class IngestionJobUseCase
 
     private final IngestionJobRepository jobRepository;
     private final IngestionDocumentRepository documentRepository;
-    private final IngestionPipelineService pipelineService;
+    private final IngestionPipelineUseCase pipelineService;
     private final DocumentFileStoragePort documentStorage;
 
     /**

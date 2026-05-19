@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.auth;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.agenthub.application.port.out.CredentialVerifier;
+import com.agenthub.application.port.out.CredentialVerifierPort;
 import com.agenthub.infrastructure.store.db.entity.AppUserEntity;
 import com.agenthub.infrastructure.store.db.mapper.AppUserMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * 仅验证状态为 ACTIVE 的用户账户。
  * </p>
  */
-public class DatabaseCredentialVerifier implements CredentialVerifier {
+public class DatabaseCredentialVerifier implements CredentialVerifierPort {
     private final AppUserMapper appUserMapper;
     private final PasswordEncoder passwordEncoder;
 

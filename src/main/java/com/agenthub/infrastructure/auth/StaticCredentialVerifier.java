@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.auth;
 
-import com.agenthub.application.port.out.CredentialVerifier;
+import com.agenthub.application.port.out.CredentialVerifierPort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -14,7 +14,7 @@ import java.util.Map;
  * </p>
  */
 @Deprecated
-public class StaticCredentialVerifier implements CredentialVerifier {
+public class StaticCredentialVerifier implements CredentialVerifierPort {
     private final Map<String, String> credentials;
     private final PasswordEncoder passwordEncoder;
     private final boolean fixedResult;

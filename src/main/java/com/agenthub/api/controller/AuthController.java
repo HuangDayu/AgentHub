@@ -2,7 +2,7 @@ package com.agenthub.api.controller;
 
 import com.agenthub.api.dto.*;
 import com.agenthub.api.mapper.AuthResponseMapper;
-import com.agenthub.application.service.AuthApplicationService;
+import com.agenthub.application.usecase.AuthApplicationUseCase;
 import com.agenthub.application.usecase.GetCurrentUserUseCase;
 import com.agenthub.application.usecase.VerifyTokenUseCase;
 import com.agenthub.common.annotations.IgnoreTenantContext;
@@ -18,17 +18,17 @@ import java.util.Map;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
     
-    private final AuthApplicationService authApplicationService;
+    private final AuthApplicationUseCase authApplicationUseCase;
     private final VerifyTokenUseCase verifyTokenUseCase;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final AuthResponseMapper responseMapper;
 
     public AuthController(
-            AuthApplicationService authApplicationService,
+            AuthApplicationUseCase authApplicationUseCase,
             VerifyTokenUseCase verifyTokenUseCase,
             GetCurrentUserUseCase getCurrentUserUseCase,
             AuthResponseMapper responseMapper) {
-        this.authApplicationService = authApplicationService;
+        this.authApplicationUseCase = authApplicationUseCase;
         this.verifyTokenUseCase = verifyTokenUseCase;
         this.getCurrentUserUseCase = getCurrentUserUseCase;
         this.responseMapper = responseMapper;
@@ -37,19 +37,19 @@ public class AuthController {
     @PostMapping("/login")
     @IgnoreTenantContext
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        var tokens = authApplicationService.login(request.getUsername(), request.getPassword());
+        var tokens = authApplicationUseCase.login(request.getUsername(), request.getPassword());
         return ResponseEntity.ok(responseMapper.toResponse(tokens));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody RefreshRequest request) {
-        var tokens = authApplicationService.refresh(request.getRefreshToken());
+        var tokens = authApplicationUseCase.refresh(request.getRefreshToken());
         return ResponseEntity.ok(responseMapper.toResponse(tokens));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestBody RefreshRequest request) {
-        authApplicationService.logout(request.getRefreshToken());
+        authApplicationUseCase.logout(request.getRefreshToken());
         return ResponseEntity.noContent().build();
     }
 

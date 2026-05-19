@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.CreateHttpToolCommand;
 import com.agenthub.application.command.InvokeToolCommand;
 import com.agenthub.application.command.UpdateToolCommand;
-import com.agenthub.application.port.out.HttpToolInvoker;
+import com.agenthub.application.port.out.HttpToolInvokerPort;
 import com.agenthub.application.port.out.IdempotencyCachePort;
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
 import com.agenthub.domain.exception.ToolNotFoundException;
@@ -26,7 +26,7 @@ import java.util.List;
 public class HttpToolsUseCase {
     private static final int IDEMPOTENCY_TTL_SECONDS = 3600;
     private final HttpToolRepository repository;
-    private final HttpToolInvoker httpToolInvoker;
+    private final HttpToolInvokerPort httpToolInvokerPort;
     private final IdempotencyCachePort idempotencyCache;
     private final ObjectMapper objectMapper;
 
@@ -91,7 +91,7 @@ public class HttpToolsUseCase {
     }
 
     private HttpToolInvokeOutput doInvoke(String toolId, InvokeToolCommand command) {
-        HttpToolInvokeResult result = httpToolInvoker.invoke(toolId, command);
+        HttpToolInvokeResult result = httpToolInvokerPort.invoke(toolId, command);
         return BeanUtil.copyProperties(result, HttpToolInvokeOutput.class);
     }
 

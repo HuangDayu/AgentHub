@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.auth;
 
-import com.agenthub.application.service.AuthApplicationService;
-import com.agenthub.application.port.out.CredentialVerifier;
+import com.agenthub.application.usecase.AuthApplicationUseCase;
+import com.agenthub.application.port.out.CredentialVerifierPort;
 import com.agenthub.application.port.out.repositories.RefreshTokenRepository;
 import com.agenthub.infrastructure.store.db.mapper.AppUserMapper;
 import org.springframework.beans.factory.ObjectProvider;
@@ -58,20 +58,20 @@ public class AuthConfiguration {
      * @return 认证应用服务实例
      */
     @Bean
-    public AuthApplicationService authApplicationService(
+    public AuthApplicationUseCase authApplicationService(
             JwtTokenProvider jwtTokenProvider,
             AppUserMapper appUserMapper,
             RefreshTokenRepository refreshTokenRepository,
-            ObjectProvider<CredentialVerifier> credentialVerifierProvider) {
+            ObjectProvider<CredentialVerifierPort> credentialVerifierProvider) {
         // 优先使用容器中的 CredentialVerifier Bean（测试时注入 StaticCredentialVerifier）
-        CredentialVerifier credentialVerifier = credentialVerifierProvider.getIfAvailable(
+        CredentialVerifierPort credentialVerifierPort = credentialVerifierProvider.getIfAvailable(
                 () -> new DatabaseCredentialVerifier(appUserMapper));
         // 创建访问令牌服务
-        SimpleAccessTokenService tokenService =
-                new SimpleAccessTokenService(jwtTokenProvider, appUserMapper);
+        SimpleAccessTokenAdapter tokenService =
+                new SimpleAccessTokenAdapter(jwtTokenProvider, appUserMapper);
         // 组装认证应用服务及其依赖
-        return new AuthApplicationService(
-                credentialVerifier,
+        return new AuthApplicationUseCase(
+                credentialVerifierPort,
                 tokenService,
                 new UuidRefreshTokenGenerator(),
                 refreshTokenRepository,

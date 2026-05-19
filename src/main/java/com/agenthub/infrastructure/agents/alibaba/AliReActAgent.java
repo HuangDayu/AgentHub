@@ -2,8 +2,8 @@ package com.agenthub.infrastructure.agents.alibaba;
 
 import com.agenthub.domain.enums.AgentLifecycleState;
 import com.agenthub.domain.model.ReActAgentContext;
-import com.agenthub.infrastructure.agents.AbstractReActAgent;
-import com.agenthub.infrastructure.agents.AbstractTeamAgent;
+import com.agenthub.domain.model.AbstractReActAgent;
+import com.agenthub.domain.model.AbstractTeamAgent;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import lombok.Getter;

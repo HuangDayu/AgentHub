@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.Workflow;
+import com.agenthub.domain.model.workflow.Workflow;
 
 import java.util.List;
 import java.util.Optional;

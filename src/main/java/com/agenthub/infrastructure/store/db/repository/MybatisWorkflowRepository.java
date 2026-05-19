@@ -2,7 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.WorkflowRepository;
-import com.agenthub.domain.model.Workflow;
+import com.agenthub.domain.model.workflow.Workflow;
 import com.agenthub.infrastructure.store.db.entity.WorkflowEntity;
 import com.agenthub.infrastructure.store.db.mapper.WorkflowMybatisMapper;
 import org.springframework.context.annotation.Primary;

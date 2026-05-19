@@ -1,9 +1,10 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.application.port.out.agent.AgentPort;
+import com.agenthub.application.port.out.agent.AgentChatPort;
 import com.agenthub.application.port.out.repositories.AgentRepository;
 import com.agenthub.application.port.out.repositories.SessionRepository;
 import com.agenthub.domain.exception.NotFoundException;
+import com.agenthub.domain.model.AbstractReActAgent;
 import com.agenthub.domain.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -26,12 +27,11 @@ import static org.springframework.ai.util.json.JsonParser.toJson;
  */
 @Component
 @RequiredArgsConstructor
-public class AgentChatUseCase {
+public class AgentChatUseCase implements AgentChatPort {
 
-    private final AgentPort agentPort;
     private final AgentRepository agentRepository;
     private final SessionRepository sessionRepository;
-
+    private final AgentPoolUseCase agentPoolUseCase;
 
     /**
      * 同步对话。
@@ -40,7 +40,7 @@ public class AgentChatUseCase {
         sessionRepository.existSession(sessionId, agentId);
         List<ChatMessage> messages = new LinkedList<>();
         messages.add(user(sessionId, userMessage));
-        AssistantMessage response = agentPort.call(agentId, sessionId, userMessage);
+        AssistantMessage response = call(agentId, sessionId, userMessage);
         messages.add(assistant(sessionId, response.getText()));
         sessionRepository.saveMessages(messages);
         return response.getText();
@@ -54,7 +54,7 @@ public class AgentChatUseCase {
         StringBuilder responseBuilder = new StringBuilder();
         List<ChatMessage> messages = new LinkedList<>();
         messages.add(user(sessionId, userMessage));
-        return agentPort.streamMessages(agentId, sessionId, userMessage)
+        return streamMessages(agentId, sessionId, userMessage)
                 .doOnNext(msg -> appendMessages(sessionId, messages, responseBuilder, msg))
                 .onErrorResume(throwable -> {
                     String errorMessage = "对话过程中发生错误: " + throwable.getMessage();
@@ -65,6 +65,30 @@ public class AgentChatUseCase {
     }
 
 
+    @Override
+    public Flux<Message> streamMessages(String agentId, String sessionId, String userMessage) {
+        AbstractReActAgent agent = getAgent(agentId, sessionId);
+        if (agent == null) throw new NotFoundException("Agent create failed :" + agentId);
+        return agent.streamMessages(sessionId, userMessage);
+    }
+
+    @Override
+    public AssistantMessage call(String agentId, String sessionId, String userMessage) {
+        AbstractReActAgent agent = getAgent(agentId, sessionId);
+        if (agent == null) throw new NotFoundException("Agent create failed :" + agentId);
+        return agent.call(sessionId, userMessage);
+    }
+
+    @Override
+    public void interrupt(String agentId, String sessionId) {
+        AbstractReActAgent agent = getAgent(agentId, sessionId);
+        if (agent != null) agent.interrupt();
+    }
+
+    private AbstractReActAgent getAgent(String agentId, String sessionId) {
+        return agentPoolUseCase.getAgent(agentId, sessionId);
+    }
+
     /**
      * 追加响应内容。
      */
@@ -73,7 +97,8 @@ public class AgentChatUseCase {
             case AssistantMessage msg -> handleAssistantMessage(sessionId, messages, builder, msg);
             case ToolResponseMessage msg -> messages.add(tool(sessionId, toJson(msg.getResponses())));
             case SystemMessage msg -> messages.add(system(sessionId, msg.getText()));
-            default -> {}
+            default -> {
+            }
         }
     }
 
@@ -101,13 +126,6 @@ public class AgentChatUseCase {
      */
     private void saveMessages(List<ChatMessage> messages) {
         sessionRepository.saveMessages(messages);
-    }
-
-    /**
-     * 中断Agent执行。
-     */
-    public void interrupt(String agentId, String sessionId) {
-        agentPort.interrupt(agentId, sessionId);
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.tools.http_tools;
 
 import com.agenthub.application.command.InvokeToolCommand;
-import com.agenthub.application.port.out.HttpToolInvoker;
+import com.agenthub.application.port.out.HttpToolInvokerPort;
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
 import com.agenthub.domain.model.HttpTool;
 import com.agenthub.domain.exception.ToolNotFoundException;
@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  * 通过 HTTP 协议调用外部工具服务，支持重试和超时配置。
  */
 @Component
-public class HttpInvokerTools implements HttpToolInvoker {
+public class HttpInvokerTools implements HttpToolInvokerPort {
     private static final Logger log = LoggerFactory.getLogger(HttpInvokerTools.class);
 
     /**

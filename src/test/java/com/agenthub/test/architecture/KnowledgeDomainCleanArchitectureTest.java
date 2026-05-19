@@ -88,12 +88,12 @@ public class KnowledgeDomainCleanArchitectureTest {
     }
 
     /**
-     * 领域服务应该只依赖领域模型
+     * 领域用例应该只依赖领域模型
      */
     @Test
-    void domain_services_should_only_depend_on_domain() {
+    void domain_use_case_should_only_depend_on_domain() {
         classes()
-                .that().resideInAPackage("..domain.service..")
+                .that().resideInAPackage("..domain.usecase..")
                 .should().onlyDependOnClassesThat()
                 .resideInAnyPackage("..domain..", "java..", "org.slf4j..")
                 .allowEmptyShould(true)
@@ -102,16 +102,16 @@ public class KnowledgeDomainCleanArchitectureTest {
     }
 
     /**
-     * 应用服务命名约定
+     * 应用用例命名约定
      */
     @Test
-    void application_services_naming_convention() {
+    void application_use_case_naming_convention() {
         classes()
-                .that().resideInAPackage("..application.service..")
+                .that().resideInAPackage("..application.usecase..")
                 .and().areNotInterfaces()
                 .and().areNotAnonymousClasses()
-                .should().haveSimpleNameEndingWith("Service")
-                .because("应用服务类应该以'Service'结尾")
+                .should().haveSimpleNameEndingWith("UseCase")
+                .because("应用服务类应该以'UseCase'结尾")
                 .check(classes);
     }
 
