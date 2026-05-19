@@ -67,7 +67,7 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
 
     private Mono<Map<String, Object>> executeSyncChat(WorkflowChat workflowChat) {
         return Mono.fromCallable(() -> {
-            var response = agentChatPort.call(workflowChat.getAgentId(), workflowChat.getSessionId(), workflowChat.getMessage());
+            var response = agentChatPort.chatMessages(workflowChat.getAgentId(), workflowChat.getSessionId(), workflowChat.getMessage());
             Map<String, Object> result = new HashMap<>();
             result.put("content", response.getText());
             result.put("success", true);

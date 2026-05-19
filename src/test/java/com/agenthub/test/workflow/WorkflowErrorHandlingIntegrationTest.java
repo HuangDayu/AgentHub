@@ -4,10 +4,13 @@ import com.agenthub.application.port.out.agent.AgentChatPort;
 import com.agenthub.domain.enums.workflow.NodeStatus;
 import com.agenthub.domain.enums.workflow.NodeType;
 import com.agenthub.domain.enums.workflow.WorkflowStatus;
+import com.agenthub.domain.model.AgentMessage;
 import com.agenthub.domain.model.workflow.*;
 import com.agenthub.infrastructure.workflow.engine.DagBuilder;
 import com.agenthub.infrastructure.workflow.engine.WorkflowEngine;
-import com.agenthub.infrastructure.workflow.processor.impl.*;
+import com.agenthub.infrastructure.workflow.processor.impl.EndNodeProcessor;
+import com.agenthub.infrastructure.workflow.processor.impl.LlmNodeProcessor;
+import com.agenthub.infrastructure.workflow.processor.impl.StartNodeProcessor;
 import com.agenthub.infrastructure.workflow.state.WorkflowStateManager;
 import com.agenthub.test.TestAgentHubApplication;
 import org.junit.jupiter.api.*;
@@ -26,9 +29,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 /**
  * 错误处理集成测试。
@@ -84,9 +86,9 @@ class WorkflowErrorHandlingIntegrationTest {
 
         // When: 设置重试次数
         NodeConfig config = new NodeConfig(
-            Map.of("agentId", "agent-001", "prompt", "test"),
-            30000,
-            3  // 重试3次
+                Map.of("agentId", "agent-001", "prompt", "test"),
+                30000,
+                3  // 重试3次
         );
         node.updateConfig(config);
 
@@ -101,37 +103,37 @@ class WorkflowErrorHandlingIntegrationTest {
         // Given
         WorkflowNode llmNode = WorkflowNode.create(NodeType.LLM, "LLM节点");
         llmNode.updateConfig(new NodeConfig(Map.of(
-            "agentId", "agent-001",
-            "sessionId", "session-001",
-            "prompt", "test",
-            "streaming", false
+                "agentId", "agent-001",
+                "sessionId", "session-001",
+                "prompt", "test",
+                "streaming", false
         ), 30000, 2));
 
         // 模拟第一次失败，第二次成功
-        when(agentChatPort.call(anyString(), anyString(), anyString()))
-            .thenThrow(new RuntimeException("网络错误"))
-            .thenReturn(new AssistantMessage("重试成功"));
+        when(agentChatPort.chatMessages(anyString(), anyString(), anyString()))
+                .thenThrow(new RuntimeException("网络错误"))
+                .thenReturn(new AgentMessage(AgentMessage.MessageType.ASSISTANT, "重试成功"));
 
         // When: 第一次执行
         Mono<NodeResult> firstAttempt = llmNodeProcessor.process(llmNode, context);
 
         // Then: 第一次应该失败
         StepVerifier.create(firstAttempt)
-            .assertNext(result -> {
-                assertThat(result.isSuccess()).isFalse();
-            })
-            .verifyComplete();
+                .assertNext(result -> {
+                    assertThat(result.isSuccess()).isFalse();
+                })
+                .verifyComplete();
 
         // When: 第二次执行（重试）
         Mono<NodeResult> retryAttempt = llmNodeProcessor.process(llmNode, context);
 
         // Then: 第二次应该成功
         StepVerifier.create(retryAttempt)
-            .assertNext(result -> {
-                assertThat(result.isSuccess()).isTrue();
-                assertThat(result.getOutput("content")).isEqualTo("重试成功");
-            })
-            .verifyComplete();
+                .assertNext(result -> {
+                    assertThat(result.isSuccess()).isTrue();
+                    assertThat(result.getOutput("content")).isEqualTo("重试成功");
+                })
+                .verifyComplete();
     }
 
     @Test
@@ -141,22 +143,22 @@ class WorkflowErrorHandlingIntegrationTest {
         // Given
         WorkflowNode llmNode = WorkflowNode.create(NodeType.LLM, "LLM节点");
         llmNode.updateConfig(new NodeConfig(Map.of(
-            "agentId", "agent-001",
-            "sessionId", "session-001",
-            "prompt", "test",
-            "streaming", false
+                "agentId", "agent-001",
+                "sessionId", "session-001",
+                "prompt", "test",
+                "streaming", false
         ), 30000, 2));
 
         // 模拟持续失败
-        when(agentChatPort.call(anyString(), anyString(), anyString()))
-            .thenThrow(new RuntimeException("持续失败"));
+        when(agentChatPort.chatMessages(anyString(), anyString(), anyString()))
+                .thenThrow(new RuntimeException("持续失败"));
 
         // When: 多次执行
         for (int i = 0; i < 3; i++) {
             Mono<NodeResult> result = llmNodeProcessor.process(llmNode, context);
             StepVerifier.create(result)
-                .assertNext(r -> assertThat(r.isSuccess()).isFalse())
-                .verifyComplete();
+                    .assertNext(r -> assertThat(r.isSuccess()).isFalse())
+                    .verifyComplete();
         }
     }
 
@@ -177,16 +179,16 @@ class WorkflowErrorHandlingIntegrationTest {
         WorkflowNode endNode = WorkflowNode.create(NodeType.END, "结束");
 
         WorkflowGraph graph = WorkflowGraph.empty()
-            .addNode(startNode)
-            .addNode(conditionNode)
-            .addNode(successNode)
-            .addNode(failNode)
-            .addNode(endNode)
-            .addEdge(WorkflowEdge.create(startNode.getId(), conditionNode.getId()))
-            .addEdge(WorkflowEdge.createWithCondition(conditionNode.getId(), successNode.getId(), "success == true"))
-            .addEdge(WorkflowEdge.createWithCondition(conditionNode.getId(), failNode.getId(), "success == false"))
-            .addEdge(WorkflowEdge.create(successNode.getId(), endNode.getId()))
-            .addEdge(WorkflowEdge.create(failNode.getId(), endNode.getId()));
+                .addNode(startNode)
+                .addNode(conditionNode)
+                .addNode(successNode)
+                .addNode(failNode)
+                .addNode(endNode)
+                .addEdge(WorkflowEdge.create(startNode.getId(), conditionNode.getId()))
+                .addEdge(WorkflowEdge.createWithCondition(conditionNode.getId(), successNode.getId(), "success == true"))
+                .addEdge(WorkflowEdge.createWithCondition(conditionNode.getId(), failNode.getId(), "success == false"))
+                .addEdge(WorkflowEdge.create(successNode.getId(), endNode.getId()))
+                .addEdge(WorkflowEdge.create(failNode.getId(), endNode.getId()));
 
         // When
         DagBuilder.DagBuildResult result = dagBuilder.build(graph);
@@ -202,25 +204,25 @@ class WorkflowErrorHandlingIntegrationTest {
         // Given
         WorkflowNode failNode = WorkflowNode.create(NodeType.LLM, "失败处理");
         failNode.updateConfig(new NodeConfig(Map.of(
-            "agentId", "agent-001",
-            "sessionId", "session-001",
-            "prompt", "处理错误",
-            "streaming", false
+                "agentId", "agent-001",
+                "sessionId", "session-001",
+                "prompt", "处理错误",
+                "streaming", false
         ), 30000, 0));
 
-        when(agentChatPort.call(anyString(), anyString(), anyString()))
-            .thenReturn(new AssistantMessage("错误已处理"));
+        when(agentChatPort.chatMessages(anyString(), anyString(), anyString()))
+                .thenReturn(new AgentMessage(AgentMessage.MessageType.ASSISTANT, "错误已处理"));
 
         // When
         Mono<NodeResult> result = llmNodeProcessor.process(failNode, context);
 
         // Then
         StepVerifier.create(result)
-            .assertNext(r -> {
-                assertThat(r.isSuccess()).isTrue();
-                assertThat(r.getOutput("content")).isEqualTo("错误已处理");
-            })
-            .verifyComplete();
+                .assertNext(r -> {
+                    assertThat(r.isSuccess()).isTrue();
+                    assertThat(r.getOutput("content")).isEqualTo("错误已处理");
+                })
+                .verifyComplete();
     }
 
     // ==================== 失败分支执行测试 ====================
@@ -255,10 +257,10 @@ class WorkflowErrorHandlingIntegrationTest {
         // When: 创建条件节点判断是否需要执行失败分支
         WorkflowNode conditionNode = WorkflowNode.create(NodeType.CONDITION, "错误判断");
         conditionNode.updateConfig(new NodeConfig(Map.of(
-            "branches", List.of(
-                Map.of("name", "errorBranch", "expression", "hasError == true", "targetNodeId", "errorHandler"),
-                Map.of("name", "normalBranch", "expression", "hasError == false", "targetNodeId", "nextNode")
-            )
+                "branches", List.of(
+                        Map.of("name", "errorBranch", "expression", "hasError == true", "targetNodeId", "errorHandler"),
+                        Map.of("name", "normalBranch", "expression", "hasError == false", "targetNodeId", "nextNode")
+                )
         ), 30000, 0));
 
         // Then: 验证条件配置正确
@@ -296,9 +298,9 @@ class WorkflowErrorHandlingIntegrationTest {
 
         // When: 设置超时时间
         NodeConfig config = new NodeConfig(
-            Map.of("agentId", "agent-001", "prompt", "test"),
-            5000,  // 5秒超时
-            0
+                Map.of("agentId", "agent-001", "prompt", "test"),
+                5000,  // 5秒超时
+                0
         );
         node.updateConfig(config);
 
@@ -313,18 +315,18 @@ class WorkflowErrorHandlingIntegrationTest {
         // Given
         WorkflowNode node = WorkflowNode.create(NodeType.LLM, "LLM节点");
         node.updateConfig(new NodeConfig(Map.of(
-            "agentId", "agent-001",
-            "sessionId", "session-001",
-            "prompt", "test",
-            "streaming", false
+                "agentId", "agent-001",
+                "sessionId", "session-001",
+                "prompt", "test",
+                "streaming", false
         ), 1000, 0)); // 1秒超时
 
         // 模拟超时
-        when(agentChatPort.call(anyString(), anyString(), anyString()))
-            .thenAnswer(invocation -> {
-                Thread.sleep(2000); // 模拟2秒延迟
-                return new AssistantMessage("响应");
-            });
+        when(agentChatPort.chatMessages(anyString(), anyString(), anyString()))
+                .thenAnswer(invocation -> {
+                    Thread.sleep(2000); // 模拟2秒延迟
+                    return new AssistantMessage("响应");
+                });
 
         // When & Then: 应该在超时前完成或抛出超时异常
         // 注意：实际测试中需要使用StepVerifier.withVirtualTime来测试超时
@@ -397,8 +399,8 @@ class WorkflowErrorHandlingIntegrationTest {
 
         // Then: 统计失败节点
         long failedCount = context.getNodeResults().values().stream()
-            .filter(r -> !r.isSuccess())
-            .count();
+                .filter(r -> !r.isSuccess())
+                .count();
 
         assertThat(failedCount).isEqualTo(2);
     }
@@ -471,11 +473,11 @@ class WorkflowErrorHandlingIntegrationTest {
 
         // When: 创建包含详细信息的错误
         String errorMessage = String.format(
-            "节点执行失败 [nodeId=%s, nodeName=%s, type=%s]: %s",
-            node.getId(),
-            node.getName(),
-            node.getType(),
-            "API调用超时"
+                "节点执行失败 [nodeId=%s, nodeName=%s, type=%s]: %s",
+                node.getId(),
+                node.getName(),
+                node.getType(),
+                "API调用超时"
         );
         NodeResult result = NodeResult.failure(node.getId(), errorMessage);
 
@@ -516,7 +518,7 @@ class WorkflowErrorHandlingIntegrationTest {
                 throw new IllegalArgumentException("节点配置不能为空");
             }
         }).isInstanceOf(IllegalArgumentException.class)
-          .hasMessage("节点配置不能为空");
+                .hasMessage("节点配置不能为空");
     }
 
     @Test

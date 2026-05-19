@@ -2,7 +2,6 @@ package com.agenthub.domain.model;
 
 import com.agenthub.domain.enums.AgentLifecycleState;
 import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -21,9 +20,9 @@ public abstract class AbstractReActAgent {
 
     public abstract ReActAgentContext getContext();
 
-    public abstract Flux<Message> streamMessages(String sessionId, String userMessage);
+    public abstract Flux<AgentMessage> streamMessages(String sessionId, String userMessage);
 
-    public abstract AssistantMessage call(String sessionId, String userMessage);
+    public abstract AgentMessage call(String sessionId, String userMessage);
 
     public abstract void interrupt();
 

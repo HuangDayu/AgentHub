@@ -1,18 +1,15 @@
 package com.agenthub.api.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.agenthub.api.dto.CreateSessionRequest;
-import com.agenthub.api.dto.MessageResponse;
-import com.agenthub.api.dto.SendMessageRequest;
-import com.agenthub.api.dto.SessionResponse;
+import com.agenthub.api.dto.*;
 import com.agenthub.api.mapper.MessageResponseMapper;
 import com.agenthub.application.dto.MessageOutput;
 import com.agenthub.application.dto.SessionOutput;
 import com.agenthub.application.usecase.AgentChatUseCase;
 import com.agenthub.application.usecase.SessionUseCase;
+import com.agenthub.domain.model.AgentMessage;
 import com.agenthub.domain.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.messages.Message;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -89,14 +86,13 @@ public class SessionController {
      * @return 回复消息响应
      */
     @PostMapping("/{sessionId}/messages")
-    public ResponseEntity<org.springframework.ai.chat.messages.AssistantMessage> sendMessage(
+    public AgentMessageResponse sendMessage(
             @PathVariable String agentId,
             @PathVariable String sessionId,
             @RequestBody SendMessageRequest request
     ) {
-        String response = agentChatUseCase.chat(agentId, sessionId, request.getContent());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new org.springframework.ai.chat.messages.AssistantMessage(response));
+        AgentMessage agentMessage = agentChatUseCase.chatMessages(agentId, sessionId, request.getContent());
+        return BeanUtil.copyProperties(agentMessage, AgentMessageResponse.class);
     }
 
     /**
@@ -126,16 +122,17 @@ public class SessionController {
      * @return SSE发射器
      */
     @PostMapping(value = "/{sessionId}/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<Message> sendMessageStream(
+    public Flux<AgentMessageResponse> sendMessageStream(
             @PathVariable String agentId,
             @PathVariable String sessionId,
             @RequestBody SendMessageRequest request
     ) {
-        return agentChatUseCase.streamChat(agentId, sessionId, request.getContent());
+        return agentChatUseCase.streamMessages(agentId, sessionId, request.getContent())
+                .map(v -> BeanUtil.copyProperties(v, AgentMessageResponse.class));
     }
 
     @DeleteMapping("/{sessionId}")
-    public void deleteSession(@PathVariable String sessionId){
+    public void deleteSession(@PathVariable String sessionId) {
         sessionUseCase.deleteSession(sessionId);
     }
 

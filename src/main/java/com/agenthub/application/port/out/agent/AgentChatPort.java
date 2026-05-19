@@ -1,7 +1,6 @@
 package com.agenthub.application.port.out.agent;
 
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
+import com.agenthub.domain.model.AgentMessage;
 import reactor.core.publisher.Flux;
 
 /**
@@ -14,12 +13,12 @@ public interface AgentChatPort {
     /**
      * 流式对话。
      */
-    Flux<Message> streamMessages(String agentId, String sessionId, String userMessage);
+    Flux<AgentMessage> streamMessages(String agentId, String sessionId, String userMessage);
 
     /**
      * 同步对话。
      */
-    AssistantMessage call(String agentId, String sessionId, String userMessage);
+    AgentMessage chatMessages(String agentId, String sessionId, String userMessage);
 
     /**
      * 中断Agent执行。

@@ -1,4 +1,4 @@
-package com.agenthub.domain.model;
+package com.agenthub.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,7 +26,7 @@ import java.util.Map;
  */
 @Data
 @AllArgsConstructor
-public class AgentMessage {
+public class AgentMessageResponse {
 
     private MessageType messageType;
     private String text;
@@ -36,20 +36,20 @@ public class AgentMessage {
     private List<Media> media;
 
 
-    public AgentMessage() {
+    public AgentMessageResponse() {
         this.metadata = new HashMap<>();
         this.toolCalls = new ArrayList<>();
         this.toolResponses = new ArrayList<>();
         this.media = new ArrayList<>();
     }
 
-    public AgentMessage(MessageType messageType, String text) {
+    public AgentMessageResponse(MessageType messageType, String text) {
         this();
         this.messageType = messageType;
         this.text = text;
     }
 
-    public AgentMessage(MessageType messageType, String text, Map<String, Object> metadata) {
+    public AgentMessageResponse(MessageType messageType, String text, Map<String, Object> metadata) {
         this();
         this.messageType = messageType;
         this.text = text;

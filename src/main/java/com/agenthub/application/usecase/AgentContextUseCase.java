@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import com.agenthub.application.factory.AgentContextFactory;
 import com.agenthub.application.port.out.repositories.*;
 import com.agenthub.domain.enums.AgentConfigCategory;
 import com.agenthub.domain.enums.AgentConfigType;
@@ -20,7 +21,7 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public class AgentContextUseCase {
+public class AgentContextUseCase implements AgentContextFactory {
     private final AgentRepository agentRepository;
     private final AgentConfigRepository agentConfigRepository;
     private final PromptTemplateRepository promptTemplateRepository;
@@ -30,6 +31,7 @@ public class AgentContextUseCase {
     private final GuardrailStrategyRepository guardrailStrategyRepository;
     private final WorkspaceRepository workspaceRepository;
 
+    @Override
     public ReActAgentContext buildContext(String agentId, String sessionId) {
         Agent agent = agentRepository.findById(agentId).orElseThrow(() -> new NotFoundException("Agent not found: " + agentId));
         List<AgentConfig> configs = agentConfigRepository.findByAgentIdAndEnabled(agentId);

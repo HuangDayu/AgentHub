@@ -2,6 +2,8 @@ package com.agenthub.application.usecase;
 
 import cn.hutool.core.map.multi.RowKeyTable;
 import cn.hutool.core.map.multi.Table;
+import com.agenthub.application.factory.AgentContextFactory;
+import com.agenthub.application.factory.AgentPoolFactory;
 import com.agenthub.application.factory.ReActAgentFactory;
 import com.agenthub.common.annotations.IgnoreTenantContext;
 import com.agenthub.domain.event.AgentConfigDeletedEvent;
@@ -29,18 +31,20 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AgentPoolUseCase {
+public class AgentPoolUseCase implements AgentPoolFactory {
 
     private static final Table<String, String, AbstractReActAgent> AGENT_POOL = new RowKeyTable<>(new ConcurrentHashMap<>(), ConcurrentHashMap::new);
     private static final Table<String, String, ReActAgentContext> CONTEXT_POOL = new RowKeyTable<>(new ConcurrentHashMap<>(), ConcurrentHashMap::new);
     private final ReActAgentFactory agentFactory;
-    private final AgentContextUseCase agentContextUseCase;
+    private final AgentContextFactory agentContextFactory;
     private static final Set<String> agentIds = new HashSet<>();
 
+    @Override
     public AbstractReActAgent getAgent(Agent agent, String sessionId) {
         return getAgent(agent.getId(), sessionId);
     }
 
+    @Override
     public AbstractReActAgent getAgent(String agentId, String sessionId) {
         AbstractReActAgent agent = AGENT_POOL.get(sessionId, agentId);
         if (agent == null) {
@@ -53,7 +57,7 @@ public class AgentPoolUseCase {
     private ReActAgentContext getReActAgentContext(String agentId, String sessionId) {
         ReActAgentContext context = CONTEXT_POOL.get(sessionId, agentId);
         if (context == null) {
-            context = agentContextUseCase.buildContext(agentId, sessionId);
+            context = agentContextFactory.buildContext(agentId, sessionId);
             CONTEXT_POOL.put(sessionId, agentId, context);
         }
         return context;

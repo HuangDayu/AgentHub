@@ -5,12 +5,9 @@ import com.agenthub.application.port.out.repositories.AgentRepository;
 import com.agenthub.application.port.out.repositories.SessionRepository;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.AbstractReActAgent;
+import com.agenthub.domain.model.AgentMessage;
 import com.agenthub.domain.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -33,50 +30,36 @@ public class AgentChatUseCase implements AgentChatPort {
     private final SessionRepository sessionRepository;
     private final AgentPoolUseCase agentPoolUseCase;
 
-    /**
-     * 同步对话。
-     */
-    public String chat(String agentId, String sessionId, String userMessage) {
+
+    @Override
+    public AgentMessage chatMessages(String agentId, String sessionId, String userMessage) {
         sessionRepository.existSession(sessionId, agentId);
+        AbstractReActAgent agent = getAgent(agentId, sessionId);
+        if (agent == null) throw new NotFoundException("Agent create failed :" + agentId);
         List<ChatMessage> messages = new LinkedList<>();
         messages.add(user(sessionId, userMessage));
-        AssistantMessage response = call(agentId, sessionId, userMessage);
+        AgentMessage response = agent.call(sessionId, userMessage);
         messages.add(assistant(sessionId, response.getText()));
         sessionRepository.saveMessages(messages);
-        return response.getText();
+        return response;
     }
 
-    /**
-     * 流式对话。
-     */
-    public Flux<Message> streamChat(String agentId, String sessionId, String userMessage) {
+    @Override
+    public Flux<AgentMessage> streamMessages(String agentId, String sessionId, String userMessage) {
         sessionRepository.existSession(sessionId, agentId);
+        AbstractReActAgent agent = getAgent(agentId, sessionId);
+        if (agent == null) throw new NotFoundException("Agent create failed :" + agentId);
         StringBuilder responseBuilder = new StringBuilder();
         List<ChatMessage> messages = new LinkedList<>();
         messages.add(user(sessionId, userMessage));
-        return streamMessages(agentId, sessionId, userMessage)
+        return agent.streamMessages(sessionId, userMessage)
                 .doOnNext(msg -> appendMessages(sessionId, messages, responseBuilder, msg))
                 .onErrorResume(throwable -> {
                     String errorMessage = "对话过程中发生错误: " + throwable.getMessage();
                     messages.add(system(sessionId, errorMessage));
-                    return Flux.just(new SystemMessage(errorMessage));
+                    return Flux.just(new AgentMessage(AgentMessage.MessageType.SYSTEM, errorMessage));
                 })
                 .doFinally(signal -> saveMessages(messages));
-    }
-
-
-    @Override
-    public Flux<Message> streamMessages(String agentId, String sessionId, String userMessage) {
-        AbstractReActAgent agent = getAgent(agentId, sessionId);
-        if (agent == null) throw new NotFoundException("Agent create failed :" + agentId);
-        return agent.streamMessages(sessionId, userMessage);
-    }
-
-    @Override
-    public AssistantMessage call(String agentId, String sessionId, String userMessage) {
-        AbstractReActAgent agent = getAgent(agentId, sessionId);
-        if (agent == null) throw new NotFoundException("Agent create failed :" + agentId);
-        return agent.call(sessionId, userMessage);
     }
 
     @Override
@@ -92,21 +75,21 @@ public class AgentChatUseCase implements AgentChatPort {
     /**
      * 追加响应内容。
      */
-    private void appendMessages(String sessionId, List<ChatMessage> messages, StringBuilder builder, Message message) {
-        switch (message) {
-            case AssistantMessage msg -> handleAssistantMessage(sessionId, messages, builder, msg);
-            case ToolResponseMessage msg -> messages.add(tool(sessionId, toJson(msg.getResponses())));
-            case SystemMessage msg -> messages.add(system(sessionId, msg.getText()));
+    private void appendMessages(String sessionId, List<ChatMessage> messages, StringBuilder builder, AgentMessage message) {
+        switch (message.getMessageType()) {
+            case ASSISTANT -> handleAssistantMessage(sessionId, messages, builder, message);
+            case TOOL -> messages.add(tool(sessionId, toJson(message.getToolResponses())));
+            case SYSTEM -> messages.add(system(sessionId, message.getText()));
             default -> {
             }
         }
     }
 
-    private void handleAssistantMessage(String sessionId, List<ChatMessage> messages, StringBuilder builder, AssistantMessage msg) {
+    private void handleAssistantMessage(String sessionId, List<ChatMessage> messages, StringBuilder builder, AgentMessage msg) {
         if (msg.getText() != null) {
             builder.append(msg.getText());
         }
-        if (!msg.getToolCalls().isEmpty()) {
+        if (msg.getToolCalls() != null && !msg.getToolCalls().isEmpty()) {
             flushPendingText(sessionId, messages, builder);
             messages.add(assistant(sessionId, toJson(msg.getToolCalls())));
         }

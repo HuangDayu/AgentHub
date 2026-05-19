@@ -1,14 +1,11 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.domain.exception.JobNotFoundException;
 import com.agenthub.application.command.CreateIngestionJobCommand;
 import com.agenthub.application.dto.IngestionJobOutput;
-import com.agenthub.application.port.in.CreateIngestionJobUseCase;
-import com.agenthub.application.port.in.GetIngestionJobUseCase;
-import com.agenthub.application.port.in.UploadDocumentsUseCase;
 import com.agenthub.application.port.out.DocumentFileStoragePort;
 import com.agenthub.application.port.out.repositories.IngestionDocumentRepository;
 import com.agenthub.application.port.out.repositories.IngestionJobRepository;
+import com.agenthub.domain.exception.JobNotFoundException;
 import com.agenthub.domain.model.IngestionDocument;
 import com.agenthub.domain.model.IngestionJob;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +27,7 @@ import static com.agenthub.common.utils.RandomUtils.randomId;
  */
 @Component
 @RequiredArgsConstructor
-public class IngestionJobUseCase
-        implements CreateIngestionJobUseCase, GetIngestionJobUseCase, UploadDocumentsUseCase {
+public class IngestionJobUseCase {
     private static final Logger log = LoggerFactory.getLogger(IngestionJobUseCase.class);
 
     private final IngestionJobRepository jobRepository;
@@ -45,7 +41,6 @@ public class IngestionJobUseCase
      * @param command 创建任务命令
      * @return 创建的入库任务
      */
-    @Override
     @Transactional
     public IngestionJob createJob(CreateIngestionJobCommand command) {
         Objects.requireNonNull(command, "command must not be null");
@@ -63,7 +58,6 @@ public class IngestionJobUseCase
     /**
      * 上传文档并创建入库任务，触发异步处理流水线。
      */
-    @Override
     @Transactional
     public IngestionJob uploadDocument(
             String kbId, String fileName, String contentType, long size, String storagePath) {
@@ -109,7 +103,6 @@ public class IngestionJobUseCase
      * @param jobId 任务ID
      * @return 入库任务
      */
-    @Override
     public IngestionJob getJobById(String jobId) {
         Objects.requireNonNull(jobId, "jobId must not be null");
         return jobRepository.findById(jobId)
@@ -128,7 +121,7 @@ public class IngestionJobUseCase
     public IngestionJobOutput reVectorStoreDocuments(String kbId, String docId) {
         IngestionDocument document = documentRepository.findByDocId(docId);
         IngestionJob job = createJob(kbId, 1);
-        List<IngestionDocument> list = List.of( document);
+        List<IngestionDocument> list = List.of(document);
         IngestionJob ingestionJob = job.withDocuments(list);
         pipelineService.execute(ingestionJob);
         log.info("Triggered pipeline for job: jobId={}", job.getJobId());

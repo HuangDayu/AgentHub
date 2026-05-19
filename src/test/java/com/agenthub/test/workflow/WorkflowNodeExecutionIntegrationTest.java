@@ -3,9 +3,10 @@ package com.agenthub.test.workflow;
 import com.agenthub.application.port.out.agent.AgentChatPort;
 import com.agenthub.domain.enums.workflow.NodeStatus;
 import com.agenthub.domain.enums.workflow.NodeType;
+import com.agenthub.domain.model.AgentMessage;
 import com.agenthub.domain.model.workflow.*;
-import com.agenthub.infrastructure.workflow.processor.impl.*;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
+import com.agenthub.infrastructure.workflow.processor.impl.*;
 import com.agenthub.test.TestAgentHubApplication;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
@@ -174,8 +175,8 @@ class WorkflowNodeExecutionIntegrationTest {
             "streaming", false
         ), 30000, 0));
 
-        AssistantMessage mockResponse = new AssistantMessage("你好，我是AI助手");
-        when(agentChatPort.call(anyString(), anyString(), anyString())).thenReturn(mockResponse);
+        when(agentChatPort.chatMessages(anyString(), anyString(), anyString()))
+                .thenReturn(new AgentMessage(AgentMessage.MessageType.ASSISTANT,"你好，我是AI助手"));
 
         // When
         Mono<NodeResult> resultMono = llmNodeProcessor.process(llmNode, context);
@@ -202,11 +203,11 @@ class WorkflowNodeExecutionIntegrationTest {
             "streaming", true
         ), 30000, 0));
 
-        Flux<org.springframework.ai.chat.messages.Message> messageFlux = Flux.just(
-            new AssistantMessage("很"),
-            new AssistantMessage("久"),
-            new AssistantMessage("以"),
-            new AssistantMessage("前")
+        Flux<AgentMessage> messageFlux = Flux.just(
+            new AgentMessage(AgentMessage.MessageType.ASSISTANT, "很"),
+            new AgentMessage(AgentMessage.MessageType.ASSISTANT, "久"),
+            new AgentMessage(AgentMessage.MessageType.ASSISTANT, "以"),
+            new AgentMessage(AgentMessage.MessageType.ASSISTANT, "前")
         );
         when(agentChatPort.streamMessages(anyString(), anyString(), anyString())).thenReturn(messageFlux);
 

@@ -1,12 +1,13 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
 import com.agenthub.domain.enums.AgentTeamType;
+import com.agenthub.domain.model.AgentMessage;
 import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.domain.model.AbstractReActAgent;
 import com.agenthub.domain.model.AbstractTeamAgent;
+import com.agenthub.infrastructure.agents.AgentMessageMapper;
 import com.alibaba.cloud.ai.graph.agent.Agent;
 import lombok.SneakyThrows;
-import org.springframework.ai.chat.messages.Message;
 import reactor.core.publisher.Flux;
 
 import java.util.LinkedList;
@@ -45,8 +46,9 @@ public class AliTeamAgent extends AbstractTeamAgent {
 
     @SneakyThrows
     @Override
-    public Flux<Message> streamMessages(String userMessage) {
-        return leader.streamMessages(userMessage);
+    public Flux<AgentMessage> streamMessages(String userMessage) {
+        return leader.streamMessages(userMessage)
+                .map(AgentMessageMapper::fromMessage);
     }
 
     @Override

@@ -1,15 +1,15 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
 import com.agenthub.domain.enums.AgentLifecycleState;
-import com.agenthub.domain.model.ReActAgentContext;
 import com.agenthub.domain.model.AbstractReActAgent;
 import com.agenthub.domain.model.AbstractTeamAgent;
+import com.agenthub.domain.model.AgentMessage;
+import com.agenthub.domain.model.ReActAgentContext;
+import com.agenthub.infrastructure.agents.AgentMessageMapper;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
 import reactor.core.publisher.Flux;
 
 import java.util.LinkedList;
@@ -62,16 +62,17 @@ public class AliReActAgent extends AbstractReActAgent {
 
     @SneakyThrows
     @Override
-    public Flux<Message> streamMessages(String sessionId, String userMessage) {
+    public Flux<AgentMessage> streamMessages(String sessionId, String userMessage) {
         RunnableConfig runnableConfig = RunnableConfig.builder(config.getRunnableConfig()).threadId(sessionId).build();
-        return agent.streamMessages(userMessage, runnableConfig);
+        return agent.streamMessages(userMessage, runnableConfig)
+                .map(AgentMessageMapper::fromMessage);
     }
 
     @SneakyThrows
     @Override
-    public AssistantMessage call(String sessionId, String userMessage) {
+    public AgentMessage call(String sessionId, String userMessage) {
         RunnableConfig runnableConfig = RunnableConfig.builder(config.getRunnableConfig()).threadId(sessionId).build();
-        return agent.call(userMessage, runnableConfig);
+        return AgentMessageMapper.fromMessage(agent.call(userMessage, runnableConfig));
     }
 
     @Override

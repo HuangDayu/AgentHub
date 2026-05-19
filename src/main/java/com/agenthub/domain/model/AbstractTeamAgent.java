@@ -1,7 +1,6 @@
 package com.agenthub.domain.model;
 
 import com.agenthub.domain.enums.AgentTeamType;
-import org.springframework.ai.chat.messages.Message;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -17,7 +16,7 @@ public abstract class AbstractTeamAgent {
 
     public abstract ReActAgentContext getContext();
 
-    public abstract Flux<Message> streamMessages(String userMessage);
+    public abstract Flux<AgentMessage> streamMessages(String userMessage);
 
     public abstract List<AbstractReActAgent> followers();
 
