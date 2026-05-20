@@ -64,16 +64,10 @@
             </label>
             <label class="field">
               <span>描述</span>
-              <textarea v-model="form.description" rows="2"></textarea>
+              <textarea v-model="form.description"></textarea>
             </label>
           </div>
         </form>
-
-        <!-- DAG编辑器部分（下） -->
-        <div class="dag-section">
-          <div class="dag-title">工作流DAG图</div>
-          <DagEditor v-model="form.graphDefinition" />
-        </div>
       </div>
     </ModalDialog>
   </section>
@@ -87,7 +81,6 @@ import type { Workflow } from '@/types/memory'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
-import DagEditor from '@/components/workflow/DagEditor.vue'
 
 const store = useWorkspaceStore()
 const workflows = ref<Workflow[]>([])
@@ -253,37 +246,5 @@ th, td {
   text-align: center;
   padding: 2rem;
   color: #6c757d;
-}
-
-.workflow-form-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.workflow-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-row {
-  display: flex;
-  gap: 1rem;
-}
-
-.form-row .field {
-  flex: 1;
-}
-
-.dag-section {
-  border-top: 1px solid #ddd;
-  padding-top: 1rem;
-}
-
-.dag-title {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  color: #333;
 }
 </style>
