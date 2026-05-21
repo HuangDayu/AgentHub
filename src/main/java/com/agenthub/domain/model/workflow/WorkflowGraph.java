@@ -1,5 +1,7 @@
 package com.agenthub.domain.model.workflow;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -22,6 +24,13 @@ public class WorkflowGraph {
 
     /** 所有边 */
     private final List<WorkflowEdge> edges;
+
+    @JsonCreator
+    public WorkflowGraph(@JsonProperty("nodes") List<WorkflowNode> nodes,
+                         @JsonProperty("edges") List<WorkflowEdge> edges) {
+        this.nodes = nodes;
+        this.edges = edges;
+    }
 
     /** 图元数据 */
     private Map<String, Object> metadata;

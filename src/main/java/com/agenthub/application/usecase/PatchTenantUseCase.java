@@ -1,7 +1,6 @@
 package com.agenthub.application.usecase;
 
 import com.agenthub.application.command.PatchTenantCommand;
-import com.agenthub.application.port.out.TimeProvider;
 import com.agenthub.application.port.out.repositories.TenantRepository;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.auth.Tenant;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PatchTenantUseCase {
     private final TenantRepository tenantRepository;
-    private final TimeProvider timeProvider;
 
     /**
      * 执行更新租户操作。

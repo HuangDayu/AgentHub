@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.model;
 
+import com.agenthub.domain.enums.ModelSupplier;
 import com.agenthub.domain.model.ModelConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +29,8 @@ public class DeepSeekModelFactory implements ModelFactory {
     private static final String DEFAULT_BASE_URL = "https://api.deepseek.com/v1";
 
     @Override
-    public String getSupplier() {
-        return "DEEPSEEK";
+    public ModelSupplier getSupplier() {
+        return ModelSupplier.DEEPSEEK;
     }
 
     @Override

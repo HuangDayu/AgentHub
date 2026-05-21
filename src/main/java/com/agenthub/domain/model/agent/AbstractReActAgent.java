@@ -1,6 +1,7 @@
 package com.agenthub.domain.model.agent;
 
 import com.agenthub.domain.enums.AgentLifecycleState;
+import com.agenthub.domain.enums.AgentTeamType;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -27,6 +28,6 @@ public abstract class AbstractReActAgent {
 
     public abstract List<AbstractTeamAgent> teams();
 
-    public abstract void addTeam(AbstractTeamAgent teamAgent);
+    public abstract void createTeam(AgentTeamType agentTeamType, ReActAgentContext leader, ReActAgentContext... followers);
 
 }

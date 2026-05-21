@@ -60,7 +60,25 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
     @SuppressWarnings("unchecked")
     private WorkflowNode getLoopBody(NodeConfig config) {
         Map<String, Object> bodyConfig = (Map<String, Object>) config.getParameters().get("body");
+        
+        // 如果没有配置 body，创建一个空操作的循环体
+        if (bodyConfig == null || bodyConfig.isEmpty()) {
+            log.warn("循环节点未配置 body，创建空操作循环体");
+            return createNoOpLoopBody();
+        }
+        
         return buildLoopBodyNode(bodyConfig);
+    }
+    
+    /**
+     * 创建空操作的循环体节点.
+     */
+    private WorkflowNode createNoOpLoopBody() {
+        WorkflowNode node = WorkflowNode.create(NodeType.CODE, "EmptyLoopBody");
+        Map<String, Object> params = new HashMap<>();
+        params.put("script", "{}; // No-op");
+        node.setConfig(new NodeConfig(params, 5000L, 0));
+        return node;
     }
 
     /**
@@ -115,7 +133,11 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
      * 获取最大迭代次数.
      */
     private int getMaxIterations(NodeConfig config) {
-        return (int) config.getParameters().getOrDefault("maxIterations", 100);
+        Object maxIterationsValue = config.getParameters().getOrDefault("maxIterations", 100);
+        if (maxIterationsValue instanceof Number) {
+            return ((Number) maxIterationsValue).intValue();
+        }
+        return 100;
     }
 
     /**

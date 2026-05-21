@@ -1,6 +1,8 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
+import com.agenthub.application.factory.TeamAgentFactory;
 import com.agenthub.domain.enums.AgentLifecycleState;
+import com.agenthub.domain.enums.AgentTeamType;
 import com.agenthub.domain.model.agent.AbstractReActAgent;
 import com.agenthub.domain.model.agent.AbstractTeamAgent;
 import com.agenthub.domain.model.agent.AgentMessage;
@@ -9,6 +11,7 @@ import com.agenthub.infrastructure.converter.AgentMessageConverter;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import reactor.core.publisher.Flux;
 
@@ -18,20 +21,16 @@ import java.util.List;
 /**
  * 单个Agent运行时，封装ReactAgent的创建与执行。
  */
+@RequiredArgsConstructor
 public class AliReActAgent extends AbstractReActAgent {
 
     private final ReActAgentContext context;
     private final AliReActAgentConfig config;
+    private final TeamAgentFactory teamAgentFactory;
     @Getter
     private final ReactAgent agent;
     private final List<AbstractTeamAgent> teams = new LinkedList<>();
     private AgentLifecycleState state = AgentLifecycleState.CREATED;
-
-    public AliReActAgent(ReActAgentContext context, AliReActAgentConfig config, ReactAgent agent) {
-        this.context = context;
-        this.config = config;
-        this.agent = agent;
-    }
 
     @SneakyThrows
     @Override
@@ -88,8 +87,8 @@ public class AliReActAgent extends AbstractReActAgent {
     }
 
     @Override
-    public void addTeam(AbstractTeamAgent teamAgent) {
-        teams.add(teamAgent);
+    public void createTeam(AgentTeamType agentTeamType, ReActAgentContext leader, ReActAgentContext... followers) {
+        teams.add(teamAgentFactory.create(agentTeamType, leader, followers));
     }
 
 }

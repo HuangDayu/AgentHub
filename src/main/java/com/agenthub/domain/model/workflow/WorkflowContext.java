@@ -1,6 +1,8 @@
 package com.agenthub.domain.model.workflow;
 
 import com.agenthub.domain.enums.workflow.WorkflowStatus;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.Instant;
@@ -23,6 +25,13 @@ public class WorkflowContext {
 
     /** 工作流ID */
     private final String workflowId;
+
+    @JsonCreator
+    public WorkflowContext(@JsonProperty("executionId") String executionId,
+                           @JsonProperty("workflowId") String workflowId) {
+        this.executionId = executionId;
+        this.workflowId = workflowId;
+    }
 
     /** 工作空间ID */
     private String workspaceId;
@@ -115,6 +124,7 @@ public class WorkflowContext {
      *
      * @return 如果正在执行返回true
      */
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isRunning() {
         return status != null && status.isRunning();
     }

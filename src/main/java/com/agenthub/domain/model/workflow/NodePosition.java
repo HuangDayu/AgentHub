@@ -1,5 +1,7 @@
 package com.agenthub.domain.model.workflow;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -17,13 +19,9 @@ public class NodePosition {
     /** Y坐标 */
     private final double y;
 
-    /**
-     * 创建节点位置。
-     *
-     * @param x X坐标
-     * @param y Y坐标
-     */
-    public NodePosition(double x, double y) {
+    @JsonCreator
+    public NodePosition(@JsonProperty("x") double x,
+                        @JsonProperty("y") double y) {
         this.x = x;
         this.y = y;
     }

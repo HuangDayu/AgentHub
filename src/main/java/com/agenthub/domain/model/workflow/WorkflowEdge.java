@@ -1,5 +1,7 @@
 package com.agenthub.domain.model.workflow;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.Map;
@@ -23,6 +25,15 @@ public class WorkflowEdge {
 
     /** 目标节点ID */
     private final String targetNodeId;
+
+    @JsonCreator
+    public WorkflowEdge(@JsonProperty("id") String id,
+                        @JsonProperty("sourceNodeId") String sourceNodeId,
+                        @JsonProperty("targetNodeId") String targetNodeId) {
+        this.id = id;
+        this.sourceNodeId = sourceNodeId;
+        this.targetNodeId = targetNodeId;
+    }
 
     /** 边标签（用于条件分支） */
     private String label;
@@ -65,6 +76,7 @@ public class WorkflowEdge {
      *
      * @return 如果无条件返回true
      */
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isUnconditional() {
         return condition == null || condition.isBlank();
     }

@@ -1,6 +1,7 @@
 package com.agenthub.application.port.out.workflow;
 
 import com.agenthub.domain.model.workflow.WorkflowContext;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Optional;
@@ -47,4 +48,13 @@ public interface WorkflowStatePort {
      */
     Mono<Void> updateNodeStatus(String executionId, String nodeId, 
                                 com.agenthub.domain.enums.workflow.NodeStatus status);
+
+    /**
+     * 按工作流ID查询执行上下文列表。
+     *
+     * @param workflowId 工作流ID
+     * @param limit 最大返回数量
+     * @return 执行上下文列表
+     */
+    Flux<WorkflowContext> listContexts(String workflowId, int limit);
 }

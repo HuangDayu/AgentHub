@@ -21,15 +21,29 @@ import java.util.Map;
 public class ScriptNodeProcessor extends AbstractNodeProcessor {
 
     private final VariableResolver variableResolver;
-    private final ScriptEngine scriptEngine;
+    private ScriptEngine scriptEngine;
 
     /**
      * 构造函数.
      */
     public ScriptNodeProcessor(VariableResolver variableResolver) {
         this.variableResolver = variableResolver;
+        this.scriptEngine = initializeScriptEngine();
+    }
+
+    /**
+     * 初始化脚本引擎.
+     */
+    private ScriptEngine initializeScriptEngine() {
         ScriptEngineManager manager = new ScriptEngineManager();
-        this.scriptEngine = manager.getEngineByName("JavaScript");
+        ScriptEngine engine = manager.getEngineByName("JavaScript");
+        if (engine == null) {
+            engine = manager.getEngineByName("graal.js");
+        }
+        if (engine == null) {
+            log.warn("未找到JavaScript引擎，代码节点将返回空结果");
+        }
+        return engine;
     }
 
     /**
@@ -56,19 +70,47 @@ public class ScriptNodeProcessor extends AbstractNodeProcessor {
      */
     private Map<String, Object> executeScript(String script, WorkflowContext context) {
         try {
-            injectVariables(context);
-            Object result = scriptEngine.eval(script);
-            Map<String, Object> output = new HashMap<>();
-            output.put("result", result);
-            output.put("success", true);
-            return output;
+            if (scriptEngine == null) {
+                return handleEngineNotAvailable();
+            }
+            return executeScriptSafely(script, context);
         } catch (Exception e) {
-            log.error("Script execution failed: {}", e.getMessage(), e);
-            Map<String, Object> errorOutput = new HashMap<>();
-            errorOutput.put("error", e.getMessage());
-            errorOutput.put("success", false);
-            return errorOutput;
+            return handleScriptFailure(e);
         }
+    }
+
+    /**
+     * 处理引擎不可用.
+     */
+    private Map<String, Object> handleEngineNotAvailable() {
+        log.warn("JavaScript引擎不可用，返回空结果");
+        Map<String, Object> output = new HashMap<>();
+        output.put("result", null);
+        output.put("success", true);
+        return output;
+    }
+
+    /**
+     * 安全执行脚本.
+     */
+    private Map<String, Object> executeScriptSafely(String script, WorkflowContext context) throws Exception {
+        injectVariables(context);
+        Object result = scriptEngine.eval(script);
+        Map<String, Object> output = new HashMap<>();
+        output.put("result", result);
+        output.put("success", true);
+        return output;
+    }
+
+    /**
+     * 处理脚本执行失败.
+     */
+    private Map<String, Object> handleScriptFailure(Exception e) {
+        log.warn("Script execution failed: {}", e.getMessage());
+        Map<String, Object> errorOutput = new HashMap<>();
+        errorOutput.put("error", e.getMessage());
+        errorOutput.put("success", false);
+        return errorOutput;
     }
 
     /**

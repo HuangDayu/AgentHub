@@ -1,12 +1,13 @@
 package com.agenthub.infrastructure.agents.alibaba;
 
-import com.agenthub.common.utils.TtlUtils;
-import com.agenthub.domain.model.agent.AgentToolInfo;
-import com.agenthub.domain.enums.AgentToolType;
-import com.agenthub.domain.model.strategy.ModelStrategy;
-import com.agenthub.domain.model.agent.ReActAgentContext;
-import com.agenthub.domain.model.agent.AbstractReActAgent;
 import com.agenthub.application.factory.ReActAgentFactory;
+import com.agenthub.application.factory.TeamAgentFactory;
+import com.agenthub.common.utils.TtlUtils;
+import com.agenthub.domain.enums.AgentToolType;
+import com.agenthub.domain.model.agent.AbstractReActAgent;
+import com.agenthub.domain.model.agent.AgentToolInfo;
+import com.agenthub.domain.model.agent.ReActAgentContext;
+import com.agenthub.domain.model.strategy.ModelStrategy;
 import com.agenthub.infrastructure.agents.alibaba.hook.AgentHookFactory;
 import com.agenthub.infrastructure.agents.alibaba.interceptor.InterceptorFactory;
 import com.agenthub.infrastructure.agents.alibaba.saver.SaverFactory;
@@ -30,6 +31,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.model.tool.DefaultToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -58,13 +60,14 @@ public class AliReActAgentFactory implements ReActAgentFactory {
     private final AgentToolsFactory agentToolsFactory;
     private final GraphToolsFactory graphToolsFactory;
     private final JdbcChatMemoryRepository jdbcChatMemoryRepository;
+    private final ObjectProvider<TeamAgentFactory> teamAgentFactoryObjectProvider;
 
 
     @Override
     public AbstractReActAgent create(ReActAgentContext reActAgentContext) {
         AliReActAgentConfig aliReActAgentConfig = buildAliReActAgentConfig(reActAgentContext);
         ReactAgent agent = buildReactAgent(aliReActAgentConfig);
-        return new AliReActAgent(reActAgentContext, aliReActAgentConfig, agent);
+        return new AliReActAgent(reActAgentContext, aliReActAgentConfig, teamAgentFactoryObjectProvider.getObject(), agent);
     }
 
     private ReactAgent buildReactAgent(AliReActAgentConfig config) {

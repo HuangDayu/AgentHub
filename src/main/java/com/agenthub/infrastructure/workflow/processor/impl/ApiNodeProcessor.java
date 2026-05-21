@@ -67,20 +67,35 @@ public class ApiNodeProcessor extends AbstractNodeProcessor {
     private Map<String, Object> executeRequest(String url, String method, 
                                                NodeConfig config, WorkflowContext context) {
         try {
-            return switch (method.toUpperCase()) {
-                case "GET" -> executeGet(url);
-                case "POST" -> executePost(url, config, context);
-                case "PUT" -> executePut(url, config, context);
-                case "DELETE" -> executeDelete(url);
-                default -> throw new IllegalArgumentException("不支持的HTTP方法: " + method);
-            };
+            return doExecuteRequest(url, method, config, context);
         } catch (Exception e) {
-            log.error("API调用失败: {}", url, e);
-            Map<String, Object> errorResult = new HashMap<>();
-            errorResult.put("error", e.getMessage());
-            errorResult.put("success", false);
-            return errorResult;
+            return handleRequestFailure(url, e);
         }
+    }
+
+    /**
+     * 执行具体的HTTP请求.
+     */
+    private Map<String, Object> doExecuteRequest(String url, String method, 
+                                                  NodeConfig config, WorkflowContext context) {
+        return switch (method.toUpperCase()) {
+            case "GET" -> executeGet(url);
+            case "POST" -> executePost(url, config, context);
+            case "PUT" -> executePut(url, config, context);
+            case "DELETE" -> executeDelete(url);
+            default -> throw new IllegalArgumentException("不支持的HTTP方法: " + method);
+        };
+    }
+
+    /**
+     * 处理请求失败.
+     */
+    private Map<String, Object> handleRequestFailure(String url, Exception e) {
+        log.warn("API调用失败: {} - {}", url, e.getMessage());
+        Map<String, Object> errorResult = new HashMap<>();
+        errorResult.put("error", e.getMessage());
+        errorResult.put("success", false);
+        return errorResult;
     }
 
     /**

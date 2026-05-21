@@ -1,6 +1,7 @@
 /**
  * 工作流状态管理Store
  * 使用Pinia管理工作流的全局状态
+ * 参照 spring-ai-alibaba spark-flow 的设计实现
  */
 
 import { defineStore } from 'pinia'
@@ -11,8 +12,9 @@ import type {
   WorkflowGraph,
   VarTreeItem,
   WorkflowExecution,
-  NodeResult
-} from '@/types/workflow-node'
+  NodeResult,
+  CheckListItem
+} from '@/types/workflow'
 import { buildVariableTree } from '@/utils/variable-system'
 
 export const useWorkflowStore = defineStore('workflow', () => {
@@ -103,6 +105,36 @@ export const useWorkflowStore = defineStore('workflow', () => {
    */
   const MAX_HISTORY = 50
   
+  /**
+   * 节点的变量树（spark-flow 功能）
+   */
+  const variableTree = ref<VarTreeItem[]>([])
+  
+  /**
+   * 校验检查清单（spark-flow 功能）
+   */
+  const checkList = ref<CheckListItem[]>([])
+  
+  /**
+   * 是否显示校验清单
+   */
+  const showCheckList = ref<boolean>(false)
+  
+  /**
+   * 是否显示结果面板
+   */
+  const showResults = ref<boolean>(false)
+  
+  /**
+   * 是否正在拖拽
+   */
+  const isDragging = ref<boolean>(false)
+  
+  /**
+   * 是否隐藏左侧菜单
+   */
+  const hiddenMenu = ref<boolean>(false)
+  
   // ==================== 计算属性 ====================
   
   /**
@@ -156,8 +188,8 @@ export const useWorkflowStore = defineStore('workflow', () => {
    * 设置图数据
    */
   function setGraph(newGraph: WorkflowGraph) {
-    nodes.value = newGraph.nodes
-    edges.value = newGraph.edges
+    nodes.value = newGraph.nodes || []
+    edges.value = newGraph.edges || []
     isDirty.value = true
   }
   
@@ -356,6 +388,48 @@ export const useWorkflowStore = defineStore('workflow', () => {
   }
   
   /**
+   * 设置变量树
+   */
+  function setVariableTree(tree: VarTreeItem[]) {
+    variableTree.value = tree
+  }
+  
+  /**
+   * 设置校验检查清单
+   */
+  function setCheckList(list: CheckListItem[]) {
+    checkList.value = list
+  }
+  
+  /**
+   * 设置是否显示校验清单
+   */
+  function setShowCheckList(val: boolean) {
+    showCheckList.value = val
+  }
+  
+  /**
+   * 设置是否显示结果面板
+   */
+  function setShowResults(val: boolean) {
+    showResults.value = val
+  }
+  
+  /**
+   * 设置是否正在拖拽
+   */
+  function setIsDragging(val: boolean) {
+    isDragging.value = val
+  }
+  
+  /**
+   * 设置是否隐藏左侧菜单
+   */
+  function setHiddenMenu(val: boolean) {
+    hiddenMenu.value = val
+  }
+  
+  /**
    * 重置Store
    */
   function reset() {
@@ -373,6 +447,12 @@ export const useWorkflowStore = defineStore('workflow', () => {
     futureStack.value = []
     isDirty.value = false
     isSaving.value = false
+    variableTree.value = []
+    checkList.value = []
+    showCheckList.value = false
+    showResults.value = false
+    isDragging.value = false
+    hiddenMenu.value = false
   }
   
   return {
@@ -393,6 +473,12 @@ export const useWorkflowStore = defineStore('workflow', () => {
     execution,
     historyStack,
     futureStack,
+    variableTree,
+    checkList,
+    showCheckList,
+    showResults,
+    isDragging,
+    hiddenMenu,
     
     // 计算属性
     graph,
@@ -420,6 +506,12 @@ export const useWorkflowStore = defineStore('workflow', () => {
     markAsSaved,
     setExecution,
     updateNodeResult,
+    setVariableTree,
+    setCheckList,
+    setShowCheckList,
+    setShowResults,
+    setIsDragging,
+    setHiddenMenu,
     reset
   }
 })

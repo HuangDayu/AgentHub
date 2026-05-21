@@ -85,7 +85,11 @@ public class ParallelNodeProcessor extends AbstractNodeProcessor {
      * 获取并发度.
      */
     private int getConcurrency(NodeConfig config) {
-        return (int) config.getParameters().getOrDefault("concurrency", 4);
+        Object concurrencyValue = config.getParameters().getOrDefault("concurrency", 4);
+        if (concurrencyValue instanceof Number) {
+            return ((Number) concurrencyValue).intValue();
+        }
+        return 4;
     }
 
     /**

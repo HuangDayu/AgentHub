@@ -35,3 +35,5 @@ src/main/resources/static/
 key.txt
 **/*.bak
 token.txt
+CLAUDE_HELP_ZH.md
+CLAUDE_HELP.md

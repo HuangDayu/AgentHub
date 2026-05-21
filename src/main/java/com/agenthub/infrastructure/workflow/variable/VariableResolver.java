@@ -4,6 +4,7 @@ import com.agenthub.domain.model.workflow.NodeResult;
 import com.agenthub.domain.model.workflow.WorkflowContext;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -209,11 +210,11 @@ public class VariableResolver {
      * @return 解析后的Map
      */
     public Map<String, Object> resolveMap(Map<String, Object> map, WorkflowContext context) {
-        return map.entrySet().stream()
-            .collect(java.util.stream.Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> resolveEntryValue(entry.getValue(), context)
-            ));
+        Map<String, Object> result = new HashMap<>();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            result.put(entry.getKey(), resolveEntryValue(entry.getValue(), context));
+        }
+        return result;
     }
 
     /**

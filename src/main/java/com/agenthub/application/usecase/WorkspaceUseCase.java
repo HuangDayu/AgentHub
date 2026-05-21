@@ -2,10 +2,9 @@ package com.agenthub.application.usecase;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.WorkspaceCommand;
-import com.agenthub.application.port.out.IdGenerator;
-import com.agenthub.application.port.out.TimeProvider;
 import com.agenthub.application.port.out.repositories.TenantRepository;
 import com.agenthub.application.port.out.repositories.WorkspaceRepository;
+import com.agenthub.common.utils.RandomUtils;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.Workspace;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +25,6 @@ import java.util.List;
 public class WorkspaceUseCase {
     private final TenantRepository tenantRepository;
     private final WorkspaceRepository workspaceRepository;
-    private final IdGenerator idGenerator;
-    private final TimeProvider timeProvider;
 
     /**
      * 执行创建工作空间操作。
@@ -37,9 +34,9 @@ public class WorkspaceUseCase {
      */
     public Workspace execute(WorkspaceCommand command) {
         Workspace workspace = BeanUtil.copyProperties(command, Workspace.class);
-        workspace.setId(idGenerator.nextId());
+        workspace.setId(RandomUtils.randomId());
         workspace.setStatus(Workspace.WorkspaceStatus.ACTIVE);
-        Instant now = timeProvider.now();
+        Instant now = Instant.now();
         workspace.setCreatedAt(now);
         workspace.setUpdatedAt(now);
         return workspaceRepository.save(workspace);
@@ -60,10 +57,10 @@ public class WorkspaceUseCase {
         
         // 创建工作空间并设置租户ID
         Workspace workspace = BeanUtil.copyProperties(command, Workspace.class);
-        workspace.setId(idGenerator.nextId());
+        workspace.setId(RandomUtils.randomId());
         workspace.setTenantId(tenantId);
         workspace.setStatus(Workspace.WorkspaceStatus.ACTIVE);
-        Instant now = timeProvider.now();
+        Instant now = Instant.now();
         workspace.setCreatedAt(now);
         workspace.setUpdatedAt(now);
         return workspaceRepository.save(workspace);

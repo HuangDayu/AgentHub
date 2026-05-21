@@ -1,6 +1,5 @@
 package com.agenthub.application.usecase;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.workflow.ExecutionCommand;
 import com.agenthub.application.dto.workflow.ExecutionOutput;
 import com.agenthub.application.port.out.workflow.WorkflowExecutionPort;
@@ -12,6 +11,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * 工作流执行用例。
@@ -50,6 +55,26 @@ public class WorkflowExecutionUseCase {
     }
 
     /**
+     * 根据executionId执行工作流。
+     *
+     * @param executionId 执行ID
+     * @return 节点执行结果流
+     */
+    public Flux<NodeResult> executeById(String executionId) {
+        return statePort.loadContext(executionId)
+                .flatMapMany(opt -> executeWorkflowFromContext(opt, executionId));
+    }
+
+    /**
+     * 从Optional<WorkflowContext>执行工作流。
+     */
+    private Flux<NodeResult> executeWorkflowFromContext(Optional<WorkflowContext> opt, String executionId) {
+        WorkflowContext context = opt.orElseThrow(() -> 
+                new NotFoundException("Execution not found: " + executionId));
+        return executionPort.executeWorkflow(context);
+    }
+
+    /**
      * 停止工作流执行。
      *
      * @param executionId 执行ID
@@ -74,12 +99,86 @@ public class WorkflowExecutionUseCase {
     }
 
     /**
-     * 转换为输出对象。
+     * 获取工作流执行历史。
      *
-     * @param context 执行上下文
-     * @return 执行输出
+     * @param workflowId 工作流ID
+     * @param limit 最大返回数量
+     * @return 执行输出列表
+     */
+    public Flux<ExecutionOutput> listHistory(String workflowId, int limit) {
+        return statePort.listContexts(workflowId, limit)
+                .map(this::toOutput);
+    }
+
+    /**
+     * 将后端NodeStatus枚举值映射为前端TaskStatus字符串。
+     */
+    private String mapNodeStatus(com.agenthub.domain.enums.workflow.NodeStatus status) {
+        if (status == null) return "pending";
+        switch (status) {
+            case PENDING: case WAITING: return "pending";
+            case EXECUTING: return "running";
+            case SUCCESS: return "success";
+            case FAILED: return "failed";
+            case SKIPPED: return "skipped";
+            case CANCELLED: return "cancelled";
+            case TIMEOUT: return "timeout";
+            default: return status.name().toLowerCase();
+        }
+    }
+
+    /**
+     * 将后端WorkflowStatus枚举值映射为前端TaskStatus字符串。
+     */
+    private String mapWorkflowStatus(com.agenthub.domain.enums.workflow.WorkflowStatus status) {
+        if (status == null) return "pending";
+        switch (status) {
+            case DRAFT: return "pending";
+            case PUBLISHED: return "success";
+            case EXECUTING: return "running";
+            case SUCCESS: return "success";
+            case FAILED: return "failed";
+            case PAUSED: return "pending";
+            case CANCELLED: return "cancelled";
+            default: return status.name().toLowerCase();
+        }
+    }
+
+    /**
+     * 转换为输出对象（含状态映射和结果转换）。
      */
     private ExecutionOutput toOutput(WorkflowContext context) {
-        return BeanUtil.copyProperties(context, ExecutionOutput.class);
+        // 不使用 BeanUtil.copyProperties，因为 status 和 nodeResults 字段类型不匹配会导致异常
+        ExecutionOutput output = new ExecutionOutput();
+        output.setExecutionId(context.getExecutionId());
+        output.setWorkflowId(context.getWorkflowId());
+        // 将状态转为小写以匹配前端TaskStatus格式
+        if (context.getStatus() != null) {
+            output.setStatus(mapWorkflowStatus(context.getStatus()));
+        } else {
+            output.setStatus("pending");
+        }
+        output.setVariables(context.getVariables());
+        output.setStartTime(context.getStartTime());
+        output.setEndTime(context.getEndTime());
+        // 将 Map<String, NodeResult> 转换为前端需要的 List<Map> 格式
+        if (context.getNodeResults() != null && !context.getNodeResults().isEmpty()) {
+            List<Map<String, Object>> nodeResults = new ArrayList<>();
+            context.getNodeResults().forEach((nodeId, result) -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("node_id", result.getNodeId());
+                item.put("node_name", result.getNodeId()); // fallback, actual name from graph
+                item.put("node_type", "");
+                item.put("node_status", mapNodeStatus(result.getStatus()));
+                item.put("output", result.getOutputs());
+                item.put("error_info", result.getErrorMessage());
+                item.put("node_exec_time", result.getStartTime() != null && result.getEndTime() != null
+                        ? (result.getEndTime().toEpochMilli() - result.getStartTime().toEpochMilli()) + "ms"
+                        : "");
+                nodeResults.add(item);
+            });
+            output.setNodeResults(nodeResults);
+        }
+        return output;
     }
 }

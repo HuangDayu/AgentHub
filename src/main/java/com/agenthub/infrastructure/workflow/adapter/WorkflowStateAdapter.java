@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Optional;
@@ -73,5 +74,10 @@ public class WorkflowStateAdapter implements WorkflowStatePort {
     @Override
     public Mono<Void> updateNodeStatus(String executionId, String nodeId, NodeStatus status) {
         return stateManager.updateNodeStatus(executionId, nodeId, status);
+    }
+
+    @Override
+    public Flux<WorkflowContext> listContexts(String workflowId, int limit) {
+        return stateManager.listContexts(workflowId, limit);
     }
 }

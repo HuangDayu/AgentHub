@@ -3,688 +3,1020 @@
     <!-- 顶部工具栏 -->
     <div class="toolbar">
       <div class="toolbar-left">
-        <h3 class="workflow-title">{{ workflowName || '未命名工作流' }}</h3>
-        <span v-if="isDirty" class="dirty-indicator">●</span>
+        <button class="btn btn-icon" @click="goBack" title="返回列表">←</button>
+        <div class="workflow-info">
+          <input
+            v-model="workflowName"
+            class="workflow-title-input"
+            :placeholder="'未命名工作流'"
+            :disabled="readOnly"
+            @input="markDirty"
+          />
+          <span v-if="isDirty" class="dirty-indicator">● 未保存</span>
+        </div>
       </div>
       <div class="toolbar-center">
-        <button 
-          class="btn btn-icon" 
-          @click="undo" 
-          :disabled="!canUndo"
-          title="撤销 (Ctrl+Z)"
-        >
-          ↶
-        </button>
-        <button 
-          class="btn btn-icon" 
-          @click="redo" 
-          :disabled="!canRedo"
-          title="重做 (Ctrl+Y)"
-        >
-          ↷
-        </button>
+        <button class="btn btn-icon" @click="undo" :disabled="!canUndo" title="撤销 (Ctrl+Z)">↶</button>
+        <button class="btn btn-icon" @click="redo" :disabled="!canRedo" title="重做 (Ctrl+Y)">↷</button>
         <div class="divider"></div>
-        <button 
-          class="btn btn-icon" 
-          @click="toggleMiniMap"
-          :class="{ active: showMiniMap }"
-          title="小地图"
-        >
-          ▤
-        </button>
-        <button 
-          class="btn btn-icon" 
-          @click="autoLayout"
-          title="自动布局"
-        >
-          ⤢
-        </button>
+        <button class="btn btn-icon" @click="toggleMiniMap" :class="{ active: showMiniMap }" title="小地图">▤</button>
+        <button class="btn btn-icon" @click="autoLayout" title="自动布局">⤢</button>
         <div class="divider"></div>
-        <button 
-          class="btn btn-secondary" 
-          @click="toggleJsonView"
-        >
-          {{ showJsonView ? '可视化' : 'JSON' }}
-        </button>
+        <button class="btn btn-secondary" @click="toggleJsonView">{{ showJsonView ? '可视化' : 'JSON' }}</button>
+        <button class="btn btn-secondary" @click="validateWorkflow">校验</button>
       </div>
       <div class="toolbar-right">
-        <button 
-          class="btn btn-secondary" 
-          @click="handleTest"
-          :disabled="!canTest"
-        >
-          测试
-        </button>
-        <button 
-          class="btn btn-primary" 
-          @click="handleSave"
-          :disabled="!isDirty || isSaving"
-        >
+        <div class="test-btn-group" v-if="workflowId && workflowId !== 'new'">
+          <button class="btn btn-secondary" @click="showTestPanel = !showTestPanel" :class="{ active: showTestPanel }">
+            测试
+          </button>
+        </div>
+        <button v-if="!readOnly" class="btn btn-primary" @click="handleSave" :disabled="isSaving">
           {{ isSaving ? '保存中...' : '保存' }}
         </button>
       </div>
     </div>
 
     <!-- 主编辑区域 -->
-    <div class="editor-container">
+    <div class="editor-body">
       <!-- 左侧节点面板 -->
-      <div class="node-panel">
-        <div class="panel-header">
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="搜索节点..." 
-            class="search-input"
-          />
+      <div class="node-panel" :class="{ collapsed: nodePanelCollapsed }">
+        <div class="panel-toggle" @click="nodePanelCollapsed = !nodePanelCollapsed">
+          {{ nodePanelCollapsed ? '▶' : '◀' }}
         </div>
-        <div class="node-categories">
-          <div 
-            v-for="(schemas, category) in filteredNodeSchemas" 
-            :key="category"
-            class="node-category"
-          >
-            <div class="category-title">{{ category }}</div>
-            <div class="node-list">
-              <div
-                v-for="schema in schemas"
-                :key="schema.type"
-                class="node-item"
-                draggable="true"
-                @dragstart="onDragStart($event, schema)"
-                @click="addNodeBySchema(schema)"
-              >
-                <span class="node-icon">{{ schema.icon }}</span>
-                <div class="node-info">
-                  <div class="node-name">{{ schema.title }}</div>
-                  <div class="node-desc">{{ schema.desc }}</div>
+        <template v-if="!nodePanelCollapsed">
+          <div class="panel-header">
+            <input v-model="searchQuery" type="text" placeholder="搜索节点..." class="search-input" />
+          </div>
+          <div class="node-categories">
+            <div v-for="(schemas, category) in filteredNodeSchemas" :key="category" class="node-category">
+              <div class="category-title">{{ category }}</div>
+              <div class="node-list">
+                <div
+                  v-for="schema in schemas"
+                  :key="schema.type"
+                  class="node-item"
+                  draggable="true"
+                  @dragstart="onDragStart($event, schema)"
+                  @click="addNodeBySchema(schema)"
+                >
+                  <span class="node-icon">{{ schema.icon }}</span>
+                  <div class="node-info">
+                    <div class="node-name">{{ schema.title }}</div>
+                    <div class="node-desc">{{ schema.desc }}</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </template>
       </div>
 
       <!-- 中间画布区域 -->
-      <div class="canvas-area">
+      <div class="canvas-area" ref="canvasRef">
         <!-- JSON视图 -->
         <div v-if="showJsonView" class="json-view">
-          <textarea 
-            v-model="jsonContent" 
-            class="json-editor"
-            @blur="applyJsonChanges"
-          ></textarea>
+          <textarea v-model="jsonContent" class="json-editor" @blur="applyJsonChanges" spellcheck="false"></textarea>
         </div>
-        
-        <!-- 可视化视图 -->
-        <div v-else class="visual-view" ref="canvasRef">
-          <!-- Vue Flow画布 -->
+
+        <!-- Vue Flow可视化画布 -->
+        <div v-else class="visual-view" ref="vueFlowContainer">
           <VueFlow
             v-model:nodes="flowNodes"
             v-model:edges="flowEdges"
-            :default-viewport="{ zoom: 1, x: 0, y: 0 }"
+            :default-viewport="{ zoom: 0.8, x: 200, y: 100 }"
             :min-zoom="0.2"
-            :max-zoom="2"
-            fit-view-on-init
+            :max-zoom="3"
             :snap-to-grid="true"
             :snap-grid="[20, 20]"
+            fit-view-on-init
             @node-click="onNodeClick"
-            @edge-click="onEdgeClick"
+            @pane-click="onPaneClick"
             @connect="onConnect"
             @nodes-change="onNodesChange"
             @edges-change="onEdgesChange"
+            @nodes-delete="onNodesDelete"
+            @drop="onDrop"
+            @dragover="onDragOver"
+            class="vue-flow-instance"
           >
-            <!-- 背景网格 -->
-            <Background :gap="20" :size="1" />
-            
-            <!-- 小地图 -->
-            <MiniMap v-if="showMiniMap" />
-            
-            <!-- 控制面板 -->
-            <Controls />
-            
-            <!-- 自定义节点 -->
+            <Background :gap="20" :size="1" pattern-color="#e8e8e8" />
+            <MiniMap v-if="showMiniMap" :node-color="getMiniMapNodeColor" />
+            <Controls show-zoom show-fit-view />
+
+            <!-- 自定义节点类型 -->
             <template #node-start="nodeProps">
-              <StartNode v-bind="nodeProps" />
+              <StartNode v-bind="nodeProps" @edit="openNodeConfig" />
             </template>
             <template #node-end="nodeProps">
-              <EndNode v-bind="nodeProps" />
+              <EndNode v-bind="nodeProps" @edit="openNodeConfig" />
             </template>
             <template #node-llm="nodeProps">
-              <LLMNode v-bind="nodeProps" />
+              <LLMNode v-bind="nodeProps" @edit="openNodeConfig" />
             </template>
             <template #node-api="nodeProps">
-              <APINode v-bind="nodeProps" />
+              <APINode v-bind="nodeProps" @edit="openNodeConfig" />
             </template>
             <template #node-script="nodeProps">
-              <ScriptNode v-bind="nodeProps" />
+              <ScriptNode v-bind="nodeProps" @edit="openNodeConfig" />
             </template>
             <template #node-retrieval="nodeProps">
-              <RetrievalNode v-bind="nodeProps" />
+              <RetrievalNode v-bind="nodeProps" @edit="openNodeConfig" />
             </template>
             <template #node-condition="nodeProps">
-              <ConditionNode v-bind="nodeProps" />
+              <ConditionNode v-bind="nodeProps" @edit="openNodeConfig" />
             </template>
             <template #node-task="nodeProps">
-              <TaskNode v-bind="nodeProps" />
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
+            </template>
+            <template #node-code="nodeProps">
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
+            </template>
+            <template #node-tool="nodeProps">
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
+            </template>
+            <template #node-agent="nodeProps">
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
+            </template>
+            <template #node-variable="nodeProps">
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
+            </template>
+            <template #node-notification="nodeProps">
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
+            </template>
+            <template #node-input="nodeProps">
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
+            </template>
+            <template #node-output="nodeProps">
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
+            </template>
+            <template #node-sub-workflow="nodeProps">
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
+            </template>
+            <template #node-loop="nodeProps">
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
+            </template>
+            <template #node-parallel="nodeProps">
+              <TaskNode v-bind="nodeProps" @edit="openNodeConfig" />
             </template>
           </VueFlow>
         </div>
       </div>
 
       <!-- 右侧配置面板 -->
-      <div v-if="selectedNode" class="config-panel">
-        <div class="panel-header">
-          <h4>{{ selectedNode.data.label }} 配置</h4>
-          <button class="btn-close" @click="closeConfigPanel">×</button>
-        </div>
-        <div class="panel-body">
-          <!-- 动态加载节点配置面板 -->
-          <component 
-            :is="getConfigPanelComponent(selectedNode.type)" 
-            :node="selectedNode"
-            :available-variables="availableVariables"
-            @update="updateNodeConfig"
-          />
-        </div>
+      <div class="config-panel" :class="{ collapsed: !showConfigPanel }">
+        <template v-if="showConfigPanel && selectedNodeRef">
+          <div class="panel-header config-header">
+            <h4>{{ getNodeTitle(selectedNodeRef.type) }} 配置</h4>
+            <div class="config-header-actions">
+              <button class="btn btn-icon btn-sm" @click="deleteSelectedNode" title="删除节点">🗑</button>
+              <button class="btn btn-icon btn-sm" @click="closeConfigPanel" title="关闭">×</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="config-name-row">
+              <input v-model="configEditName" class="config-name-input" placeholder="节点名称" />
+              <button class="btn btn-icon btn-sm" @click="confirmRename" :disabled="!configEditName.trim()" title="确认重命名">✓</button>
+            </div>
+            <textarea
+              v-model="configEditDesc"
+              class="config-desc-input"
+              placeholder="添加描述..."
+              rows="2"
+              @input="updateNodeConfigFromPanel"
+            ></textarea>
+            <component
+              :is="getConfigPanelComponent(selectedNodeRef.type)"
+              :node="selectedNodeRef"
+              @update="handlePanelUpdate"
+            />
+            <div class="config-actions">
+              <button class="btn btn-sm" @click="copySelectedNode">📋 复制节点</button>
+              <button class="btn btn-sm btn-danger" @click="deleteSelectedNode">🗑 删除节点</button>
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <div class="panel-placeholder">
+            <p>选择一个节点以编辑配置</p>
+          </div>
+        </template>
       </div>
     </div>
 
     <!-- 测试面板 -->
-    <div v-if="showTestPanel" class="test-panel">
-      <div class="panel-header">
-        <h4>工作流测试</h4>
-        <button class="btn-close" @click="closeTestPanel">×</button>
-      </div>
-      <div class="panel-body">
-        <WorkflowTestPanel 
-          :workflow-id="workflowId"
-          @close="closeTestPanel"
-        />
+    <div v-if="showTestPanel" class="test-panel-overlay" @click.self="showTestPanel = false">
+      <div class="test-panel">
+        <div class="panel-header">
+          <h4>工作流测试</h4>
+          <button class="btn-close" @click="showTestPanel = false">×</button>
+        </div>
+        <div class="panel-body">
+          <WorkflowTestPanel :workflow-id="workflowId" @close="showTestPanel = false" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, markRaw } from 'vue'
+import { useRouter } from 'vue-router'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
+import '@vue-flow/core/dist/style.css'
+import '@vue-flow/core/dist/theme-default.css'
+import '@vue-flow/controls/dist/style.css'
+import '@vue-flow/minimap/dist/style.css'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
-import { useWorkflowStore } from '@/stores/workflow-store'
-import { 
-  getNodeSchemasByCategory, 
-  getNodeSchema 
-} from '@/constants/node-schemas'
-import type { NodeSchema, WorkflowNode } from '@/types/workflow-node'
 
-// 组件导入
-import StartNode from './workflow-nodes/StartNode.vue'
-import EndNode from './workflow-nodes/EndNode.vue'
+import { useWorkflowStore } from '@/stores/workflow-store'
+import { getNodeSchemasByCategory, getNodeSchema, NODE_SCHEMA_MAP, generateNodeId, generateEdgeId, NODE_TYPE } from '@/constants/node-schemas'
+import type { NodeSchema, WorkflowNode, WorkflowEdge, WorkflowGraph } from '@/types/workflow'
+
+// Node components
+import StartNode from './dag-nodes/StartNode.vue'
+import EndNode from './dag-nodes/EndNode.vue'
 import LLMNode from './workflow-nodes/LLMNode.vue'
 import APINode from './workflow-nodes/APINode.vue'
 import ScriptNode from './workflow-nodes/ScriptNode.vue'
 import RetrievalNode from './workflow-nodes/RetrievalNode.vue'
-import ConditionNode from './workflow-nodes/ConditionNode.vue'
-import TaskNode from './workflow-nodes/TaskNode.vue'
+import ConditionNode from './dag-nodes/ConditionNode.vue'
+import TaskNode from './dag-nodes/TaskNode.vue'
 import WorkflowTestPanel from './WorkflowTestPanel.vue'
+
+// Config panels (lazy)
+import LLMPanel from './workflow-panels/LLMPanel.vue'
+import APIPanel from './workflow-panels/APIPanel.vue'
+import ScriptPanel from './workflow-panels/ScriptPanel.vue'
+import ConditionPanel from './workflow-panels/ConditionPanel.vue'
+import RetrievalPanel from './workflow-panels/RetrievalPanel.vue'
+import GenericConfigPanel from './workflow-panels/GenericConfigPanel.vue'
+import StartPanel from './workflow-panels/StartPanel.vue'
+import EndPanel from './workflow-panels/EndPanel.vue'
+import TaskPanel from './workflow-panels/TaskPanel.vue'
 
 // Props
 interface Props {
   workflowId?: string
   workflowName?: string
-  initialGraph?: any
+  initialGraph?: WorkflowGraph | null
   readOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   workflowId: '',
   workflowName: '',
-  readOnly: false
+  readOnly: false,
 })
 
 // Emits
 const emit = defineEmits<{
-  save: [graph: any]
-  test: [input: any]
-  nodeSelect: [node: WorkflowNode]
+  save: [graph: WorkflowGraph]
 }>()
 
-// Store
-const store = useWorkflowStore()
-const { addNodes, addEdges, onConnect: handleConnect } = useVueFlow()
+const router = useRouter()
+const workflowStore = useWorkflowStore()
 
-// 状态
+// ==================== VueFlow setup ====================
+const { screenToFlowCoordinate } = useVueFlow()
+
+// ==================== State ====================
 const showJsonView = ref(false)
 const showTestPanel = ref(false)
 const searchQuery = ref('')
 const canvasRef = ref<HTMLElement>()
+const vueFlowContainer = ref<HTMLElement>()
 const jsonContent = ref('')
+const nodePanelCollapsed = ref(false)
+const showMiniMap = ref(true)
+const isSaving = ref(false)
+const isDirty = ref(false)
+const workflowName = ref(props.workflowName || '')
 
-// 计算属性
+// ==================== Flow nodes/edges (refs for v-model) ====================
+const flowNodes = ref<WorkflowNode[]>([])
+const flowEdges = ref<WorkflowEdge[]>([])
+const selectedNodeRef = ref<WorkflowNode | null>(null)
+
+// ==================== Computed ====================
 const nodeSchemasByCategory = computed(() => getNodeSchemasByCategory())
 
 const filteredNodeSchemas = computed(() => {
-  if (!searchQuery.value) {
-    return nodeSchemasByCategory.value
-  }
-  
+  if (!searchQuery.value) return nodeSchemasByCategory.value
+  const q = searchQuery.value.toLowerCase()
   const result: Record<string, NodeSchema[]> = {}
-  const query = searchQuery.value.toLowerCase()
-  
-  for (const [category, schemas] of Object.entries(nodeSchemasByCategory.value)) {
-    const filtered = schemas.filter(
-      s => s.title.toLowerCase().includes(query) || 
-           s.desc.toLowerCase().includes(query)
-    )
-    if (filtered.length > 0) {
-      result[category] = filtered
-    }
+  for (const [cat, schemas] of Object.entries(nodeSchemasByCategory.value)) {
+    const filtered = schemas.filter(s => s.title.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q))
+    if (filtered.length > 0) result[cat] = filtered
   }
-  
   return result
 })
 
-const {
-  workflowName,
-  isDirty,
-  isSaving,
-  canUndo,
-  canRedo,
-  showMiniMap,
-  selectedNode,
-  availableVariables,
-  nodes: flowNodes,
-  edges: flowEdges
-} = store
+const showConfigPanel = computed(() => !!selectedNodeRef.value)
+const canUndo = computed(() => workflowStore.canUndo)
+const canRedo = computed(() => workflowStore.canRedo)
 
-const canTest = computed(() => {
-  return flowNodes.value.length > 0 && !isDirty.value
-})
-
-// 方法
-function toggleJsonView() {
-  showJsonView.value = !showJsonView.value
-  if (showJsonView.value) {
-    jsonContent.value = JSON.stringify(store.graph, null, 2)
-  }
-}
-
-function toggleMiniMap() {
-  store.showMiniMap = !store.showMiniMap
-}
-
-function applyJsonChanges() {
-  try {
-    const graph = JSON.parse(jsonContent.value)
-    store.setGraph(graph)
-  } catch (error) {
-    console.error('JSON解析错误:', error)
-    // 恢复到有效状态
-    jsonContent.value = JSON.stringify(store.graph, null, 2)
-  }
-}
-
-function onDragStart(event: DragEvent, schema: NodeSchema) {
-  event.dataTransfer!.setData('application/node-schema', JSON.stringify(schema))
-  event.dataTransfer!.effectAllowed = 'move'
-}
-
-function addNodeBySchema(schema: NodeSchema) {
-  const position = { x: 200, y: 200 } // 默认位置，可以优化为画布中心
-  
-  const newNode: WorkflowNode = {
-    id: `${schema.type}_${Date.now()}`,
-    type: schema.type,
-    position,
-    data: {
-      label: schema.title,
-      desc: schema.desc,
-      input_params: [...schema.defaultParams.input_params],
-      output_params: [...schema.defaultParams.output_params],
-      node_param: { ...schema.defaultParams.node_param }
-    }
-  }
-  
-  store.addNode(newNode)
-}
-
-function onNodeClick(event: any) {
-  const node = event.node
-  store.selectNode(node)
-  emit('nodeSelect', node)
-}
-
-function onEdgeClick(event: any) {
-  store.selectEdge(event.edge)
-}
-
-function onConnect(connection: any) {
-  const newEdge = {
-    id: `edge_${Date.now()}`,
-    source: connection.source,
-    target: connection.target,
-    sourceHandle: connection.sourceHandle,
-    targetHandle: connection.targetHandle
-  }
-  store.addEdge(newEdge)
-}
-
-function onNodesChange(changes: any) {
-  // 处理节点位置变化等
-  for (const change of changes) {
-    if (change.type === 'position' && change.position) {
-      store.updateNode(change.id, { position: change.position })
-    }
-  }
-}
-
-function onEdgesChange(changes: any) {
-  // 处理边的变化
-}
-
-function closeConfigPanel() {
-  store.selectNode(null)
-}
-
-function updateNodeConfig(updates: any) {
-  if (selectedNode.value) {
-    store.updateNode(selectedNode.value.id, {
-      data: {
-        ...selectedNode.value.data,
-        ...updates
-      }
-    })
-  }
-}
-
-function getConfigPanelComponent(type: string) {
-  // 根据节点类型返回对应的配置面板组件
-  const panelMap: Record<string, any> = {
-    llm: () => import('./workflow-panels/LLMPanel.vue'),
-    api: () => import('./workflow-panels/APIPanel.vue'),
-    script: () => import('./workflow-panels/ScriptPanel.vue'),
-    retrieval: () => import('./workflow-panels/RetrievalPanel.vue'),
-    condition: () => import('./workflow-panels/ConditionPanel.vue'),
-    task: () => import('./workflow-panels/TaskPanel.vue')
-  }
-  
-  return panelMap[type] || null
-}
-
-function handleTest() {
-  showTestPanel.value = true
-}
-
-function closeTestPanel() {
-  showTestPanel.value = false
-}
-
-async function handleSave() {
-  if (!isDirty.value || isSaving.value) return
-  
-  store.isSaving = true
-  try {
-    await emit('save', store.graph)
-    store.markAsSaved()
-  } catch (error) {
-    console.error('保存失败:', error)
-  } finally {
-    store.isSaving = false
-  }
-}
-
-function undo() {
-  store.undo()
-}
-
-function redo() {
-  store.redo()
-}
-
-function autoLayout() {
-  // TODO: 实现自动布局算法
-  console.log('自动布局')
-}
-
-// 键盘快捷键
-function handleKeyboard(event: KeyboardEvent) {
-  if (props.readOnly) return
-  
-  // Ctrl+S 保存
-  if (event.ctrlKey && event.key === 's') {
-    event.preventDefault()
-    handleSave()
-  }
-  
-  // Ctrl+Z 撤销
-  if (event.ctrlKey && event.key === 'z') {
-    event.preventDefault()
-    undo()
-  }
-  
-  // Ctrl+Y 重做
-  if (event.ctrlKey && event.key === 'y') {
-    event.preventDefault()
-    redo()
-  }
-  
-  // Delete 删除选中节点
-  if (event.key === 'Delete' && selectedNode.value) {
-    event.preventDefault()
-    store.deleteNode(selectedNode.value.id)
-  }
-}
-
-// 生命周期
+// ==================== Init ====================
 onMounted(() => {
-  // 初始化工作流数据
-  if (props.workflowId) {
-    store.setWorkflowInfo(props.workflowId, props.workflowName || '', '')
-  }
-  
   if (props.initialGraph) {
-    store.setGraph(props.initialGraph)
+    loadGraph(props.initialGraph)
   }
-  
-  // 设置只读模式
-  store.readOnly = props.readOnly
-  
-  // 监听键盘事件
   window.addEventListener('keydown', handleKeyboard)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyboard)
-  store.reset()
 })
 
-// 自动保存（防抖）
-let saveTimer: number | null = null
-watch(() => store.isDirty, (dirty) => {
-  if (dirty && !props.readOnly) {
-    if (saveTimer) clearTimeout(saveTimer)
-    saveTimer = window.setTimeout(() => {
-      handleSave()
-    }, 5000) // 5秒后自动保存
-  }
+watch(() => props.initialGraph, (val) => {
+  if (val) loadGraph(val)
 })
+
+function loadGraph(graph: WorkflowGraph) {
+  flowNodes.value = (graph.nodes || []) as WorkflowNode[]
+  flowEdges.value = (graph.edges || []) as WorkflowEdge[]
+  workflowStore.setGraph(graph)
+  isDirty.value = false
+}
+
+// ==================== Node/Schema helpers ====================
+function getNodeTitle(type: string): string {
+  const schema = NODE_SCHEMA_MAP[type]
+  return schema?.title || type
+}
+
+function getMiniMapNodeColor(node: any): string {
+  const schema = NODE_SCHEMA_MAP[node.type]
+  return schema?.bgColor || '#ccc'
+}
+
+// ==================== Drag & Drop ====================
+function onDragStart(event: DragEvent, schema: NodeSchema) {
+  event.dataTransfer!.setData('application/node-schema', JSON.stringify(schema))
+  event.dataTransfer!.effectAllowed = 'move'
+}
+
+function onDragOver(event: DragEvent) {
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+function onDrop(event: DragEvent) {
+  const schemaData = event.dataTransfer?.getData('application/node-schema')
+  if (!schemaData) return
+
+  const schema: NodeSchema = JSON.parse(schemaData)
+
+  // 计算放置位置
+  const bounds = vueFlowContainer.value?.getBoundingClientRect()
+  if (!bounds) return
+
+  const position = screenToFlowCoordinate({
+    x: event.clientX - bounds.left,
+    y: event.clientY - bounds.top,
+  })
+
+  const newNode: WorkflowNode = {
+    id: generateNodeId(schema.type),
+    type: schema.type,
+    position,
+    data: {
+      label: schema.title,
+      desc: schema.desc,
+      input_params: JSON.parse(JSON.stringify(schema.defaultParams.input_params)),
+      output_params: JSON.parse(JSON.stringify(schema.defaultParams.output_params)),
+      node_param: JSON.parse(JSON.stringify(schema.defaultParams.node_param)),
+    },
+  }
+
+  flowNodes.value.push(newNode)
+  workflowStore.addNode(newNode)
+  markDirty()
+}
+
+// ==================== Add Node ====================
+function addNodeBySchema(schema: NodeSchema) {
+  // 如果是开始或结束节点，检查是否已存在
+  if ((schema.type === NODE_TYPE.START || schema.type === NODE_TYPE.END) &&
+      flowNodes.value.some(n => n.type === schema.type)) {
+    return
+  }
+
+  const position = {
+    x: 200 + Math.random() * 200,
+    y: 200 + Math.random() * 200,
+  }
+
+  const newNode: WorkflowNode = {
+    id: generateNodeId(schema.type),
+    type: schema.type,
+    position,
+    data: {
+      label: schema.title,
+      desc: schema.desc,
+      input_params: JSON.parse(JSON.stringify(schema.defaultParams.input_params)),
+      output_params: JSON.parse(JSON.stringify(schema.defaultParams.output_params)),
+      node_param: JSON.parse(JSON.stringify(schema.defaultParams.node_param)),
+    },
+  }
+
+  flowNodes.value.push(newNode)
+  workflowStore.addNode(newNode)
+  selectedNodeRef.value = newNode
+  markDirty()
+}
+
+// ==================== Click handlers ====================
+function onNodeClick(event: any) {
+  const node = event.node as WorkflowNode
+  selectedNodeRef.value = node
+  configEditName.value = node.data.label || ''
+  configEditDesc.value = node.data.desc || ''
+  workflowStore.selectNode(node)
+}
+
+function onPaneClick() {
+  selectedNodeRef.value = null
+  workflowStore.selectNode(null)
+}
+
+function hasCycle(nodeId: string, targetId: string, visited: Set<string> = new Set()): boolean {
+  if (nodeId === targetId) return true
+  if (visited.has(nodeId)) return false
+  visited.add(nodeId)
+
+  const outgoing = flowEdges.value.filter(e => e.source === nodeId)
+  for (const edge of outgoing) {
+    if (hasCycle(edge.target, targetId, visited)) return true
+  }
+  return false
+}
+
+function onConnect(connection: any) {
+  if (!connection.source || !connection.target) return
+
+  // 自连接检测
+  if (connection.source === connection.target) return
+
+  // 环检测
+  if (hasCycle(connection.target, connection.source)) {
+    alert('不能形成环路连接')
+    return
+  }
+
+  const newEdge: WorkflowEdge = {
+    id: generateEdgeId(),
+    source: connection.source,
+    target: connection.target,
+    sourceHandle: connection.sourceHandle,
+    targetHandle: connection.targetHandle,
+  }
+
+  flowEdges.value.push(newEdge)
+  workflowStore.addEdge(newEdge)
+  markDirty()
+}
+
+function onNodesChange(changes: any) {
+  for (const change of changes) {
+    if (change.type === 'position' && change.position) {
+      const node = flowNodes.value.find(n => n.id === change.id)
+      if (node) {
+        node.position = change.position
+        workflowStore.updateNode(change.id, { position: change.position })
+        markDirty()
+      }
+    }
+  }
+}
+
+function onEdgesChange(changes: any) {
+  // VueFlow handles edge deletions automatically
+}
+
+function onNodesDelete(nodes: any[]) {
+  const allowDelete = nodes.filter((n: any) => {
+    const schema = NODE_SCHEMA_MAP[n.type]
+    // 系统节点不允许删除
+    if (schema?.isSystem) return false
+    return true
+  })
+
+  if (allowDelete.length !== nodes.length) {
+    alert('系统节点不允许删除')
+  }
+
+  for (const node of allowDelete) {
+    workflowStore.deleteNode(node.id)
+    if (selectedNodeRef.value?.id === node.id) {
+      selectedNodeRef.value = null
+    }
+  }
+  markDirty()
+}
+
+// ==================== Config Panel ====================
+function openNodeConfig(nodeId: string) {
+  const node = flowNodes.value.find(n => n.id === nodeId)
+  if (node) {
+    selectedNodeRef.value = node
+    workflowStore.selectNode(node)
+  }
+}
+
+function closeConfigPanel() {
+  selectedNodeRef.value = null
+}
+
+function getConfigPanelComponent(type: string): any {
+  const panelMap: Record<string, any> = {
+    // 专用面板
+    start: markRaw(StartPanel),
+    end: markRaw(EndPanel),
+    llm: markRaw(LLMPanel),
+    api: markRaw(APIPanel),
+    script: markRaw(ScriptPanel),
+    retrieval: markRaw(RetrievalPanel),
+    condition: markRaw(ConditionPanel),
+    // 通用面板（基于schema自动渲染）
+    code: markRaw(GenericConfigPanel),
+    tool: markRaw(GenericConfigPanel),
+    agent: markRaw(GenericConfigPanel),
+    variable: markRaw(GenericConfigPanel),
+    notification: markRaw(GenericConfigPanel),
+    input: markRaw(GenericConfigPanel),
+    output: markRaw(GenericConfigPanel),
+    'sub-workflow': markRaw(GenericConfigPanel),
+    loop: markRaw(GenericConfigPanel),
+    parallel: markRaw(GenericConfigPanel),
+    task: markRaw(GenericConfigPanel),
+  }
+  return panelMap[type] || markRaw(GenericConfigPanel)
+}
+
+function handlePanelUpdate(updates: any) {
+  if (!selectedNodeRef.value) return
+  const nodeId = selectedNodeRef.value.id
+  const node = flowNodes.value.find(n => n.id === nodeId)
+  if (!node) return
+
+  Object.assign(node.data, updates)
+  workflowStore.updateNode(nodeId, { data: node.data })
+  markDirty()
+}
+
+const configEditName = ref('')
+const configEditDesc = ref('')
+
+function configEditDescStr(): string {
+  return configEditDesc.value
+}
+
+function confirmRename() {
+  if (!selectedNodeRef.value || !configEditName.value.trim()) return
+  selectedNodeRef.value.data.label = configEditName.value.trim()
+  updateNodeConfigFromPanel()
+}
+
+function updateNodeConfigFromPanel() {
+  if (!selectedNodeRef.value) return
+  const nodeId = selectedNodeRef.value.id
+  // 同步描述
+  if (configEditDesc.value !== undefined) {
+    selectedNodeRef.value.data.desc = configEditDesc.value
+  }
+  workflowStore.updateNode(nodeId, { data: selectedNodeRef.value.data })
+  markDirty()
+}
+
+function copySelectedNode() {
+  if (!selectedNodeRef.value) return
+  const sourceNode = selectedNodeRef.value
+  const schema = NODE_SCHEMA_MAP[sourceNode.type]
+  if (schema?.isSystem) {
+    alert('系统节点不允许复制')
+    return
+  }
+
+  const newNode: WorkflowNode = {
+    ...JSON.parse(JSON.stringify(sourceNode)),
+    id: generateNodeId(sourceNode.type),
+    position: {
+      x: sourceNode.position.x + 200,
+      y: sourceNode.position.y + 80,
+    },
+    selected: true,
+    data: {
+      ...JSON.parse(JSON.stringify(sourceNode.data)),
+      label: sourceNode.data.label + '_副本',
+    },
+  }
+
+  flowNodes.value.push(newNode)
+  workflowStore.addNode(newNode)
+  selectedNodeRef.value = newNode
+  markDirty()
+}
+
+function deleteSelectedNode() {
+  if (!selectedNodeRef.value) return
+  const nodeId = selectedNodeRef.value.id
+  flowNodes.value = flowNodes.value.filter(n => n.id !== nodeId)
+  flowEdges.value = flowEdges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
+  workflowStore.deleteNode(nodeId)
+  selectedNodeRef.value = null
+  markDirty()
+}
+
+// ==================== Toolbar actions ====================
+function toggleJsonView() {
+  showJsonView.value = !showJsonView.value
+  if (showJsonView.value) {
+    jsonContent.value = JSON.stringify({ nodes: flowNodes.value, edges: flowEdges.value }, null, 2)
+  }
+}
+
+function applyJsonChanges() {
+  try {
+    const graph = JSON.parse(jsonContent.value)
+    flowNodes.value = graph.nodes || []
+    flowEdges.value = graph.edges || []
+    workflowStore.setGraph(graph)
+    markDirty()
+  } catch (err) {
+    console.error('JSON解析错误:', err)
+  }
+}
+
+function toggleMiniMap() {
+  showMiniMap.value = !showMiniMap.value
+}
+
+function undo() {
+  workflowStore.undo()
+  // Sync with VueFlow
+  flowNodes.value = [...workflowStore.nodes]
+  flowEdges.value = [...workflowStore.edges]
+}
+
+function redo() {
+  workflowStore.redo()
+  flowNodes.value = [...workflowStore.nodes]
+  flowEdges.value = [...workflowStore.edges]
+}
+
+function validateWorkflow() {
+  const errors: string[] = []
+
+  // 检查是否有开始节点
+  if (!flowNodes.value.some(n => n.type === NODE_TYPE.START)) {
+    errors.push('缺少开始节点')
+  }
+
+  // 检查是否有结束节点
+  if (!flowNodes.value.some(n => n.type === NODE_TYPE.END)) {
+    errors.push('缺少结束节点')
+  }
+
+  // 检查未连接的节点
+  const connectedNodeIds = new Set<string>()
+  flowEdges.value.forEach(e => {
+    connectedNodeIds.add(e.source)
+    connectedNodeIds.add(e.target)
+  })
+
+  const disconnectedNodes = flowNodes.value.filter(
+    n => !connectedNodeIds.has(n.id) && n.type !== NODE_TYPE.START
+  )
+
+  if (disconnectedNodes.length > 0) {
+    errors.push(`${disconnectedNodes.length} 个节点未连接`)
+  }
+
+  if (errors.length === 0) {
+    alert('✅ 工作流校验通过')
+  } else {
+    alert('⚠️ 校验发现问题:\n' + errors.join('\n'))
+  }
+}
+
+function autoLayout() {
+  // Simple grid-based auto layout
+  const startNode = flowNodes.value.find(n => n.type === NODE_TYPE.START)
+  const endNode = flowNodes.value.find(n => n.type === NODE_TYPE.END)
+  const otherNodes = flowNodes.value.filter(
+    n => n.type !== NODE_TYPE.START && n.type !== NODE_TYPE.END
+  )
+
+  let y = 150
+  if (startNode) {
+    startNode.position = { x: 200, y }
+    y += 120
+  }
+
+  // Topological sort by finding levels
+  const levels = new Map<string, number>()
+  const visited = new Set<string>()
+
+  function assignLevel(nodeId: string, level: number) {
+    if (visited.has(nodeId)) return
+    visited.add(nodeId)
+    const currentLevel = levels.get(nodeId) ?? level
+    levels.set(nodeId, Math.max(currentLevel, level))
+
+    // 找出从该节点出发的所有边
+    const outgoing = flowEdges.value.filter(e => e.source === nodeId)
+    for (const edge of outgoing) {
+      assignLevel(edge.target, level + 1)
+    }
+  }
+
+  // 从开始节点开始分配层级
+  if (startNode) {
+    assignLevel(startNode.id, 0)
+  } else {
+    otherNodes.forEach((n, i) => levels.set(n.id, i))
+  }
+
+  // 按层级排列
+  const levelGroups = new Map<number, WorkflowNode[]>()
+  for (const [nodeId, level] of levels) {
+    const node = flowNodes.value.find(n => n.id === nodeId)
+    if (node && node !== startNode && node !== endNode) {
+      if (!levelGroups.has(level)) levelGroups.set(level, [])
+      levelGroups.get(level)!.push(node)
+    }
+  }
+
+  for (const [level, nodes] of levelGroups) {
+    const xOffset = 200 + level * 280
+    nodes.forEach((node, i) => {
+      node.position = { x: xOffset, y: y + i * 120 }
+    })
+  }
+
+  if (endNode) {
+    const maxLevel = Math.max(...levels.values(), 0)
+    endNode.position = { x: 200 + (maxLevel + 1) * 280, y: 150 }
+  }
+
+  workflowStore.setGraph({ nodes: flowNodes.value, edges: flowEdges.value })
+  markDirty()
+}
+
+// ==================== Save ====================
+async function handleSave() {
+  if (isSaving.value) return
+  isSaving.value = true
+
+  const graph: WorkflowGraph = {
+    nodes: flowNodes.value,
+    edges: flowEdges.value,
+  }
+
+  emit('save', graph)
+  
+  // 等待store同步
+  setTimeout(() => {
+    isSaving.value = false
+    isDirty.value = false
+  }, 500)
+}
+
+function markDirty() {
+  isDirty.value = true
+}
+
+// ==================== Keyboard ====================
+function handleKeyboard(event: KeyboardEvent) {
+  if (props.readOnly) return
+
+  if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+    event.preventDefault()
+    handleSave()
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+    event.preventDefault()
+    undo()
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key === 'y') {
+    event.preventDefault()
+    redo()
+  }
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    // VueFlow handles deletion for selected elements
+  }
+}
+
+function goBack() {
+  router.push('/agenthub/workflows')
+}
 </script>
 
 <style scoped>
+/* ==================== Layout ==================== */
 .workflow-editor {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   background: #f5f7fa;
+  overflow: hidden;
 }
 
+/* ==================== Toolbar ==================== */
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: 8px 16px;
   background: white;
   border-bottom: 1px solid #e1e5eb;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .toolbar-left {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.workflow-info {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.workflow-title {
-  margin: 0;
+.workflow-title-input {
   font-size: 16px;
   font-weight: 600;
+  border: none;
+  background: transparent;
   color: #2c3e50;
+  outline: none;
+  min-width: 150px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.workflow-title-input:focus {
+  background: #f0f2f5;
+}
+.workflow-title-input:disabled {
+  color: #999;
 }
 
 .dirty-indicator {
-  color: #f56c6c;
-  font-size: 12px;
+  color: #faad14;
+  font-size: 11px;
 }
 
 .toolbar-center,
 .toolbar-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
+/* ==================== Buttons ==================== */
 .btn {
-  padding: 6px 16px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
+  padding: 6px 14px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
   background: white;
-  color: #606266;
-  font-size: 14px;
+  color: #333;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
+.btn:hover:not(:disabled) { border-color: #1677ff; color: #1677ff; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: #1677ff; border-color: #1677ff; color: white; }
+.btn-primary:hover:not(:disabled) { background: #4096ff; border-color: #4096ff; color: white; }
+.btn-secondary { background: #fafafa; border-color: #d9d9d9; }
+.btn-secondary:hover:not(:disabled) { border-color: #1677ff; color: #1677ff; }
+.btn-icon { padding: 6px 10px; font-size: 16px; line-height: 1; }
+.btn-icon.active { background: #e6f4ff; border-color: #1677ff; color: #1677ff; }
+.btn-sm { font-size: 12px; padding: 4px 8px; }
+.divider { width: 1px; height: 20px; background: #e8e8e8; margin: 0 2px; }
+.test-btn-group .btn.active { background: #e6f4ff; border-color: #1677ff; color: #1677ff; }
 
-.btn:hover:not(:disabled) {
-  border-color: #409eff;
-  color: #409eff;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background: #409eff;
-  border-color: #409eff;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #66b1ff;
-  border-color: #66b1ff;
-}
-
-.btn-secondary {
-  background: #f4f4f5;
-  border-color: #e9e9eb;
-}
-
-.btn-icon {
-  padding: 6px 10px;
-  font-size: 16px;
-}
-
-.btn-icon.active {
-  background: #ecf5ff;
-  border-color: #409eff;
-  color: #409eff;
-}
-
-.divider {
-  width: 1px;
-  height: 20px;
-  background: #dcdfe6;
-  margin: 0 4px;
-}
-
-.editor-container {
+/* ==================== Editor Body ==================== */
+.editor-body {
   display: flex;
   flex: 1;
   overflow: hidden;
 }
 
+/* ==================== Left Node Panel ==================== */
 .node-panel {
-  width: 260px;
+  width: 240px;
   background: white;
   border-right: 1px solid #e1e5eb;
   display: flex;
   flex-direction: column;
+  position: relative;
+  transition: width 0.2s;
+  flex-shrink: 0;
+}
+.node-panel.collapsed {
+  width: 32px;
+}
+
+.panel-toggle {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 48px;
+  background: white;
+  border: 1px solid #e1e5eb;
+  border-radius: 0 4px 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  font-size: 10px;
+  color: #999;
+}
+.panel-toggle:hover {
+  background: #f5f5f5;
 }
 
 .panel-header {
-  padding: 16px;
-  border-bottom: 1px solid #e1e5eb;
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .search-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  font-size: 14px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+.search-input:focus {
+  border-color: #1677ff;
 }
 
 .node-categories {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 12px;
 }
 
 .node-category {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .category-title {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: #909399;
+  color: #999;
   margin-bottom: 8px;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .node-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .node-item {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 10px;
-  background: #f8f9fa;
-  border: 1px solid #e1e5eb;
+  padding: 8px 10px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
   border-radius: 6px;
   cursor: grab;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
-
 .node-item:hover {
-  background: #ecf5ff;
-  border-color: #409eff;
-  transform: translateX(4px);
+  background: #e6f4ff;
+  border-color: #91caff;
+  transform: translateX(3px);
 }
-
 .node-item:active {
   cursor: grabbing;
 }
 
 .node-icon {
-  font-size: 20px;
+  font-size: 18px;
   flex-shrink: 0;
+  line-height: 1.2;
 }
 
 .node-info {
@@ -693,38 +1025,24 @@ watch(() => store.isDirty, (dirty) => {
 }
 
 .node-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: #303133;
-  margin-bottom: 2px;
+  color: #333;
 }
 
 .node-desc {
-  font-size: 12px;
-  color: #909399;
-  line-height: 1.4;
+  font-size: 11px;
+  color: #999;
+  line-height: 1.3;
+  margin-top: 2px;
 }
 
+/* ==================== Canvas Area ==================== */
 .canvas-area {
   flex: 1;
   position: relative;
-  background: #ffffff;
-}
-
-.json-view {
-  width: 100%;
-  height: 100%;
-}
-
-.json-editor {
-  width: 100%;
-  height: 100%;
-  border: none;
-  padding: 20px;
-  font-family: 'Monaco', 'Menlo', monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  resize: none;
+  background: #fafafa;
+  overflow: hidden;
 }
 
 .visual-view {
@@ -732,12 +1050,62 @@ watch(() => store.isDirty, (dirty) => {
   height: 100%;
 }
 
+.vue-flow-instance {
+  width: 100%;
+  height: 100%;
+}
+
+.json-view {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+.json-editor {
+  width: 100%;
+  height: 100%;
+  border: none;
+  padding: 20px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  background: #1e1e1e;
+  color: #d4d4d4;
+}
+
+/* ==================== Config Panel ==================== */
 .config-panel {
   width: 320px;
   background: white;
   border-left: 1px solid #e1e5eb;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.2s;
+}
+.config-panel.collapsed {
+  width: 0;
+  overflow: hidden;
+}
+
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.config-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+}
+
+.config-header-actions {
+  display: flex;
+  gap: 4px;
 }
 
 .panel-body {
@@ -746,33 +1114,152 @@ watch(() => store.isDirty, (dirty) => {
   padding: 16px;
 }
 
-.btn-close {
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  font-size: 18px;
-  color: #909399;
-  cursor: pointer;
-  border-radius: 4px;
+.panel-placeholder {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  font-size: 13px;
+  padding: 20px;
+  text-align: center;
 }
 
-.btn-close:hover {
-  background: #f4f4f5;
-  color: #606266;
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+.form-group input:focus {
+  outline: none;
+  border-color: #1677ff;
+}
+
+/* ==================== Config Panel Updates ==================== */
+.config-name-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.config-name-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+}
+.config-name-input:focus {
+  border-color: #1677ff;
+}
+
+.config-desc-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  font-family: inherit;
+}
+.config-desc-input:focus {
+  border-color: #1677ff;
+}
+
+.config-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn-danger {
+  color: #ff4d4f;
+  border-color: #ffccc7;
+}
+.btn-danger:hover:not(:disabled) {
+  background: #fff2f0;
+  border-color: #ff4d4f;
+  color: #ff4d4f;
+}
+
+/* ==================== Test Panel Overlay ==================== */
+.test-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
 }
 
 .test-panel {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  width: 400px;
-  max-height: 600px;
+  width: 480px;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
   display: flex;
   flex-direction: column;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.test-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.test-panel .panel-header h4 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.btn-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-close:hover {
+  background: #f5f5f5;
+}
+
+.test-panel .panel-body {
+  padding: 20px;
+  overflow-y: auto;
 }
 </style>

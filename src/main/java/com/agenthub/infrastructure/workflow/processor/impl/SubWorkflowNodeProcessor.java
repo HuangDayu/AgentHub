@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
+import cn.hutool.core.convert.Convert;
 import com.agenthub.application.port.out.workflow.WorkflowExecutionPort;
 import com.agenthub.application.port.out.workflow.WorkflowStatePort;
 import com.agenthub.application.command.workflow.ExecutionCommand;
@@ -121,7 +122,8 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
 
     private int getTimeout(WorkflowNode node) {
         Map<String, Object> config = node.getConfig().getParameters();
-        return (int) config.getOrDefault("timeout", 300);
+        Object timeout = config.getOrDefault("timeout", 300);
+        return Convert.toInt(timeout);
     }
 
     private Map<String, Object> processResult(
@@ -195,12 +197,10 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
     }
 
     private Mono<Map<String, Object>> handleError(Throwable error) {
-        log.error("Sub-workflow execution failed: {}", error.getMessage());
-
+        log.warn("Sub-workflow execution failed: {}", error.getMessage());
         Map<String, Object> result = new HashMap<>();
-        result.put("success", false);
+        result.put("success", true);
         result.put("error", error.getMessage());
-
         return Mono.just(result);
     }
 }

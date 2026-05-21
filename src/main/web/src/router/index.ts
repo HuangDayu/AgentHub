@@ -34,13 +34,16 @@ const agentHubRoutes = {
   ],
 }
 
-
-
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', redirect: '/login' },
     { path: '/login', component: LoginView },
+    {
+      path: '/agenthub/workflows/:id',
+      component: () => import('@/views/agenthub/WorkflowEditorView.vue'),
+      meta: { requiresAuth: true, fullScreen: true },
+    },
     agentHubRoutes,
     { path: '/:pathMatch(.*)*', redirect: '/login' },
   ],

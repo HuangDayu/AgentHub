@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.model;
 
+import com.agenthub.domain.enums.ModelSupplier;
 import com.agenthub.domain.model.ModelConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +23,8 @@ public class OpenAiModelFactory implements ModelFactory {
     private static final Logger log = LoggerFactory.getLogger(OpenAiModelFactory.class);
 
     @Override
-    public String getSupplier() {
-        return "OPENAI";
+    public ModelSupplier getSupplier() {
+        return ModelSupplier.OPENAI;
     }
 
     @Override

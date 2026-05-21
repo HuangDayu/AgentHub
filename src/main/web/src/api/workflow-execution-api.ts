@@ -9,7 +9,7 @@ import type {
   WorkflowGraph,
   WorkflowExecution,
   NodeResult
-} from '@/types/workflow-node'
+} from '@/types/workflow'
 import { requestJson } from './http'
 
 export interface Selection {
@@ -301,7 +301,7 @@ export async function getExecutionHistory(
       baseUrl: runtimeConfig.agentApiBase,
       method: 'GET',
       headers: buildHeaders(selection),
-      bodyJson: { limit }
+      query: { limit }
     }
   )
 }

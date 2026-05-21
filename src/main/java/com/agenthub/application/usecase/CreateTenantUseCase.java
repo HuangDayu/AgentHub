@@ -2,9 +2,8 @@ package com.agenthub.application.usecase;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.TenantCommand;
-import com.agenthub.application.port.out.IdGenerator;
-import com.agenthub.application.port.out.TimeProvider;
 import com.agenthub.application.port.out.repositories.TenantRepository;
+import com.agenthub.common.utils.RandomUtils;
 import com.agenthub.domain.model.auth.Tenant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -21,8 +20,6 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class CreateTenantUseCase {
     private final TenantRepository tenantRepository;
-    private final IdGenerator idGenerator;
-    private final TimeProvider timeProvider;
 
     /**
      * 执行创建租户操作。
@@ -34,10 +31,10 @@ public class CreateTenantUseCase {
         Tenant.IsolationLevel level = parseIsolationLevel(command.getIsolationLevel());
         // 使用ID生成器创建租户
         Tenant tenant = BeanUtil.copyProperties(command, Tenant.class);
-        tenant.setId(idGenerator.nextId());
+        tenant.setId(RandomUtils.randomId());
         tenant.setIsolationLevel(level);
         tenant.setStatus(Tenant.TenantStatus.ACTIVE);
-        Instant now = timeProvider.now();
+        Instant now = Instant.now();
         tenant.setCreatedAt(now);
         tenant.setUpdatedAt(now);
         return tenantRepository.save(tenant);

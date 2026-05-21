@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.model;
 
+import com.agenthub.domain.enums.ModelSupplier;
 import com.agenthub.domain.model.KnowledgeBase;
 import com.agenthub.domain.model.ModelConfig;
 import org.slf4j.Logger;
@@ -25,11 +26,7 @@ public class ModelFactoryRegistry {
 
     private static final Logger log = LoggerFactory.getLogger(ModelFactoryRegistry.class);
 
-    private final Map<String, ModelFactory> factoriesBySupplier;
-
-    public EmbeddingModel createEmbeddingModel(KnowledgeBase knowledgeBase) {
-        return null;
-    }
+    private final Map<ModelSupplier, ModelFactory> factoriesBySupplier;
 
     /**
      * Spring 自动注入所有 ModelFactory Bean。
@@ -47,7 +44,7 @@ public class ModelFactoryRegistry {
      * @return 对应的 ModelFactory
      * @throws IllegalArgumentException 如果供应商未注册
      */
-    public ModelFactory getFactory(String supplier) {
+    public ModelFactory getFactory(ModelSupplier supplier) {
         ModelFactory factory = factoriesBySupplier.get(supplier);
         if (factory == null) {
             throw new IllegalArgumentException("Unsupported supplier: " + supplier
@@ -63,7 +60,7 @@ public class ModelFactoryRegistry {
      * @return Spring AI ChatModel 实例
      */
     public ChatModel createChatModel(ModelConfig config) {
-        ModelFactory factory = getFactory(config.getSupplier().name());
+        ModelFactory factory = getFactory(config.getSupplier());
         return factory.createChatModel(config);
     }
 
@@ -74,14 +71,14 @@ public class ModelFactoryRegistry {
      * @return Spring AI EmbeddingModel 实例
      */
     public EmbeddingModel createEmbeddingModel(ModelConfig config) {
-        ModelFactory factory = getFactory(config.getSupplier().name());
+        ModelFactory factory = getFactory(config.getSupplier());
         return factory.createEmbeddingModel(config);
     }
 
     /**
      * 判断是否支持指定供应商。
      */
-    public boolean isSupported(String supplier) {
+    public boolean isSupported(ModelSupplier supplier) {
         return factoriesBySupplier.containsKey(supplier);
     }
 }

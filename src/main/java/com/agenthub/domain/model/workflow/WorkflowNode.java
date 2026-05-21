@@ -2,6 +2,8 @@ package com.agenthub.domain.model.workflow;
 
 import com.agenthub.domain.enums.workflow.NodeStatus;
 import com.agenthub.domain.enums.workflow.NodeType;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.Instant;
@@ -23,6 +25,13 @@ public class WorkflowNode {
 
     /** 节点类型 */
     private final NodeType type;
+
+    @JsonCreator
+    public WorkflowNode(@JsonProperty("id") String id,
+                        @JsonProperty("type") NodeType type) {
+        this.id = id;
+        this.type = type;
+    }
 
     /** 节点名称 */
     private String name;

@@ -124,8 +124,8 @@ import {
   stopExecution as apiStopExecution,
   getExecutionStatus
 } from '@/api/workflow-execution-api'
-import { useWorkspaceStore } from '@/stores/workspace-store'
-import type { NodeResult, TaskStatus } from '@/types/workflow-node'
+import { useWorkspaceStore } from '@/store/workspace-store'
+import type { NodeResult, TaskStatus } from '@/types/workflow'
 
 interface Props {
   workflowId: string

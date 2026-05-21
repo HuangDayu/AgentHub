@@ -1,11 +1,12 @@
 package com.agenthub.api.dto;
 
-import com.agenthub.domain.enums.workflow.WorkflowStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,13 +21,15 @@ import java.util.Map;
 public class ExecutionResponse {
 
     /** 执行ID */
+    @JsonProperty("task_id")
     private String executionId;
 
     /** 工作流ID */
     private String workflowId;
 
-    /** 执行状态 */
-    private WorkflowStatus status;
+    /** 执行状态（小写，匹配前端TaskStatus） */
+    @JsonProperty("status")
+    private String status;
 
     /** 变量上下文 */
     private Map<String, Object> variables;
@@ -39,4 +42,8 @@ public class ExecutionResponse {
 
     /** 错误信息 */
     private String errorMessage;
+
+    /** 节点执行结果列表 */
+    @JsonProperty("node_results")
+    private List<Map<String, Object>> nodeResults;
 }

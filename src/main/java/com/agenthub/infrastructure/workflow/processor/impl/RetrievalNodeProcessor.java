@@ -64,11 +64,19 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
     }
 
     private int getTopK(Map<String, Object> config) {
-        return (int) config.getOrDefault("topK", 5);
+        Object topKValue = config.getOrDefault("topK", 5);
+        if (topKValue instanceof Number) {
+            return ((Number) topKValue).intValue();
+        }
+        return 5;
     }
 
     private double getScoreThreshold(Map<String, Object> config) {
-        return (double) config.getOrDefault("scoreThreshold", 0.5);
+        Object thresholdValue = config.getOrDefault("scoreThreshold", 0.5);
+        if (thresholdValue instanceof Number) {
+            return ((Number) thresholdValue).doubleValue();
+        }
+        return 0.5;
     }
 
     private void setRetrievalType(RetrievalCommand command, Map<String, Object> config) {
@@ -93,8 +101,51 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
 
     private Map<String, Object> doRetrieve(
             RetrievalCommand command, WorkflowNode node, WorkflowContext context) {
+        try {
+            return executeRetrievalSafely(command, node, context);
+        } catch (Exception e) {
+            return handleRetrievalFailure(node, context, e);
+        }
+    }
+
+    /**
+     * 安全执行检索。
+     */
+    private Map<String, Object> executeRetrievalSafely(
+            RetrievalCommand command, WorkflowNode node, WorkflowContext context) {
         RetrievalOutput output = ragRetrievalPort.retrieve(command);
         return processResult(output, node, context);
+    }
+
+    /**
+     * 处理检索失败，返回空结果。
+     */
+    private Map<String, Object> handleRetrievalFailure(
+            WorkflowNode node, WorkflowContext context, Exception e) {
+        log.warn("Retrieval failed, returning empty result: {}", e.getMessage());
+        Map<String, Object> result = createEmptyResult(e);
+        saveResultToContext(result, node, context);
+        return result;
+    }
+
+    /**
+     * 创建空结果。
+     */
+    private Map<String, Object> createEmptyResult(Exception e) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("documentCount", 0);
+        result.put("documents", new ArrayList<>());
+        result.put("error", e.getMessage());
+        return result;
+    }
+
+    /**
+     * 保存结果到上下文。
+     */
+    private void saveResultToContext(Map<String, Object> result, WorkflowNode node, WorkflowContext context) {
+        Map<String, Object> config = node.getConfig().getParameters();
+        saveToContext(result, config, context);
     }
 
     private Map<String, Object> processResult(

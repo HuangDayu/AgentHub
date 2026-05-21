@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.model;
 
+import com.agenthub.domain.enums.ModelSupplier;
 import com.agenthub.domain.model.ModelConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +29,8 @@ public class OpenRouterModelFactory implements ModelFactory {
     private static final String DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 
     @Override
-    public String getSupplier() {
-        return "OPENROUTER";
+    public ModelSupplier getSupplier() {
+        return ModelSupplier.OPENROUTER;
     }
 
     @Override

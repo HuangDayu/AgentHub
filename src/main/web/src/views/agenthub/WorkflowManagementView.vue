@@ -28,6 +28,7 @@
             <td>{{ formatDate(workflow.createdAt) }}</td>
             <td>
               <button @click="editWorkflow(workflow)" class="btn-small">编辑</button>
+                <button @click="openWorkflowEditor(workflow)" class="btn-small btn-workflow">工作流</button>
               <button @click="togglePublish(workflow)" class="btn-small">
                 {{ workflow.status === 'PUBLISHED' ? '取消发布' : '发布' }}
               </button>
@@ -48,7 +49,6 @@
       @close="closeDialog"
       @confirm="editingWorkflowId ? updateWorkflowHandler() : createWorkflowHandler()"
       :confirm-text="editingWorkflowId ? '更新' : '创建'"
-      width="1200px"
     >
       <div class="workflow-form-container">
         <!-- 表单部分（上） -->
@@ -74,13 +74,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listWorkflows, createWorkflow, updateWorkflow, publishWorkflow, unpublishWorkflow, deleteWorkflow } from '@/api/workflow-api'
-import type { Workflow } from '@/types/memory'
+import type { Workflow } from '@/types/workflow'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
+
+const router = useRouter()
 
 const store = useWorkspaceStore()
 const workflows = ref<Workflow[]>([])
@@ -94,19 +97,29 @@ const form = ref({
   graphDefinition: '{}'
 })
 
+const selectionReady = computed(() => Boolean(store.tenantId && store.workspaceId))
+
 const selection = () => ({
   tenantId: store.tenantId,
   workspaceId: store.workspaceId
 })
 
-onMounted(async () => {
+watch([() => store.tenantId, () => store.workspaceId], () => {
+  if (selectionReady.value) {
+    loadWorkflows()
+  }
+})
+
+onMounted(() => {
   // 监听全局新增事件
   window.addEventListener('global-add', () => {
     editingWorkflowId.value = ''
     resetForm()
     showCreateDialog.value = true
   })
-  await loadWorkflows()
+  if (selectionReady.value) {
+    loadWorkflows()
+  }
 })
 
 async function loadWorkflows() {
@@ -162,14 +175,19 @@ async function deleteWorkflowHandler(id: string) {
 }
 
 function editWorkflow(workflow: Workflow) {
+  // 打开编辑对话框，填充表单
   editingWorkflowId.value = workflow.id
   form.value = {
     workflowCode: workflow.workflowCode,
     name: workflow.name,
     description: workflow.description,
-    graphDefinition: workflow.graphDefinition
+    graphDefinition: workflow.graphDefinition || '{}'
   }
   showCreateDialog.value = true
+}
+
+function openWorkflowEditor(workflow: Workflow) {
+  router.push(`/agenthub/workflows/${workflow.id}`)
 }
 
 function resetForm() {
@@ -220,6 +238,11 @@ function formatDate(date: string): string {
 
 .btn-danger {
   background: #dc3545;
+  color: white;
+}
+
+.btn-workflow {
+  background: #1677ff;
   color: white;
 }
 

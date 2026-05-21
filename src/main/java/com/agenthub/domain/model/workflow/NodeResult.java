@@ -1,6 +1,8 @@
 package com.agenthub.domain.model.workflow;
 
 import com.agenthub.domain.enums.workflow.NodeStatus;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.Instant;
@@ -23,6 +25,15 @@ public class NodeResult {
 
     /** 输出数据 */
     private final Map<String, Object> outputs;
+
+    @JsonCreator
+    public NodeResult(@JsonProperty("nodeId") String nodeId,
+                      @JsonProperty("status") NodeStatus status,
+                      @JsonProperty("outputs") Map<String, Object> outputs) {
+        this.nodeId = nodeId;
+        this.status = status;
+        this.outputs = outputs;
+    }
 
     /** 错误信息 */
     private String errorMessage;

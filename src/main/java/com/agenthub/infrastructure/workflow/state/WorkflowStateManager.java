@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
@@ -30,6 +31,9 @@ public class WorkflowStateManager {
     /** 状态过期时间 */
     private static final Duration STATE_TTL = Duration.ofHours(24);
     
+    /** 历史记录键前缀 */
+    private static final String HISTORY_KEY_PREFIX = "workflow:history:";
+    
     /** Redis键前缀 */
     private static final String KEY_PREFIX = "workflow:state:";
 
@@ -41,8 +45,10 @@ public class WorkflowStateManager {
      */
     public Mono<Void> saveContext(WorkflowContext context) {
         String key = buildContextKey(context.getExecutionId());
+        String historyKey = buildHistoryKey(context.getWorkflowId());
         return serializeContext(context)
             .flatMap(json -> saveToRedis(key, json))
+            .then(redisTemplate.opsForList().leftPush(historyKey, context.getExecutionId()).then())
             .doOnSuccess(v -> log.debug("保存执行上下文: {}", context.getExecutionId()))
             .doOnError(e -> log.error("保存执行上下文失败: {}", context.getExecutionId(), e));
     }
@@ -57,8 +63,42 @@ public class WorkflowStateManager {
         String key = buildContextKey(executionId);
         return redisTemplate.opsForValue().get(key)
             .flatMap(this::deserializeContext)
+            .flatMap(context -> loadAndUpdateStatus(context, executionId))
             .doOnSuccess(ctx -> log.debug("加载执行上下文: {}", executionId))
             .doOnError(e -> log.error("加载执行上下文失败: {}", executionId, e));
+    }
+
+    /**
+     * 加载状态并更新到context。
+     */
+    private Mono<WorkflowContext> loadAndUpdateStatus(WorkflowContext context, String executionId) {
+        String statusKey = buildStatusKey(executionId);
+        return redisTemplate.opsForValue().get(statusKey)
+            .map(statusStr -> updateContextStatus(context, statusStr))
+            .onErrorResume(e -> handleStatusLoadError(context, executionId, e))
+            .defaultIfEmpty(context);
+    }
+
+    /**
+     * 更新context的状态。
+     */
+    private WorkflowContext updateContextStatus(WorkflowContext context, String statusStr) {
+        if (statusStr != null && !statusStr.isEmpty()) {
+            try {
+                context.setStatus(WorkflowStatus.valueOf(statusStr));
+            } catch (Exception e) {
+                log.warn("Failed to parse status: {}", statusStr);
+            }
+        }
+        return context;
+    }
+
+    /**
+     * 处理状态加载错误。
+     */
+    private Mono<WorkflowContext> handleStatusLoadError(WorkflowContext context, String executionId, Throwable e) {
+        log.warn("Failed to load status for execution: {}", executionId, e);
+        return Mono.just(context);
     }
 
     /**
@@ -134,6 +174,24 @@ public class WorkflowStateManager {
     }
 
     /**
+     * 按工作流ID查询执行上下文列表。
+     *
+     * @param workflowId 工作流ID
+     * @param limit 最大返回数量
+     * @return 执行上下文列表
+     */
+    public Flux<WorkflowContext> listContexts(String workflowId, int limit) {
+        String historyKey = buildHistoryKey(workflowId);
+        return redisTemplate.opsForList().range(historyKey, 0, limit - 1)
+            .flatMap(executionId -> loadContext(executionId)
+                .onErrorResume(e -> {
+                    log.warn("加载历史执行上下文失败: {}", executionId, e);
+                    return Mono.empty();
+                }))
+            .doOnComplete(() -> log.debug("查询执行历史: {} limit={}", workflowId, limit));
+    }
+
+    /**
      * 构建上下文键。
      *
      * @param executionId 执行ID
@@ -141,6 +199,16 @@ public class WorkflowStateManager {
      */
     private String buildContextKey(String executionId) {
         return KEY_PREFIX + executionId + ":context";
+    }
+
+    /**
+     * 构建历史记录键。
+     *
+     * @param workflowId 工作流ID
+     * @return Redis键
+     */
+    private String buildHistoryKey(String workflowId) {
+        return HISTORY_KEY_PREFIX + workflowId;
     }
 
     /**

@@ -40,13 +40,16 @@ public class WorkflowController {
     }
 
     /**
-     * 获取工作流列表。
+     * 获取工作流列表（按工作空间过滤）。
      *
+     * @param workspaceId 工作空间ID
+     * @param tenantId 租户ID
      * @return 工作流列表
      */
     @GetMapping
-    public List<WorkflowResponse> list() {
-        return useCase.list().stream().map(this::toResponse).toList();
+    public List<WorkflowResponse> list(@PathVariable String workspaceId,
+                                        @RequestHeader("X-Tenant-Id") String tenantId) {
+        return useCase.list(tenantId, workspaceId).stream().map(this::toResponse).toList();
     }
 
     /**

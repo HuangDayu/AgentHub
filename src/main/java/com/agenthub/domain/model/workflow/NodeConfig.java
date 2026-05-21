@@ -1,5 +1,7 @@
 package com.agenthub.domain.model.workflow;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.Map;
@@ -29,7 +31,10 @@ public class NodeConfig {
      * @param timeoutMs 超时时间
      * @param retryCount 重试次数
      */
-    public NodeConfig(Map<String, Object> parameters, long timeoutMs, int retryCount) {
+    @JsonCreator
+    public NodeConfig(@JsonProperty("parameters") Map<String, Object> parameters,
+                      @JsonProperty("timeoutMs") long timeoutMs,
+                      @JsonProperty("retryCount") int retryCount) {
         this.parameters = parameters != null ? Map.copyOf(parameters) : Map.of();
         this.timeoutMs = timeoutMs;
         this.retryCount = retryCount;

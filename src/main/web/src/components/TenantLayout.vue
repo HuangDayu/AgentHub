@@ -1,7 +1,7 @@
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'fullscreen-mode': isFullScreen }">
     <!-- 顶部栏 -->
-    <header class="app-header">
+    <header v-if="!isFullScreen" class="app-header">
       <div class="header-left">
         <div class="logo">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -30,13 +30,17 @@
       <RouterView />
     </main>
 
-    <!-- 悬浮设置按钮 -->
-    <FloatingSettingsButton />
+    <template v-if="!isFullScreen">
+      <!-- 悬浮设置按钮 -->
+      <FloatingSettingsButton />
+    </template>
   </div>
-    <FloatingEffectButton :bottom="buttonPositions.effect" />
-    <FloatingHomeButton v-if="showHomeButton" :bottom="buttonPositions.home" />
-    <FloatingSyncButton v-if="showSyncButton" :bottom="buttonPositions.sync" @sync="handleSync" />
-    <FloatingAddButton v-if="showAddButton" :bottom="buttonPositions.add" @add="handleAdd" />
+    <template v-if="!isFullScreen">
+      <FloatingEffectButton :bottom="buttonPositions.effect" />
+      <FloatingHomeButton v-if="showHomeButton" :bottom="buttonPositions.home" />
+      <FloatingSyncButton v-if="showSyncButton" :bottom="buttonPositions.sync" @sync="handleSync" />
+      <FloatingAddButton v-if="showAddButton" :bottom="buttonPositions.add" @add="handleAdd" />
+    </template>
 </template>
 
 <script setup lang="ts">
@@ -56,6 +60,11 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+
+// 是否全屏模式（隐藏header和悬浮按钮）
+const isFullScreen = computed(() => {
+  return route.meta.fullScreen === true
+})
 
 // 判断是否显示新增按钮
 const showAddButton = computed(() => {
@@ -172,6 +181,17 @@ function logout() {
   flex-direction: column;
 }
 
+.app-shell.fullscreen-mode {
+  overflow: hidden;
+}
+
+.app-shell.fullscreen-mode .app-content {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  height: 100vh;
+}
+
 .app-header {
   position: sticky;
   top: 0;
@@ -263,19 +283,19 @@ function logout() {
   .app-header {
     padding: 12px 16px;
   }
-  
+
   .header-left h1 {
     font-size: 1rem;
   }
-  
+
   .app-content {
     padding: 16px;
   }
-  
+
   .logout-btn span {
     display: none;
   }
-  
+
   .logout-btn {
     padding: 8px;
   }

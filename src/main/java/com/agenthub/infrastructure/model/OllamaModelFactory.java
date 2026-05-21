@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.model;
 
+import com.agenthub.domain.enums.ModelSupplier;
 import com.agenthub.domain.model.ModelConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +22,8 @@ public class OllamaModelFactory implements ModelFactory {
     private static final Logger log = LoggerFactory.getLogger(OllamaModelFactory.class);
 
     @Override
-    public String getSupplier() {
-        return "OLLAMA";
+    public ModelSupplier getSupplier() {
+        return ModelSupplier.OLLAMA;
     }
 
     @Override

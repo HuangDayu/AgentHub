@@ -45,12 +45,15 @@ public class WorkflowUseCase {
     }
 
     /**
-     * 获取所有工作流列表。
+     * 按租户和工作空间获取工作流列表。
      *
+     * @param tenantId 租户ID
+     * @param workspaceId 工作空间ID
      * @return 工作流列表
      */
-    public List<WorkflowOutput> list() {
-        return repository.findAll().stream().map(this::toOutput).toList();
+    public List<WorkflowOutput> list(String tenantId, String workspaceId) {
+        return repository.findByTenantIdAndWorkspaceId(tenantId, workspaceId)
+                .stream().map(this::toOutput).toList();
     }
 
     /**
@@ -69,13 +72,17 @@ public class WorkflowUseCase {
      * 更新工作流。
      *
      * @param workflowId 工作流ID
-     * @param command 工作流命令
+     * @param command 工作流命令（仅携带需要更新的非空字段）
      * @return 工作流输出
      */
     public WorkflowOutput update(String workflowId, WorkflowCommand command) {
-        Workflow workflow = BeanUtil.copyProperties(command, Workflow.class);
-        workflow.setWorkspaceId(workflowId);
-        return toOutput(repository.save(workflow));
+        Workflow existing = findById(workflowId);
+        // 仅更新允许修改的字段
+        if (command.getName() != null) existing.setName(command.getName());
+        if (command.getDescription() != null) existing.setDescription(command.getDescription());
+        if (command.getGraphDefinition() != null) existing.setGraphDefinition(command.getGraphDefinition());
+        if (command.getWorkflowCode() != null) existing.setWorkflowCode(command.getWorkflowCode());
+        return toOutput(repository.save(existing));
     }
 
     /**

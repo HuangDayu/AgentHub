@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.model;
 
+import com.agenthub.domain.enums.ModelSupplier;
 import com.agenthub.domain.model.ModelConfig;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -17,7 +18,7 @@ public interface ModelFactory {
      *
      * @return 供应商标识
      */
-    String getSupplier();
+    ModelSupplier getSupplier();
 
     /**
      * 根据配置创建 ChatModel。

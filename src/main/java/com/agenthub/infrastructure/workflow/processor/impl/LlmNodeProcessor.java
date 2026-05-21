@@ -2,15 +2,18 @@ package com.agenthub.infrastructure.workflow.processor.impl;
 
 import com.agenthub.domain.model.workflow.WorkflowChat;
 import com.agenthub.application.port.out.agent.AgentChatPort;
+import com.agenthub.application.port.out.repositories.SessionRepository;
 import com.agenthub.domain.enums.workflow.NodeType;
 import com.agenthub.domain.model.workflow.WorkflowContext;
 import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.model.agent.Session;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,6 +29,7 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
 
     private final AgentChatPort agentChatPort;
     private final VariableResolver variableResolver;
+    private final SessionRepository sessionRepository;
 
     @Override
     public String getSupportedType() {
@@ -67,6 +71,9 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
 
     private Mono<Map<String, Object>> executeSyncChat(WorkflowChat workflowChat) {
         return Mono.fromCallable(() -> {
+            // 确保 session 存在，如果不存在则创建
+            ensureSessionExists(workflowChat.getAgentId(), workflowChat.getSessionId());
+            
             var response = agentChatPort.chatMessages(workflowChat.getAgentId(), workflowChat.getSessionId(), workflowChat.getMessage());
             Map<String, Object> result = new HashMap<>();
             result.put("content", response.getText());
@@ -76,6 +83,9 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
     }
 
     private Mono<Map<String, Object>> executeStreamingChat(WorkflowChat workflowChat) {
+        // 确保 session 存在，如果不存在则创建
+        ensureSessionExists(workflowChat.getAgentId(), workflowChat.getSessionId());
+        
         return agentChatPort.streamMessages(workflowChat.getAgentId(), workflowChat.getSessionId(), workflowChat.getMessage())
             .collectList()
             .map(messages -> {
@@ -85,5 +95,26 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
                 result.put("success", true);
                 return result;
             });
+    }
+    
+    /**
+     * 确保 Session 存在。如果不存在则创建。
+     * 工作流执行时使用 executionId 作为 sessionId,但这个 session 可能还没创建。
+     */
+    private void ensureSessionExists(String agentId, String sessionId) {
+        try {
+            // 尝试检查 session 是否存在
+            sessionRepository.existSession(sessionId, agentId);
+        } catch (Exception e) {
+            // 如果 session 不存在，创建一个
+            if (e.getMessage() != null && e.getMessage().contains("Session not owned by agent")) {
+                Session session = new Session();
+                session.setId(sessionId);
+                session.setAgentId(agentId);
+                session.setName("Workflow Execution Session");
+                session.setCreatedAt(Instant.now());
+                sessionRepository.save(session);
+            }
+        }
     }
 }

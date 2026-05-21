@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS workflow (
   workflow_code varchar(255),
   name varchar(255),
   description text,
-  graph_definition varchar(255),
+  graph_definition text,
   status varchar(255),
   created_at timestamptz,
   updated_at timestamptz,

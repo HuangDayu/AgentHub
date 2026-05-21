@@ -36,6 +36,7 @@ configurations.all {
         force "io.grpc:grpc-api:${grpcVersion}"
         force "io.grpc:grpc-core:${grpcVersion}"
         force "io.grpc:grpc-netty:${grpcVersion}"
+        force "io.grpc:grpc-netty-shaded:${grpcVersion}"
         force "io.grpc:grpc-protobuf:${grpcVersion}"
         force "io.grpc:grpc-stub:${grpcVersion}"
         force "io.grpc:grpc-util:${grpcVersion}"

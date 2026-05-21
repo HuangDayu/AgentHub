@@ -2,6 +2,7 @@ interface RequestOptions extends RequestInit {
   baseUrl: string
   bodyJson?: unknown
   headers?: Record<string, string>
+  query?: Record<string, string | number | boolean>
 }
 
 function getDefaultBaseUrl(): string {
@@ -18,7 +19,7 @@ function ensureValidBaseUrl(baseUrl: string): string {
   return getDefaultBaseUrl()
 }
 
-function buildUrl(baseUrl: string, path: string, params?: Record<string, string>) {
+function buildUrl(baseUrl: string, path: string, params?: Record<string, string | number | boolean>) {
   const validBaseUrl = ensureValidBaseUrl(baseUrl)
   const url = new URL(path, validBaseUrl)
   if (params) {
@@ -80,7 +81,7 @@ export async function patch<T>(path: string, bodyJson?: unknown, headers?: Recor
 }
 
 export async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {
-  const url = buildUrl(options.baseUrl, path)
+  const url = buildUrl(options.baseUrl, path, options.query)
   const headers = buildHeaders(options)
   injectAuthToken(headers)
   const body = buildBody(options.bodyJson)

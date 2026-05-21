@@ -1,456 +1,472 @@
 /**
- * 节点Schema定义
- * 定义所有可用节点的模板和默认配置
+ * 工作流节点Schema定义
+ * 定义所有可用节点类型及其默认参数
  */
 
-import type { NodeSchema, InputParam, OutputParam } from '@/types/workflow-node'
+import type { NodeSchema, InputParam, OutputParam } from '@/types/workflow'
 
-// ==================== 默认配置 ====================
-
-const DEFAULT_MODEL_CONFIG = {
-  temperature: 0.7,
-  max_tokens: 2000,
-  top_p: 0.9,
-  frequency_penalty: 0,
-  presence_penalty: 0
+/**
+ * 按照 @vue-flow/core 的节点类型常量
+ */
+export const NODE_TYPE = {
+  START: 'start',
+  END: 'end',
+  LLM: 'llm',
+  API: 'api',
+  SCRIPT: 'script',
+  RETRIEVAL: 'retrieval',
+  CONDITION: 'condition',
+  PARALLEL: 'parallel',
+  PARALLEL_START: 'parallel-start',
+  PARALLEL_END: 'parallel-end',
+  LOOP: 'loop',
+  LOOP_START: 'loop-start',
+  LOOP_END: 'loop-end',
+  VARIABLE: 'variable',
+  CODE: 'code',
+  TOOL: 'tool',
+  SUB_WORKFLOW: 'sub-workflow',
+  AGENT: 'agent',
+  TASK: 'task',
+  NOTIFICATION: 'notification',
+  INPUT: 'input',
+  OUTPUT: 'output',
 }
-
-const DEFAULT_LLM_OUTPUT: OutputParam[] = [
-  { key: 'output', name: '模型输出', type: 'string', description: '大模型生成的文本内容' },
-  { key: 'tokens', name: 'Token数', type: 'number', description: '使用的token数量' }
-]
-
-const DEFAULT_API_OUTPUT: OutputParam[] = [
-  { key: 'response', name: '响应数据', type: 'object', description: 'API响应数据' },
-  { key: 'status', name: '状态码', type: 'number', description: 'HTTP状态码' }
-]
-
-const DEFAULT_RETRIEVAL_OUTPUT: OutputParam[] = [
-  { key: 'documents', name: '检索结果', type: 'array', description: '检索到的文档列表' },
-  { key: 'scores', name: '相似度分数', type: 'array', description: '每个文档的相似度分数' }
-]
 
 // ==================== 节点Schema定义 ====================
 
-/**
- * 开始节点Schema
- */
-export const StartSchema: NodeSchema = {
-  type: 'start',
-  title: '开始',
+const StartSchema: NodeSchema = {
+  type: NODE_TYPE.START,
   icon: '▶',
-  desc: '工作流的开始节点，定义工作流的输入参数',
-  category: '基础',
+  title: '开始',
+  desc: '工作流的开始节点，定义输入参数',
+  bgColor: '#52c41a',
+  isSystem: true,
+  groupLabel: '系统',
   defaultParams: {
     input_params: [],
-    output_params: [],
-    node_param: {
-      input_params: []
-    }
+    output_params: [
+      { key: 'output', type: 'Object', desc: '开始节点输出' }
+    ],
+    node_param: {},
   },
-  allowSingleTest: false
 }
 
-/**
- * 结束节点Schema
- */
-export const EndSchema: NodeSchema = {
-  type: 'end',
-  title: '结束',
+const EndSchema: NodeSchema = {
+  type: NODE_TYPE.END,
   icon: '⏹',
-  desc: '工作流的结束节点，定义工作流的输出参数',
-  category: '基础',
-  defaultParams: {
-    input_params: [],
-    output_params: [],
-    node_param: {
-      output_params: []
-    }
-  },
-  allowSingleTest: false
-}
-
-/**
- * LLM节点Schema
- */
-export const LLMSchema: NodeSchema = {
-  type: 'llm',
-  title: '大模型',
-  icon: '🤖',
-  desc: '调用大语言模型，根据提示词生成内容',
-  category: 'AI',
+  title: '结束',
+  desc: '工作流的结束节点，定义输出结果',
+  bgColor: '#ff4d4f',
+  isSystem: true,
+  groupLabel: '系统',
   defaultParams: {
     input_params: [
-      { key: 'sys_prompt', name: '系统提示词', type: 'string', required: false, value: '' },
-      { key: 'user_prompt', name: '用户提示词', type: 'string', required: true, value: '' }
+      { key: 'input', type: 'Object', value_from: 'refer' }
     ],
-    output_params: DEFAULT_LLM_OUTPUT,
-    node_param: {
-      model_id: '',
-      model_config: DEFAULT_MODEL_CONFIG,
-      sys_prompt: '',
-      user_prompt: '',
-      output_key: 'llm_output'
-    }
+    output_params: [],
+    node_param: {},
   },
-  allowSingleTest: true,
-  checkValid: (data) => {
-    const param = data.node_param as any
-    if (!param.model_id) {
-      return { valid: false, message: '请选择模型' }
-    }
-    if (!param.user_prompt) {
-      return { valid: false, message: '请输入用户提示词' }
-    }
-    return { valid: true }
-  },
-  getRefVariables: (data) => {
-    const param = data.node_param as any
-    const vars: string[] = []
-    const regex = /\$\{([^}]+)\}/g
-    let match
-    while ((match = regex.exec(param.sys_prompt + param.user_prompt)) !== null) {
-      vars.push(match[0])
-    }
-    return vars
-  }
 }
 
-/**
- * API节点Schema
- */
-export const APISchema: NodeSchema = {
-  type: 'api',
-  title: 'API调用',
+const LLMSchema: NodeSchema = {
+  type: NODE_TYPE.LLM,
+  icon: '🧠',
+  title: 'LLM',
+  desc: '调用大语言模型节点',
+  bgColor: '#1677ff',
+  allowSingleTest: true,
+  groupLabel: 'AI',
+  defaultParams: {
+    input_params: [
+      { key: 'prompt', type: 'String', name: '提示词', required: true, description: '发送给LLM的提示词模板，支持变量引用' },
+    ],
+    output_params: [
+      { key: 'content', type: 'String', name: 'LLM回复', description: 'LLM返回的文本内容' },
+      { key: 'success', type: 'Boolean', name: '是否成功', description: '调用是否成功' },
+    ],
+    node_param: {
+      agentId: '',
+      prompt: '',
+      streaming: false,
+    },
+  },
+}
+
+const APISchema: NodeSchema = {
+  type: NODE_TYPE.API,
   icon: '🔗',
-  desc: '调用外部API接口',
-  category: '集成',
+  title: 'API调用',
+  desc: '调用外部HTTP API',
+  bgColor: '#fa8c16',
+  allowSingleTest: true,
+  groupLabel: '集成',
   defaultParams: {
     input_params: [
-      { key: 'url', name: 'API地址', type: 'string', required: true, value: '' },
-      { key: 'body', name: '请求体', type: 'object', required: false, value: {} }
+      { key: 'url', type: 'String', name: '请求URL', required: true, description: 'HTTP请求URL，支持变量引用' },
     ],
-    output_params: DEFAULT_API_OUTPUT,
+    output_params: [
+      { key: 'success', type: 'Boolean', name: '是否成功', description: 'API调用是否成功' },
+      { key: 'error', type: 'String', name: '错误信息', description: '调用失败时的错误信息' },
+    ],
     node_param: {
-      method: 'POST',
       url: '',
-      headers: { 'Content-Type': 'application/json' },
-      body: '',
-      timeout: 30000,
-      output_key: 'api_response'
-    }
+      method: 'GET',
+      body: {},
+      timeoutMs: 30000,
+    },
   },
-  allowSingleTest: true,
-  checkValid: (data) => {
-    const param = data.node_param as any
-    if (!param.url) {
-      return { valid: false, message: '请输入API地址' }
-    }
-    return { valid: true }
-  }
 }
 
-/**
- * 脚本节点Schema
- */
-export const ScriptSchema: NodeSchema = {
-  type: 'script',
+const ScriptSchema: NodeSchema = {
+  type: NODE_TYPE.SCRIPT,
+  icon: '📜',
   title: '脚本',
-  icon: '📝',
   desc: '执行自定义脚本代码',
-  category: '逻辑',
+  bgColor: '#722ed1',
+  allowSingleTest: true,
+  groupLabel: '处理',
   defaultParams: {
-    input_params: [],
+    input_params: [
+      { key: 'data', type: 'Object', name: '输入数据', description: '传递给脚本的上下文变量' },
+    ],
     output_params: [
-      { key: 'result', name: '执行结果', type: 'any', description: '脚本执行返回的结果' }
+      { key: 'result', type: 'Object', name: '执行结果', description: '脚本执行返回的结果' },
+      { key: 'success', type: 'Boolean', name: '是否成功' },
     ],
     node_param: {
-      language: 'javascript',
-      code: '// 在此编写脚本代码\nreturn { result: "Hello" }',
-      output_key: 'script_result'
-    }
+      script: '',
+    },
   },
-  allowSingleTest: true,
-  checkValid: (data) => {
-    const param = data.node_param as any
-    if (!param.code) {
-      return { valid: false, message: '请编写脚本代码' }
-    }
-    return { valid: true }
-  }
 }
 
-/**
- * 知识检索节点Schema
- */
-export const RetrievalSchema: NodeSchema = {
-  type: 'retrieval',
+const RetrievalSchema: NodeSchema = {
+  type: NODE_TYPE.RETRIEVAL,
+  icon: '📚',
   title: '知识检索',
-  icon: '🔍',
-  desc: '从知识库中检索相关信息',
-  category: 'AI',
+  desc: '从知识库检索相关信息',
+  bgColor: '#13c2c2',
+  allowSingleTest: true,
+  groupLabel: 'AI',
   defaultParams: {
     input_params: [
-      { key: 'query', name: '查询文本', type: 'string', required: true, value: '' }
+      { key: 'query', type: 'String', name: '检索查询', required: true, description: '检索的查询文本，支持变量引用' },
     ],
-    output_params: DEFAULT_RETRIEVAL_OUTPUT,
+    output_params: [
+      { key: 'documentCount', type: 'Number', name: '检索文档数', description: '检索到的文档数量' },
+      { key: 'documents', type: 'Array<Object>', name: '文档列表', description: '检索到的文档列表' },
+      { key: 'content', type: 'String', name: '拼接内容', description: '拼接模式下的文档内容' },
+      { key: 'success', type: 'Boolean', name: '是否成功' },
+    ],
     node_param: {
-      knowledge_base_id: '',
+      knowledgeBaseId: '',
       query: '',
-      top_k: 5,
-      score_threshold: 0.7,
-      output_key: 'retrieval_result'
-    }
+      topK: 5,
+      scoreThreshold: 0.5,
+      retrievalType: 'similarity',
+      processMode: 'list',
+      includeMetadata: false,
+      includeScores: true,
+      separator: '\n\n',
+      outputVariable: 'retrievedDocs',
+    },
   },
-  allowSingleTest: true,
-  checkValid: (data) => {
-    const param = data.node_param as any
-    if (!param.knowledge_base_id) {
-      return { valid: false, message: '请选择知识库' }
-    }
-    if (!param.query) {
-      return { valid: false, message: '请输入查询文本' }
-    }
-    return { valid: true }
-  }
 }
 
-/**
- * 条件节点Schema
- */
-export const ConditionSchema: NodeSchema = {
-  type: 'condition',
-  title: '条件判断',
+const ConditionSchema: NodeSchema = {
+  type: NODE_TYPE.CONDITION,
   icon: '◇',
-  desc: '根据条件表达式进行分支判断',
-  category: '逻辑',
-  defaultParams: {
-    input_params: [],
-    output_params: [],
-    node_param: {
-      conditions: [
-        { expression: '', label: '分支1' },
-        { expression: '', label: '分支2' }
-      ],
-      default_branch: 'default'
-    }
-  },
-  allowSingleTest: false,
-  checkValid: (data) => {
-    const param = data.node_param as any
-    if (!param.conditions || param.conditions.length === 0) {
-      return { valid: false, message: '请至少定义一个条件分支' }
-    }
-    return { valid: true }
-  }
-}
-
-/**
- * 任务节点Schema
- */
-export const TaskSchema: NodeSchema = {
-  type: 'task',
-  title: '任务',
-  icon: '⚙',
-  desc: '执行一个任务或操作',
-  category: '基础',
+  title: '条件判断',
+  desc: '根据条件分支执行不同路径',
+  bgColor: '#fadb14',
+  groupLabel: '流程控制',
   defaultParams: {
     input_params: [],
     output_params: [
-      { key: 'result', name: '任务结果', type: 'any', description: '任务执行结果' }
+      { key: 'selectedBranch', type: 'String', name: '选中分支', description: '匹配的条件分支名称' },
+      { key: 'branchCount', type: 'Number', name: '分支数量' },
+      { key: 'evaluated', type: 'Boolean', name: '已评估' },
     ],
     node_param: {
-      action: '',
-      parameters: {},
-      output_key: 'task_result'
-    }
+      branches: [] as any[],
+    },
   },
-  allowSingleTest: true,
-  checkValid: (data) => {
-    const param = data.node_param as any
-    if (!param.action) {
-      return { valid: false, message: '请指定任务动作' }
-    }
-    return { valid: true }
-  }
 }
 
-/**
- * 循环节点Schema
- */
-export const LoopSchema: NodeSchema = {
-  type: 'loop',
-  title: '循环',
-  icon: '↻',
-  desc: '循环执行任务直到满足条件',
-  category: '逻辑',
-  defaultParams: {
-    input_params: [],
-    output_params: [],
-    node_param: {
-      max_iterations: 10,
-      condition: '',
-      iteration_var: 'item'
-    }
-  },
-  allowSingleTest: false
-}
-
-/**
- * 并行节点Schema
- */
-export const ParallelSchema: NodeSchema = {
-  type: 'parallel',
-  title: '并行',
+const ParallelSchema: NodeSchema = {
+  type: NODE_TYPE.PARALLEL,
   icon: '⫿',
+  title: '并行分支',
   desc: '并行执行多个分支',
-  category: '逻辑',
-  defaultParams: {
-    input_params: [],
-    output_params: [],
-    node_param: {
-      branches: [],
-      wait_all: true
-    }
-  },
-  allowSingleTest: false
-}
-
-/**
- * 迭代器节点Schema
- */
-export const IteratorSchema: NodeSchema = {
-  type: 'iterator',
-  title: '迭代器',
-  icon: '🔄',
-  desc: '遍历数组或集合中的每个元素',
-  category: '逻辑',
-  defaultParams: {
-    input_params: [
-      { key: 'input_array', name: '输入数组', type: 'array', required: true, value: [] }
-    ],
-    output_params: [],
-    node_param: {
-      input_array: '',
-      item_var: 'item',
-      index_var: 'index'
-    }
-  },
-  allowSingleTest: false
-}
-
-/**
- * 变量处理节点Schema
- */
-export const VariableSchema: NodeSchema = {
-  type: 'variable',
-  title: '变量处理',
-  icon: '📦',
-  desc: '设置、获取或删除变量',
-  category: '数据',
-  defaultParams: {
-    input_params: [],
-    output_params: [],
-    node_param: {
-      operations: []
-    }
-  },
-  allowSingleTest: false
-}
-
-/**
- * 输入节点Schema
- */
-export const InputSchema: NodeSchema = {
-  type: 'input',
-  title: '输入',
-  icon: '📥',
-  desc: '接收用户输入',
-  category: '交互',
+  bgColor: '#eb2f96',
+  groupLabel: '流程控制',
+  isGroup: true,
   defaultParams: {
     input_params: [],
     output_params: [
-      { key: 'value', name: '输入值', type: 'any', description: '用户输入的值' }
+      { key: 'results', type: 'Array<Object>', name: '执行结果', description: '各分支的执行结果列表' },
+      { key: 'totalNodes', type: 'Number', name: '节点总数' },
     ],
     node_param: {
-      input_type: 'text',
-      label: '请输入',
-      required: true
-    }
+      concurrency: 4,
+    },
   },
-  allowSingleTest: false
 }
 
-/**
- * 输出节点Schema
- */
-export const OutputSchema: NodeSchema = {
-  type: 'output',
-  title: '输出',
-  icon: '📤',
-  desc: '输出结果给用户',
-  category: '交互',
+const LoopSchema: NodeSchema = {
+  type: NODE_TYPE.LOOP,
+  icon: '↻',
+  title: '循环',
+  desc: '循环执行子节点',
+  bgColor: '#2f54eb',
+  groupLabel: '流程控制',
+  isGroup: true,
+  defaultParams: {
+    input_params: [],
+    output_params: [
+      { key: 'results', type: 'Array<Object>', name: '循环结果', description: '每次迭代的执行结果' },
+      { key: 'iterations', type: 'Number', name: '迭代次数' },
+    ],
+    node_param: {
+      items: '',
+      maxIterations: 100,
+    },
+  },
+}
+
+const VariableSchema: NodeSchema = {
+  type: NODE_TYPE.VARIABLE,
+  icon: '📋',
+  title: '变量赋值',
+  desc: '设置工作流变量',
+  bgColor: '#08979c',
+  groupLabel: '处理',
+  defaultParams: {
+    input_params: [],
+    output_params: [
+      { key: 'name', type: 'String', name: '变量名' },
+      { key: 'value', type: 'Object', name: '变量值' },
+    ],
+    node_param: {
+      assignments: [] as any[],
+    },
+  },
+}
+
+const CodeSchema: NodeSchema = {
+  type: NODE_TYPE.CODE,
+  icon: '💻',
+  title: '代码执行',
+  desc: '执行JavaScript代码片段',
+  bgColor: '#531dab',
+  allowSingleTest: true,
+  groupLabel: '处理',
   defaultParams: {
     input_params: [
-      { key: 'value', name: '输出值', type: 'any', required: true, value: '' }
+      { key: 'data', type: 'Object', name: '输入数据', description: '传递给脚本的上下文变量' },
     ],
-    output_params: [],
+    output_params: [
+      { key: 'result', type: 'Object', name: '执行结果', description: '代码执行返回的结果' },
+      { key: 'success', type: 'Boolean', name: '是否成功' },
+    ],
+    node_param: {
+      script: '',
+    },
+  },
+}
+
+const ToolSchema: NodeSchema = {
+  type: NODE_TYPE.TOOL,
+  icon: '🔧',
+  title: '工具调用',
+  desc: '调用系统工具或MCP工具',
+  bgColor: '#237804',
+  allowSingleTest: true,
+  groupLabel: '集成',
+  customAdd: true,
+  defaultParams: {
+    input_params: [],
+    output_params: [
+      { key: 'result', type: 'Object', name: '工具输出', description: '工具执行返回的结果' },
+      { key: 'toolName', type: 'String', name: '工具名称' },
+      { key: 'success', type: 'Boolean', name: '是否成功' },
+    ],
+    node_param: {
+      toolName: '',
+      parameters: {},
+    },
+  },
+}
+
+const AgentSchema: NodeSchema = {
+  type: NODE_TYPE.AGENT,
+  icon: '🤖',
+  title: 'Agent',
+  desc: '调用子Agent执行任务，LLM节点实际使用agentId调用AgentPort',
+  bgColor: '#0958d9',
+  allowSingleTest: true,
+  groupLabel: 'AI',
+  defaultParams: {
+    input_params: [
+      { key: 'instruction', type: 'String', name: '指令', required: true, description: '发给Agent的指令' },
+    ],
+    output_params: [
+      { key: 'response', type: 'String', name: '回复', description: 'Agent回复内容' },
+    ],
+    node_param: {
+      agentId: '',
+      prompt: '',
+    },
+  },
+}
+
+const NotificationSchema: NodeSchema = {
+  type: NODE_TYPE.NOTIFICATION,
+  icon: '🔔',
+  title: '通知',
+  desc: '发送通知消息',
+  bgColor: '#cf1322',
+  groupLabel: '系统',
+  defaultParams: {
+    input_params: [
+      { key: 'message', type: 'String', value_from: 'input', desc: '通知内容' },
+    ],
+    output_params: [
+      { key: 'sent', type: 'Boolean', desc: '是否发送成功' },
+    ],
+    node_param: {
+      channel: 'email',
+      recipients: [],
+      title: '',
+    },
+  },
+}
+
+const InputSchema: NodeSchema = {
+  type: NODE_TYPE.INPUT,
+  icon: '📥',
+  title: '用户输入',
+  desc: '等待用户输入',
+  bgColor: '#7cb305',
+  groupLabel: '系统',
+  defaultParams: {
+    input_params: [],
+    output_params: [
+      { key: 'user_input', type: 'Object', desc: '用户输入值' },
+    ],
+    node_param: {
+      prompt: '',
+      input_type: 'text',
+      required: true,
+    },
+  },
+}
+
+const OutputSchema: NodeSchema = {
+  type: NODE_TYPE.OUTPUT,
+  icon: '📤',
+  title: '输出',
+  desc: '输出信息给用户',
+  bgColor: '#389e0d',
+  groupLabel: '系统',
+  defaultParams: {
+    input_params: [
+      { key: 'output_content', type: 'Object', value_from: 'refer' },
+    ],
+    output_params: [
+      { key: 'response', type: 'Object', desc: '输出内容' },
+    ],
     node_param: {
       output_type: 'text',
-      value: ''
-    }
+    },
   },
-  allowSingleTest: false
 }
 
-// ==================== Schema映射表 ====================
+const SubWorkflowSchema: NodeSchema = {
+  type: NODE_TYPE.SUB_WORKFLOW,
+  icon: '🔀',
+  title: '子工作流',
+  desc: '调用另一个工作流作为子流程',
+  bgColor: '#096dd9',
+  allowSingleTest: true,
+  groupLabel: '流程控制',
+  defaultParams: {
+    input_params: [],
+    output_params: [
+      { key: 'success', type: 'Boolean', name: '是否成功' },
+      { key: 'executionId', type: 'String', name: '执行ID' },
+      { key: 'output', type: 'Object', name: '子工作流输出' },
+    ],
+    node_param: {
+      subWorkflowId: '',
+      inputMapping: '',
+      outputMapping: '',
+      timeout: 300,
+    },
+  },
+}
+
+// ==================== Schema Map ====================
 
 /**
- * 所有节点Schema的映射表
+ * 所有节点Schema Map
+ * key为节点type
  */
 export const NODE_SCHEMA_MAP: Record<string, NodeSchema> = {
-  start: StartSchema,
-  end: EndSchema,
-  llm: LLMSchema,
-  api: APISchema,
-  script: ScriptSchema,
-  retrieval: RetrievalSchema,
-  condition: ConditionSchema,
-  task: TaskSchema,
-  loop: LoopSchema,
-  parallel: ParallelSchema,
-  iterator: IteratorSchema,
-  variable: VariableSchema,
-  input: InputSchema,
-  output: OutputSchema
+  [NODE_TYPE.START]: StartSchema,
+  [NODE_TYPE.END]: EndSchema,
+  [NODE_TYPE.LLM]: LLMSchema,
+  [NODE_TYPE.API]: APISchema,
+  [NODE_TYPE.SCRIPT]: ScriptSchema,
+  [NODE_TYPE.RETRIEVAL]: RetrievalSchema,
+  [NODE_TYPE.CONDITION]: ConditionSchema,
+  [NODE_TYPE.PARALLEL]: ParallelSchema,
+  [NODE_TYPE.LOOP]: LoopSchema,
+  [NODE_TYPE.VARIABLE]: VariableSchema,
+  [NODE_TYPE.CODE]: CodeSchema,
+  [NODE_TYPE.TOOL]: ToolSchema,
+  [NODE_TYPE.AGENT]: AgentSchema,
+  [NODE_TYPE.NOTIFICATION]: NotificationSchema,
+  [NODE_TYPE.INPUT]: InputSchema,
+  [NODE_TYPE.OUTPUT]: OutputSchema,
+  [NODE_TYPE.SUB_WORKFLOW]: SubWorkflowSchema,
 }
 
 /**
- * 获取节点Schema
+ * 按分组获取节点Schema
+ */
+export function getNodeSchemasByCategory(): Record<string, NodeSchema[]> {
+  const result: Record<string, NodeSchema[]> = {}
+
+  for (const schema of Object.values(NODE_SCHEMA_MAP)) {
+    if (schema.hideInMenu) continue
+    const group = schema.groupLabel || '其他'
+    if (!result[group]) {
+      result[group] = []
+    }
+    result[group].push(schema)
+  }
+
+  return result
+}
+
+/**
+ * 根据类型获取节点Schema
  */
 export function getNodeSchema(type: string): NodeSchema | undefined {
   return NODE_SCHEMA_MAP[type]
 }
 
 /**
- * 获取所有节点Schema列表
+ * 生成唯一节点ID
  */
-export function getAllNodeSchemas(): NodeSchema[] {
-  return Object.values(NODE_SCHEMA_MAP)
+export function generateNodeId(type: string): string {
+  return `${type}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
 }
 
 /**
- * 按分类获取节点Schema
+ * 生成唯一边ID
  */
-export function getNodeSchemasByCategory(): Record<string, NodeSchema[]> {
-  const result: Record<string, NodeSchema[]> = {}
-  
-  for (const schema of Object.values(NODE_SCHEMA_MAP)) {
-    if (!result[schema.category]) {
-      result[schema.category] = []
-    }
-    result[schema.category].push(schema)
-  }
-  
-  return result
+export function generateEdgeId(): string {
+  return `edge_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
 }

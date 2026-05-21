@@ -5,9 +5,9 @@ import com.agenthub.domain.model.workflow.WorkflowEdge;
 import com.agenthub.domain.model.workflow.WorkflowGraph;
 import com.agenthub.domain.model.workflow.WorkflowNode;
 import lombok.Getter;
-import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DirectedAcyclicGraph;
+import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -236,7 +236,11 @@ public class DagBuilder {
      * @return 拓扑排序列表
      */
     public List<String> topologicalSort(DirectedAcyclicGraph<String, DefaultEdge> dag) {
-        return new ArrayList<>(Graphs.successorListOf(dag, ""));
+        List<String> order = new ArrayList<>();
+        TopologicalOrderIterator<String, DefaultEdge> iterator =
+            new TopologicalOrderIterator<>(dag);
+        iterator.forEachRemaining(order::add);
+        return order;
     }
 
     /**
