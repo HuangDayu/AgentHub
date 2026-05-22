@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.context.handler;
 
-import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.agenthub.infrastructure.context.TenantContextGetter;
+import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
@@ -58,16 +58,20 @@ public class TenantContextObjectHandler implements MetaObjectHandler {
      * 填充租户ID字段。
      */
     private void fillTenantId(MetaObject metaObject) {
-        String tenantId = tenantContextGetter.getTenantId();
-        if (isValidTenantId(tenantId)) {
-            setFieldValByName("tenantId", tenantId, metaObject);
+        if (metaObject.hasSetter("tenantId")) {
+            String tenantId = tenantContextGetter.getTenantId();
+            if (isValidTenantId(tenantId)) {
+                setFieldValByName("tenantId", tenantId, metaObject);
+            }
         }
     }
 
     private void fillWorkspaceId(MetaObject metaObject) {
-        String workspaceId = tenantContextGetter.getWorkspaceId();
-        if (isValidTenantId(workspaceId)) {
-            setFieldValByName("workspaceId", workspaceId, metaObject);
+        if (metaObject.hasSetter("workspaceId")) {
+            String workspaceId = tenantContextGetter.getWorkspaceId();
+            if (isValidTenantId(workspaceId)) {
+                setFieldValByName("workspaceId", workspaceId, metaObject);
+            }
         }
     }
 

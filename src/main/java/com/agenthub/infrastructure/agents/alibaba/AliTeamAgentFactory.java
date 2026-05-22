@@ -15,6 +15,7 @@ import com.alibaba.cloud.ai.graph.agent.flow.agent.SupervisorAgent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;

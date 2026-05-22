@@ -19,6 +19,8 @@ public interface SessionRepository {
 
     void saveMessages(List<ChatMessage> messages);
 
+    void saveMessage(ChatMessage message);
+
     void delete(String sessionId);
 
     Session existSession(String sessionId, String agentId);

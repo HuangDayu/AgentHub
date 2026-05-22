@@ -64,7 +64,15 @@ dependencies {
     implementation 'org.springframework.retry:spring-retry:2.0.11'
 
     implementation 'com.alibaba.cloud.ai:spring-ai-alibaba-agent-framework'
-    implementation 'io.agentscope:agentscope:1.0.12'
+    implementation 'io.agentscope:agentscope-core:1.1.0-RC2'
+    implementation('io.agentscope:agentscope-harness:1.1.0-RC2') {
+        exclude group: 'com.github.victools', module: 'jsonschema-generator'
+        exclude group: 'com.github.victools', module: 'jsonschema-module-jackson'
+    }
+    implementation 'com.github.victools:jsonschema-module-jackson:5.0.0'
+    implementation('com.github.victools:jsonschema-generator:5.0.0') {
+        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+    }
 
     implementation "com.baomidou:mybatis-plus-spring-boot4-starter:${mybatisPlusVersion}"
     implementation "com.baomidou:mybatis-plus-jsqlparser:${mybatisPlusVersion}"

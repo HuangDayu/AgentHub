@@ -1,0 +1,116 @@
+package com.agenthub.infrastructure.agents.aliyun;
+
+import com.agenthub.application.factory.ReActAgentFactory;
+import com.agenthub.domain.model.agent.AbstractReActAgent;
+import com.agenthub.domain.model.agent.ReActAgentContext;
+import com.agenthub.infrastructure.agents.aliyun.filesystem.FilesystemFactory;
+import com.agenthub.infrastructure.agents.aliyun.memory.MemoryConfigFactory;
+import com.agenthub.infrastructure.agents.aliyun.model.AgentScopeModelFactoryRegistry;
+import com.agenthub.infrastructure.agents.aliyun.session.SessionFactory;
+import com.agenthub.infrastructure.agents.aliyun.tools.SpringToolToAgentScopeConverter;
+import com.agenthub.infrastructure.agents.aliyun.tools.ToolkitFactory;
+import com.agenthub.infrastructure.agents.aliyun.workspace.WorkspaceManagerFactory;
+import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
+import com.agenthub.infrastructure.tools.AgentToolsFactory;
+import io.agentscope.core.model.Model;
+import io.agentscope.core.tool.ToolExecutionContext;
+import io.agentscope.core.tool.Toolkit;
+import io.agentscope.harness.agent.HarnessAgent;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+import java.nio.file.Path;
+import java.util.List;
+
+import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+
+/**
+ * AgentScope Harness 框架的 Agent 运行时工厂。
+ * <p>
+ * 根据 {@link ReActAgentContext} 构建 {@link HarnessAgent}，
+ * 适配为项目的 {@link AbstractReActAgent} 接口。
+ * <p>
+ * 模型实例支持两种路径：
+ * <ul>
+ *   <li><b>AgentScope 原生</b> — 通过 {@link AgentScopeModelFactoryRegistry} 创建</li>
+ *   <li><b>Spring AI 桥接</b> — 通过 {@link AgentScopeSpringModelAdapter} 包装</li>
+ * </ul>
+ */
+@Primary
+@RequiredArgsConstructor
+@Component
+public class AgentScopeReActAgentFactory implements ReActAgentFactory {
+
+    private static final Logger log = LoggerFactory.getLogger(AgentScopeReActAgentFactory.class);
+
+    private final SpringShareObjectFactory springShareObjectFactory;
+    private final AgentToolsFactory agentToolsFactory;
+    private final AgentScopeModelFactoryRegistry agentScopeModelFactoryRegistry;
+    private final MemoryConfigFactory memoryConfigFactory;
+    private final ToolkitFactory toolkitFactory;
+    private final SessionFactory sessionFactory;
+    private final WorkspaceManagerFactory workspaceManagerFactory;
+    private final FilesystemFactory filesystemFactory;
+    private final SpringToolToAgentScopeConverter toolConverter;
+    private final ObjectProvider<AgentScopeTeamAgentFactory> agentScopeTeamAgentFactory;
+
+    @Override
+    public AbstractReActAgent create(ReActAgentContext ctx) {
+        AgentScopeReActAgentConfig config = buildConfig(ctx);
+        HarnessAgent agent = buildHarnessAgent(config, ctx);
+        return new AgentScopeReActAgent(ctx, config, agentScopeTeamAgentFactory.getObject(), agent);
+    }
+
+    private AgentScopeReActAgentConfig buildConfig(ReActAgentContext ctx) {
+        String chatModelId = ctx.getChatModelId();
+        Model model = resolveModel(ctx, chatModelId);
+        Path workspacePath = ctx.getWorkspace() != null && ctx.getWorkspace().getRootPath() != null
+                ? ctx.getWorkspace().getRootPath()
+                : Path.of(".agentscope/workspace");
+        return new AgentScopeReActAgentConfig(
+                ctx.getAgent(), model, ctx.getSystemPrompt(), workspacePath,
+                ctx.getWorkspace(), List.of(), null);
+    }
+
+    /**
+     * 解析模型：优先使用 AgentScope 原生 Model，回退到 Spring AI 桥接。
+     */
+    private Model resolveModel(ReActAgentContext ctx, String chatModelId) {
+        if (chatModelId == null) return null;
+        try {
+            Model nativeModel = agentScopeModelFactoryRegistry.getOrCreateModel(chatModelId);
+            log.info("Using AgentScope native model for configId={}", chatModelId);
+            return nativeModel;
+        } catch (Exception e) {
+            log.info("Falling back to Spring AI bridge for configId={}: {}",
+                    chatModelId, e.getMessage());
+        }
+        var chatModel = springShareObjectFactory.getChatModelByConfigId(chatModelId);
+        return new AgentScopeSpringModelAdapter(ctx.getAgent().getName(), chatModel);
+    }
+
+    private HarnessAgent buildHarnessAgent(AgentScopeReActAgentConfig config, ReActAgentContext ctx) {
+        Toolkit toolkit = resolveToolkit();
+        HarnessAgent.Builder builder = HarnessAgent.builder()
+                .name(config.getAgent().getName())
+                .sysPrompt(config.getSystemPrompt())
+                .model(config.getModel())
+                .workspace(config.getWorkspacePath())
+                .compaction(memoryConfigFactory.createDefaultCompactionConfig())
+                .enablePendingToolRecovery(true)
+                .toolExecutionContext(ToolExecutionContext.builder().register(AGENT_CONTEXT_KEY, ctx).build())
+                .toolResultEviction(memoryConfigFactory.createDefaultToolResultEvictionConfig())
+                .toolkit(toolkit);
+        return builder.build();
+    }
+
+    private Toolkit resolveToolkit() {
+        var springTools = agentToolsFactory.getToolCallbacks();
+        return toolConverter.convertToToolkit(springTools);
+    }
+
+}

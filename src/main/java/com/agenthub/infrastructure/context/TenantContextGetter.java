@@ -61,8 +61,12 @@ public class TenantContextGetter {
     private TenantThreadContext findFirstTenantContext() {
         return tenantContextSupplier.stream()
                 .flatMap(supplier -> {
-                    try { return Stream.ofNullable(supplier.getTenantThreadContext()); }
-                    catch (Exception e) { log.warn("Failed to get tenant context from supplier: {}", supplier, e); return Stream.empty(); }
+                    try {
+                        return Stream.ofNullable(supplier.getTenantThreadContext());
+                    } catch (Exception e) {
+                        log.warn("Failed to get tenant context from supplier: {} , error message: {}", supplier, e.getMessage());
+                        return Stream.empty();
+                    }
                 })
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No valid tenant context found"));

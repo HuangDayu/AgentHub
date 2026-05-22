@@ -66,8 +66,13 @@ public class MybatisSessionRepository implements SessionRepository {
 
     @Override
     public void saveMessages(List<ChatMessage> messages) {
-        List<ChatMessageEntity> list = messages.stream().map(message -> toMessagePo(message, message.getSessionId())).toList();
+        List<ChatMessageEntity> list = messages.stream().map(this::toMessagePo).toList();
         messageMapper.insert(list);
+    }
+
+    @Override
+    public void saveMessage(ChatMessage message) {
+        messageMapper.insert(toMessagePo(message));
     }
 
     @Override
@@ -99,10 +104,10 @@ public class MybatisSessionRepository implements SessionRepository {
         return po;
     }
 
-    private ChatMessageEntity toMessagePo(ChatMessage message, String sessionId) {
+    private ChatMessageEntity toMessagePo(ChatMessage message) {
         ChatMessageEntity po = new ChatMessageEntity();
         po.setId(message.getId());
-        po.setSessionId(sessionId);
+        po.setSessionId(message.getSessionId());
         po.setRole(message.getRole());
         po.setContent(message.getContent());
         po.setCreatedAt(message.getCreatedAt());

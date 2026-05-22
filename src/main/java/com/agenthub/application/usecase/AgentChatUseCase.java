@@ -3,11 +3,13 @@ package com.agenthub.application.usecase;
 import com.agenthub.application.port.out.agent.AgentChatPort;
 import com.agenthub.application.port.out.repositories.AgentRepository;
 import com.agenthub.application.port.out.repositories.SessionRepository;
+import com.agenthub.common.utils.RandomUtils;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.agent.AbstractReActAgent;
 import com.agenthub.domain.model.agent.AgentMessage;
 import com.agenthub.domain.model.agent.ChatMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -22,6 +24,7 @@ import static org.springframework.ai.util.json.JsonParser.toJson;
  *
  * @author huangdayu
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AgentChatUseCase implements AgentChatPort {
@@ -50,16 +53,11 @@ public class AgentChatUseCase implements AgentChatPort {
         AbstractReActAgent agent = getAgent(agentId, sessionId);
         if (agent == null) throw new NotFoundException("Agent create failed :" + agentId);
         StringBuilder responseBuilder = new StringBuilder();
-        List<ChatMessage> messages = new LinkedList<>();
-        messages.add(user(sessionId, userMessage));
+        saveMessage(user(sessionId, userMessage));
         return agent.streamMessages(sessionId, userMessage)
-                .doOnNext(msg -> appendMessages(sessionId, messages, responseBuilder, msg))
-                .onErrorResume(throwable -> {
-                    String errorMessage = "对话过程中发生错误: " + throwable.getMessage();
-                    messages.add(system(sessionId, errorMessage));
-                    return Flux.just(new AgentMessage(AgentMessage.MessageType.SYSTEM, errorMessage));
-                })
-                .doFinally(signal -> saveMessages(messages));
+                .doOnNext(msg -> appendMessages(sessionId, responseBuilder, msg))
+                .onErrorResume(throwable -> Flux.just(handlerThrowable(sessionId, throwable)))
+                .doFinally(signal -> finallyHandleMessage(sessionId, responseBuilder));
     }
 
     @Override
@@ -72,43 +70,60 @@ public class AgentChatUseCase implements AgentChatPort {
         return agentPoolUseCase.getAgent(agentId, sessionId);
     }
 
+    private AgentMessage handlerThrowable(String sessionId, Throwable throwable) {
+        String treadId = RandomUtils.randomId();
+        log.error("Agent session [{}] stream messages [{}] throwable: ", sessionId, treadId, throwable);
+        String errorMessage = "发生错误 [" + treadId + "] : " + throwable.getMessage();
+        saveMessage(system(sessionId, errorMessage));
+        return new AgentMessage(AgentMessage.MessageType.SYSTEM, errorMessage);
+    }
+
     /**
      * 追加响应内容。
      */
-    private void appendMessages(String sessionId, List<ChatMessage> messages, StringBuilder builder, AgentMessage message) {
+    private void appendMessages(String sessionId, StringBuilder builder, AgentMessage message) {
         switch (message.getMessageType()) {
-            case ASSISTANT -> handleAssistantMessage(sessionId, messages, builder, message);
-            case TOOL -> messages.add(tool(sessionId, toJson(message.getToolResponses())));
-            case SYSTEM -> messages.add(system(sessionId, message.getText()));
+            case ASSISTANT -> handleAssistantMessage(sessionId, builder, message);
+            case TOOL -> saveMessage(tool(sessionId, toJson(message.getToolResponses())));
+            case SYSTEM -> saveMessage(system(sessionId, message.getText()));
             default -> {
             }
         }
     }
 
-    private void handleAssistantMessage(String sessionId, List<ChatMessage> messages, StringBuilder builder, AgentMessage msg) {
+    private void handleAssistantMessage(String sessionId, StringBuilder builder, AgentMessage msg) {
         if (msg.getText() != null) {
             builder.append(msg.getText());
         }
         if (msg.getToolCalls() != null && !msg.getToolCalls().isEmpty()) {
-            flushPendingText(sessionId, messages, builder);
-            messages.add(assistant(sessionId, toJson(msg.getToolCalls())));
+            saveMessage(flushPendingText(sessionId, builder));
+            saveMessage(assistant(sessionId, toJson(msg.getToolCalls())));
         }
         if ("STOP".equalsIgnoreCase((String) msg.getMetadata().getOrDefault("finishReason", ""))) {
-            flushPendingText(sessionId, messages, builder);
+            saveMessage(flushPendingText(sessionId, builder));
         }
     }
 
-    private void flushPendingText(String sessionId, List<ChatMessage> messages, StringBuilder builder) {
+    private void finallyHandleMessage(String sessionId, StringBuilder responseBuilder) {
+        saveMessage(flushPendingText(sessionId, responseBuilder));
+    }
+
+    private ChatMessage flushPendingText(String sessionId, StringBuilder builder) {
         String text = builder.toString().strip().replaceFirst("^\n", "").replaceFirst("\n$", "");
-        if (!text.isEmpty()) messages.add(assistant(sessionId, text));
-        builder.delete(0, builder.length());
+        if (!text.isEmpty()) {
+            builder.delete(0, builder.length());
+            return assistant(sessionId, text);
+        }
+        return null;
     }
 
     /**
      * 保存助手消息。
      */
-    private void saveMessages(List<ChatMessage> messages) {
-        sessionRepository.saveMessages(messages);
+    private void saveMessage(ChatMessage message) {
+        if (message != null) {
+            sessionRepository.saveMessage(message);
+        }
     }
 
     /**
