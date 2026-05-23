@@ -1,0 +1,46 @@
+# Telemetry配置示例
+agenthub:
+  telemetry:
+    # 是否启用Telemetry功能
+    enabled: true
+    
+    # 服务名称
+    service-name: agenthub
+    
+    # 是否记录到数据库
+    record-to-database: true
+    
+    # OTLP导出器配置
+    otlp:
+      # 是否启用OTLP导出
+      enabled: false
+      
+      # OTLP端点URL（例如：Langfuse、Jaeger等）
+      endpoint: http://localhost:4317
+      
+      # 请求超时时间（毫秒）
+      timeout: 10000
+      
+      # HTTP请求头（用于认证）
+      headers:
+        # Authorization: Bearer your-token
+        # X-API-Key: your-api-key
+    
+    # 采样配置
+    sampling:
+      # 采样策略：always, never, ratio
+      strategy: always
+      
+      # 采样比例（0.0-1.0），仅在ratio策略下生效
+      ratio: 1.0
+
+# OpenTelemetry Spring Boot Actuator配置
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,traces

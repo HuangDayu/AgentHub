@@ -14,7 +14,7 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
  * <p>
  * 使用ClassFileImporter只导入项目内部的类，避免扫描外部依赖
  */
-public class KnowledgeDomainCleanArchitectureTest {
+public class AgentHubCleanArchitectureTest {
 
     /**
      * 导入项目内部的类，排除外部依赖
@@ -47,6 +47,20 @@ public class KnowledgeDomainCleanArchitectureTest {
                 .because("应用层只应该依赖领域层，不应该依赖基础设施层或API层")
                 .check(classes);
     }
+
+    /**
+     * API层不应该依赖基础设施层
+     */
+    @Test
+    void api_should_not_depend_on_infrastructure() {
+        noClasses()
+                .that().resideInAPackage("..api..")
+                .should().dependOnClassesThat()
+                .resideInAPackage("com.agenthub..infrastructure..")
+                .because("API层不应该依赖基础设施层")
+                .check(classes);
+    }
+
 
     /**
      * 基础设施层不应该依赖API层
