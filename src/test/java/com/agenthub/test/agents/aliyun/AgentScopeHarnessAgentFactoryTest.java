@@ -1,6 +1,5 @@
 package com.agenthub.test.agents.aliyun;
 
-import com.agenthub.domain.enums.AgentTeamType;
 import com.agenthub.domain.enums.AgentToolType;
 import com.agenthub.domain.model.agent.Agent;
 import com.agenthub.domain.model.agent.AbstractReActAgent;
@@ -9,9 +8,9 @@ import com.agenthub.domain.model.agent.AgentToolInfo;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.domain.model.agent.ReActAgentWorkspace;
 import com.agenthub.domain.model.strategy.ModelStrategy;
-import com.agenthub.infrastructure.agents.aliyun.AgentScopeReActAgent;
+import com.agenthub.infrastructure.agents.aliyun.AgentScopeHarnessAgent;
 import com.agenthub.infrastructure.agents.aliyun.AgentScopeReActAgentConfig;
-import com.agenthub.infrastructure.agents.aliyun.AgentScopeReActAgentFactory;
+import com.agenthub.infrastructure.agents.aliyun.AgentScopeHarnessAgentFactory;
 import com.agenthub.infrastructure.agents.aliyun.model.AgentScopeModelFactoryRegistry;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import com.agenthub.infrastructure.tools.AgentToolsFactory;
@@ -41,10 +40,10 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 /**
- * 验证 {@link AgentScopeReActAgentFactory} 的集成逻辑。
+ * 验证 {@link AgentScopeHarnessAgentFactory} 的集成逻辑。
  */
 @ExtendWith(MockitoExtension.class)
-public class AgentScopeReActAgentFactoryTest {
+public class AgentScopeHarnessAgentFactoryTest {
 
     @Mock
     private SpringShareObjectFactory springShareObjectFactory;
@@ -94,7 +93,7 @@ public class AgentScopeReActAgentFactoryTest {
                 org.springframework.beans.factory.ObjectProvider.class);
         when(teamAgentFactoryProvider.getObject()).thenReturn(teamAgentFactory);
         
-        var factory = new AgentScopeReActAgentFactory(
+        var factory = new AgentScopeHarnessAgentFactory(
                 springShareObjectFactory, agentToolsFactory, registry, 
                 new com.agenthub.infrastructure.agents.aliyun.memory.MemoryConfigFactory(),
                 new com.agenthub.infrastructure.agents.aliyun.tools.ToolkitFactory(),
@@ -116,7 +115,7 @@ public class AgentScopeReActAgentFactoryTest {
         var config = new AgentScopeReActAgentConfig();
         config.setAgent(agent);
 
-        var reActAgent = new AgentScopeReActAgent(context, config, null, harnessAgent);
+        var reActAgent = new AgentScopeHarnessAgent(context, config, null, harnessAgent);
 
         AgentMessage result = reActAgent.call("sess-001", "hello");
 
@@ -130,7 +129,7 @@ public class AgentScopeReActAgentFactoryTest {
         var config = new AgentScopeReActAgentConfig();
         config.setAgent(agent);
 
-        var reActAgent = new AgentScopeReActAgent(context, config, null, harnessAgent);
+        var reActAgent = new AgentScopeHarnessAgent(context, config, null, harnessAgent);
 
         Flux<AgentMessage> flux = reActAgent.streamMessages("sess-001", "hello");
 
@@ -145,7 +144,7 @@ public class AgentScopeReActAgentFactoryTest {
         var config = new AgentScopeReActAgentConfig();
         config.setAgent(agent);
 
-        var reActAgent = new AgentScopeReActAgent(context, config, null, harnessAgent);
+        var reActAgent = new AgentScopeHarnessAgent(context, config, null, harnessAgent);
 
         assertThat(reActAgent.getState().name()).isEqualTo("CREATED");
         reActAgent.init();
@@ -160,7 +159,7 @@ public class AgentScopeReActAgentFactoryTest {
         var config = new AgentScopeReActAgentConfig();
         config.setAgent(agent);
 
-        var reActAgent = new AgentScopeReActAgent(context, config, null, harnessAgent);
+        var reActAgent = new AgentScopeHarnessAgent(context, config, null, harnessAgent);
 
         assertThat(reActAgent.teams()).isEmpty();
         assertThat(reActAgent.getNativeAgent()).isSameAs(harnessAgent);

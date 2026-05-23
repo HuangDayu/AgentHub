@@ -32,14 +32,15 @@ public class AgentMessage {
     private String text;
     private Map<String, Object> metadata;
     private List<ToolCall> toolCalls;
-    private List<ToolResult> toolResponses;
+    private List<ToolResult> responses;
     private List<Media> media;
+    private ChatUsage chatUsage;
 
 
     public AgentMessage() {
         this.metadata = new HashMap<>();
         this.toolCalls = new ArrayList<>();
-        this.toolResponses = new ArrayList<>();
+        this.responses = new ArrayList<>();
         this.media = new ArrayList<>();
     }
 
@@ -53,6 +54,13 @@ public class AgentMessage {
         this();
         this.messageType = messageType;
         this.text = text;
+        this.metadata = metadata;
+    }
+
+    public AgentMessage(MessageType messageType, ChatUsage chatUsage, Map<String, Object> metadata) {
+        this();
+        this.messageType = messageType;
+        this.chatUsage = chatUsage;
         this.metadata = metadata;
     }
 
@@ -115,6 +123,16 @@ public class AgentMessage {
             return this.value;
         }
 
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ChatUsage {
+        private int inputTokens;
+        private int outputTokens;
+        private double time;
+        private int totalTokens;
     }
 
 

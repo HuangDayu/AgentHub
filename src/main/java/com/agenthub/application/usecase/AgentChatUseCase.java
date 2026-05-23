@@ -84,7 +84,7 @@ public class AgentChatUseCase implements AgentChatPort {
     private void appendMessages(String sessionId, StringBuilder builder, AgentMessage message) {
         switch (message.getMessageType()) {
             case ASSISTANT -> handleAssistantMessage(sessionId, builder, message);
-            case TOOL -> saveMessage(tool(sessionId, toJson(message.getToolResponses())));
+            case TOOL -> saveMessage(tool(sessionId, toJson(message.getResponses())));
             case SYSTEM -> saveMessage(system(sessionId, message.getText()));
             default -> {
             }

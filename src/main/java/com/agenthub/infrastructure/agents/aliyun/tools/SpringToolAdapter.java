@@ -8,12 +8,13 @@ import io.agentscope.core.tool.ToolCallParam;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallback;
 import reactor.core.publisher.Mono;
+import tools.jackson.core.type.TypeReference;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static org.springframework.ai.util.json.JsonParser.fromJson;
 import static org.springframework.ai.util.json.JsonParser.toJson;
 
 /**
@@ -21,31 +22,32 @@ import static org.springframework.ai.util.json.JsonParser.toJson;
  */
 public class SpringToolAdapter implements AgentTool {
 
-    private final ToolCallback springTool;
+    private final ToolCallback toolCallback;
 
-    public SpringToolAdapter(ToolCallback springTool) {
-        this.springTool = springTool;
+    public SpringToolAdapter(ToolCallback toolCallback) {
+        this.toolCallback = toolCallback;
     }
 
     @Override
     public String getName() {
-        return springTool.getToolDefinition().name();
+        return toolCallback.getToolDefinition().name();
     }
 
     @Override
     public String getDescription() {
-        return springTool.getToolDefinition().description();
+        return toolCallback.getToolDefinition().description();
     }
 
     @Override
     public Map<String, Object> getParameters() {
-        return new HashMap<>();
+        return fromJson(toolCallback.getToolDefinition().inputSchema(), new TypeReference<>() {
+        });
     }
 
     @Override
     public Mono<ToolResultBlock> callAsync(ToolCallParam param) {
-        ReActAgentContext reActAgentContext = param.getContext().get(AGENT_CONTEXT_KEY,ReActAgentContext.class);
-        String result = springTool.call(toJson(param.getInput()), new ToolContext(Map.of(AGENT_CONTEXT_KEY, reActAgentContext)));
+        ReActAgentContext reActAgentContext = param.getContext().get(AGENT_CONTEXT_KEY, ReActAgentContext.class);
+        String result = toolCallback.call(toJson(param.getInput()), new ToolContext(Map.of(AGENT_CONTEXT_KEY, reActAgentContext)));
         TextBlock textBlock = TextBlock.builder().text(result).build();
         return Mono.just(new ToolResultBlock(param.getToolUseBlock().getId(), param.getToolUseBlock().getName(), List.of(textBlock)));
     }

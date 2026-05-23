@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,14 +16,14 @@ import java.util.List;
  * AgentScope Harness 的多 Agent 团队工厂。
  * <p>
  * 根据 {@link AgentTeamType} 创建对应的 {@link AgentScopeTeamAgent} 实例，
- * 使用 {@link AgentScopeReActAgentFactory} 创建团队中的 follower agent。
+ * 使用 {@link AgentScopeHarnessAgentFactory} 创建团队中的 follower agent。
  */
 @Primary
 @RequiredArgsConstructor
 @Component
 public class AgentScopeTeamAgentFactory implements TeamAgentFactory {
 
-    private final AgentScopeReActAgentFactory agentFactory;
+    private final AgentScopeHarnessAgentFactory agentFactory;
 
     @Override
     public AbstractTeamAgent create(AgentTeamType agentTeamType, ReActAgentContext leader,

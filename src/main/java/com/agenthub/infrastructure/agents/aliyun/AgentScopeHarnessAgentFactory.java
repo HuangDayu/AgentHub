@@ -43,9 +43,9 @@ import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
 @Primary
 @RequiredArgsConstructor
 @Component
-public class AgentScopeReActAgentFactory implements ReActAgentFactory {
+public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(AgentScopeReActAgentFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(AgentScopeHarnessAgentFactory.class);
 
     private final SpringShareObjectFactory springShareObjectFactory;
     private final AgentToolsFactory agentToolsFactory;
@@ -62,7 +62,7 @@ public class AgentScopeReActAgentFactory implements ReActAgentFactory {
     public AbstractReActAgent create(ReActAgentContext ctx) {
         AgentScopeReActAgentConfig config = buildConfig(ctx);
         HarnessAgent agent = buildHarnessAgent(config, ctx);
-        return new AgentScopeReActAgent(ctx, config, agentScopeTeamAgentFactory.getObject(), agent);
+        return new AgentScopeHarnessAgent(ctx, config, agentScopeTeamAgentFactory.getObject(), agent);
     }
 
     private AgentScopeReActAgentConfig buildConfig(ReActAgentContext ctx) {

@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.agents.aliyun;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.factory.TeamAgentFactory;
 import com.agenthub.domain.enums.AgentLifecycleState;
 import com.agenthub.domain.enums.AgentTeamType;
@@ -10,17 +11,18 @@ import com.agenthub.domain.model.agent.ReActAgentContext;
 import io.agentscope.core.agent.Event;
 import io.agentscope.core.agent.RuntimeContext;
 import io.agentscope.core.agent.StreamOptions;
-import io.agentscope.core.message.Msg;
-import io.agentscope.core.message.MsgRole;
+import io.agentscope.core.message.*;
 import io.agentscope.harness.agent.HarnessAgent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.springframework.ai.util.json.JsonParser.toJson;
 
@@ -29,7 +31,7 @@ import static org.springframework.ai.util.json.JsonParser.toJson;
  * 封装 {@link HarnessAgent} 的创建与执行，适配项目的 {@link AbstractReActAgent} 接口。
  */
 @RequiredArgsConstructor
-public class AgentScopeReActAgent extends AbstractReActAgent {
+public class AgentScopeHarnessAgent extends AbstractReActAgent {
 
     private final ReActAgentContext context;
     private final AgentScopeReActAgentConfig config;
@@ -109,13 +111,44 @@ public class AgentScopeReActAgent extends AbstractReActAgent {
     private AgentMessage toAgentMessage(Event event) {
         Msg msg = event.getMessage();
         AgentMessage.MessageType messageType = AgentMessage.MessageType.valueOf(msg.getRole().name());
+        if (event.isLast() && msg.getChatUsage() != null) {
+            AgentMessage.ChatUsage chatUsage = BeanUtil.copyProperties(msg.getChatUsage(), AgentMessage.ChatUsage.class);
+            chatUsage.setTotalTokens(msg.getChatUsage().getTotalTokens());
+            return new AgentMessage(messageType, chatUsage, toMetadata(event, "STOP"));
+        }
+        List<AgentMessage.ToolCall> toolCalls = toToolCalls(msg);
+        String finishReason = !toolCalls.isEmpty() ? "TOOL_CALLS" : event.getType().name();
+        AgentMessage agentMessage = new AgentMessage(messageType, event.isLast() ? "" : msg.getTextContent(), toMetadata(event, finishReason));
+        agentMessage.setToolCalls(toolCalls);
+        agentMessage.setResponses(toToolResults(msg));
+        return agentMessage;
+    }
+
+    private Map<String, Object> toMetadata(Event event, String finishReason) {
+        AgentMessage.MessageType messageType = AgentMessage.MessageType.valueOf(event.getMessage().getRole().name());
         Map<String, Object> metadata = event.getMessage().getMetadata();
         metadata.put("role", messageType);
-        metadata.put("finishReason", event.isLast() ? "STOP" : event.getType().name());
+        metadata.put("finishReason", finishReason);
         metadata.put("messageId", event.getMessageId());
         metadata.put("source", event.getSource());
         metadata.put("messageType", messageType);
-        return new AgentMessage(messageType, event.isLast() ? "" : msg.getTextContent(), msg.getMetadata());
+        return metadata;
+    }
+
+    private List<AgentMessage.ToolCall> toToolCalls(Msg msg) {
+        return msg.hasContentBlocks(ToolUseBlock.class) ? msg.getContentBlocks(ToolUseBlock.class).stream()
+                .map(v -> new AgentMessage.ToolCall(v.getId(), "tool_call", v.getName(), toJson(v.getInput())))
+                .toList() : new ArrayList<>();
+    }
+
+    private List<AgentMessage.ToolResult> toToolResults(Msg msg) {
+        return msg.hasContentBlocks(ToolResultBlock.class) ? msg.getContentBlocks(ToolResultBlock.class).stream()
+                .map(v -> new AgentMessage.ToolResult(v.getId(), v.getName(), v.getOutput().stream()
+                        .filter(TextBlock.class::isInstance)
+                        .map(TextBlock.class::cast)
+                        .map(TextBlock::getText)
+                        .collect(Collectors.joining("\n"))))
+                .toList() : new ArrayList<>();
     }
 
 }

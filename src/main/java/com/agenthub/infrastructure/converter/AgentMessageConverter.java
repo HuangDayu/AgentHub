@@ -48,7 +48,7 @@ public final class AgentMessageConverter {
     }
 
     private static void convertFromToolResponse(AgentMessage result, ToolResponseMessage msg) {
-        result.setToolResponses(msg.getResponses() != null
+        result.setResponses(msg.getResponses() != null
                 ? msg.getResponses().stream().map(AgentMessageConverter::fromToolResponse).toList()
                 : List.of());
     }
@@ -89,7 +89,7 @@ public final class AgentMessageConverter {
     }
 
     private static List<ToolResponseMessage.ToolResponse> resolveToolResponses(AgentMessage agentMessage) {
-        List<AgentMessage.ToolResult> toolResponses = agentMessage.getToolResponses();
+        List<AgentMessage.ToolResult> toolResponses = agentMessage.getResponses();
         if (toolResponses == null || toolResponses.isEmpty()) return List.of();
         return toolResponses.stream().map(AgentMessageConverter::toSpringToolResponse).toList();
     }
@@ -125,8 +125,10 @@ public final class AgentMessageConverter {
 
         if (media.getData() instanceof byte[] bytes) {
             builder.data(new ByteArrayResource(bytes));
-        } else if (media.getData() != null) {
-            builder.data(URI.create(media.getData().toString()));
+        } else if (media.getData() instanceof String str) {
+            builder.data(URI.create(str));
+        } else {
+            builder.data(media.getData());
         }
 
         if (media.getId() != null) builder.id(media.getId());
