@@ -3,7 +3,7 @@ package com.agenthub.infrastructure.auth;
 import com.agenthub.application.usecase.AuthApplicationUseCase;
 import com.agenthub.application.port.out.CredentialVerifierPort;
 import com.agenthub.application.port.out.repositories.RefreshTokenRepository;
-import com.agenthub.infrastructure.store.db.mapper.AppUserMapper;
+import com.agenthub.infrastructure.store.db.mapper.AppUserMybatisMapper;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -52,7 +52,7 @@ public class AuthJwtConfiguration {
      * </p>
      *
      * @param jwtTokenProvider         JWT令牌提供者
-     * @param appUserMapper            用户数据映射器
+     * @param appUserMybatisMapper            用户数据映射器
      * @param refreshTokenRepository   刷新令牌仓储
      * @param credentialVerifierProvider 可选的凭据验证器Bean
      * @return 认证应用服务实例
@@ -60,15 +60,15 @@ public class AuthJwtConfiguration {
     @Bean
     public AuthApplicationUseCase authApplicationService(
             JwtTokenProvider jwtTokenProvider,
-            AppUserMapper appUserMapper,
+            AppUserMybatisMapper appUserMybatisMapper,
             RefreshTokenRepository refreshTokenRepository,
             ObjectProvider<CredentialVerifierPort> credentialVerifierProvider) {
         // 优先使用容器中的 CredentialVerifier Bean（测试时注入 StaticCredentialVerifier）
         CredentialVerifierPort credentialVerifierPort = credentialVerifierProvider.getIfAvailable(
-                () -> new DatabaseCredentialVerifier(appUserMapper));
+                () -> new DatabaseCredentialVerifier(appUserMybatisMapper));
         // 创建访问令牌服务
         SimpleAccessTokenAdapter tokenService =
-                new SimpleAccessTokenAdapter(jwtTokenProvider, appUserMapper);
+                new SimpleAccessTokenAdapter(jwtTokenProvider, appUserMybatisMapper);
         // 组装认证应用服务及其依赖
         return new AuthApplicationUseCase(
                 credentialVerifierPort,

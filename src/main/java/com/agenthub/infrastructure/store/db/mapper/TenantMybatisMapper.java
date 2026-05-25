@@ -1,0 +1,15 @@
+package com.agenthub.infrastructure.store.db.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.agenthub.infrastructure.store.db.entity.TenantEntity;
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+ * 租户数据映射器.
+ * <p>
+ * 提供对tenant表的CRUD操作。
+ * </p>
+ */
+@Mapper
+public interface TenantMybatisMapper extends BaseMapper<TenantEntity> {
+}

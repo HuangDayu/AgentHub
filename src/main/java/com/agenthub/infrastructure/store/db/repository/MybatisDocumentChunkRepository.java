@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.IngestionDocumentChunkRepository;
 import com.agenthub.domain.model.etl.DocumentChunk;
 import com.agenthub.infrastructure.store.db.entity.DocumentChunkEntity;
-import com.agenthub.infrastructure.store.db.mapper.DocumentChunkMapper;
+import com.agenthub.infrastructure.store.db.mapper.DocumentChunkMybatisMapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
@@ -20,9 +20,9 @@ import java.util.List;
 @Primary
 public class MybatisDocumentChunkRepository implements IngestionDocumentChunkRepository {
 
-    private final DocumentChunkMapper mapper;
+    private final DocumentChunkMybatisMapper mapper;
 
-    public MybatisDocumentChunkRepository(DocumentChunkMapper mapper) {
+    public MybatisDocumentChunkRepository(DocumentChunkMybatisMapper mapper) {
         this.mapper = mapper;
     }
 

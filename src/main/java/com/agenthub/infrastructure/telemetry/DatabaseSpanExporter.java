@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.telemetry;
 
-import com.agenthub.application.port.out.OtlpSpanRepository;
+import com.agenthub.application.port.out.repositories.OtlpSpanRepository;
 import com.agenthub.common.annotations.IgnoreTenantContext;
 import com.agenthub.domain.model.telemetry.OtlpSpan;
 import io.opentelemetry.api.common.AttributeKey;
@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.Collection;
+
+import static org.springframework.ai.util.json.JsonParser.toJson;
 
 /**
  * 数据库Span导出器
@@ -71,7 +73,9 @@ public class DatabaseSpanExporter implements SpanExporter {
         calculateDuration(span);
         span.setStatus(spanData.getStatus().getStatusCode().name());
         span.setStatusDescription(spanData.getStatus().getDescription());
-        span.setAttributes(extractAttributes(spanData));
+        span.setAttributes(toJson(spanData.getAttributes()));
+        span.setEvents(toJson(spanData.getEvents()));
+        span.setLinks(toJson(spanData.getLinks()));
         span.setCreatedAt(Instant.now());
         return span;
     }
@@ -84,15 +88,9 @@ public class DatabaseSpanExporter implements SpanExporter {
 
     private String extractServiceName(SpanData spanData) {
         return spanData.getResource()
-            .getAttributes()
-            .get(AttributeKey.stringKey("service.name"));
+                .getAttributes()
+                .get(AttributeKey.stringKey("service.name"));
     }
 
-    private String extractAttributes(SpanData spanData) {
-        try {
-            return spanData.getAttributes().toString();
-        } catch (Exception e) {
-            return "{}";
-        }
-    }
+
 }

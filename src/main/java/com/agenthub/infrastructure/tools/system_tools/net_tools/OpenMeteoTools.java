@@ -21,6 +21,7 @@ package com.agenthub.infrastructure.tools.system_tools.net_tools;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.annotation.PostConstruct;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.web.client.RestClient;
@@ -74,9 +75,10 @@ public class OpenMeteoTools {
                             
                             """;
 
-    private final RestClient restClient;
+    private  RestClient restClient;
 
-    public OpenMeteoTools() {
+    @PostConstruct
+    public void init(){
         this.restClient = RestClient.builder()
                 .baseUrl(BASE_URL)
                 .defaultHeader("Accept", "application/json")

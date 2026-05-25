@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.domain.model.auth.AccessToken;
 import com.agenthub.application.port.out.AccessTokenPort;
 import com.agenthub.infrastructure.store.db.entity.AppUserEntity;
-import com.agenthub.infrastructure.store.db.mapper.AppUserMapper;
+import com.agenthub.infrastructure.store.db.mapper.AppUserMybatisMapper;
 
 /**
  * 基于JWT的访问令牌服务实现.
@@ -15,11 +15,11 @@ import com.agenthub.infrastructure.store.db.mapper.AppUserMapper;
 public class SimpleAccessTokenAdapter implements AccessTokenPort {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final AppUserMapper appUserMapper;
+    private final AppUserMybatisMapper appUserMybatisMapper;
 
-    public SimpleAccessTokenAdapter(JwtTokenProvider jwtTokenProvider, AppUserMapper appUserMapper) {
+    public SimpleAccessTokenAdapter(JwtTokenProvider jwtTokenProvider, AppUserMybatisMapper appUserMybatisMapper) {
         this.jwtTokenProvider = jwtTokenProvider;
-        this.appUserMapper = appUserMapper;
+        this.appUserMybatisMapper = appUserMybatisMapper;
     }
 
     /**
@@ -58,6 +58,6 @@ public class SimpleAccessTokenAdapter implements AccessTokenPort {
         wrapper.eq(AppUserEntity::getUsername, username)
                .eq(AppUserEntity::getStatus, "ACTIVE")
                .last("LIMIT 1");
-        return appUserMapper.selectOne(wrapper);
+        return appUserMybatisMapper.selectOne(wrapper);
     }
 }

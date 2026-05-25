@@ -1,9 +1,9 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import com.agenthub.domain.model.telemetry.OtlpLog;
-import com.agenthub.application.port.out.OtlpLogRepository;
+import com.agenthub.application.port.out.repositories.OtlpLogRepository;
 import com.agenthub.infrastructure.store.db.entity.OtlpLogEntity;
-import com.agenthub.infrastructure.store.db.mapper.OtlpLogMapper;
+import com.agenthub.infrastructure.store.db.mapper.OtlpLogMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -17,7 +17,7 @@ import java.util.List;
 @Repository
 @RequiredArgsConstructor
 public class MybatisOtlpLogRepository implements OtlpLogRepository {
-    private final OtlpLogMapper mapper;
+    private final OtlpLogMybatisMapper mapper;
 
     @Override
     public void save(OtlpLog log) {

@@ -3,7 +3,7 @@ package com.agenthub.infrastructure.store.db.repository;
 import com.agenthub.application.port.out.repositories.IngestionJobRepository;
 import com.agenthub.domain.model.etl.IngestionJob;
 import com.agenthub.infrastructure.store.db.entity.IngestionJobEntity;
-import com.agenthub.infrastructure.store.db.mapper.IngestionJobMapper;
+import com.agenthub.infrastructure.store.db.mapper.IngestionJobMybatisMapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
@@ -15,12 +15,12 @@ import java.util.Optional;
 @Repository
 @Primary
 public class MybatisIngestionJobRepository implements IngestionJobRepository {
-    private final IngestionJobMapper mapper;
+    private final IngestionJobMybatisMapper mapper;
 
     /**
      * 构造函数。
      */
-    public MybatisIngestionJobRepository(IngestionJobMapper mapper) {
+    public MybatisIngestionJobRepository(IngestionJobMybatisMapper mapper) {
         this.mapper = mapper;
     }
 

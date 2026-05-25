@@ -1,9 +1,9 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import com.agenthub.domain.model.telemetry.OtlpMetric;
-import com.agenthub.application.port.out.OtlpMetricRepository;
+import com.agenthub.application.port.out.repositories.OtlpMetricRepository;
 import com.agenthub.infrastructure.store.db.entity.OtlpMetricEntity;
-import com.agenthub.infrastructure.store.db.mapper.OtlpMetricMapper;
+import com.agenthub.infrastructure.store.db.mapper.OtlpMetricMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -17,7 +17,7 @@ import java.util.List;
 @Repository
 @RequiredArgsConstructor
 public class MybatisOtlpMetricRepository implements OtlpMetricRepository {
-    private final OtlpMetricMapper mapper;
+    private final OtlpMetricMybatisMapper mapper;
 
     @Override
     public void save(OtlpMetric metric) {

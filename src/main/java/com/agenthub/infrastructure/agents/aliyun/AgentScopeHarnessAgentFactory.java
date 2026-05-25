@@ -11,8 +11,12 @@ import com.agenthub.infrastructure.agents.aliyun.tools.SpringToolToAgentScopeCon
 import com.agenthub.infrastructure.agents.aliyun.tools.ToolkitFactory;
 import com.agenthub.infrastructure.agents.aliyun.workspace.WorkspaceManagerFactory;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
+import com.agenthub.infrastructure.telemetry.AgentStudioMessageHandler;
 import com.agenthub.infrastructure.tools.AgentToolsFactory;
 import io.agentscope.core.model.Model;
+import io.agentscope.core.studio.StudioClient;
+import io.agentscope.core.studio.StudioConfig;
+import io.agentscope.core.studio.StudioMessageHook;
 import io.agentscope.core.tool.ToolExecutionContext;
 import io.agentscope.core.tool.Toolkit;
 import io.agentscope.harness.agent.HarnessAgent;
@@ -57,6 +61,7 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
     private final FilesystemFactory filesystemFactory;
     private final SpringToolToAgentScopeConverter toolConverter;
     private final ObjectProvider<AgentScopeTeamAgentFactory> agentScopeTeamAgentFactory;
+    private final AgentStudioMessageHandler agentStudioMessageHandler;
 
     @Override
     public AbstractReActAgent create(ReActAgentContext ctx) {
@@ -102,10 +107,22 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
                 .workspace(config.getWorkspacePath())
                 .compaction(memoryConfigFactory.createDefaultCompactionConfig())
                 .enablePendingToolRecovery(true)
+                .hook(resolveStudioMessageHook(config, ctx))
                 .toolExecutionContext(ToolExecutionContext.builder().register(AGENT_CONTEXT_KEY, ctx).build())
                 .toolResultEviction(memoryConfigFactory.createDefaultToolResultEvictionConfig())
                 .toolkit(toolkit);
         return builder.build();
+    }
+
+    private StudioMessageHook resolveStudioMessageHook(AgentScopeReActAgentConfig config, ReActAgentContext ctx) {
+        StudioConfig build = StudioConfig.builder()
+                .project(config.getAgent().getName())
+                .runName(config.getAgent().getAgentCode())
+                .runId(ctx.getSessionId())
+                .build();
+        StudioClient studioClient = new StudioClient(build, agentStudioMessageHandler);
+        studioClient.registerRun();
+        return new StudioMessageHook(studioClient);
     }
 
     private Toolkit resolveToolkit() {

@@ -5,7 +5,7 @@ import com.agenthub.application.port.out.repositories.KnowledgeBaseRepository;
 import com.agenthub.domain.model.KnowledgeBase;
 import com.agenthub.domain.model.PageResult;
 import com.agenthub.infrastructure.store.db.entity.KnowledgeBaseEntity;
-import com.agenthub.infrastructure.store.db.mapper.KnowledgeBaseMapper;
+import com.agenthub.infrastructure.store.db.mapper.KnowledgeBaseMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -23,14 +23,14 @@ import java.util.Optional;
 @Primary
 public class MybatisKnowledgeBaseRepository implements KnowledgeBaseRepository {
     private static final String VERSION_SPLITTER = "|";
-    private final KnowledgeBaseMapper mapper;
+    private final KnowledgeBaseMybatisMapper mapper;
 
     /**
      * 构造函数，注入 MyBatis Mapper。
      *
      * @param mapper 知识库数据访问 Mapper
      */
-    public MybatisKnowledgeBaseRepository(KnowledgeBaseMapper mapper) {
+    public MybatisKnowledgeBaseRepository(KnowledgeBaseMybatisMapper mapper) {
         this.mapper = mapper;
     }
 

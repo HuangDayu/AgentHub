@@ -1,7 +1,9 @@
 package com.agenthub.application.usecase;
 
 import com.agenthub.application.dto.*;
-import com.agenthub.application.port.out.*;
+import com.agenthub.application.port.out.repositories.OtlpLogRepository;
+import com.agenthub.application.port.out.repositories.OtlpMetricRepository;
+import com.agenthub.application.port.out.repositories.OtlpSpanRepository;
 import com.agenthub.domain.model.telemetry.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

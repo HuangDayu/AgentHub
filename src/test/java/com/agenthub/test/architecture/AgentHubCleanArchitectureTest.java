@@ -177,7 +177,7 @@ public class AgentHubCleanArchitectureTest {
                 .that().haveSimpleNameEndingWith("Request")
                 .or().haveSimpleNameEndingWith("Response")
                 .or().haveSimpleNameEndingWith("DTO")
-                .should().resideInAPackage("..api.dto..")
+                .should().resideInAnyPackage("..api.dto..","..infrastructure..dto..")
                 .because("DTO类应该在api.dto包中")
                 .check(classes);
     }

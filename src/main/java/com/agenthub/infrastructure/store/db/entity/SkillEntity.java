@@ -1,8 +1,9 @@
 package com.agenthub.infrastructure.store.db.entity;
-import com.agenthub.common.annotations.ConfigChangeListenerEntity;
-import lombok.Data;
 
+import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+import org.apache.ibatis.type.JdbcType;
 
 import java.time.Instant;
 
@@ -22,12 +23,13 @@ public class SkillEntity {
     @TableField(value = "skill_code")
     private String skillCode;
     private String name;
+    @TableField(value = "description", jdbcType = JdbcType.LONGVARCHAR)
     private String description;
     @TableField(value = "skill_type")
     private String skillType;
-    @TableField(value = "skill_path")
+    @TableField(value = "skill_path", jdbcType = JdbcType.LONGVARCHAR)
     private String skillPath;
-    @TableField(value = "skill_files_tree")
+    @TableField(value = "skill_files_tree", jdbcType = JdbcType.LONGVARCHAR)
     private String skillFilesTree;
     private boolean enabled;
     @TableField(value = "created_at", fill = FieldFill.INSERT)

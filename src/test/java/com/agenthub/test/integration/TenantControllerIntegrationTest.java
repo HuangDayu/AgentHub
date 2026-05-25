@@ -1,6 +1,6 @@
 package com.agenthub.test.integration;
 
-import com.agenthub.infrastructure.store.db.mapper.TenantMapper;
+import com.agenthub.infrastructure.store.db.mapper.TenantMybatisMapper;
 import com.agenthub.test.TestAgentHubApplication;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ public class TenantControllerIntegrationTest {
     private WebApplicationContext webApplicationContext;
 
     @Autowired
-    private TenantMapper tenantMapper;
+    private TenantMybatisMapper tenantMybatisMapper;
 
     private MockMvc mockMvc;
     private static String testTenantCode;

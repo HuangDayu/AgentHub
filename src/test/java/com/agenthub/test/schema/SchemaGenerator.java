@@ -3,12 +3,14 @@ package com.agenthub.test.schema;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import org.apache.ibatis.type.JdbcType;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -60,7 +62,7 @@ public class SchemaGenerator {
      */
     public static void main(String[] args) throws Exception {
         String basePackage = args.length > 0 ? args[0] : "com.agenthub";
-        String schemaOutputPath = args.length > 1 ? args[1] : "services/monolith-service/src/main/resources/schema.sql";
+        String schemaOutputPath = args.length > 1 ? args[1] : "sql/schema.sql";
         String checklistOutputPath = args.length > 2 ? args[2] : "sql/checklist.sql";
         SchemaGenerator generator = new SchemaGenerator();
         generator.generate(basePackage, schemaOutputPath, checklistOutputPath);
@@ -269,20 +271,9 @@ public class SchemaGenerator {
      * 解析字段为列定义。
      */
     private ColumnDefinition parseColumn(Field field) {
-        if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+        if (Modifier.isStatic(field.getModifiers())) {
             return null;
         }
-        ColumnDefinition column = createColumnDefinition(field);
-        column.isPrimaryKey = field.getAnnotation(TableId.class) != null;
-        column.sqlType = mapJavaTypeToPostgreSQL(field.getType(), column.columnName);
-        column.nullable = !column.isPrimaryKey;
-        return column;
-    }
-
-    /**
-     * 创建列定义对象。
-     */
-    private ColumnDefinition createColumnDefinition(Field field) {
         ColumnDefinition column = new ColumnDefinition();
         column.fieldName = field.getName();
         column.javaType = field.getType().getSimpleName();
@@ -292,8 +283,62 @@ public class SchemaGenerator {
         } else {
             column.columnName = camelToSnake(field.getName());
         }
+        if (tableField != null && !JdbcType.UNDEFINED.equals(tableField.jdbcType())) {
+            column.sqlType = mapJdbcType(tableField.jdbcType());
+        } else {
+            column.sqlType = mapJavaTypeToPostgreSQL(field.getType(), column.columnName);
+        }
+        column.isPrimaryKey = field.getAnnotation(TableId.class) != null;
+        column.nullable = !column.isPrimaryKey;
         return column;
     }
+
+    private String mapJdbcType(JdbcType jdbcType) {
+        return switch (jdbcType) {
+            case VARCHAR -> "varchar(255)";
+            case INTEGER -> "integer";
+            case BIGINT -> "bigint";
+            case BOOLEAN -> "boolean";
+            case REAL -> "text";
+            case DOUBLE -> "double precision";
+            case FLOAT -> "real";
+            case TIMESTAMP -> "timestamptz";
+            case DATE -> "date";
+            case NUMERIC -> "numeric(19,2)";
+            case BLOB -> "bytea";
+            case CLOB -> "text";
+            case BINARY -> "bytea";
+            case VARBINARY -> "bytea";
+            case LONGVARBINARY -> "bytea";
+            case TIME -> "time";
+            case NCHAR -> "text";
+            case NVARCHAR -> "text";
+            case NCLOB -> "text";
+            case SQLXML -> "text";
+            case OTHER -> "text";
+            case ARRAY -> "text";
+            case REF -> "text";
+            case DATALINK -> "text";
+            case ROWID -> "text";
+            case STRUCT -> "text";
+            case NULL -> "text";
+            case UNDEFINED -> "text";
+            case DISTINCT -> "text";
+            case JAVA_OBJECT -> "text";
+            case CURSOR -> "text";
+            case DATETIMEOFFSET -> null;
+            case TIME_WITH_TIMEZONE -> "timestamptz";
+            case TIMESTAMP_WITH_TIMEZONE -> "timestamptz";
+            case BIT -> "boolean";
+            case TINYINT -> "smallint";
+            case SMALLINT -> "smallint";
+            case DECIMAL -> "numeric(19,2)";
+            case CHAR -> "char(1)";
+            case LONGNVARCHAR -> "text";
+            case LONGVARCHAR -> "text";
+        };
+    }
+
 
     /**
      * 生成CREATE TABLE SQL。

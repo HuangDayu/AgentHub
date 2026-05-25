@@ -1,9 +1,9 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import com.agenthub.domain.model.telemetry.OtlpSpan;
-import com.agenthub.application.port.out.OtlpSpanRepository;
+import com.agenthub.application.port.out.repositories.OtlpSpanRepository;
 import com.agenthub.infrastructure.store.db.entity.OtlpSpanEntity;
-import com.agenthub.infrastructure.store.db.mapper.OtlpSpanMapper;
+import com.agenthub.infrastructure.store.db.mapper.OtlpSpanMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -17,7 +17,7 @@ import java.util.List;
 @Repository
 @RequiredArgsConstructor
 public class MybatisOtlpSpanRepository implements OtlpSpanRepository {
-    private final OtlpSpanMapper mapper;
+    private final OtlpSpanMybatisMapper mapper;
 
     @Override
     public void save(OtlpSpan span) {

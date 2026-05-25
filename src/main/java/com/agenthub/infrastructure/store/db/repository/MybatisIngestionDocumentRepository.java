@@ -5,7 +5,7 @@ import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.port.out.repositories.IngestionDocumentRepository;
 import com.agenthub.domain.model.etl.IngestionDocument;
 import com.agenthub.infrastructure.store.db.entity.IngestionDocumentEntity;
-import com.agenthub.infrastructure.store.db.mapper.IngestionDocumentMapper;
+import com.agenthub.infrastructure.store.db.mapper.IngestionDocumentMybatisMapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
@@ -20,9 +20,9 @@ import java.util.List;
 @Repository
 @Primary
 public class MybatisIngestionDocumentRepository implements IngestionDocumentRepository {
-    private final IngestionDocumentMapper mapper;
+    private final IngestionDocumentMybatisMapper mapper;
 
-    public MybatisIngestionDocumentRepository(IngestionDocumentMapper mapper) {
+    public MybatisIngestionDocumentRepository(IngestionDocumentMybatisMapper mapper) {
         this.mapper = mapper;
     }
 

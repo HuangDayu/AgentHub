@@ -3,7 +3,7 @@ package com.agenthub.application.usecase;
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.command.ScheduledTaskCommand;
 import com.agenthub.application.dto.ScheduledTaskOutput;
-import com.agenthub.application.port.out.ScheduledTaskRepository;
+import com.agenthub.application.port.out.repositories.ScheduledTaskRepository;
 import com.agenthub.domain.model.ScheduledTask;
 import org.springframework.stereotype.Service;
 

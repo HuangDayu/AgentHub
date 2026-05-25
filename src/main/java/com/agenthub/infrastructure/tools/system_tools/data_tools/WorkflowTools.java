@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.tools.system_tools.data_tools;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.agenthub.application.port.out.ScheduledTaskRepository;
+import com.agenthub.application.port.out.repositories.ScheduledTaskRepository;
 import com.agenthub.application.port.out.repositories.WorkflowRepository;
 import com.agenthub.domain.model.ScheduledTask;
 import com.agenthub.domain.model.Workspace;

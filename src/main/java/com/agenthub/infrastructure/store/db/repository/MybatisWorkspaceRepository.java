@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.WorkspaceRepository;
 import com.agenthub.domain.model.Workspace;
 import com.agenthub.infrastructure.store.db.entity.WorkspaceEntity;
-import com.agenthub.infrastructure.store.db.mapper.WorkspaceMapper;
+import com.agenthub.infrastructure.store.db.mapper.WorkspaceMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -22,14 +22,14 @@ import java.util.Optional;
 @Component
 @Primary
 public class MybatisWorkspaceRepository implements WorkspaceRepository {
-    private final WorkspaceMapper mapper;
+    private final WorkspaceMybatisMapper mapper;
 
     /**
      * 构造基于MyBatis的工作空间仓储。
      *
      * @param mapper MyBatis工作空间映射器
      */
-    public MybatisWorkspaceRepository(WorkspaceMapper mapper) {
+    public MybatisWorkspaceRepository(WorkspaceMybatisMapper mapper) {
         this.mapper = mapper;
     }
 

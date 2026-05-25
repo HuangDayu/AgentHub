@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableAsync
 @EnableScheduling
-@MapperScan("com.agenthub.infrastructure.store")
+@MapperScan("com.agenthub.infrastructure.store.db.mapper")
 @SpringBootApplication(scanBasePackages = "com.agenthub")
 public class AgentHubApplication {
 

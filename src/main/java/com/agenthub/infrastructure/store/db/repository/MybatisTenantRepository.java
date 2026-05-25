@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.TenantRepository;
 import com.agenthub.domain.model.auth.Tenant;
 import com.agenthub.infrastructure.store.db.entity.TenantEntity;
-import com.agenthub.infrastructure.store.db.mapper.TenantMapper;
+import com.agenthub.infrastructure.store.db.mapper.TenantMybatisMapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -21,14 +21,14 @@ import java.util.Optional;
 @Component
 @Primary
 public class MybatisTenantRepository implements TenantRepository {
-    private final TenantMapper mapper;
+    private final TenantMybatisMapper mapper;
 
     /**
      * 构造基于MyBatis的租户仓储。
      *
      * @param mapper MyBatis租户映射器
      */
-    public MybatisTenantRepository(TenantMapper mapper) {
+    public MybatisTenantRepository(TenantMybatisMapper mapper) {
         this.mapper = mapper;
     }
 
