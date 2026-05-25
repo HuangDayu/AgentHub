@@ -67,21 +67,25 @@ class RuntimeDataViewControllerIntegrationTest {
         String ownerAgentId = createAgent();
         String otherAgentId = createAgent();
         Session session = withTenant(() -> sessionRepository.save(session(ownerAgentId)));
-        mockMvc.perform(get(path(otherAgentId, session.getId())))
+        withTenant(() -> mockMvc.perform(get(path(otherAgentId, session.getId())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.selectedRun.id").value(session.getId()))
-                .andExpect(jsonPath("$.trace.spanCount").value(0));
+                .andExpect(jsonPath("$.trace.spanCount").value(0)));
     }
 
     private void expectDataView(String agentId, String sessionId) throws Exception {
-        mockMvc.perform(get(path(agentId, sessionId)))
+        withTenant(() -> mockMvc.perform(get(path(agentId, sessionId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.selectedRun.id").value(sessionId))
                 .andExpect(jsonPath("$.trace.spanCount").value(1))
-                .andExpect(jsonPath("$.modelInvocationData.chat.totalTokens.totalTokens").value(15.0));
+                .andExpect(jsonPath("$.modelInvocationData.chat.totalTokens.totalTokens").value(15.0)));
     }
 
     private String createAgent() throws Exception {
+        return withTenant(() -> createAgentWithTenant());
+    }
+
+    private String createAgentWithTenant() throws Exception {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         String json = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON).content(agentJson(suffix)))

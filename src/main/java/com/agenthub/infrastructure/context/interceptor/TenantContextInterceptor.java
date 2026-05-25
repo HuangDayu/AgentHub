@@ -66,15 +66,18 @@ public class TenantContextInterceptor implements HandlerInterceptor {
 
 
     public String getPathId(HttpServletRequest httpServletRequest, String path) {
-        String servletPath = httpServletRequest.getServletPath();
-        if (servletPath.contains(path)) {
-            String[] split = servletPath.split(path);
-            if (split[1].contains("/")) {
-                return split[1].split("/")[0];
-            }
-            return split[1];
-        }
-        return null;
+        return parsePathId(requestPath(httpServletRequest), path);
+    }
+
+    private String requestPath(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path == null || path.isBlank() ? request.getRequestURI() : path;
+    }
+
+    private String parsePathId(String requestPath, String path) {
+        if (requestPath == null || !requestPath.contains(path)) return null;
+        String tail = requestPath.split(path, 2)[1];
+        return tail.contains("/") ? tail.split("/", 2)[0] : tail;
     }
 
     public String getTenantId(HttpServletRequest httpServletRequest, Object handler) {

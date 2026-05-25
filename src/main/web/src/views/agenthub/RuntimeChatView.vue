@@ -81,6 +81,19 @@
                     <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                   </svg>
                 </div>
+                <button
+                  class="session-runtime-btn"
+                  :disabled="isTempSession(session.sessionId)"
+                  @click.stop="showSessionRuntime(session.sessionId)"
+                  title="查看运行视图"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19h16"/>
+                    <path d="M7 16V9"/>
+                    <path d="M12 16V5"/>
+                    <path d="M17 16v-4"/>
+                  </svg>
+                </button>
                 <button class="delete-btn" @click.stop="handleDeleteSession(session.sessionId)" title="删除会话">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"/>
@@ -97,18 +110,16 @@
         </div>
       </aside>
 
-      <!-- 左侧：运行时管理 -->
+      <!-- 左侧：运行视图 -->
       <aside :class="['runtime-sidebar', { 'collapsed': !runtimeExpanded }]">
         <div v-if="runtimeExpanded" class="runtime-content">
           <div class="sidebar-header">
-            <h3>运行时管理</h3>
+            <h3>运行视图</h3>
           </div>
 
-          <div class="runtime-toolbar">
-            <div class="runtime-target">
-              <span>当前运行</span>
-              <strong>{{ runtimeRunLabel }}</strong>
-            </div>
+          <div class="runtime-tabs">
+            <button :class="['runtime-tab', { active: activeRuntimeTab === 'run' }]" @click="activeRuntimeTab = 'run'">运行</button>
+            <button :class="['runtime-tab', { active: activeRuntimeTab === 'trace' }]" @click="activeRuntimeTab = 'trace'">追踪</button>
             <button class="runtime-refresh-btn" @click="loadRuntimeData" :disabled="runtimeLoading" title="刷新运行时数据">
               <svg :class="{ spinning: runtimeLoading }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 4v6h-6"/>
@@ -116,11 +127,6 @@
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
               </svg>
             </button>
-          </div>
-
-          <div class="runtime-tabs">
-            <button :class="['runtime-tab', { active: activeRuntimeTab === 'run' }]" @click="activeRuntimeTab = 'run'">运行</button>
-            <button :class="['runtime-tab', { active: activeRuntimeTab === 'trace' }]" @click="activeRuntimeTab = 'trace'">追踪</button>
           </div>
 
           <div v-if="runtimeError" class="runtime-error">{{ runtimeError }}</div>
@@ -137,23 +143,78 @@
             </div>
 
             <template v-else-if="activeRuntimeTab === 'run'">
-              <div class="runtime-kpi-grid">
-                <div class="runtime-kpi ok">
-                  <span>状态</span>
-                  <strong>{{ runtimeTrace.status || 'PENDING' }}</strong>
+              <div class="runtime-section">
+                <div class="runtime-section-title">
+                  <span>运行信息</span>
+                  <small>{{ runtimeData.selectedRun?.status || runtimeTrace.status || 'PENDING' }}</small>
                 </div>
-                <div class="runtime-kpi">
-                  <span>耗时</span>
-                  <strong>{{ formatDuration(runtimeTrace.latencyNs) }}</strong>
+                <table class="run-info-table">
+                  <tbody>
+                    <tr>
+                      <th>Run ID</th>
+                      <td>{{ shortId(runtimeData.selectedRun?.id) }}</td>
+                    </tr>
+                    <tr>
+                      <th>名称</th>
+                      <td>{{ runtimeData.selectedRun?.name || '-' }}</td>
+                    </tr>
+                    <tr>
+                      <th>状态</th>
+                      <td>{{ runtimeData.selectedRun?.status || runtimeTrace.status || 'PENDING' }}</td>
+                    </tr>
+                    <tr>
+                      <th>开始时间</th>
+                      <td>{{ formatDateTime(runtimeData.selectedRun?.timestamp || '') }}</td>
+                    </tr>
+                    <tr>
+                      <th>耗时</th>
+                      <td>{{ formatDuration(runtimeTrace.latencyNs) }}</td>
+                    </tr>
+                    <tr>
+                      <th>Spans</th>
+                      <td>{{ runtimeTrace.spanCount }}</td>
+                    </tr>
+                    <tr>
+                      <th>PID</th>
+                      <td>{{ runtimeData.selectedRun?.pid || '-' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="runtime-section">
+                <div class="runtime-section-title">
+                  <span>Token 信息</span>
+                  <small>{{ formatNumber(runtimeTotalTokens) }}</small>
                 </div>
-                <div class="runtime-kpi">
-                  <span>Token</span>
-                  <strong>{{ formatNumber(runtimeTotalTokens) }}</strong>
-                </div>
-                <div class="runtime-kpi">
-                  <span>Spans</span>
-                  <strong>{{ runtimeTrace.spanCount }}</strong>
-                </div>
+                <table class="run-info-table">
+                  <tbody>
+                    <tr>
+                      <th>总计</th>
+                      <td>{{ formatNumber(runtimeTotalTokens) }}</td>
+                    </tr>
+                    <tr>
+                      <th>提示词</th>
+                      <td>{{ formatNumber(runtimeChatStats.totalTokens.promptTokens) }}</td>
+                    </tr>
+                    <tr>
+                      <th>生成内容</th>
+                      <td>{{ formatNumber(runtimeChatStats.totalTokens.completionTokens) }}</td>
+                    </tr>
+                    <tr>
+                      <th>总计(Avg)</th>
+                      <td>{{ formatNumber(runtimeChatStats.avgTokens.totalTokens) }}</td>
+                    </tr>
+                    <tr>
+                      <th>提示词(Avg)</th>
+                      <td>{{ formatNumber(runtimeChatStats.avgTokens.promptTokens) }}</td>
+                    </tr>
+                    <tr>
+                      <th>生成内容(Avg)</th>
+                      <td>{{ formatNumber(runtimeChatStats.avgTokens.completionTokens) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               <div class="runtime-section">
@@ -171,42 +232,6 @@
                   <small>{{ formatNumber(item.tokens) }} tokens · {{ formatDuration(item.avgLatencyNs) }}</small>
                 </div>
               </div>
-
-              <div class="runtime-section">
-                <div class="runtime-section-title">
-                  <span>运行信息</span>
-                  <small>{{ runtimeData.runs.length }} runs</small>
-                </div>
-                <dl class="run-detail">
-                  <dt>Run ID</dt>
-                  <dd>{{ shortId(runtimeData.selectedRun?.id) }}</dd>
-                  <dt>Project</dt>
-                  <dd>{{ runtimeData.selectedRun?.project || '-' }}</dd>
-                  <dt>Run Dir</dt>
-                  <dd>{{ runtimeData.selectedRun?.runDir || '-' }}</dd>
-                  <dt>PID</dt>
-                  <dd>{{ runtimeData.selectedRun?.pid || '-' }}</dd>
-                </dl>
-              </div>
-
-              <div class="runtime-section run-list-section">
-                <div class="runtime-section-title">
-                  <span>运行记录</span>
-                  <small>{{ runtimeData.runs.length }}</small>
-                </div>
-                <div v-if="runtimeData.runs.length === 0" class="runtime-empty">暂无运行记录</div>
-                <div
-                  v-for="run in runtimeData.runs"
-                  :key="run.id"
-                  :class="['run-row', { selected: run.id === runtimeData.selectedRun?.id }]"
-                >
-                  <div class="run-row-main">
-                    <strong>{{ run.name || shortId(run.id) }}</strong>
-                    <span>{{ run.status || 'UNKNOWN' }}</span>
-                  </div>
-                  <small>{{ formatDateTime(run.timestamp || '') }} · {{ shortId(run.id) }}</small>
-                </div>
-              </div>
             </template>
 
             <template v-else>
@@ -215,37 +240,51 @@
                   <span>调用链</span>
                   <small>{{ runtimeData.spans.length }} spans</small>
                 </div>
+                <input
+                  v-if="runtimeData.spans.length > 0"
+                  v-model="traceSearchText"
+                  class="trace-search"
+                  type="search"
+                  placeholder="搜索 Span"
+                />
                 <div v-if="runtimeData.spans.length === 0" class="runtime-empty">暂无追踪数据</div>
-                <button
-                  v-for="span in traceTreeRows"
-                  :key="span.spanId"
-                  :class="['span-row', { selected: selectedSpan?.spanId === span.spanId, error: span.statusCode === 2 }]"
-                  @click="selectedSpan = span"
-                >
-                  <span class="span-indent" :style="{ width: span.depth * 14 + 'px' }"></span>
-                  <span class="span-line"></span>
-                  <div>
-                    <strong>{{ span.name || span.spanId }}</strong>
-                    <small>{{ span.kind || 'SPAN' }} · {{ formatDuration(span.latencyNs) }}</small>
+                <div v-if="traceTreeRows.length > 0" class="trace-tree" role="tree">
+                  <div v-for="node in traceTreeRows" :key="node.spanId" class="trace-node">
+                    <div
+                      :class="['span-row', { selected: selectedSpan?.spanId === node.spanId, error: node.statusCode === 2 }]"
+                      role="treeitem"
+                      tabindex="0"
+                      :aria-expanded="node.children.length ? isSpanExpanded(node.spanId) : undefined"
+                      @click="selectSpanNode(node)"
+                      @keydown.enter.prevent="selectSpanNode(node)"
+                      @keydown.space.prevent="selectSpanNode(node)"
+                    >
+                      <span class="span-prefix">{{ node.treePrefix }}</span>
+                      <button
+                        class="span-toggle"
+                        type="button"
+                        :disabled="node.children.length === 0"
+                        :title="isSpanExpanded(node.spanId) ? '收起' : '展开'"
+                        @click.stop="toggleSpanNode(node.spanId)"
+                      >
+                        <svg :class="{ expanded: isSpanExpanded(node.spanId) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                      </button>
+                      <div class="span-row-content">
+                        <div class="span-row-main">
+                          <strong>{{ spanDisplayName(node) }}</strong>
+                          <span class="span-duration">{{ formatDuration(node.latencyNs) }}</span>
+                        </div>
+                        <div class="span-row-sub">
+                          <span>{{ spanDisplayKind(node) }}</span>
+                          <span>{{ formatSpanTime(node.startTimeUnixNano) }}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </button>
-              </div>
-
-              <div v-if="selectedSpan" class="runtime-section span-detail">
-                <div class="runtime-section-title">
-                  <span>Span 详情</span>
-                  <small>{{ statusLabel(selectedSpan.statusCode) }}</small>
                 </div>
-                <dl>
-                  <dt>Trace ID</dt>
-                  <dd>{{ shortId(selectedSpan.traceId) }}</dd>
-                  <dt>Span ID</dt>
-                  <dd>{{ shortId(selectedSpan.spanId) }}</dd>
-                  <dt>模型</dt>
-                  <dd>{{ selectedSpan.model || '-' }}</dd>
-                  <dt>Token</dt>
-                  <dd>{{ selectedSpan.totalTokens || 0 }}</dd>
-                </dl>
+                <div v-else-if="runtimeData.spans.length > 0" class="runtime-empty">没有匹配的 Span</div>
               </div>
             </template>
           </div>
@@ -392,8 +431,8 @@
       </article>
     </div>
 
-    <!-- 左下角：运行时管理展开/收起按钮 -->
-    <button class="toggle-runtime-fab" @click="toggleRuntime" :title="runtimeExpanded ? '收起运行时管理' : '展开运行时管理'">
+    <!-- 左下角：运行视图展开/收起按钮 -->
+    <button class="toggle-runtime-fab" @click="toggleRuntime" :title="runtimeExpanded ? '收起运行视图' : '展开运行视图'">
       <svg v-if="runtimeExpanded" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M15 18l-6-6 6-6"/>
       </svg>
@@ -418,6 +457,61 @@
         <path d="M12 5v14M5 12h14"/>
       </svg>
     </button>
+
+    <ModalDialog
+      :visible="spanDetailVisible"
+      :title="selectedSpan ? spanDisplayName(selectedSpan) : 'Span 详情'"
+      size="xlarge"
+      :show-footer="false"
+      @close="closeSpanDetail"
+    >
+      <div v-if="selectedSpan" class="span-detail-modal">
+        <div class="span-detail-summary">
+          <div>
+            <span>状态</span>
+            <strong>{{ statusLabel(selectedSpan.statusCode) }}</strong>
+          </div>
+          <div>
+            <span>操作类型</span>
+            <strong>{{ spanDisplayKind(selectedSpan) }}</strong>
+          </div>
+          <div>
+            <span>耗时</span>
+            <strong>{{ formatDuration(selectedSpan.latencyNs) }}</strong>
+          </div>
+        </div>
+        <dl class="span-meta-grid">
+          <dt>Trace ID</dt>
+          <dd>{{ selectedSpan.traceId || '-' }}</dd>
+          <dt>Span ID</dt>
+          <dd>{{ selectedSpan.spanId || '-' }}</dd>
+          <dt>Parent ID</dt>
+          <dd>{{ selectedSpan.parentSpanId || '-' }}</dd>
+          <dt>开始时间</dt>
+          <dd>{{ formatSpanDateTime(selectedSpan.startTimeUnixNano) }}</dd>
+          <dt>结束时间</dt>
+          <dd>{{ formatSpanDateTime(selectedSpan.endTimeUnixNano) }}</dd>
+        </dl>
+        <div class="span-json-grid">
+          <div class="span-json-section">
+            <strong>输入</strong>
+            <pre>{{ formatJson(spanFunctionPayload(selectedSpan, 'input')) }}</pre>
+          </div>
+          <div class="span-json-section">
+            <strong>输出</strong>
+            <pre>{{ formatJson(spanFunctionPayload(selectedSpan, 'output')) }}</pre>
+          </div>
+        </div>
+        <div class="span-json-section">
+          <strong>Attributes</strong>
+          <pre>{{ formatJson(selectedSpan.attributes || {}) }}</pre>
+        </div>
+        <div class="span-json-section" v-if="selectedSpan.events?.length">
+          <strong>Events</strong>
+          <pre>{{ formatJson(selectedSpan.events) }}</pre>
+        </div>
+      </div>
+    </ModalDialog>
   </section>
 </template>
 
@@ -436,6 +530,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import ToolCallMessage from '@/components/ToolCallMessage.vue'
 import ToolResultMessage from '@/components/ToolResultMessage.vue'
 import SkillMessage from '@/components/SkillMessage.vue'
+import ModalDialog from '@/components/ModalDialog.vue'
 
 const router = useRouter()
 const store = useWorkspaceStore()
@@ -472,6 +567,9 @@ const runtimeLoading = ref(false)
 const runtimeError = ref('')
 const selectedSpan = ref<(Span & { depth?: number }) | null>(null)
 const runtimeData = ref<RuntimeDataView>(emptyRuntimeDataView())
+const traceSearchText = ref('')
+const expandedSpanIds = ref(new Set<string>())
+const spanDetailVisible = ref(false)
 
 // 流消息状态管理 - 为每个会话维护独立的流消息状态
 const sessionStreamingStates = new Map<string, {
@@ -530,7 +628,6 @@ const selectionReady = computed(() => store.tenantId && store.workspaceId)
 const runtimeHasTarget = computed(() => Boolean(selectedAgentId.value && selectedSessionId.value))
 const currentSession = computed(() => sessions.value.find((item) => item.sessionId === selectedSessionId.value))
 const runtimeCanLoad = computed(() => Boolean(runtimeHasTarget.value && !isTempSession(selectedSessionId.value)))
-const runtimeRunLabel = computed(() => runtimeData.value.selectedRun?.name || shortId(selectedSessionId.value) || '未选择')
 const runtimeTrace = computed(() => runtimeData.value.trace)
 const runtimeChatStats = computed(() => runtimeData.value.modelInvocationData.chat)
 const runtimeTotalTokens = computed(() => runtimeChatStats.value.totalTokens.totalTokens || 0)
@@ -554,6 +651,7 @@ async function loadRuntimeData() {
   runtimeLoading.value = true
   try {
     runtimeData.value = await loadRuntimeDataView(getSelection(), selectedAgentId.value, selectedSessionId.value)
+    expandRootSpans()
     selectedSpan.value = traceTreeRows.value[0] || null
   } catch (e: any) {
     runtimeError.value = e.message || '加载运行时数据失败'
@@ -571,7 +669,7 @@ function scheduleRuntimeRefresh(runId: string) {
 // Toggle sidebar
 function toggleSidebar() {
   sidebarExpanded.value = !sidebarExpanded.value
-  // 如果展开会话管理，则收起运行时管理
+  // 如果展开会话管理，则收起运行视图
   if (sidebarExpanded.value) {
     runtimeExpanded.value = false
   }
@@ -580,10 +678,19 @@ function toggleSidebar() {
 // Toggle runtime panel
 function toggleRuntime() {
   runtimeExpanded.value = !runtimeExpanded.value
-  // 如果展开运行时管理，则收起会话管理
+  // 如果展开运行视图，则收起会话管理
   if (runtimeExpanded.value) {
     sidebarExpanded.value = false
   }
+}
+
+function showSessionRuntime(sessionId: string) {
+  if (isTempSession(sessionId)) return
+  selectedSessionId.value = sessionId
+  sidebarExpanded.value = false
+  runtimeExpanded.value = true
+  loadMessages()
+  loadRuntimeData()
 }
 
 // Load agents
@@ -1098,22 +1205,161 @@ function scrollToBottom() {
   })
 }
 
-function buildTraceRows(spans: Span[]) {
-  const children = new Map<string, Span[]>()
-  spans.forEach((span) => children.set(span.spanId, []))
-  spans.forEach((span) => {
-    if (span.parentSpanId && children.has(span.parentSpanId)) {
-      children.get(span.parentSpanId)!.push(span)
-    }
-  })
-  const roots = spans.filter((span) => !span.parentSpanId || !children.has(span.parentSpanId))
-  return roots.flatMap((span) => flattenSpan(span, children, 0))
+type TraceNode = Span & { depth: number; children: TraceNode[]; treePrefix?: string }
+
+function buildTraceRows(spans: Span[]): TraceNode[] {
+  const nodeMap = buildTraceNodeMap(spans)
+  const roots = rootTraceNodes(spans, nodeMap)
+  const filteredRoots = filterTraceNodes(roots)
+  return filteredRoots.flatMap((node, index) => flattenTraceRoot(node, index, filteredRoots.length))
 }
 
-function flattenSpan(span: Span, children: Map<string, Span[]>, depth: number): Array<Span & { depth: number }> {
-  const row = { ...span, depth }
-  const childRows = (children.get(span.spanId) || []).flatMap((child) => flattenSpan(child, children, depth + 1))
-  return [row, ...childRows]
+function flattenTraceRoot(node: TraceNode, index: number, total: number) {
+  return flattenTraceNode(node, 0, [], total - 1 === index)
+}
+
+function buildTraceNodeMap(spans: Span[]) {
+  const nodeMap = new Map<string, TraceNode>()
+  spans.forEach((span) => nodeMap.set(span.spanId, { ...span, depth: 0, children: [] }))
+  spans.forEach((span) => {
+    const parent = span.parentSpanId ? nodeMap.get(span.parentSpanId) : null
+    if (parent) {
+      parent.children.push(nodeMap.get(span.spanId)!)
+    }
+  })
+  nodeMap.forEach((node) => node.children.sort(compareSpanTimeDesc))
+  return nodeMap
+}
+
+function rootTraceNodes(spans: Span[], nodeMap: Map<string, TraceNode>) {
+  return spans
+    .filter((span) => !span.parentSpanId || !nodeMap.has(span.parentSpanId))
+    .map((span) => nodeMap.get(span.spanId)!)
+    .sort(compareSpanTimeDesc)
+}
+
+function filterTraceNodes(nodes: TraceNode[]): TraceNode[] {
+  const keyword = traceSearchText.value.trim().toLowerCase()
+  if (!keyword) return nodes
+  return nodes.map((node) => filterTraceNode(node, keyword)).filter(Boolean) as TraceNode[]
+}
+
+function filterTraceNode(node: TraceNode, keyword: string): TraceNode | null {
+  const children = node.children.map((child) => filterTraceNode(child, keyword)).filter(Boolean) as TraceNode[]
+  if (spanMatchesKeyword(node, keyword) || children.length) return { ...node, children }
+  return null
+}
+
+function spanMatchesKeyword(span: Span, keyword: string) {
+  return [spanDisplayName(span), span.name, spanDisplayKind(span)].some((text) => text.toLowerCase().includes(keyword))
+}
+
+function flattenTraceNode(node: TraceNode, depth: number, ancestors: boolean[] = [], isLast = true): TraceNode[] {
+  const row = { ...node, depth, treePrefix: traceTreePrefix(ancestors, isLast) }
+  if (!traceSearchText.value && !isSpanExpanded(node.spanId)) return [row]
+  return [row, ...node.children.flatMap((child, index) => flattenTraceChild(child, depth, ancestors, isLast, index, node.children.length))]
+}
+
+function flattenTraceChild(child: TraceNode, depth: number, ancestors: boolean[], parentLast: boolean, index: number, total: number) {
+  return flattenTraceNode(child, depth + 1, [...ancestors, parentLast], total - 1 === index)
+}
+
+function traceTreePrefix(ancestors: boolean[], isLast: boolean) {
+  const prefix = ancestors.map((last) => (last ? '   ' : '│  ')).join('')
+  return `${prefix}${isLast ? '└─' : '├─'}`
+}
+
+function compareSpanTimeDesc(left: Span, right: Span) {
+  return spanTimeNumber(right) - spanTimeNumber(left)
+}
+
+function spanTimeNumber(span: Span) {
+  return Number(span.startTimeUnixNano || span.endTimeUnixNano || 0)
+}
+
+function expandRootSpans() {
+  expandedSpanIds.value = new Set(rootTraceNodes(runtimeData.value.spans, buildTraceNodeMap(runtimeData.value.spans)).map((span) => span.spanId))
+}
+
+function toggleSpanNode(spanId: string) {
+  const next = new Set(expandedSpanIds.value)
+  next.has(spanId) ? next.delete(spanId) : next.add(spanId)
+  expandedSpanIds.value = next
+}
+
+function isSpanExpanded(spanId: string) {
+  return expandedSpanIds.value.has(spanId)
+}
+
+function selectSpanNode(node: TraceNode) {
+  selectedSpan.value = node
+  spanDetailVisible.value = true
+}
+
+function closeSpanDetail() {
+  spanDetailVisible.value = false
+}
+
+function spanDisplayName(span: Span) {
+  return stringAttr(span, 'agentscope.function.name') || span.name || shortId(span.spanId)
+}
+
+function spanDisplayKind(span: Span) {
+  return invokeDisplayKind(span) || modelDisplayKind(span) || stringAttr(span, 'gen_ai.operation.name') || span.kind || 'Unknown'
+}
+
+function invokeDisplayKind(span: Span) {
+  const operation = stringAttr(span, 'gen_ai.operation.name')
+  if (operation === 'invoke_agent') return withName(operation, stringAttr(span, 'gen_ai.agent.name'))
+  if (operation === 'execute_tool') return withName(operation, stringAttr(span, 'gen_ai.tool.name'))
+  return operation === 'format' ? withName(operation, stringAttr(span, 'agentscope.format.target')) : ''
+}
+
+function modelDisplayKind(span: Span) {
+  const operation = stringAttr(span, 'gen_ai.operation.name')
+  if (!['chat', 'chat_model', 'embeddings'].includes(operation || '')) return ''
+  return withName(operation!, span.model || stringAttr(span, 'gen_ai.request.model'))
+}
+
+function withName(operation: string, name?: string) {
+  return name ? `${operation}: ${name}` : operation
+}
+
+function stringAttr(span: Span, path: string) {
+  const value = span.attributes?.[path] ?? pathValue(span.attributes, path.split('.'))
+  return value === undefined || value === null ? '' : String(value)
+}
+
+function spanFunctionPayload(span: Span, key: 'input' | 'output') {
+  return pathValue(span.attributes, ['agentscope', 'function', key]) ?? pathValue(span.attributes, [`agentscope.function.${key}`]) ?? {}
+}
+
+function pathValue(source: any, path: string[]) {
+  return path.reduce<any>((obj, key) => obj?.[key], source)
+}
+
+function formatJson(value: unknown) {
+  if (typeof value === 'string') return formatJsonString(value)
+  return JSON.stringify(value ?? {}, null, 2)
+}
+
+function formatJsonString(value: string) {
+  try {
+    return JSON.stringify(JSON.parse(value), null, 2)
+  } catch {
+    return value
+  }
+}
+
+function formatSpanTime(value?: string) {
+  return formatSpanDateTime(value, true)
+}
+
+function formatSpanDateTime(value?: string, timeOnly = false) {
+  const numericValue = Number(value)
+  if (!numericValue) return '-'
+  const date = new Date(numericValue / 1000000)
+  return timeOnly ? date.toLocaleTimeString('zh-CN') : date.toLocaleString('zh-CN')
 }
 
 function buildModelStats() {
@@ -1253,6 +1499,7 @@ function resetRuntimeData() {
   runtimeError.value = ''
   runtimeData.value = emptyRuntimeDataView()
   selectedSpan.value = null
+  spanDetailVisible.value = false
 }
 
 function isTempSession(sessionId?: string) {
@@ -1620,6 +1867,7 @@ onMounted(() => {
   color: #8a94a6;
 }
 
+.session-runtime-btn,
 .delete-btn {
   width: 28px;
   height: 28px;
@@ -1637,11 +1885,28 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
+.session-runtime-btn svg,
 .delete-btn svg {
   width: 100%;
   height: 100%;
 }
 
+.session-runtime-btn:hover:not(:disabled) {
+  color: #3a8ad6;
+  background: rgba(58, 138, 214, 0.1);
+}
+
+.session-runtime-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0;
+}
+
+.delete-btn:hover {
+  color: #c94a35;
+  background: rgba(201, 74, 53, 0.08);
+}
+
+.session-item:hover .session-runtime-btn,
 .session-item:hover .delete-btn {
   opacity: 1;
 }
@@ -2188,38 +2453,8 @@ onMounted(() => {
   opacity: 0.7;
 }
 
-.runtime-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
-  border-bottom: 1px solid rgba(22, 33, 50, 0.06);
-}
-
-.runtime-target {
-  min-width: 0;
-  flex: 1;
-}
-
-.runtime-target span {
-  display: block;
-  color: #8a94a6;
-  font-size: 0.72rem;
-  margin-bottom: 3px;
-}
-
-.runtime-target strong {
-  display: block;
-  color: #264266;
-  font-size: 0.92rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .runtime-refresh-btn {
-  width: 36px;
-  height: 36px;
+  min-height: 34px;
   border: 1px solid rgba(38, 66, 102, 0.14);
   background: white;
   border-radius: 10px;
@@ -2285,42 +2520,11 @@ onMounted(() => {
   padding: 0 18px 18px;
 }
 
-.runtime-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.runtime-kpi {
-  min-height: 74px;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(248, 250, 255, 0.85);
-  border: 1px solid rgba(38, 66, 102, 0.1);
-}
-
-.runtime-kpi span,
 .collector-grid span,
 .model-row small {
   display: block;
   color: #8a94a6;
   font-size: 0.72rem;
-}
-
-.runtime-kpi strong {
-  display: block;
-  margin-top: 8px;
-  color: #1a1e29;
-  font-size: 1.15rem;
-}
-
-.runtime-kpi.ok strong {
-  color: #059669;
-}
-
-.runtime-kpi.warn strong {
-  color: #c07a1b;
 }
 
 .runtime-section {
@@ -2388,16 +2592,45 @@ onMounted(() => {
   font-size: 0.84rem;
 }
 
-.model-row-main,
-.run-row-main {
+.run-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.76rem;
+}
+
+.run-info-table tr + tr {
+  border-top: 1px solid rgba(22, 33, 50, 0.06);
+}
+
+.run-info-table th,
+.run-info-table td {
+  padding: 8px 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.run-info-table th {
+  width: 78px;
+  color: #8a94a6;
+  font-weight: 500;
+}
+
+.run-info-table td {
+  color: #1a1e29;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-row-main {
   display: flex;
   justify-content: space-between;
   gap: 8px;
   align-items: center;
 }
 
-.model-row-main span,
-.run-row-main span {
+.model-row-main span {
   color: #8a94a6;
   font-size: 0.76rem;
 }
@@ -2417,120 +2650,232 @@ onMounted(() => {
   background: linear-gradient(90deg, #3a8ad6, #10b981);
 }
 
-.run-list-section {
-  padding-bottom: 8px;
-}
-
-.run-row {
-  border-top: 1px solid rgba(22, 33, 50, 0.06);
-  padding: 10px 0;
-}
-
-.run-row.selected {
-  margin-left: -6px;
-  margin-right: -6px;
-  padding: 10px 6px;
-  border-radius: 10px;
-  background: rgba(58, 138, 214, 0.08);
-}
-
-.run-row strong {
-  min-width: 0;
-  color: #1a1e29;
-  font-size: 0.82rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.run-row small {
-  display: block;
-  margin-top: 4px;
-  color: #8a94a6;
-  font-size: 0.72rem;
-}
-
 .trace-section {
   padding-bottom: 8px;
 }
 
+.trace-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 0;
+}
+
+.trace-node {
+  width: 100%;
+}
+
 .span-row {
   width: 100%;
-  min-height: 46px;
+  min-height: 34px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
   border: none;
-  border-top: 1px solid rgba(22, 33, 50, 0.06);
   background: transparent;
-  padding: 9px 0;
+  padding: 3px 4px;
+  border-radius: 6px;
   color: inherit;
   text-align: left;
   cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.span-row:hover {
+  background: rgba(58, 138, 214, 0.06);
 }
 
 .span-row.selected {
-  background: rgba(58, 138, 214, 0.07);
-  border-radius: 10px;
-  padding-left: 8px;
-  padding-right: 8px;
+  background: rgba(58, 138, 214, 0.1);
+  box-shadow: inset 2px 0 0 #3a8ad6;
 }
 
 .span-row.error strong {
   color: #c94a35;
 }
 
-.span-indent {
+.span-prefix {
+  color: #8a94a6;
   flex-shrink: 0;
+  font-family: Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
+  line-height: 1;
+  white-space: pre;
 }
 
-.span-line {
-  width: 9px;
-  height: 9px;
-  border: 2px solid #3a8ad6;
-  border-radius: 50%;
-  flex-shrink: 0;
+.span-prefix:empty {
+  width: 0;
 }
 
-.span-row div {
+.span-toggle {
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: transparent;
+  color: #5d6678;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.span-toggle:disabled {
+  opacity: 0;
+  cursor: default;
+}
+
+.span-toggle svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.18s ease;
+}
+
+.span-toggle svg.expanded {
+  transform: rotate(90deg);
+}
+
+.span-row-content {
+  flex: 1;
   min-width: 0;
 }
 
-.span-row strong {
+.span-row-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  align-items: center;
+}
+
+.span-row-main strong {
   display: block;
   color: #1a1e29;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+.span-duration {
+  color: #8a94a6;
+  font-size: 0.68rem;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.span-row-sub {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 2px;
+  color: #8a94a6;
+  font-size: 0.68rem;
+  min-width: 0;
+}
+
+.span-row-sub span:first-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.span-row small {
+.span-row-sub span:last-child {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.span-detail-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.span-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.span-detail-summary div {
+  padding: 12px;
+  border: 1px solid rgba(38, 66, 102, 0.1);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.span-detail-summary span {
   display: block;
-  margin-top: 3px;
   color: #8a94a6;
   font-size: 0.72rem;
+  margin-bottom: 6px;
 }
 
-.span-detail dl {
+.span-detail-summary strong {
+  color: #1a1e29;
+  font-size: 0.88rem;
+  word-break: break-word;
+}
+
+.span-meta-grid {
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
-  gap: 8px 10px;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px 12px;
   margin: 0;
+  padding: 12px;
+  border: 1px solid rgba(38, 66, 102, 0.1);
+  border-radius: 8px;
 }
 
-.span-detail dt {
+.span-meta-grid dt {
   color: #8a94a6;
   font-size: 0.74rem;
 }
 
-.span-detail dd {
+.span-meta-grid dd {
   margin: 0;
   color: #1a1e29;
   font-size: 0.76rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.span-json-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.span-json-section {
+  min-width: 0;
+}
+
+.span-json-section strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #264266;
+  font-size: 0.8rem;
+}
+
+.span-json-section pre {
+  max-height: 280px;
+  overflow: auto;
+  margin: 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: #1f2937;
+  color: #e5e7eb;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.trace-search {
+  margin-bottom: 10px;
 }
 
 /* Animations */
