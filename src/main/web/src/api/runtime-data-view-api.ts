@@ -23,6 +23,20 @@ export interface RuntimeTrace {
   status: string
   spanCount: number
   totalTokens: number
+  errorSpanCount?: number
+  slowestSpanId?: string
+  slowestSpanName?: string
+  slowestLatencyNs?: number
+}
+
+export interface RuntimeSpanSummary {
+  spanId: string
+  parentSpanId?: string
+  name?: string
+  latencyNs?: number
+  statusCode?: number
+  status?: string
+  model?: string
 }
 
 export interface TokenStats {
@@ -62,6 +76,8 @@ export interface RuntimeDataView {
   selectedRun?: RuntimeRun
   trace: RuntimeTrace
   spans: Span[]
+  errorSpans: RuntimeSpanSummary[]
+  slowSpans: RuntimeSpanSummary[]
   modelInvocationData: ModelInvocationData
 }
 
@@ -69,6 +85,8 @@ export function emptyRuntimeDataView(): RuntimeDataView {
   return {
     runs: [],
     spans: [],
+    errorSpans: [],
+    slowSpans: [],
     trace: { runId: '', latencyNs: 0, status: 'PENDING', spanCount: 0, totalTokens: 0 },
     modelInvocationData: { modelInvocations: 0, chat: emptyChatStats() },
   }

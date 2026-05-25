@@ -1614,8 +1614,8 @@ onMounted(() => {
 
 /* Sidebar */
 .sidebar {
-  width: 320px;
-  min-width: 320px;
+  width: 360px;
+  min-width: 360px;
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(26, 30, 41, 0.08);
   border-radius: 20px;
@@ -2922,7 +2922,7 @@ onMounted(() => {
   }
   
   .sidebar.collapsed {
-    left: -320px;
+    left: -360px;
   }
 
   .runtime-sidebar {

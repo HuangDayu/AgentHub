@@ -63,6 +63,32 @@ class RuntimeDataViewControllerIntegrationTest {
     }
 
     @Test
+    void shouldNotLeakSpanWhenSessionNotOwnedByAgent() throws Exception {
+        String ownerAgentId = createAgent();
+        String otherAgentId = createAgent();
+        Session session = withTenant(() -> sessionRepository.save(session(ownerAgentId)));
+        withTenant(() -> spanRepository.save(span(ownerAgentId, session.getId())));
+        expectIsolatedDataView(otherAgentId, session.getId());
+    }
+
+    @Test
+    void shouldSortRunsAndSpansByTimeDesc() throws Exception {
+        String agentId = createAgent();
+        Session older = withTenant(() -> sessionRepository.save(namedSession(agentId, "Older", Instant.parse("2026-01-01T00:00:00Z"))));
+        Session newer = withTenant(() -> sessionRepository.save(namedSession(agentId, "Newer", Instant.parse("2026-01-02T00:00:00Z"))));
+        withTenant(() -> saveSpans(agentId, newer.getId()));
+        expectSortedDataView(agentId, newer.getId(), newer.getId(), "span-new");
+    }
+
+    @Test
+    void shouldReturnTraceProblemSummary() throws Exception {
+        String agentId = createAgent();
+        Session session = withTenant(() -> sessionRepository.save(session(agentId)));
+        withTenant(() -> saveProblemSpans(agentId, session.getId()));
+        expectProblemSummary(agentId, session.getId());
+    }
+
+    @Test
     void shouldReturnEmptyViewWhenSessionNotOwnedByAgent() throws Exception {
         String ownerAgentId = createAgent();
         String otherAgentId = createAgent();
@@ -79,6 +105,31 @@ class RuntimeDataViewControllerIntegrationTest {
                 .andExpect(jsonPath("$.selectedRun.id").value(sessionId))
                 .andExpect(jsonPath("$.trace.spanCount").value(1))
                 .andExpect(jsonPath("$.modelInvocationData.chat.totalTokens.totalTokens").value(15.0)));
+    }
+
+    private void expectIsolatedDataView(String agentId, String sessionId) throws Exception {
+        withTenant(() -> mockMvc.perform(get(path(agentId, sessionId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trace.spanCount").value(0))
+                .andExpect(jsonPath("$.spans.length()").value(0)));
+    }
+
+    private void expectSortedDataView(String agentId, String sessionId, String runId, String spanId) throws Exception {
+        withTenant(() -> mockMvc.perform(get(path(agentId, sessionId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.runs[0].id").value(runId))
+                .andExpect(jsonPath("$.spans[0].spanId").value(spanId)));
+    }
+
+    private void expectProblemSummary(String agentId, String sessionId) throws Exception {
+        withTenant(() -> mockMvc.perform(get(path(agentId, sessionId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trace.errorSpanCount").value(1))
+                .andExpect(jsonPath("$.trace.slowestSpanId").value("slow-span"))
+                .andExpect(jsonPath("$.trace.slowestSpanName").value("slow"))
+                .andExpect(jsonPath("$.trace.slowestLatencyNs").value(9000))
+                .andExpect(jsonPath("$.errorSpans[0].spanId").value("error-span"))
+                .andExpect(jsonPath("$.slowSpans[0].spanId").value("slow-span")));
     }
 
     private String createAgent() throws Exception {
@@ -106,9 +157,41 @@ class RuntimeDataViewControllerIntegrationTest {
         return new Session(null, agentId, "Runtime Session", null, null, Instant.now());
     }
 
+    private Session namedSession(String agentId, String name, Instant createdAt) {
+        return new Session(null, agentId, name, null, null, createdAt);
+    }
+
     private Span span(String agentId, String runId) {
         Span span = Span.create("trace-runtime", "span-runtime", "chat");
         fillSpan(span, agentId, runId);
+        return span;
+    }
+
+    private Void saveSpans(String agentId, String runId) {
+        spanRepository.save(timedSpan(agentId, runId, "span-old", "100"));
+        spanRepository.save(timedSpan(agentId, runId, "span-new", "200"));
+        return null;
+    }
+
+    private Void saveProblemSpans(String agentId, String runId) {
+        spanRepository.save(problemSpan(agentId, runId, "error-span", "error", 3000L, 2));
+        spanRepository.save(problemSpan(agentId, runId, "slow-span", "slow", 9000L, 0));
+        return null;
+    }
+
+    private Span problemSpan(String agentId, String runId, String spanId, String name, Long latency, Integer statusCode) {
+        Span span = timedSpan(agentId, runId, spanId, "300");
+        span.setName(name);
+        span.setLatencyNs(latency);
+        span.setStatusCode(statusCode);
+        return span;
+    }
+
+    private Span timedSpan(String agentId, String runId, String spanId, String start) {
+        Span span = Span.create("trace-runtime", spanId, "chat");
+        fillSpan(span, agentId, runId);
+        span.setStartTimeUnixNano(start);
+        span.setEndTimeUnixNano(String.valueOf(Long.parseLong(start) + 10));
         return span;
     }
 

@@ -26,7 +26,7 @@ public class RuntimeDataViewUseCase {
     public RuntimeDataViewOutput get(String agentId, String sessionId) {
         agentUseCase.get(agentId);
         Session selected = findSession(agentId, sessionId);
-        List<Span> spans = sortedSpans(sessionId);
+        List<Span> spans = sortedSpans(agentId, sessionId);
         return buildOutput(agentId, selected, spans);
     }
 
@@ -45,12 +45,14 @@ public class RuntimeDataViewUseCase {
     private RuntimeDataViewOutput buildOutput(String agentId, Session selected, List<Span> spans) {
         List<RuntimeRunOutput> runs = runs(agentId);
         RuntimeRunOutput selectedRun = run(selected);
-        return new RuntimeDataViewOutput(runs, selectedRun, trace(selectedRun.getId(), spans), outputs(spans), modelData(spans));
+        return new RuntimeDataViewOutput(runs, selectedRun, trace(selectedRun.getId(), spans),
+                outputs(spans), errorSpans(spans), slowSpans(spans), modelData(spans));
     }
 
     private List<RuntimeRunOutput> runs(String agentId) {
         return sessionRepository.findByAgentId(agentId).stream()
                 .map(this::run)
+                .sorted(Comparator.comparing(RuntimeRunOutput::getTimestamp, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
     }
 
@@ -74,9 +76,10 @@ public class RuntimeDataViewUseCase {
         return session.getName() == null || session.getName().isBlank() ? session.getId() : session.getName();
     }
 
-    private List<Span> sortedSpans(String runId) {
+    private List<Span> sortedSpans(String agentId, String runId) {
         return spanRepository.findByRunId(runId).stream()
-                .sorted(Comparator.comparing(this::startNanos))
+                .filter(span -> agentId.equals(span.getAgentId()))
+                .sorted(Comparator.comparing(this::startNanos).reversed())
                 .toList();
     }
 
@@ -86,16 +89,21 @@ public class RuntimeDataViewUseCase {
 
     private RuntimeTraceOutput trace(String runId, List<Span> spans) {
         return new RuntimeTraceOutput(runId, firstStart(spans), lastEnd(spans),
-                latency(spans), status(spans), spans.size(), totalTokens(spans));
+                latency(spans), status(spans), spans.size(), totalTokens(spans),
+                errorCount(spans), slowestSpanId(spans), slowestSpanName(spans), slowestLatency(spans));
     }
 
 
     private String firstStart(List<Span> spans) {
-        return spans.stream().map(Span::getStartTimeUnixNano).filter(Objects::nonNull).findFirst().orElse(null);
+        return nanoString(minStart(spans));
     }
 
     private String lastEnd(List<Span> spans) {
-        return spans.stream().map(Span::getEndTimeUnixNano).filter(Objects::nonNull).reduce((a, b) -> b).orElse(null);
+        return nanoString(maxEnd(spans));
+    }
+
+    private String nanoString(Long value) {
+        return value == null ? null : String.valueOf(value);
     }
 
     private Long latency(List<Span> spans) {
@@ -118,6 +126,43 @@ public class RuntimeDataViewUseCase {
 
     private boolean errorSpan(Span span) {
         return span.hasError() || "ERROR".equalsIgnoreCase(span.getStatus());
+    }
+
+    private Integer errorCount(List<Span> spans) {
+        return (int) spans.stream().filter(this::errorSpan).count();
+    }
+
+    private String slowestSpanId(List<Span> spans) {
+        return slowest(spans).map(Span::getSpanId).orElse(null);
+    }
+
+    private String slowestSpanName(List<Span> spans) {
+        return slowest(spans).map(Span::getName).orElse(null);
+    }
+
+    private Long slowestLatency(List<Span> spans) {
+        return slowest(spans).map(Span::getLatencyNs).orElse(0L);
+    }
+
+    private Optional<Span> slowest(List<Span> spans) {
+        return spans.stream().max(Comparator.comparing(this::latencyNanos));
+    }
+
+    private Long latencyNanos(Span span) {
+        return span.getLatencyNs() == null ? 0L : span.getLatencyNs();
+    }
+
+    private List<RuntimeSpanSummaryOutput> errorSpans(List<Span> spans) {
+        return spans.stream().filter(this::errorSpan).map(this::summary).toList();
+    }
+
+    private List<RuntimeSpanSummaryOutput> slowSpans(List<Span> spans) {
+        return spans.stream().sorted(Comparator.comparing(this::latencyNanos).reversed()).limit(5).map(this::summary).toList();
+    }
+
+    private RuntimeSpanSummaryOutput summary(Span span) {
+        return new RuntimeSpanSummaryOutput(span.getSpanId(), span.getParentSpanId(), span.getName(),
+                latencyNanos(span), span.getStatusCode(), span.getStatus(), span.getModel());
     }
 
     private Long totalTokens(List<Span> spans) {

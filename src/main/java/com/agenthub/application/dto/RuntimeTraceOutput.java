@@ -13,4 +13,8 @@ public class RuntimeTraceOutput {
     private String status;
     private Integer spanCount;
     private Long totalTokens;
+    private Integer errorSpanCount;
+    private String slowestSpanId;
+    private String slowestSpanName;
+    private Long slowestLatencyNs;
 }

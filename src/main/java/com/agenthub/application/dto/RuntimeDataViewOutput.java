@@ -12,5 +12,7 @@ public class RuntimeDataViewOutput {
     private RuntimeRunOutput selectedRun;
     private RuntimeTraceOutput trace;
     private List<SpanOutput> spans;
+    private List<RuntimeSpanSummaryOutput> errorSpans;
+    private List<RuntimeSpanSummaryOutput> slowSpans;
     private ModelInvocationDataOutput modelInvocationData;
 }
