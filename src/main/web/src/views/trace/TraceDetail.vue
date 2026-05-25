@@ -83,7 +83,8 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { spanApi } from '@/api/span';
 import SpanDetail from '@/components/trace/SpanDetail.vue';
-import type { Span, Trace } from '@/types/span';
+import type { Span } from '@/types/span';
+import type { Trace } from '@/types/trace';
 
 const route = useRoute();
 const router = useRouter();

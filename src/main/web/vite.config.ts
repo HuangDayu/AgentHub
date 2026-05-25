@@ -8,6 +8,16 @@ export default defineConfig({
   build: {
     outDir: resolve(__dirname, '../resources/static'),
     emptyOutDir: true,
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // 忽略__PURE__注释警告
+        if (warning.code === 'INVALID_ANNOTATION' &&
+            warning.message.includes('__PURE__')) {
+          return
+        }
+        warn(warning)
+      }
+    }
   },
   resolve: {
     alias: { '@': resolve(__dirname, 'src') },

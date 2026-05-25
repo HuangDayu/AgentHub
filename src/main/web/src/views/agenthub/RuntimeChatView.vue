@@ -104,16 +104,168 @@
             <h3>运行时管理</h3>
           </div>
 
-          <!-- 运行时管理内容 - 待实现 -->
-          <div class="runtime-placeholder">
-            <div class="placeholder-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 6v6l4 2"/>
-              </svg>
+          <div class="runtime-toolbar">
+            <div class="runtime-target">
+              <span>当前运行</span>
+              <strong>{{ runtimeRunLabel }}</strong>
             </div>
-            <p>运行时管理功能</p>
-            <p class="hint">待后端接口实现</p>
+            <button class="runtime-refresh-btn" @click="loadRuntimeData" :disabled="runtimeLoading" title="刷新运行时数据">
+              <svg :class="{ spinning: runtimeLoading }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6"/>
+                <path d="M1 20v-6h6"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="runtime-tabs">
+            <button :class="['runtime-tab', { active: activeRuntimeTab === 'monitor' }]" @click="activeRuntimeTab = 'monitor'">监控</button>
+            <button :class="['runtime-tab', { active: activeRuntimeTab === 'stats' }]" @click="activeRuntimeTab = 'stats'">统计</button>
+            <button :class="['runtime-tab', { active: activeRuntimeTab === 'trace' }]" @click="activeRuntimeTab = 'trace'">追踪</button>
+          </div>
+
+          <div v-if="runtimeError" class="runtime-error">{{ runtimeError }}</div>
+
+          <div class="runtime-body">
+            <div v-if="!runtimeHasTarget" class="runtime-placeholder">
+              <div class="placeholder-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <p>选择会话查看运行时数据</p>
+              <p class="hint">发送消息后会自动关联当前运行</p>
+            </div>
+
+            <template v-else-if="activeRuntimeTab === 'monitor'">
+              <div class="runtime-kpi-grid">
+                <div class="runtime-kpi ok">
+                  <span>健康度</span>
+                  <strong>{{ runtimeHealthLabel }}</strong>
+                </div>
+                <div class="runtime-kpi">
+                  <span>平均延迟</span>
+                  <strong>{{ formatDuration(runtimeSummary.avgLatencyNs) }}</strong>
+                </div>
+                <div class="runtime-kpi">
+                  <span>Token</span>
+                  <strong>{{ formatNumber(runtimeSummary.totalTokens) }}</strong>
+                </div>
+                <div class="runtime-kpi warn">
+                  <span>告警</span>
+                  <strong>{{ runtimeData.alerts.length }}</strong>
+                </div>
+              </div>
+
+              <div class="runtime-section">
+                <div class="runtime-section-title">
+                  <span>实时采集</span>
+                  <small>OTLP</small>
+                </div>
+                <div class="collector-grid">
+                  <div><strong>{{ runtimeData.statistics.totalSpans }}</strong><span>Spans</span></div>
+                  <div><strong>{{ runtimeData.statistics.totalMetrics }}</strong><span>Metrics</span></div>
+                  <div><strong>{{ runtimeData.statistics.totalLogs }}</strong><span>Logs</span></div>
+                </div>
+              </div>
+
+              <div class="runtime-section">
+                <div class="runtime-section-title">
+                  <span>最近告警</span>
+                  <small>{{ runtimeData.alerts.length }}</small>
+                </div>
+                <div v-if="runtimeData.alerts.length === 0" class="runtime-empty">暂无告警</div>
+                <div v-for="alert in runtimeData.alerts.slice(0, 3)" :key="alert.id || alert.title" class="alert-row">
+                  <span :class="['alert-dot', alert.alertLevel.toLowerCase()]"></span>
+                  <div>
+                    <strong>{{ alert.title }}</strong>
+                    <small>{{ alert.message }}</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="runtime-section">
+                <div class="runtime-section-title">
+                  <span>运行日志</span>
+                  <small>最近 20 条</small>
+                </div>
+                <div v-if="runtimeData.logs.length === 0" class="runtime-empty">暂无日志</div>
+                <div v-for="log in runtimeData.logs.slice(0, 4)" :key="log.logId || log.createdAt" class="log-row">
+                  <span :class="['log-level', (log.severity || 'INFO').toLowerCase()]">{{ log.severity || 'INFO' }}</span>
+                  <p>{{ log.body || '-' }}</p>
+                </div>
+              </div>
+            </template>
+
+            <template v-else-if="activeRuntimeTab === 'stats'">
+              <div class="runtime-section">
+                <div class="runtime-section-title">
+                  <span>模型调用</span>
+                  <small>{{ modelStats.length }} 个模型</small>
+                </div>
+                <div v-if="modelStats.length === 0" class="runtime-empty">暂无模型调用数据</div>
+                <div v-for="item in modelStats" :key="item.model" class="model-row">
+                  <div class="model-row-main">
+                    <strong>{{ item.model }}</strong>
+                    <span>{{ item.calls }} 次</span>
+                  </div>
+                  <div class="model-meter"><i :style="{ width: item.percent + '%' }"></i></div>
+                  <small>{{ formatNumber(item.tokens) }} tokens · {{ formatDuration(item.avgLatencyNs) }}</small>
+                </div>
+              </div>
+
+              <div class="runtime-section">
+                <div class="runtime-section-title">
+                  <span>指标明细</span>
+                  <small>{{ runtimeData.metrics.length }}</small>
+                </div>
+                <div v-if="runtimeData.metrics.length === 0" class="runtime-empty">暂无指标数据</div>
+                <div v-for="metric in runtimeData.metrics.slice(0, 8)" :key="metric.id || metric.metricName" class="metric-row">
+                  <span>{{ metric.metricName }}</span>
+                  <strong>{{ formatMetric(metric.metricValue) }}</strong>
+                </div>
+              </div>
+            </template>
+
+            <template v-else>
+              <div class="runtime-section trace-section">
+                <div class="runtime-section-title">
+                  <span>调用链</span>
+                  <small>{{ runtimeData.spans.length }} spans</small>
+                </div>
+                <div v-if="runtimeData.spans.length === 0" class="runtime-empty">暂无追踪数据</div>
+                <button
+                  v-for="span in traceTreeRows"
+                  :key="span.spanId"
+                  :class="['span-row', { selected: selectedSpan?.spanId === span.spanId, error: span.statusCode && span.statusCode !== 0 }]"
+                  @click="selectedSpan = span"
+                >
+                  <span class="span-indent" :style="{ width: span.depth * 14 + 'px' }"></span>
+                  <span class="span-line"></span>
+                  <div>
+                    <strong>{{ span.name || span.spanId }}</strong>
+                    <small>{{ span.kind || 'SPAN' }} · {{ formatDuration(span.latencyNs) }}</small>
+                  </div>
+                </button>
+              </div>
+
+              <div v-if="selectedSpan" class="runtime-section span-detail">
+                <div class="runtime-section-title">
+                  <span>Span 详情</span>
+                  <small>{{ statusLabel(selectedSpan.statusCode) }}</small>
+                </div>
+                <dl>
+                  <dt>Trace ID</dt>
+                  <dd>{{ shortId(selectedSpan.traceId) }}</dd>
+                  <dt>Span ID</dt>
+                  <dd>{{ shortId(selectedSpan.spanId) }}</dd>
+                  <dt>模型</dt>
+                  <dd>{{ selectedSpan.model || '-' }}</dd>
+                  <dt>Token</dt>
+                  <dd>{{ selectedSpan.totalTokens || 0 }}</dd>
+                </dl>
+              </div>
+            </template>
           </div>
         </div>
       </aside>
@@ -292,9 +444,12 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { listAgents } from '@/api/agent-api'
 import { createSession, deleteSession, listMessages, listSessions, sendMessage, sendMessageStream } from '@/api/runtime-api'
+import { loadRuntimeObservability, type RuntimeObservabilityData } from '@/api/runtime-observability-api'
 import { formatDateTime } from '@/common/format'
-import type { Agent, ChatMessage, ChatSession, StreamMessage } from '@/domain/types'
+import type { ChatMessage, ChatSession, StreamMessage } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
+import type { Agent } from '@/types/agent'
+import type { Span } from '@/types/span'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import ToolCallMessage from '@/components/ToolCallMessage.vue'
 import ToolResultMessage from '@/components/ToolResultMessage.vue'
@@ -329,6 +484,23 @@ const sending = ref(false)
 const useStream = ref(true)
 const streamingContent = ref('')
 
+// Runtime observability
+const activeRuntimeTab = ref<'monitor' | 'stats' | 'trace'>('monitor')
+const runtimeLoading = ref(false)
+const runtimeError = ref('')
+const selectedSpan = ref<(Span & { depth?: number }) | null>(null)
+const runtimeData = ref<RuntimeObservabilityData>({
+  spans: [],
+  metrics: [],
+  alerts: [],
+  logs: [],
+  statistics: {
+    totalSpans: 0,
+    totalMetrics: 0,
+    totalLogs: 0,
+  },
+})
+
 // 流消息状态管理 - 为每个会话维护独立的流消息状态
 const sessionStreamingStates = new Map<string, {
   content: string
@@ -345,7 +517,8 @@ function getCurrentStreamingState() {
   if (!sessionStreamingStates.has(sessionId)) {
     sessionStreamingStates.set(sessionId, {
       content: '',
-      isStreaming: false
+      isStreaming: false,
+      pendingMessages: []
     })
   }
   return sessionStreamingStates.get(sessionId)!
@@ -382,6 +555,16 @@ watch(selectedSessionId, (newSessionId) => {
 
 // Selection state
 const selectionReady = computed(() => store.tenantId && store.workspaceId)
+const runtimeHasTarget = computed(() => Boolean(selectedAgentId.value || selectedSessionId.value))
+const runtimeRunLabel = computed(() => selectedSessionId.value ? shortId(selectedSessionId.value) : '未选择')
+const runtimeSummary = computed(() => summarizeRuntime(runtimeData.value.spans))
+const runtimeHealthLabel = computed(() => {
+  if (runtimeSummary.value.errorCount > 0 || runtimeData.value.alerts.length > 0) return '异常'
+  if (runtimeData.value.spans.length === 0) return '待采集'
+  return '正常'
+})
+const traceTreeRows = computed(() => buildTraceRows(runtimeData.value.spans))
+const modelStats = computed(() => buildModelStats(runtimeData.value.spans))
 
 // Get selection object
 function getSelection() {
@@ -389,6 +572,25 @@ function getSelection() {
     tenantId: store.tenantId!,
     workspaceId: store.workspaceId!
   }
+}
+
+async function loadRuntimeData() {
+  if (!runtimeHasTarget.value) return
+  runtimeError.value = ''
+  runtimeLoading.value = true
+  try {
+    runtimeData.value = await loadRuntimeObservability(selectedAgentId.value, selectedSessionId.value)
+    selectedSpan.value = traceTreeRows.value[0] || null
+  } catch (e: any) {
+    runtimeError.value = e.message || '加载运行时数据失败'
+  } finally {
+    runtimeLoading.value = false
+  }
+}
+
+function scheduleRuntimeRefresh(runId: string) {
+  if (selectedSessionId.value !== runId) return
+  window.setTimeout(loadRuntimeData, 800)
 }
 
 // Toggle sidebar
@@ -505,8 +707,8 @@ async function loadMessages() {
   try {
     const rawMessages = await listMessages(getSelection(), selectedAgentId.value, selectedSessionId.value)
     // 解析消息内容
-    const parsedMessages = rawMessages.map(msg => {
-      const parsedMsg = { ...msg }
+    const parsedMessages: ChatMessage[] = rawMessages.map(msg => {
+      const parsedMsg: ChatMessage = { ...msg }
 
       // 解析工具调用
       if (msg.role === 'ASSISTANT' && msg.content && msg.content.startsWith('[{')) {
@@ -702,6 +904,7 @@ async function handleSend() {
             if (selectedSessionId.value === currentSessionId) {
               streamingContent.value = ''
             }
+            scheduleRuntimeRefresh(currentSessionId)
             scrollToBottom()
           },
           onError: (err) => {
@@ -749,6 +952,7 @@ async function handleSend() {
           messages.value = [...sessionMsgs]
         }
       }
+      scheduleRuntimeRefresh(currentSessionId)
       scrollToBottom()
     }
   } catch (e: any) {
@@ -917,6 +1121,80 @@ function scrollToBottom() {
   })
 }
 
+function summarizeRuntime(spans: Span[]) {
+  const totalLatencyNs = spans.reduce((sum, span) => sum + (span.latencyNs || 0), 0)
+  const totalTokens = spans.reduce((sum, span) => sum + (span.totalTokens || 0), 0)
+  const errorCount = spans.filter((span) => span.statusCode && span.statusCode !== 0).length
+  return {
+    totalTokens,
+    errorCount,
+    avgLatencyNs: spans.length ? totalLatencyNs / spans.length : 0,
+  }
+}
+
+function buildTraceRows(spans: Span[]) {
+  const children = new Map<string, Span[]>()
+  spans.forEach((span) => children.set(span.spanId, []))
+  spans.forEach((span) => {
+    if (span.parentSpanId && children.has(span.parentSpanId)) {
+      children.get(span.parentSpanId)!.push(span)
+    }
+  })
+  const roots = spans.filter((span) => !span.parentSpanId || !children.has(span.parentSpanId))
+  return roots.flatMap((span) => flattenSpan(span, children, 0))
+}
+
+function flattenSpan(span: Span, children: Map<string, Span[]>, depth: number): Array<Span & { depth: number }> {
+  const row = { ...span, depth }
+  const childRows = (children.get(span.spanId) || []).flatMap((child) => flattenSpan(child, children, depth + 1))
+  return [row, ...childRows]
+}
+
+function buildModelStats(spans: Span[]) {
+  const grouped = new Map<string, { calls: number; tokens: number; latencyNs: number }>()
+  spans.filter((span) => span.model).forEach((span) => {
+    const current = grouped.get(span.model!) || { calls: 0, tokens: 0, latencyNs: 0 }
+    current.calls += 1
+    current.tokens += span.totalTokens || 0
+    current.latencyNs += span.latencyNs || 0
+    grouped.set(span.model!, current)
+  })
+  const maxTokens = Math.max(...[...grouped.values()].map((item) => item.tokens), 1)
+  return [...grouped.entries()].map(([model, item]) => ({
+    model,
+    calls: item.calls,
+    tokens: item.tokens,
+    percent: Math.max(6, Math.round((item.tokens / maxTokens) * 100)),
+    avgLatencyNs: item.calls ? item.latencyNs / item.calls : 0,
+  }))
+}
+
+function formatDuration(nanoseconds?: number) {
+  if (!nanoseconds) return '-'
+  if (nanoseconds < 1000000) return `${(nanoseconds / 1000).toFixed(1)} us`
+  if (nanoseconds < 1000000000) return `${(nanoseconds / 1000000).toFixed(1)} ms`
+  return `${(nanoseconds / 1000000000).toFixed(2)} s`
+}
+
+function formatNumber(value?: number) {
+  return new Intl.NumberFormat('zh-CN').format(value || 0)
+}
+
+function formatMetric(value?: number) {
+  if (value === undefined || value === null) return '-'
+  return Math.abs(value) >= 1000 ? formatNumber(value) : Number(value.toFixed(2)).toString()
+}
+
+function shortId(id?: string) {
+  if (!id) return '-'
+  return id.length > 12 ? `${id.slice(0, 8)}...` : id
+}
+
+function statusLabel(statusCode?: number) {
+  if (statusCode === undefined || statusCode === null) return 'UNSET'
+  return statusCode === 0 ? 'OK' : 'ERROR'
+}
+
 // Format time
 function formatTime(dateStr: string) {
   const date = new Date(dateStr)
@@ -960,7 +1238,12 @@ function getMessageRoleLabel(msg: ChatMessage): string {
 function onAgentChange() {
   selectedSessionId.value = ''
   messages.value = []
+  runtimeData.value.spans = []
+  runtimeData.value.metrics = []
+  runtimeData.value.alerts = []
+  selectedSpan.value = null
   loadSessions()
+  loadRuntimeData()
 }
 
 // Go to workspace
@@ -979,7 +1262,15 @@ watch(() => [store.tenantId, store.workspaceId], () => {
   selectedSessionId.value = ''
   messages.value = []
   sessions.value = []
+  runtimeData.value.spans = []
+  runtimeData.value.metrics = []
+  runtimeData.value.alerts = []
+  selectedSpan.value = null
   loadAgents()
+})
+
+watch([selectedAgentId, selectedSessionId], () => {
+  loadRuntimeData()
 })
 
 // Initialize
@@ -1848,26 +2139,36 @@ onMounted(() => {
 }
 
 .runtime-sidebar {
-  width: 320px;
-  background: var(--bg-color, #ffffff);
-  border-right: 1px solid var(--border-color, #e5e7eb);
+  width: 360px;
+  min-width: 360px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(26, 30, 41, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 12px 24px rgba(32, 44, 68, 0.08);
+  backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
   overflow: hidden;
+  flex-shrink: 0;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+              min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .runtime-sidebar.collapsed {
   width: 0;
-  border-right: none;
+  min-width: 0;
+  border: none;
+  box-shadow: none;
+  opacity: 0;
 }
 
 .runtime-content {
-  width: 320px;
+  width: 360px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  overflow: hidden;
 }
 
 .runtime-placeholder {
@@ -1899,6 +2200,394 @@ onMounted(() => {
 .runtime-placeholder .hint {
   font-size: 0.875rem;
   opacity: 0.7;
+}
+
+.runtime-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(22, 33, 50, 0.06);
+}
+
+.runtime-target {
+  min-width: 0;
+  flex: 1;
+}
+
+.runtime-target span {
+  display: block;
+  color: #8a94a6;
+  font-size: 0.72rem;
+  margin-bottom: 3px;
+}
+
+.runtime-target strong {
+  display: block;
+  color: #264266;
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.runtime-refresh-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(38, 66, 102, 0.14);
+  background: white;
+  border-radius: 10px;
+  color: #264266;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.runtime-refresh-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.runtime-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.runtime-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 12px 18px;
+}
+
+.runtime-tab {
+  min-height: 34px;
+  border: 1px solid rgba(38, 66, 102, 0.1);
+  background: rgba(248, 250, 255, 0.75);
+  border-radius: 10px;
+  color: #5d6678;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.runtime-tab.active {
+  background: #264266;
+  border-color: #264266;
+  color: white;
+}
+
+.runtime-error {
+  margin: 0 18px 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  color: #c94a35;
+  background: rgba(201, 74, 53, 0.08);
+  font-size: 0.82rem;
+}
+
+.runtime-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 18px 18px;
+}
+
+.runtime-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.runtime-kpi {
+  min-height: 74px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(248, 250, 255, 0.85);
+  border: 1px solid rgba(38, 66, 102, 0.1);
+}
+
+.runtime-kpi span,
+.collector-grid span,
+.model-row small {
+  display: block;
+  color: #8a94a6;
+  font-size: 0.72rem;
+}
+
+.runtime-kpi strong {
+  display: block;
+  margin-top: 8px;
+  color: #1a1e29;
+  font-size: 1.15rem;
+}
+
+.runtime-kpi.ok strong {
+  color: #059669;
+}
+
+.runtime-kpi.warn strong {
+  color: #c07a1b;
+}
+
+.runtime-section {
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(38, 66, 102, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.runtime-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.runtime-section-title span {
+  color: #264266;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.runtime-section-title small {
+  color: #8a94a6;
+  font-size: 0.72rem;
+}
+
+.collector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.collector-grid div {
+  padding: 10px 8px;
+  background: rgba(248, 250, 255, 0.85);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.collector-grid strong {
+  display: block;
+  color: #264266;
+  font-size: 1.05rem;
+}
+
+.runtime-empty {
+  padding: 18px 8px;
+  color: #8a94a6;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.alert-row,
+.log-row,
+.metric-row,
+.model-row {
+  border-top: 1px solid rgba(22, 33, 50, 0.06);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.alert-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+}
+
+.alert-row strong,
+.model-row strong {
+  display: block;
+  color: #1a1e29;
+  font-size: 0.84rem;
+}
+
+.alert-row small {
+  display: block;
+  margin-top: 3px;
+  color: #8a94a6;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.alert-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #3a8ad6;
+  margin-top: 4px;
+}
+
+.alert-dot.warning {
+  background: #f59e0b;
+}
+
+.alert-dot.error,
+.alert-dot.critical {
+  background: #c94a35;
+}
+
+.log-row {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.log-level {
+  padding: 3px 6px;
+  border-radius: 7px;
+  background: rgba(58, 138, 214, 0.1);
+  color: #3a8ad6;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.log-level.error,
+.log-level.fatal {
+  background: rgba(201, 74, 53, 0.1);
+  color: #c94a35;
+}
+
+.log-level.warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #a9670d;
+}
+
+.log-row p {
+  margin: 0;
+  color: #5d6678;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.model-row-main,
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.model-row-main span,
+.metric-row span {
+  color: #8a94a6;
+  font-size: 0.76rem;
+}
+
+.model-meter {
+  height: 7px;
+  margin: 8px 0 6px;
+  border-radius: 999px;
+  background: rgba(38, 66, 102, 0.08);
+  overflow: hidden;
+}
+
+.model-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3a8ad6, #10b981);
+}
+
+.metric-row strong {
+  color: #264266;
+  font-size: 0.84rem;
+}
+
+.trace-section {
+  padding-bottom: 8px;
+}
+
+.span-row {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-top: 1px solid rgba(22, 33, 50, 0.06);
+  background: transparent;
+  padding: 9px 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.span-row.selected {
+  background: rgba(58, 138, 214, 0.07);
+  border-radius: 10px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.span-row.error strong {
+  color: #c94a35;
+}
+
+.span-indent {
+  flex-shrink: 0;
+}
+
+.span-line {
+  width: 9px;
+  height: 9px;
+  border: 2px solid #3a8ad6;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.span-row div {
+  min-width: 0;
+}
+
+.span-row strong {
+  display: block;
+  color: #1a1e29;
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.span-row small {
+  display: block;
+  margin-top: 3px;
+  color: #8a94a6;
+  font-size: 0.72rem;
+}
+
+.span-detail dl {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 8px 10px;
+  margin: 0;
+}
+
+.span-detail dt {
+  color: #8a94a6;
+  font-size: 0.74rem;
+}
+
+.span-detail dd {
+  margin: 0;
+  color: #1a1e29;
+  font-size: 0.76rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Animations */
@@ -1946,6 +2635,18 @@ onMounted(() => {
   
   .sidebar.collapsed {
     left: -320px;
+  }
+
+  .runtime-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: calc(100vh - 120px);
+    z-index: 50;
+  }
+
+  .runtime-sidebar.collapsed {
+    left: -360px;
   }
 }
 

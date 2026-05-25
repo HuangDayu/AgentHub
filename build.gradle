@@ -19,6 +19,7 @@ ext {
     embabelAgentVersion = '0.4.0-SNAPSHOT'
     hutoolVersion = '5.8.31'
     springAiAlibabaVersion = '1.1.2.0'
+    agentscopeVersion = '1.1.0-RC2'
 }
 
 java {
@@ -61,18 +62,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-logging'
-    implementation 'org.springframework.retry:spring-retry:2.0.11'
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework.security:spring-security-crypto'
 
     implementation 'com.alibaba.cloud.ai:spring-ai-alibaba-agent-framework'
-    implementation 'io.agentscope:agentscope-core:1.1.0-RC2'
-    implementation('io.agentscope:agentscope-harness:1.1.0-RC2') {
-        exclude group: 'com.github.victools', module: 'jsonschema-generator'
-        exclude group: 'com.github.victools', module: 'jsonschema-module-jackson'
-    }
-    implementation 'com.github.victools:jsonschema-module-jackson:5.0.0'
-    implementation('com.github.victools:jsonschema-generator:5.0.0') {
-        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
-    }
+    implementation "io.agentscope:agentscope-core:${agentscopeVersion}"
+    implementation "io.agentscope:agentscope-harness:${agentscopeVersion}"
+    implementation "io.agentscope:agentscope-extensions-studio:${agentscopeVersion}"
 
     implementation "com.baomidou:mybatis-plus-spring-boot4-starter:${mybatisPlusVersion}"
     implementation "com.baomidou:mybatis-plus-jsqlparser:${mybatisPlusVersion}"

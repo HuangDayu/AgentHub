@@ -1,6 +1,6 @@
 -- =========================================================
 -- AgentHub - Auto-generated Schema
--- Generated: 2026-05-15T07:24:12.872574900Z
+-- Generated: 2026-05-24T10:20:18.648226700Z
 -- Source: MyBatis-Plus Entity Classes
 -- =========================================================
 
@@ -12,19 +12,27 @@ SET search_path TO app, public;
 -- Drop existing tables (dependency order)
 -- =========================================================
 -- DROP TABLE IF EXISTS workspace CASCADE;
+-- DROP TABLE IF EXISTS workflow_execution CASCADE;
 -- DROP TABLE IF EXISTS workflow CASCADE;
 -- DROP TABLE IF EXISTS vector_store_config CASCADE;
+-- DROP TABLE IF EXISTS traces CASCADE;
 -- DROP TABLE IF EXISTS tool_policy_binding CASCADE;
 -- DROP TABLE IF EXISTS tool_policy CASCADE;
 -- DROP TABLE IF EXISTS tenant CASCADE;
 -- DROP TABLE IF EXISTS system_tools CASCADE;
+-- DROP TABLE IF EXISTS spans CASCADE;
 -- DROP TABLE IF EXISTS skill CASCADE;
 -- DROP TABLE IF EXISTS session CASCADE;
 -- DROP TABLE IF EXISTS scheduled_task CASCADE;
 -- DROP TABLE IF EXISTS retrieval_policy CASCADE;
 -- DROP TABLE IF EXISTS prompt_template CASCADE;
+-- DROP TABLE IF EXISTS otlp_span CASCADE;
+-- DROP TABLE IF EXISTS otlp_metric CASCADE;
+-- DROP TABLE IF EXISTS otlp_log CASCADE;
+-- DROP TABLE IF EXISTS node_execution_result CASCADE;
 -- DROP TABLE IF EXISTS model_policy CASCADE;
 -- DROP TABLE IF EXISTS model_config CASCADE;
+-- DROP TABLE IF EXISTS metrics CASCADE;
 -- DROP TABLE IF EXISTS memory CASCADE;
 -- DROP TABLE IF EXISTS mcp_tool CASCADE;
 -- DROP TABLE IF EXISTS knowledge_base CASCADE;
@@ -36,6 +44,7 @@ SET search_path TO app, public;
 -- DROP TABLE IF EXISTS document_chunk CASCADE;
 -- DROP TABLE IF EXISTS chat_message CASCADE;
 -- DROP TABLE IF EXISTS app_user CASCADE;
+-- DROP TABLE IF EXISTS alerts CASCADE;
 -- DROP TABLE IF EXISTS agent_team CASCADE;
 -- DROP TABLE IF EXISTS agent_config CASCADE;
 -- DROP TABLE IF EXISTS agent CASCADE;
@@ -93,6 +102,27 @@ CREATE TABLE IF NOT EXISTS agent_team
     status            varchar(255),
     created_at        timestamptz,
     updated_at        timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: alerts
+CREATE TABLE IF NOT EXISTS alerts
+(
+    id           varchar(64) NOT NULL,
+    alert_level  varchar(255),
+    alert_type   varchar(255),
+    title        varchar(255),
+    message      varchar(255),
+    run_id       varchar(255),
+    agent_id     varchar(255),
+    trace_id     varchar(255),
+    metadata     text,
+    resolved     boolean,
+    resolved_at  timestamptz,
+    resolved_by  varchar(255),
+    tenant_id    varchar(255),
+    workspace_id varchar(255),
+    created_at   timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -277,6 +307,25 @@ CREATE TABLE IF NOT EXISTS memory
     PRIMARY KEY (id)
 );
 
+-- Table: metrics
+CREATE TABLE IF NOT EXISTS metrics
+(
+    id           varchar(64) NOT NULL,
+    metric_type  varchar(255),
+    metric_name  varchar(255),
+    metric_value double precision,
+    run_id       varchar(255),
+    agent_id     varchar(255),
+    trace_id     varchar(255),
+    span_id      varchar(255),
+    labels       text,
+    timestamp    timestamptz,
+    tenant_id    varchar(255),
+    workspace_id varchar(255),
+    created_at   timestamptz,
+    PRIMARY KEY (id)
+);
+
 -- Table: model_config
 CREATE TABLE IF NOT EXISTS model_config
 (
@@ -311,6 +360,86 @@ CREATE TABLE IF NOT EXISTS model_policy
     presence_penalty  double precision,
     created_at        timestamptz,
     updated_at        timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: node_execution_result
+CREATE TABLE IF NOT EXISTS node_execution_result
+(
+    id           varchar(64) NOT NULL,
+    execution_id varchar(255),
+    node_id      varchar(255),
+    node_name    varchar(255),
+    node_type    varchar(255),
+    status       varchar(255),
+    input        varchar(255),
+    output       varchar(255),
+    error_info   varchar(255),
+    start_time   timestamptz,
+    end_time     timestamptz,
+    duration     bigint,
+    created_at   timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: otlp_log
+CREATE TABLE IF NOT EXISTS otlp_log
+(
+    id              varchar(64) NOT NULL,
+    log_id          varchar(255),
+    trace_id        varchar(255),
+    span_id         varchar(255),
+    service_name    varchar(255),
+    severity        varchar(255),
+    severity_number integer,
+    body            varchar(255),
+    attributes      varchar(255),
+    timestamp       bigint,
+    tenant_id       varchar(255),
+    workspace_id    varchar(255),
+    created_at      timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: otlp_metric
+CREATE TABLE IF NOT EXISTS otlp_metric
+(
+    id           varchar(64) NOT NULL,
+    metric_name  varchar(255),
+    description  text,
+    unit         varchar(255),
+    metric_type  varchar(255),
+    service_name varchar(255),
+    value        varchar(255),
+    attributes   varchar(255),
+    timestamp    bigint,
+    tenant_id    varchar(255),
+    workspace_id varchar(255),
+    created_at   timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: otlp_span
+CREATE TABLE IF NOT EXISTS otlp_span
+(
+    id                 varchar(64) NOT NULL,
+    span_id            varchar(255),
+    trace_id           varchar(255),
+    parent_span_id     varchar(255),
+    operation_name     varchar(255),
+    service_name       varchar(255),
+    kind               varchar(255),
+    start_timestamp    bigint,
+    end_timestamp      bigint,
+    duration           bigint,
+    status             varchar(255),
+    status_description text,
+    attributes         varchar(255),
+    events             varchar(255),
+    links              varchar(255),
+    tenant_id          varchar(255),
+    workspace_id       varchar(255),
+    created_at         timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -408,6 +537,38 @@ CREATE TABLE IF NOT EXISTS skill
     PRIMARY KEY (id)
 );
 
+-- Table: spans
+CREATE TABLE IF NOT EXISTS spans
+(
+    id                   varchar(64) NOT NULL,
+    span_id              varchar(255),
+    trace_id             varchar(255),
+    parent_span_id       varchar(255),
+    name                 varchar(255),
+    kind                 varchar(255),
+    start_time_unix_nano varchar(255),
+    end_time_unix_nano   varchar(255),
+    latency_ns           bigint,
+    attributes           text,
+    events               text,
+    links                text,
+    status_code          integer,
+    status_message       varchar(255),
+    resource             text,
+    scope                text,
+    model                varchar(255),
+    input_tokens         integer,
+    output_tokens        integer,
+    total_tokens         integer,
+    conversation_id      varchar(255),
+    run_id               varchar(255),
+    agent_id             varchar(255),
+    tenant_id            varchar(255),
+    workspace_id         varchar(255),
+    created_at           timestamptz,
+    PRIMARY KEY (id)
+);
+
 -- Table: system_tools
 CREATE TABLE IF NOT EXISTS system_tools
 (
@@ -470,6 +631,26 @@ CREATE TABLE IF NOT EXISTS tool_policy_binding
     PRIMARY KEY (id)
 );
 
+-- Table: traces
+CREATE TABLE IF NOT EXISTS traces
+(
+    id                   varchar(64) NOT NULL,
+    trace_id             varchar(255),
+    run_id               varchar(255),
+    root_span_id         varchar(255),
+    span_count           integer,
+    start_time_unix_nano varchar(255),
+    end_time_unix_nano   varchar(255),
+    duration_ns          bigint,
+    status_code          integer,
+    error_message        varchar(255),
+    total_tokens         integer,
+    tenant_id            varchar(255),
+    workspace_id         varchar(255),
+    created_at           timestamptz,
+    PRIMARY KEY (id)
+);
+
 -- Table: vector_store_config
 CREATE TABLE IF NOT EXISTS vector_store_config
 (
@@ -498,10 +679,30 @@ CREATE TABLE IF NOT EXISTS workflow
     workflow_code    varchar(255),
     name             varchar(255),
     description      text,
-    graph_definition text,
+    graph_definition varchar(255),
     status           varchar(255),
     created_at       timestamptz,
     updated_at       timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: workflow_execution
+CREATE TABLE IF NOT EXISTS workflow_execution
+(
+    id           varchar(64) NOT NULL,
+    workflow_id  varchar(255),
+    tenant_id    varchar(255),
+    workspace_id varchar(255),
+    execution_id varchar(255),
+    status       varchar(255),
+    input        varchar(255),
+    output       varchar(255),
+    error_info   varchar(255),
+    start_time   timestamptz,
+    end_time     timestamptz,
+    duration     bigint,
+    created_at   timestamptz,
+    updated_at   timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -531,6 +732,12 @@ CREATE INDEX IF NOT EXISTS idx_agent_config_config_id ON agent_config (config_id
 
 CREATE INDEX IF NOT EXISTS idx_agent_team_tenant_id ON agent_team (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_agent_team_workspace_id ON agent_team (workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_alerts_run_id ON alerts (run_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_agent_id ON alerts (agent_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_trace_id ON alerts (trace_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_tenant_id ON alerts (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_workspace_id ON alerts (workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_app_user_tenant_id ON app_user (tenant_id);
 
@@ -567,11 +774,36 @@ CREATE INDEX IF NOT EXISTS idx_memory_tenant_id ON memory (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_memory_workspace_id ON memory (workspace_id);
 CREATE INDEX IF NOT EXISTS idx_memory_agent_id ON memory (agent_id);
 
+CREATE INDEX IF NOT EXISTS idx_metrics_run_id ON metrics (run_id);
+CREATE INDEX IF NOT EXISTS idx_metrics_agent_id ON metrics (agent_id);
+CREATE INDEX IF NOT EXISTS idx_metrics_trace_id ON metrics (trace_id);
+CREATE INDEX IF NOT EXISTS idx_metrics_span_id ON metrics (span_id);
+CREATE INDEX IF NOT EXISTS idx_metrics_tenant_id ON metrics (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_metrics_workspace_id ON metrics (workspace_id);
+
 CREATE INDEX IF NOT EXISTS idx_model_config_tenant_id ON model_config (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_model_config_workspace_id ON model_config (workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_model_policy_tenant_id ON model_policy (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_model_policy_workspace_id ON model_policy (workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_node_execution_result_execution_id ON node_execution_result (execution_id);
+CREATE INDEX IF NOT EXISTS idx_node_execution_result_node_id ON node_execution_result (node_id);
+
+CREATE INDEX IF NOT EXISTS idx_otlp_log_log_id ON otlp_log (log_id);
+CREATE INDEX IF NOT EXISTS idx_otlp_log_trace_id ON otlp_log (trace_id);
+CREATE INDEX IF NOT EXISTS idx_otlp_log_span_id ON otlp_log (span_id);
+CREATE INDEX IF NOT EXISTS idx_otlp_log_tenant_id ON otlp_log (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_otlp_log_workspace_id ON otlp_log (workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_otlp_metric_tenant_id ON otlp_metric (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_otlp_metric_workspace_id ON otlp_metric (workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_otlp_span_span_id ON otlp_span (span_id);
+CREATE INDEX IF NOT EXISTS idx_otlp_span_trace_id ON otlp_span (trace_id);
+CREATE INDEX IF NOT EXISTS idx_otlp_span_parent_span_id ON otlp_span (parent_span_id);
+CREATE INDEX IF NOT EXISTS idx_otlp_span_tenant_id ON otlp_span (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_otlp_span_workspace_id ON otlp_span (workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_prompt_template_tenant_id ON prompt_template (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_prompt_template_workspace_id ON prompt_template (workspace_id);
@@ -589,6 +821,15 @@ CREATE INDEX IF NOT EXISTS idx_session_workspace_id ON session (workspace_id);
 CREATE INDEX IF NOT EXISTS idx_skill_tenant_id ON skill (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_skill_workspace_id ON skill (workspace_id);
 
+CREATE INDEX IF NOT EXISTS idx_spans_span_id ON spans (span_id);
+CREATE INDEX IF NOT EXISTS idx_spans_trace_id ON spans (trace_id);
+CREATE INDEX IF NOT EXISTS idx_spans_parent_span_id ON spans (parent_span_id);
+CREATE INDEX IF NOT EXISTS idx_spans_conversation_id ON spans (conversation_id);
+CREATE INDEX IF NOT EXISTS idx_spans_run_id ON spans (run_id);
+CREATE INDEX IF NOT EXISTS idx_spans_agent_id ON spans (agent_id);
+CREATE INDEX IF NOT EXISTS idx_spans_tenant_id ON spans (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_spans_workspace_id ON spans (workspace_id);
+
 CREATE INDEX IF NOT EXISTS idx_system_tools_tenant_id ON system_tools (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_system_tools_workspace_id ON system_tools (workspace_id);
 
@@ -598,11 +839,22 @@ CREATE INDEX IF NOT EXISTS idx_tool_policy_workspace_id ON tool_policy (workspac
 CREATE INDEX IF NOT EXISTS idx_tool_policy_binding_tool_policy_id ON tool_policy_binding (tool_policy_id);
 CREATE INDEX IF NOT EXISTS idx_tool_policy_binding_tool_id ON tool_policy_binding (tool_id);
 
+CREATE INDEX IF NOT EXISTS idx_traces_trace_id ON traces (trace_id);
+CREATE INDEX IF NOT EXISTS idx_traces_run_id ON traces (run_id);
+CREATE INDEX IF NOT EXISTS idx_traces_root_span_id ON traces (root_span_id);
+CREATE INDEX IF NOT EXISTS idx_traces_tenant_id ON traces (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_traces_workspace_id ON traces (workspace_id);
+
 CREATE INDEX IF NOT EXISTS idx_vector_store_config_tenant_id ON vector_store_config (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_vector_store_config_workspace_id ON vector_store_config (workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_workflow_tenant_id ON workflow (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_workflow_workspace_id ON workflow (workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_workflow_execution_workflow_id ON workflow_execution (workflow_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_execution_tenant_id ON workflow_execution (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_execution_workspace_id ON workflow_execution (workspace_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_execution_execution_id ON workflow_execution (execution_id);
 
 CREATE INDEX IF NOT EXISTS idx_workspace_tenant_id ON workspace (tenant_id);
 

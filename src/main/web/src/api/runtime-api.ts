@@ -1,5 +1,5 @@
 import { runtimeConfig } from '../common/runtime-config'
-import type { ChatMessage, ChatSession, SelectionState, StreamMessage } from '../domain/types'
+import type { ChatMessage, ChatSession, MessageRole, SelectionState, StreamMessage } from '../domain/types'
 import { scopedHeaders } from '../services/workspace-service'
 import { requestJson } from './http'
 
@@ -58,11 +58,17 @@ export function listMessages(selection: SelectionState, agentId: string, session
     items.map((raw: any) => ({
       messageId: raw.id ?? raw.messageId,
       sessionId: raw.sessionId,
-      role: raw.role as 'user' | 'assistant' | 'system',
+      role: normalizeRole(raw.role),
       content: raw.content,
       createdAt: raw.createdAt,
     })),
   )
+}
+
+function normalizeRole(role: string): MessageRole {
+  const upperRole = role?.toUpperCase()
+  if (upperRole === 'USER' || upperRole === 'SYSTEM' || upperRole === 'TOOL') return upperRole
+  return 'ASSISTANT'
 }
 
 /**
@@ -80,7 +86,7 @@ export function sendMessage(selection: SelectionState, agentId: string, sessionI
     const message: ChatMessage = {
       messageId: raw.id ?? `msg-${Date.now()}`,
       sessionId: sessionId,
-      role: 'assistant',
+      role: 'ASSISTANT',
       content: raw.text || raw.content || '',
       createdAt: new Date().toISOString(),
     }
