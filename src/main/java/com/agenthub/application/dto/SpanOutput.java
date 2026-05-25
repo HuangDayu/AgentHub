@@ -26,17 +26,32 @@ public class SpanOutput {
 
     private Map<String, Object> attributes;
     private List<Map<String, Object>> events;
+    private List<Map<String, Object>> links;
 
     private Integer statusCode;
     private String statusMessage;
 
+    private Map<String, Object> resource;
+    private Map<String, Object> scope;
+
     private String model;
-    private Integer inputTokens;
-    private Integer outputTokens;
-    private Integer totalTokens;
+    private Long inputTokens;
+    private Long outputTokens;
+    private Long totalTokens;
+    private String conversationId;
 
     private String runId;
     private String agentId;
 
+    private String operationName;
+    private String serviceName;
+    private Long startTimestamp;
+    private Long endTimestamp;
+    private Long duration;
+    private String status;
+    private String statusDescription;
+
+    private String tenantId;
+    private String workspaceId;
     private Instant createdAt;
 }

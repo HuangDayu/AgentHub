@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.agenthub.application.port.out.repositories.SpanRepository;
 import com.agenthub.domain.model.trace.Span;
 import com.agenthub.infrastructure.store.db.entity.SpanEntity;
@@ -76,7 +77,8 @@ public class MybatisSpanRepository implements SpanRepository {
     }
 
     private SpanEntity toEntity(Span span) {
-        SpanEntity spanEntity = BeanUtil.copyProperties(span, SpanEntity.class);
+        SpanEntity spanEntity = new SpanEntity();
+        BeanUtil.copyProperties(span, spanEntity, jsonCopyOptions());
         spanEntity.setAttributes(toJson(span.getAttributes()));
         spanEntity.setEvents(toJson(span.getEvents()));
         spanEntity.setLinks(toJson(span.getLinks()));
@@ -86,7 +88,8 @@ public class MybatisSpanRepository implements SpanRepository {
     }
 
     private Span toDomain(SpanEntity entity) {
-        Span span = BeanUtil.copyProperties(entity, Span.class);
+        Span span = new Span();
+        BeanUtil.copyProperties(entity, span, jsonCopyOptions());
         span.setAttributes(fromJson(entity.getAttributes(), new TypeReference<>() {
         }));
         span.setEvents(fromJson(entity.getEvents(), new TypeReference<>() {
@@ -98,5 +101,10 @@ public class MybatisSpanRepository implements SpanRepository {
         span.setScope(fromJson(entity.getScope(), new TypeReference<>() {
         }));
         return span;
+    }
+
+    private CopyOptions jsonCopyOptions() {
+        return CopyOptions.create()
+                .setIgnoreProperties("attributes", "events", "links", "resource", "scope");
     }
 }

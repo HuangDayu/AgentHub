@@ -36,9 +36,9 @@ public class Span {
     private Map<String, Object> scope;
 
     private String model;
-    private Integer inputTokens;
-    private Integer outputTokens;
-    private Integer totalTokens;
+    private Long inputTokens;
+    private Long outputTokens;
+    private Long totalTokens;
     private String conversationId;
 
     private String runId;

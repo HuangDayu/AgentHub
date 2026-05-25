@@ -119,8 +119,7 @@
           </div>
 
           <div class="runtime-tabs">
-            <button :class="['runtime-tab', { active: activeRuntimeTab === 'monitor' }]" @click="activeRuntimeTab = 'monitor'">监控</button>
-            <button :class="['runtime-tab', { active: activeRuntimeTab === 'stats' }]" @click="activeRuntimeTab = 'stats'">统计</button>
+            <button :class="['runtime-tab', { active: activeRuntimeTab === 'run' }]" @click="activeRuntimeTab = 'run'">运行</button>
             <button :class="['runtime-tab', { active: activeRuntimeTab === 'trace' }]" @click="activeRuntimeTab = 'trace'">追踪</button>
           </div>
 
@@ -137,71 +136,30 @@
               <p class="hint">发送消息后会自动关联当前运行</p>
             </div>
 
-            <template v-else-if="activeRuntimeTab === 'monitor'">
+            <template v-else-if="activeRuntimeTab === 'run'">
               <div class="runtime-kpi-grid">
                 <div class="runtime-kpi ok">
-                  <span>健康度</span>
-                  <strong>{{ runtimeHealthLabel }}</strong>
+                  <span>状态</span>
+                  <strong>{{ runtimeTrace.status || 'PENDING' }}</strong>
                 </div>
                 <div class="runtime-kpi">
-                  <span>平均延迟</span>
-                  <strong>{{ formatDuration(runtimeSummary.avgLatencyNs) }}</strong>
+                  <span>耗时</span>
+                  <strong>{{ formatDuration(runtimeTrace.latencyNs) }}</strong>
                 </div>
                 <div class="runtime-kpi">
                   <span>Token</span>
-                  <strong>{{ formatNumber(runtimeSummary.totalTokens) }}</strong>
+                  <strong>{{ formatNumber(runtimeTotalTokens) }}</strong>
                 </div>
-                <div class="runtime-kpi warn">
-                  <span>告警</span>
-                  <strong>{{ runtimeData.alerts.length }}</strong>
-                </div>
-              </div>
-
-              <div class="runtime-section">
-                <div class="runtime-section-title">
-                  <span>实时采集</span>
-                  <small>OTLP</small>
-                </div>
-                <div class="collector-grid">
-                  <div><strong>{{ runtimeData.statistics.totalSpans }}</strong><span>Spans</span></div>
-                  <div><strong>{{ runtimeData.statistics.totalMetrics }}</strong><span>Metrics</span></div>
-                  <div><strong>{{ runtimeData.statistics.totalLogs }}</strong><span>Logs</span></div>
+                <div class="runtime-kpi">
+                  <span>Spans</span>
+                  <strong>{{ runtimeTrace.spanCount }}</strong>
                 </div>
               </div>
 
-              <div class="runtime-section">
-                <div class="runtime-section-title">
-                  <span>最近告警</span>
-                  <small>{{ runtimeData.alerts.length }}</small>
-                </div>
-                <div v-if="runtimeData.alerts.length === 0" class="runtime-empty">暂无告警</div>
-                <div v-for="alert in runtimeData.alerts.slice(0, 3)" :key="alert.id || alert.title" class="alert-row">
-                  <span :class="['alert-dot', alert.alertLevel.toLowerCase()]"></span>
-                  <div>
-                    <strong>{{ alert.title }}</strong>
-                    <small>{{ alert.message }}</small>
-                  </div>
-                </div>
-              </div>
-
-              <div class="runtime-section">
-                <div class="runtime-section-title">
-                  <span>运行日志</span>
-                  <small>最近 20 条</small>
-                </div>
-                <div v-if="runtimeData.logs.length === 0" class="runtime-empty">暂无日志</div>
-                <div v-for="log in runtimeData.logs.slice(0, 4)" :key="log.logId || log.createdAt" class="log-row">
-                  <span :class="['log-level', (log.severity || 'INFO').toLowerCase()]">{{ log.severity || 'INFO' }}</span>
-                  <p>{{ log.body || '-' }}</p>
-                </div>
-              </div>
-            </template>
-
-            <template v-else-if="activeRuntimeTab === 'stats'">
               <div class="runtime-section">
                 <div class="runtime-section-title">
                   <span>模型调用</span>
-                  <small>{{ modelStats.length }} 个模型</small>
+                  <small>{{ runtimeChatStats.modelInvocations }} 次</small>
                 </div>
                 <div v-if="modelStats.length === 0" class="runtime-empty">暂无模型调用数据</div>
                 <div v-for="item in modelStats" :key="item.model" class="model-row">
@@ -216,13 +174,37 @@
 
               <div class="runtime-section">
                 <div class="runtime-section-title">
-                  <span>指标明细</span>
-                  <small>{{ runtimeData.metrics.length }}</small>
+                  <span>运行信息</span>
+                  <small>{{ runtimeData.runs.length }} runs</small>
                 </div>
-                <div v-if="runtimeData.metrics.length === 0" class="runtime-empty">暂无指标数据</div>
-                <div v-for="metric in runtimeData.metrics.slice(0, 8)" :key="metric.id || metric.metricName" class="metric-row">
-                  <span>{{ metric.metricName }}</span>
-                  <strong>{{ formatMetric(metric.metricValue) }}</strong>
+                <dl class="run-detail">
+                  <dt>Run ID</dt>
+                  <dd>{{ shortId(runtimeData.selectedRun?.id) }}</dd>
+                  <dt>Project</dt>
+                  <dd>{{ runtimeData.selectedRun?.project || '-' }}</dd>
+                  <dt>Run Dir</dt>
+                  <dd>{{ runtimeData.selectedRun?.runDir || '-' }}</dd>
+                  <dt>PID</dt>
+                  <dd>{{ runtimeData.selectedRun?.pid || '-' }}</dd>
+                </dl>
+              </div>
+
+              <div class="runtime-section run-list-section">
+                <div class="runtime-section-title">
+                  <span>运行记录</span>
+                  <small>{{ runtimeData.runs.length }}</small>
+                </div>
+                <div v-if="runtimeData.runs.length === 0" class="runtime-empty">暂无运行记录</div>
+                <div
+                  v-for="run in runtimeData.runs"
+                  :key="run.id"
+                  :class="['run-row', { selected: run.id === runtimeData.selectedRun?.id }]"
+                >
+                  <div class="run-row-main">
+                    <strong>{{ run.name || shortId(run.id) }}</strong>
+                    <span>{{ run.status || 'UNKNOWN' }}</span>
+                  </div>
+                  <small>{{ formatDateTime(run.timestamp || '') }} · {{ shortId(run.id) }}</small>
                 </div>
               </div>
             </template>
@@ -237,7 +219,7 @@
                 <button
                   v-for="span in traceTreeRows"
                   :key="span.spanId"
-                  :class="['span-row', { selected: selectedSpan?.spanId === span.spanId, error: span.statusCode && span.statusCode !== 0 }]"
+                  :class="['span-row', { selected: selectedSpan?.spanId === span.spanId, error: span.statusCode === 2 }]"
                   @click="selectedSpan = span"
                 >
                   <span class="span-indent" :style="{ width: span.depth * 14 + 'px' }"></span>
@@ -444,7 +426,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { listAgents } from '@/api/agent-api'
 import { createSession, deleteSession, listMessages, listSessions, sendMessage, sendMessageStream } from '@/api/runtime-api'
-import { loadRuntimeObservability, type RuntimeObservabilityData } from '@/api/runtime-observability-api'
+import { emptyRuntimeDataView, loadRuntimeDataView, type RuntimeDataView } from '@/api/runtime-data-view-api'
 import { formatDateTime } from '@/common/format'
 import type { ChatMessage, ChatSession, StreamMessage } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
@@ -484,22 +466,12 @@ const sending = ref(false)
 const useStream = ref(true)
 const streamingContent = ref('')
 
-// Runtime observability
-const activeRuntimeTab = ref<'monitor' | 'stats' | 'trace'>('monitor')
+// Runtime data view
+const activeRuntimeTab = ref<'run' | 'trace'>('run')
 const runtimeLoading = ref(false)
 const runtimeError = ref('')
 const selectedSpan = ref<(Span & { depth?: number }) | null>(null)
-const runtimeData = ref<RuntimeObservabilityData>({
-  spans: [],
-  metrics: [],
-  alerts: [],
-  logs: [],
-  statistics: {
-    totalSpans: 0,
-    totalMetrics: 0,
-    totalLogs: 0,
-  },
-})
+const runtimeData = ref<RuntimeDataView>(emptyRuntimeDataView())
 
 // 流消息状态管理 - 为每个会话维护独立的流消息状态
 const sessionStreamingStates = new Map<string, {
@@ -555,16 +527,15 @@ watch(selectedSessionId, (newSessionId) => {
 
 // Selection state
 const selectionReady = computed(() => store.tenantId && store.workspaceId)
-const runtimeHasTarget = computed(() => Boolean(selectedAgentId.value || selectedSessionId.value))
-const runtimeRunLabel = computed(() => selectedSessionId.value ? shortId(selectedSessionId.value) : '未选择')
-const runtimeSummary = computed(() => summarizeRuntime(runtimeData.value.spans))
-const runtimeHealthLabel = computed(() => {
-  if (runtimeSummary.value.errorCount > 0 || runtimeData.value.alerts.length > 0) return '异常'
-  if (runtimeData.value.spans.length === 0) return '待采集'
-  return '正常'
-})
+const runtimeHasTarget = computed(() => Boolean(selectedAgentId.value && selectedSessionId.value))
+const currentSession = computed(() => sessions.value.find((item) => item.sessionId === selectedSessionId.value))
+const runtimeCanLoad = computed(() => Boolean(runtimeHasTarget.value && !isTempSession(selectedSessionId.value)))
+const runtimeRunLabel = computed(() => runtimeData.value.selectedRun?.name || shortId(selectedSessionId.value) || '未选择')
+const runtimeTrace = computed(() => runtimeData.value.trace)
+const runtimeChatStats = computed(() => runtimeData.value.modelInvocationData.chat)
+const runtimeTotalTokens = computed(() => runtimeChatStats.value.totalTokens.totalTokens || 0)
 const traceTreeRows = computed(() => buildTraceRows(runtimeData.value.spans))
-const modelStats = computed(() => buildModelStats(runtimeData.value.spans))
+const modelStats = computed(() => buildModelStats())
 
 // Get selection object
 function getSelection() {
@@ -575,11 +546,14 @@ function getSelection() {
 }
 
 async function loadRuntimeData() {
-  if (!runtimeHasTarget.value) return
+  if (!runtimeCanLoad.value) {
+    resetRuntimeData()
+    return
+  }
   runtimeError.value = ''
   runtimeLoading.value = true
   try {
-    runtimeData.value = await loadRuntimeObservability(selectedAgentId.value, selectedSessionId.value)
+    runtimeData.value = await loadRuntimeDataView(getSelection(), selectedAgentId.value, selectedSessionId.value)
     selectedSpan.value = traceTreeRows.value[0] || null
   } catch (e: any) {
     runtimeError.value = e.message || '加载运行时数据失败'
@@ -590,6 +564,7 @@ async function loadRuntimeData() {
 
 function scheduleRuntimeRefresh(runId: string) {
   if (selectedSessionId.value !== runId) return
+  if (isTempSession(runId)) return
   window.setTimeout(loadRuntimeData, 800)
 }
 
@@ -636,6 +611,7 @@ async function loadSessions() {
   error.value = ''
   try {
     sessions.value = await listSessions(getSelection(), selectedAgentId.value)
+    ensureSelectedSession()
     // 默认选中第一个会话
     if (sessions.value.length > 0 && !selectedSessionId.value) {
       selectedSessionId.value = sessions.value[0].sessionId
@@ -662,6 +638,7 @@ function createNewSession() {
 
   sessions.value.unshift(tempSession)
   selectedSessionId.value = tempSessionId
+  resetRuntimeData()
   pendingSessionName.value = '新会话'
   messages.value = []
 }
@@ -1121,17 +1098,6 @@ function scrollToBottom() {
   })
 }
 
-function summarizeRuntime(spans: Span[]) {
-  const totalLatencyNs = spans.reduce((sum, span) => sum + (span.latencyNs || 0), 0)
-  const totalTokens = spans.reduce((sum, span) => sum + (span.totalTokens || 0), 0)
-  const errorCount = spans.filter((span) => span.statusCode && span.statusCode !== 0).length
-  return {
-    totalTokens,
-    errorCount,
-    avgLatencyNs: spans.length ? totalLatencyNs / spans.length : 0,
-  }
-}
-
 function buildTraceRows(spans: Span[]) {
   const children = new Map<string, Span[]>()
   spans.forEach((span) => children.set(span.spanId, []))
@@ -1150,9 +1116,23 @@ function flattenSpan(span: Span, children: Map<string, Span[]>, depth: number): 
   return [row, ...childRows]
 }
 
-function buildModelStats(spans: Span[]) {
+function buildModelStats() {
+  const tokenStats = runtimeChatStats.value.totalTokensByModel || []
+  const callStats = runtimeChatStats.value.modelInvocationsByModel || []
+  if (tokenStats.length === 0) return buildSpanModelStats()
+  const maxTokens = Math.max(...tokenStats.map((item) => item.totalTokens), 1)
+  return tokenStats.map((item) => ({
+    model: item.modelName,
+    calls: callStats.find((call) => call.modelName === item.modelName)?.invocations || 0,
+    tokens: item.totalTokens,
+    percent: Math.max(6, Math.round((item.totalTokens / maxTokens) * 100)),
+    avgLatencyNs: 0,
+  }))
+}
+
+function buildSpanModelStats() {
   const grouped = new Map<string, { calls: number; tokens: number; latencyNs: number }>()
-  spans.filter((span) => span.model).forEach((span) => {
+  runtimeData.value.spans.filter((span) => span.model).forEach((span) => {
     const current = grouped.get(span.model!) || { calls: 0, tokens: 0, latencyNs: 0 }
     current.calls += 1
     current.tokens += span.totalTokens || 0
@@ -1180,11 +1160,6 @@ function formatNumber(value?: number) {
   return new Intl.NumberFormat('zh-CN').format(value || 0)
 }
 
-function formatMetric(value?: number) {
-  if (value === undefined || value === null) return '-'
-  return Math.abs(value) >= 1000 ? formatNumber(value) : Number(value.toFixed(2)).toString()
-}
-
 function shortId(id?: string) {
   if (!id) return '-'
   return id.length > 12 ? `${id.slice(0, 8)}...` : id
@@ -1192,7 +1167,8 @@ function shortId(id?: string) {
 
 function statusLabel(statusCode?: number) {
   if (statusCode === undefined || statusCode === null) return 'UNSET'
-  return statusCode === 0 ? 'OK' : 'ERROR'
+  if (statusCode === 2) return 'ERROR'
+  return statusCode === 1 ? 'OK' : 'UNSET'
 }
 
 // Format time
@@ -1238,12 +1214,8 @@ function getMessageRoleLabel(msg: ChatMessage): string {
 function onAgentChange() {
   selectedSessionId.value = ''
   messages.value = []
-  runtimeData.value.spans = []
-  runtimeData.value.metrics = []
-  runtimeData.value.alerts = []
-  selectedSpan.value = null
+  resetRuntimeData()
   loadSessions()
-  loadRuntimeData()
 }
 
 // Go to workspace
@@ -1262,16 +1234,30 @@ watch(() => [store.tenantId, store.workspaceId], () => {
   selectedSessionId.value = ''
   messages.value = []
   sessions.value = []
-  runtimeData.value.spans = []
-  runtimeData.value.metrics = []
-  runtimeData.value.alerts = []
-  selectedSpan.value = null
+  resetRuntimeData()
   loadAgents()
 })
 
 watch([selectedAgentId, selectedSessionId], () => {
   loadRuntimeData()
 })
+
+function ensureSelectedSession() {
+  if (!selectedSessionId.value) return
+  if (sessions.value.some((session) => session.sessionId === selectedSessionId.value)) return
+  selectedSessionId.value = ''
+  resetRuntimeData()
+}
+
+function resetRuntimeData() {
+  runtimeError.value = ''
+  runtimeData.value = emptyRuntimeDataView()
+  selectedSpan.value = null
+}
+
+function isTempSession(sessionId?: string) {
+  return Boolean(sessionId?.startsWith('temp-'))
+}
 
 // Initialize
 onMounted(() => {
@@ -2390,91 +2376,20 @@ onMounted(() => {
   text-align: center;
 }
 
-.alert-row,
-.log-row,
-.metric-row,
 .model-row {
   border-top: 1px solid rgba(22, 33, 50, 0.06);
   padding-top: 10px;
   margin-top: 10px;
 }
 
-.alert-row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 8px;
-}
-
-.alert-row strong,
 .model-row strong {
   display: block;
   color: #1a1e29;
   font-size: 0.84rem;
 }
 
-.alert-row small {
-  display: block;
-  margin-top: 3px;
-  color: #8a94a6;
-  font-size: 0.74rem;
-  line-height: 1.35;
-}
-
-.alert-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #3a8ad6;
-  margin-top: 4px;
-}
-
-.alert-dot.warning {
-  background: #f59e0b;
-}
-
-.alert-dot.error,
-.alert-dot.critical {
-  background: #c94a35;
-}
-
-.log-row {
-  display: grid;
-  grid-template-columns: 54px 1fr;
-  gap: 8px;
-  align-items: start;
-}
-
-.log-level {
-  padding: 3px 6px;
-  border-radius: 7px;
-  background: rgba(58, 138, 214, 0.1);
-  color: #3a8ad6;
-  font-size: 0.66rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.log-level.error,
-.log-level.fatal {
-  background: rgba(201, 74, 53, 0.1);
-  color: #c94a35;
-}
-
-.log-level.warn {
-  background: rgba(245, 158, 11, 0.12);
-  color: #a9670d;
-}
-
-.log-row p {
-  margin: 0;
-  color: #5d6678;
-  font-size: 0.76rem;
-  line-height: 1.35;
-  word-break: break-word;
-}
-
 .model-row-main,
-.metric-row {
+.run-row-main {
   display: flex;
   justify-content: space-between;
   gap: 8px;
@@ -2482,7 +2397,7 @@ onMounted(() => {
 }
 
 .model-row-main span,
-.metric-row span {
+.run-row-main span {
   color: #8a94a6;
   font-size: 0.76rem;
 }
@@ -2502,9 +2417,37 @@ onMounted(() => {
   background: linear-gradient(90deg, #3a8ad6, #10b981);
 }
 
-.metric-row strong {
-  color: #264266;
-  font-size: 0.84rem;
+.run-list-section {
+  padding-bottom: 8px;
+}
+
+.run-row {
+  border-top: 1px solid rgba(22, 33, 50, 0.06);
+  padding: 10px 0;
+}
+
+.run-row.selected {
+  margin-left: -6px;
+  margin-right: -6px;
+  padding: 10px 6px;
+  border-radius: 10px;
+  background: rgba(58, 138, 214, 0.08);
+}
+
+.run-row strong {
+  min-width: 0;
+  color: #1a1e29;
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.run-row small {
+  display: block;
+  margin-top: 4px;
+  color: #8a94a6;
+  font-size: 0.72rem;
 }
 
 .trace-section {

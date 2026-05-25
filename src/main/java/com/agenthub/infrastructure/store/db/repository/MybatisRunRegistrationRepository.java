@@ -6,6 +6,7 @@ import com.agenthub.infrastructure.store.db.entity.RunRegistrationEntity;
 import com.agenthub.infrastructure.store.db.mapper.RunRegistrationMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -29,24 +30,29 @@ public class MybatisRunRegistrationRepository implements RunRegistrationReposito
 
     @Override
     public Optional<RunRegistration> findById(String id) {
-        return Optional.ofNullable(mapper.selectById(id))
-            .map(this::toDomain);
+        try {
+            return Optional.ofNullable(mapper.selectById(id)).map(this::toDomain);
+        } catch (BadSqlGrammarException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
     public List<RunRegistration> findByProject(String project) {
-        LambdaQueryWrapper<RunRegistrationEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RunRegistrationEntity::getProject, project);
-        return mapper.selectList(wrapper).stream()
-            .map(this::toDomain)
-            .toList();
+        try {
+            return findByProjectSafely(project);
+        } catch (BadSqlGrammarException e) {
+            return List.of();
+        }
     }
 
     @Override
     public List<RunRegistration> findAll() {
-        return mapper.selectList(null).stream()
-            .map(this::toDomain)
-            .toList();
+        try {
+            return mapper.selectList(null).stream().map(this::toDomain).toList();
+        } catch (BadSqlGrammarException e) {
+            return List.of();
+        }
     }
 
     @Override
@@ -65,6 +71,12 @@ public class MybatisRunRegistrationRepository implements RunRegistrationReposito
         entity.setRunDir(domain.getRunDir());
         entity.setCreatedAt(domain.getCreatedAt());
         return entity;
+    }
+
+    private List<RunRegistration> findByProjectSafely(String project) {
+        LambdaQueryWrapper<RunRegistrationEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RunRegistrationEntity::getProject, project);
+        return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
     }
 
     private RunRegistration toDomain(RunRegistrationEntity entity) {

@@ -12,6 +12,16 @@ import lombok.NoArgsConstructor;
 public class TenantThreadContext {
     private String tenantId;
     private String workspaceId;
+    private String agentId;
+    private String sessionId;
     private String requestId;
     private boolean ignoreTenantContext;
+
+
+
+    public static TenantThreadContext ignoreContext(){
+        TenantThreadContext tenantThreadContext = new TenantThreadContext();
+        tenantThreadContext.setIgnoreTenantContext(true);
+        return tenantThreadContext;
+    }
 }

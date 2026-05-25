@@ -97,6 +97,7 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-starter-mcp-client-webflux'
 
     implementation 'cn.hutool:hutool-core'
+    implementation 'cn.hutool:hutool-cache'
     implementation 'com.alibaba:transmittable-thread-local:2.14.4'
     implementation "jakarta.servlet:jakarta.servlet-api"
     implementation 'org.aspectj:aspectjweaver:1.9.22.1'

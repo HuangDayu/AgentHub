@@ -28,7 +28,7 @@ public class TraceEntity {
     private Integer statusCode;
     private String errorMessage;
 
-    private Integer totalTokens;
+    private Long totalTokens;
 
     @TableField(value = "tenant_id", fill = FieldFill.INSERT)
     private String tenantId;

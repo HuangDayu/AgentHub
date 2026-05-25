@@ -17,8 +17,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 
-import static com.agenthub.infrastructure.context.TenantContextHeaders.CONTEXT_WORKSPACE_ID;
-
 public class TenantContextInterceptor implements HandlerInterceptor {
 
     private final SecretKey secretKey;
@@ -42,7 +40,9 @@ public class TenantContextInterceptor implements HandlerInterceptor {
     private TenantThreadContext buildContext(HttpServletRequest request, Object handler) {
         return new TenantThreadContext(
                 getTenantId(request, handler),
-                getWorkspaceId(request),
+                getPathId(request, "/workspaces/"),
+                getPathId(request, "/agents/"),
+                getPathId(request, "/sessions/"),
                 request.getHeader(TenantContextHeaders.CONTEXT_REQUEST_ID),
                 isIgnoreTenantContext(handler)
         );
@@ -64,15 +64,17 @@ public class TenantContextInterceptor implements HandlerInterceptor {
         TenantContextHolder.clear();
     }
 
-    public String getWorkspaceId(HttpServletRequest httpServletRequest) {
+
+    public String getPathId(HttpServletRequest httpServletRequest, String path) {
         String servletPath = httpServletRequest.getServletPath();
-        if (servletPath.startsWith("/api/v1/workspaces/")) {
-            String substring = servletPath.replaceAll("/api/v1/workspaces/", "");
-            if (substring.split("/").length > 1) {
-                return substring.substring(0, substring.indexOf("/"));
+        if (servletPath.contains(path)) {
+            String[] split = servletPath.split(path);
+            if (split[1].contains("/")) {
+                return split[1].split("/")[0];
             }
+            return split[1];
         }
-        return httpServletRequest.getHeader(CONTEXT_WORKSPACE_ID);
+        return null;
     }
 
     public String getTenantId(HttpServletRequest httpServletRequest, Object handler) {

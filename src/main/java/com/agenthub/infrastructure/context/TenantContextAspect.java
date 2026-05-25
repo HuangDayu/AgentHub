@@ -33,10 +33,9 @@ public class TenantContextAspect {
     public Object aroundIgnoreTenantContext(ProceedingJoinPoint joinPoint,
                                             IgnoreTenantContext ignoreTenantContext) throws Throwable {
         if (TenantContextHolder.current().isEmpty()) {
-            // 创建忽略租户上下文的上下文对象
-            TenantThreadContext context = new TenantThreadContext(null, null, null, true);
+
             // 打开上下文作用域，执行方法，然后自动清理
-            try (TenantContextHolder.TenantContextScope scope = TenantContextHolder.open(context)) {
+            try (TenantContextHolder.TenantContextScope scope = TenantContextHolder.open(TenantThreadContext.ignoreContext())) {
                 return joinPoint.proceed();
             }
         }

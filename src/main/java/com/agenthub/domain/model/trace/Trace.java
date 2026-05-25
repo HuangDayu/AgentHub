@@ -26,7 +26,7 @@ public class Trace {
     private Integer statusCode;
     private String errorMessage;
 
-    private Integer totalTokens;
+    private Long totalTokens;
 
     private String tenantId;
     private String workspaceId;

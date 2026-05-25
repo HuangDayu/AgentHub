@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.dto.SpanOutput;
 import com.agenthub.application.port.out.repositories.SpanRepository;
 import com.agenthub.domain.exception.NotFoundException;
@@ -47,28 +48,7 @@ public class SpanUseCase {
     }
 
     private SpanOutput toOutput(Span span) {
-        return new SpanOutput(
-            span.getId(),
-            span.getSpanId(),
-            span.getTraceId(),
-            span.getParentSpanId(),
-            span.getName(),
-            span.getKind(),
-            span.getStartTimeUnixNano(),
-            span.getEndTimeUnixNano(),
-            span.getLatencyNs(),
-            span.getAttributes(),
-            span.getEvents(),
-            span.getStatusCode(),
-            span.getStatusMessage(),
-            span.getModel(),
-            span.getInputTokens(),
-            span.getOutputTokens(),
-            span.getTotalTokens(),
-            span.getRunId(),
-            span.getAgentId(),
-            span.getCreatedAt()
-        );
+        return BeanUtil.copyProperties(span, SpanOutput.class);
     }
 
     private NotFoundException notFound(String spanId) {

@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.agenthub.application.port.out.repositories.AlertRepository;
 import com.agenthub.domain.model.monitor.Alert;
 import com.agenthub.infrastructure.store.db.entity.AlertEntity;
@@ -68,15 +69,21 @@ public class MybatisAlertRepository implements AlertRepository {
     }
 
     private AlertEntity toEntity(Alert alert) {
-        AlertEntity alertEntity = BeanUtil.copyProperties(alert, AlertEntity.class);
+        AlertEntity alertEntity = new AlertEntity();
+        BeanUtil.copyProperties(alert, alertEntity, metadataCopyOptions());
         alertEntity.setMetadata(toJson(alert.getMetadata()));
         return alertEntity;
     }
 
     private Alert toDomain(AlertEntity entity) {
-        Alert alert = BeanUtil.copyProperties(entity, Alert.class);
+        Alert alert = new Alert();
+        BeanUtil.copyProperties(entity, alert, metadataCopyOptions());
         alert.setMetadata(fromJson(entity.getMetadata(), new TypeReference<>() {
         }));
         return alert;
+    }
+
+    private CopyOptions metadataCopyOptions() {
+        return CopyOptions.create().setIgnoreProperties("metadata");
     }
 }

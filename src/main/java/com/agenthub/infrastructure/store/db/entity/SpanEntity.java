@@ -5,6 +5,8 @@ import lombok.Data;
 import org.apache.ibatis.type.JdbcType;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Span Entity.
@@ -43,10 +45,18 @@ public class SpanEntity {
     private String scope;
 
     private String model;
-    private Integer inputTokens;
-    private Integer outputTokens;
-    private Integer totalTokens;
+    private Long inputTokens;
+    private Long outputTokens;
+    private Long totalTokens;
     private String conversationId;
+
+    private String operationName;
+    private String serviceName;
+    private Long startTimestamp;
+    private Long endTimestamp;
+    private Long duration;
+    private String status;
+    private String statusDescription;
 
     private String runId;
     private String agentId;

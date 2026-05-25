@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.telemetry;
 
+import cn.hutool.core.date.LocalDateTimeUtil;
 import com.agenthub.application.port.out.repositories.MessagePushRepository;
 import com.agenthub.application.port.out.repositories.RunRegistrationRepository;
 import com.agenthub.application.port.out.repositories.UserInputRequestRepository;
@@ -53,7 +54,7 @@ public class LoggingAgentStudioMessageHandler implements AgentStudioMessageHandl
                     payload.getId(),
                     payload.getProject(),
                     payload.getName(),
-                    Instant.parse(payload.getTimestamp()),
+                    LocalDateTimeUtil.parse(payload.getTimestamp(), "yyyy-MM-dd HH:mm:ss.SSS").toInstant(java.time.ZoneOffset.ofHours(8)),
                     Math.toIntExact(payload.getPid()),
                     payload.getStatus(),
                     payload.getRunDir()
@@ -72,7 +73,7 @@ public class LoggingAgentStudioMessageHandler implements AgentStudioMessageHandl
                     payload.getRole(),
                     toJson(payload.getMsg()),
                     toJson(payload.getMsg().getMetadata()),
-                    Instant.parse(payload.getMsg().getTimestamp())
+                    LocalDateTimeUtil.parse(payload.getMsg().getTimestamp(), "yyyy-MM-dd HH:mm:ss.SSS").toInstant(java.time.ZoneOffset.ofHours(8))
             );
             messagePushRepository.save(messagePush);
         } catch (Exception e) {

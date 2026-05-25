@@ -93,6 +93,12 @@ public class MybatisSessionRepository implements SessionRepository {
         return toSession(sessionEntity, new ArrayList<>());
     }
 
+    @Override
+    public Session findSessionBaseInfoById(String sessionId) {
+        SessionEntity sessionEntity = sessionMapper.selectById(sessionId);
+        return toSession(sessionEntity, new ArrayList<>());
+    }
+
     private SessionEntity toSessionPo(Session session) {
         SessionEntity po = new SessionEntity();
         po.setId(session.getId());

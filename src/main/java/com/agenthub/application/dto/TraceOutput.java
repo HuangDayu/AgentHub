@@ -25,7 +25,7 @@ public class TraceOutput {
     private Integer statusCode;
     private String errorMessage;
 
-    private Integer totalTokens;
+    private Long totalTokens;
 
     private Instant createdAt;
 }

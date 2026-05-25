@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.agenthub.application.port.out.repositories.MetricRepository;
 import com.agenthub.domain.model.monitor.Metric;
 import com.agenthub.infrastructure.store.db.entity.MetricEntity;
@@ -70,15 +71,21 @@ public class MybatisMetricRepository implements MetricRepository {
     }
 
     private MetricEntity toEntity(Metric metric) {
-        MetricEntity metricEntity = BeanUtil.copyProperties(metric, MetricEntity.class);
+        MetricEntity metricEntity = new MetricEntity();
+        BeanUtil.copyProperties(metric, metricEntity, labelsCopyOptions());
         metricEntity.setLabels(toJson(metric.getLabels()));
         return metricEntity;
     }
 
     private Metric toDomain(MetricEntity entity) {
-        Metric metric = BeanUtil.copyProperties(entity, Metric.class);
+        Metric metric = new Metric();
+        BeanUtil.copyProperties(entity, metric, labelsCopyOptions());
         metric.setLabels(fromJson(entity.getLabels(), new TypeReference<>() {
         }));
         return metric;
+    }
+
+    private CopyOptions labelsCopyOptions() {
+        return CopyOptions.create().setIgnoreProperties("labels");
     }
 }

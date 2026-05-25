@@ -24,4 +24,6 @@ public interface SessionRepository {
     void delete(String sessionId);
 
     Session existSession(String sessionId, String agentId);
+
+    Session findSessionBaseInfoById(String sessionId);
 }

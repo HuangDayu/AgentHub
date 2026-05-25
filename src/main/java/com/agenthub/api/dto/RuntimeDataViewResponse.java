@@ -1,0 +1,14 @@
+package com.agenthub.api.dto;
+
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class RuntimeDataViewResponse {
+    private List<RuntimeRunResponse> runs;
+    private RuntimeRunResponse selectedRun;
+    private RuntimeTraceResponse trace;
+    private List<SpanResponse> spans;
+    private ModelInvocationDataResponse modelInvocationData;
+}
