@@ -22,7 +22,7 @@ const nodeData = props.node.data
 .section-title {
   font-size: 13px; font-weight: 600; color: #333;
   margin: 16px 0 8px; padding-bottom: 4px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--bg-stripe);
 }
 .param-row {
   display: flex; align-items: center; gap: 8px;

@@ -13,6 +13,7 @@
       </CustomButton>
     </div>
 
+
     <div class="settings-grid">
       <!-- 工作区管理 -->
       <article class="settings-card" @click="navigateTo('workspace')">
@@ -128,7 +129,7 @@
           </svg>
         </div>
         <div class="card-content float-effect">
-          <h3>向量库</h3>
+          <h3>向量数据库</h3>
           <p class="muted">管理向量存储配置</p>
         </div>
         <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -164,7 +165,7 @@
           </svg>
         </div>
         <div class="card-content float-effect">
-          <h3>策略管理</h3>
+          <h3>策略配置</h3>
           <p class="muted">配置检索和执行策略</p>
         </div>
         <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -181,7 +182,7 @@
           </svg>
         </div>
         <div class="card-content float-effect">
-          <h3>提示词模板</h3>
+          <h3>提示词</h3>
           <p class="muted">管理提示词模板库</p>
         </div>
         <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -229,7 +230,7 @@
           </svg>
         </div>
         <div class="card-content float-effect">
-          <h3>技能管理</h3>
+          <h3>技能</h3>
           <p class="muted">管理Agent技能和能力</p>
         </div>
         <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -312,14 +313,14 @@ function navigateTo(path: string) {
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  border: 1px solid rgba(38, 66, 102, 0.14);
-  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--color-border);
+  background: var(--bg-card);
   border-radius: 12px;
   font: inherit;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.25s ease;
-  color: #264266;
+  color: var(--color-primary-dark);
   backdrop-filter: blur(8px);
 }
 
@@ -329,22 +330,22 @@ function navigateTo(path: string) {
 }
 
 .back-btn:hover {
-  border-color: #3a8ad6;
-  background: white;
+  border-color: var(--color-primary);
+  background: var(--bg-card-solid);
   transform: translateX(-2px);
 }
 
 .page-header h2 {
   margin: 0;
   font-size: 1.75rem;
-  background: linear-gradient(135deg, #264266, #3a8ad6);
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .muted {
-  color: #5d6678;
+  color: var(--color-text-muted);
   margin: 4px 0 0;
   font-size: 0.9rem;
 }
@@ -356,8 +357,8 @@ function navigateTo(path: string) {
 }
 
 .settings-card {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(22, 33, 50, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px;
   display: flex;
@@ -366,23 +367,23 @@ function navigateTo(path: string) {
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(12px);
-  box-shadow: 0 4px 12px rgba(32, 44, 68, 0.06);
+  box-shadow: 0 4px 12px rgba(26, 30, 43, 0.06);
 }
 
 .settings-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(32, 44, 68, 0.12);
-  border-color: rgba(58, 138, 214, 0.2);
-  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 12px 24px rgba(26, 30, 43, 0.12);
+  border-color: rgba(58, 123, 213, 0.2);
+  background: var(--bg-card-hover);
 }
 
 .card-icon {
   width: 48px;
   height: 48px;
   padding: 12px;
-  background: linear-gradient(135deg, rgba(58, 138, 214, 0.1), rgba(58, 138, 214, 0.05));
+  background: linear-gradient(135deg, var(--color-primary-subtle), rgba(58, 138, 214, 0.05));
   border-radius: 12px;
-  color: #3a8ad6;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -398,20 +399,20 @@ function navigateTo(path: string) {
 .card-content h3 {
   margin: 0 0 4px;
   font-size: 1rem;
-  color: #1a1e29;
+  color: var(--color-text);
 }
 
 .arrow-icon {
   width: 20px;
   height: 20px;
-  color: #8a94a6;
+  color: var(--color-text-light);
   flex-shrink: 0;
   transition: transform 0.25s ease;
 }
 
 .settings-card:hover .arrow-icon {
   transform: translateX(4px);
-  color: #3a8ad6;
+  color: var(--color-primary);
 }
 
 /* Animation */
@@ -425,15 +426,16 @@ function navigateTo(path: string) {
 }
 
 /* Responsive */
+/* Responsive */
 @media (max-width: 768px) {
   .settings-page {
     padding: 16px;
   }
-  
+
   .settings-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;

@@ -7,7 +7,7 @@
       <article class="panel glass-effect header-panel">
         <div class="header-row">
           <div class="header-left">
-            <h2>Agent配置管理</h2>
+            <h2>Agent配置</h2>
             <p class="muted">管理Agent的配置关联关系</p>
           </div>
           <div class="header-right">
@@ -21,7 +21,7 @@
       </article>
 
       <!-- 配置列表 -->
-      <article v-if="selectedAgentId" class="panel">
+      <article v-if="selectedAgentId" class="panel float-effect">
 
         <!-- 配置方块网格 -->
         <div v-if="filteredConfigs.length === 0" class="empty-hint">
@@ -47,20 +47,16 @@
             </div>
             <div class="config-footer">
               <div class="config-meta">
-                <span>优先级: {{ config.priority }}</span>
+                优先级: {{ config.priority }}
               </div>
               <div class="config-actions">
-                <button class="btn-detail" @click="showDetail(config)">详情</button>
-                <button
-                  :class="['btn-toggle', config.enabled ? 'btn-disable' : 'btn-enable']"
-                  @click="toggleEnabled(config)"
-                  :disabled="loading"
-                >
+                <CustomButton type="ghost" size="small" @click="showDetail(config)">详情</CustomButton>
+                <CustomButton type="ghost" size="small" @click="toggleEnabled(config)" :disabled="loading">
                   {{ config.enabled ? '禁用' : '启用' }}
-                </button>
-                <button class="btn-delete" @click="handleDelete(config.id)" :disabled="loading">
+                </CustomButton>
+                <CustomButton type="ghost" size="small" @click="handleDelete(config.id)" :disabled="loading">
                   删除
-                </button>
+                </CustomButton>
               </div>
             </div>
           </div>
@@ -68,40 +64,37 @@
       </article>
 
       <!-- 详情弹窗 -->
-      <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetail">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>配置详情</h3>
-            <button class="modal-close" @click="closeDetail">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="detail-row">
-              <span class="detail-label">类别/类型:</span>
-              <span class="detail-value">{{ getCategoryLabel(detailConfig?.category || '') }}/{{ getTypeLabel(detailConfig?.category || '', detailConfig?.type || '') }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">名称:</span>
-              <span class="detail-value">{{ detailConfig?.name || '无名称' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">描述:</span>
-              <span class="detail-value">{{ detailConfig?.description || '无描述' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">优先级:</span>
-              <span class="detail-value">{{ detailConfig?.priority }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">状态:</span>
-              <span class="detail-value">{{ detailConfig?.enabled ? '启用' : '禁用' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">配置ID:</span>
-              <span class="detail-value">{{ detailConfig?.configId }}</span>
-            </div>
-          </div>
+      <ModalDialog
+        v-model:visible="showDetailModal"
+        title="配置详情"
+        :show-footer="false"
+        @close="closeDetail"
+      >
+        <div class="detail-row">
+          <span class="detail-label">类别/类型:</span>
+          <span class="detail-value">{{ getCategoryLabel(detailConfig?.category || '') }}/{{ getTypeLabel(detailConfig?.category || '', detailConfig?.type || '') }}</span>
         </div>
-      </div>
+        <div class="detail-row">
+          <span class="detail-label">名称:</span>
+          <span class="detail-value">{{ detailConfig?.name || '无名称' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">描述:</span>
+          <span class="detail-value">{{ detailConfig?.description || '无描述' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">优先级:</span>
+          <span class="detail-value">{{ detailConfig?.priority }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">状态:</span>
+          <span class="detail-value">{{ detailConfig?.enabled ? '启用' : '禁用' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">配置ID:</span>
+          <span class="detail-value">{{ detailConfig?.configId }}</span>
+        </div>
+      </ModalDialog>
 
       <!-- 添加配置表单 -->
       <ModalDialog
@@ -544,12 +537,12 @@ async function handleSync() {
 }
 
 .muted {
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 0.875rem;
 }
 
 .status {
-  color: #dc2626;
+  color: var(--color-error);
   font-size: 0.875rem;
   margin-top: 0.5rem;
 }
@@ -557,13 +550,13 @@ async function handleSync() {
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .panel {
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   padding: 1rem;
 }
 
@@ -583,7 +576,7 @@ async function handleSync() {
 .header-left h2 {
   margin: 0 0 0.25rem 0;
   font-size: 1.25rem;
-  color: #1f2937;
+  color: var(--color-heading);
 }
 
 .header-right {
@@ -594,14 +587,14 @@ async function handleSync() {
 .agent-select {
   min-width: 200px;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.25rem;
   font-size: 0.875rem;
 }
 
 .agent-select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
 }
 
 .panel-header {
@@ -614,7 +607,7 @@ async function handleSync() {
 .panel-header h3 {
   margin: 0;
   font-size: 1rem;
-  color: #374151;
+  color: var(--color-heading);
 }
 
 .header-controls {
@@ -625,15 +618,15 @@ async function handleSync() {
 
 .filter-select, .size-select {
   padding: 0.375rem 0.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.25rem;
   font-size: 0.8rem;
-  background: white;
+  background: var(--bg-card-solid);
 }
 
 .filter-select:focus, .size-select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
 }
 
 /* Config Grid - 大小调整 */
@@ -663,7 +656,7 @@ async function handleSync() {
 }
 
 .config-card {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 0.375rem;
   overflow: hidden;
   transition: box-shadow 0.2s;
@@ -673,48 +666,19 @@ async function handleSync() {
   box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* 类别背景色 - 浅色系 */
-.config-card.category-model {
-  background: #fef9c3;
-}
-
-.config-card.category-knowledge {
-  background: #dbeafe;
-}
-
-.config-card.category-tool {
-  background: #dcfce7;
-}
-
-.config-card.category-memory {
-  background: #f3e8ff;
-}
-
-.config-card.category-prompt {
-  background: #fce7f3;
-}
-
-.config-card.category-strategy {
-  background: #fed7aa;
-}
-
-.config-card.category-workflow {
-  background: #e0e7ff;
-}
-
 .config-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0.75rem;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .config-category {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--color-heading);
   text-transform: uppercase;
 }
 
@@ -725,13 +689,13 @@ async function handleSync() {
 }
 
 .config-status.enabled {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--color-success-subtle);
+  color: var(--color-success-dark);
 }
 
 .config-status.disabled {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-error-subtle);
+  color: var(--color-error-dark);
 }
 
 .config-body {
@@ -741,13 +705,13 @@ async function handleSync() {
 .config-name {
   font-size: 0.8rem;
   font-weight: 500;
-  color: #1f2937;
+  color: var(--color-heading);
   margin-bottom: 0.25rem;
 }
 
 .config-desc {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
   line-height: 1.3;
   display: flex;
   align-items: center;
@@ -761,63 +725,19 @@ async function handleSync() {
   white-space: nowrap;
 }
 
-/* Modal styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+.config-footer {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 0.5rem;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #6b7280;
-  line-height: 1;
-}
-
-.modal-close:hover {
-  color: #374151;
-}
-
-.modal-body {
-  padding: 1rem;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--color-border);
 }
 
 .detail-row {
   display: flex;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--bg-stripe);
 }
 
 .detail-row:last-child {
@@ -827,77 +747,24 @@ async function handleSync() {
 .detail-label {
   width: 100px;
   font-weight: 500;
-  color: #374151;
+  color: var(--color-heading);
   flex-shrink: 0;
 }
 
 .detail-value {
   flex: 1;
-  color: #1f2937;
+  color: var(--color-heading);
   word-break: break-all;
-}
-.config-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  background: #f9fafb;
-  border-top: 1px solid #e5e7eb;
 }
 
 .config-meta {
   font-size: 0.7rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .config-actions {
   display: flex;
   gap: 0.375rem;
-}
-
-.btn-toggle, .btn-delete, .btn-detail {
-  font-size: 0.7rem;
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.125rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-enable {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.btn-enable:hover {
-  background: #bbf7d0;
-}
-
-.btn-disable {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.btn-disable:hover {
-  background: #fecaca;
-}
-
-.btn-delete {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.btn-delete:hover {
-  background: #e5e7eb;
-}
-
-.btn-detail {
-  background: #e0f2fe;
-  color: #0369a1;
-}
-
-.btn-detail:hover {
-  background: #bae6fd;
 }
 
 /* Form */
@@ -926,7 +793,7 @@ async function handleSync() {
 .form-field span {
   font-size: 0.8rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--color-heading);
 }
 
 .form-field.full-width {
@@ -941,7 +808,7 @@ async function handleSync() {
 .form-field input,
 .form-field select {
   padding: 0.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.25rem;
   font-size: 0.875rem;
 }
@@ -949,7 +816,7 @@ async function handleSync() {
 .form-field input:focus,
 .form-field select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
 }
 
 .form-actions {
@@ -959,8 +826,7 @@ async function handleSync() {
 
 /* Buttons */
 button.primary {
-  background: #3b82f6;
-  color: white;
+  background: var(--color-primary); color: var(--color-text-inverse);
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   border: none;
@@ -970,7 +836,7 @@ button.primary {
 }
 
 button.primary:hover {
-  background: #2563eb;
+  background: var(--color-primary-dark);
 }
 
 button.primary:disabled {
@@ -979,18 +845,18 @@ button.primary:disabled {
 }
 
 button.secondary {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--bg-stripe);
+  color: var(--color-heading);
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-strong);
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
 }
 
 button.secondary:hover {
-  background: #e5e7eb;
+  background: var(--color-border);
 }
 
 button.secondary:disabled {
@@ -1000,16 +866,16 @@ button.secondary:disabled {
 
 button.ghost {
   background: transparent;
-  color: #6b7280;
+  color: var(--color-text-muted);
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-strong);
   cursor: pointer;
   font-size: 0.875rem;
 }
 
 button.ghost:hover {
-  background: #f3f4f6;
+  background: var(--bg-stripe);
 }
 
 .empty-hint {
@@ -1018,7 +884,7 @@ button.ghost:hover {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
   gap: 0.5rem;
 }
 

@@ -33,7 +33,7 @@ function emitUpdate() {
 .form-group textarea {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   font-size: 13px;
   box-sizing: border-box;

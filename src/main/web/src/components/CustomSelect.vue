@@ -30,17 +30,20 @@
             />
           </div>
           <div class="dropdown-options">
-            <div 
-              v-for="option in filteredOptions" 
+            <div
+              v-for="option in filteredOptions"
               :key="option.value"
               class="dropdown-option"
-              :class="{ 
+              :class="{
                 selected: option.value === modelValue,
-                disabled: option.disabled 
+                disabled: option.disabled
               }"
               @click.stop="selectOption(option)"
             >
-              <span class="option-label">{{ option.label }}</span>
+              <div class="option-content">
+                <span class="option-label">{{ option.label }}</span>
+                <span v-if="option.description" class="option-desc">{{ option.description }}</span>
+              </div>
               <span v-if="option.value === modelValue" class="option-check">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M3.5 8L6.5 11L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -65,6 +68,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 interface Option {
   value: string | number
   label: string
+  description?: string
   disabled?: boolean
 }
 
@@ -158,7 +162,7 @@ const vClickOutside = {
 .select-label {
   font-size: 14px;
   font-weight: 500;
-  color: #27415d;
+  color: var(--color-primary-dark);
   margin-bottom: 2px;
 }
 
@@ -172,45 +176,46 @@ const vClickOutside = {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: white;
-  border: 1px solid rgba(38, 66, 102, 0.15);
-  border-radius: 8px;
+  background: var(--bg-input, #ffffff);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
   min-height: 40px;
+  color: var(--color-text);
 }
 
 .select-trigger:hover {
-  border-color: rgba(58, 138, 214, 0.4);
-  background: rgba(58, 138, 214, 0.02);
+  border-color: var(--color-primary, #3a7bd5);
+  background: var(--bg-hover, rgba(58, 123, 213, 0.02));
 }
 
 .custom-select.is-open .select-trigger {
-  border-color: #3a8ad6;
-  box-shadow: 0 0 0 3px rgba(58, 138, 214, 0.1);
+  border-color: var(--color-primary, #3a7bd5);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle, rgba(58, 123, 213, 0.1));
 }
 
 .custom-select.disabled .select-trigger {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--bg-stripe, rgba(0, 0, 0, 0.03));
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 .custom-select.has-error .select-trigger {
-  border-color: #c94a35;
+  border-color: var(--color-error);
 }
 
 .select-value {
   flex: 1;
   font-size: 14px;
-  color: #1a1e29;
+  color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .select-value.placeholder {
-  color: rgba(38, 66, 102, 0.4);
+  color: var(--color-text-light);
 }
 
 .select-arrow {
@@ -219,7 +224,7 @@ const vClickOutside = {
   justify-content: center;
   width: 20px;
   height: 20px;
-  color: rgba(38, 66, 102, 0.5);
+  color: var(--color-text-light, var(--color-text-muted));
   transition: transform 0.2s ease;
   margin-left: 8px;
 }
@@ -233,31 +238,33 @@ const vClickOutside = {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid rgba(38, 66, 102, 0.1);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: var(--bg-card-solid, #ffffff);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.12));
   z-index: 1000;
   overflow: hidden;
 }
 
 .dropdown-search {
   padding: 8px;
-  border-bottom: 1px solid rgba(38, 66, 102, 0.08);
+  border-bottom: 1px solid var(--color-border, rgba(38, 66, 102, 0.08));
 }
 
 .search-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid rgba(38, 66, 102, 0.15);
+  border: 1px solid var(--color-border-strong);
   border-radius: 6px;
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s;
+  background: var(--bg-input, #ffffff);
+  color: var(--color-text);
 }
 
 .search-input:focus {
-  border-color: #3a8ad6;
+  border-color: var(--color-primary, #3a7bd5);
 }
 
 .dropdown-options {
@@ -273,15 +280,16 @@ const vClickOutside = {
   padding: 10px 14px;
   cursor: pointer;
   transition: background 0.15s;
+  color: var(--color-text);
 }
 
 .dropdown-option:hover:not(.disabled) {
-  background: rgba(58, 138, 214, 0.06);
+  background: var(--color-primary-subtle, rgba(58, 123, 213, 0.06));
 }
 
 .dropdown-option.selected {
-  background: rgba(58, 138, 214, 0.1);
-  color: #3a8ad6;
+  background: var(--color-primary-subtle, rgba(58, 123, 213, 0.1));
+  color: var(--color-primary, #3a7bd5);
 }
 
 .dropdown-option.disabled {
@@ -289,34 +297,54 @@ const vClickOutside = {
   cursor: not-allowed;
 }
 
+.option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
 .option-label {
   font-size: 14px;
-  flex: 1;
+  font-weight: 500;
+}
+
+.option-desc {
+  font-size: 11px;
+  color: var(--color-text-light, #6a6a7a);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-option.selected .option-desc {
+  color: var(--color-primary-light, #5f9cf0);
 }
 
 .option-check {
   display: flex;
   align-items: center;
-  color: #3a8ad6;
+  color: var(--color-primary, #3a7bd5);
   margin-left: 8px;
 }
 
 .dropdown-empty {
   padding: 20px;
   text-align: center;
-  color: rgba(38, 66, 102, 0.4);
+  color: var(--color-text-light);
   font-size: 14px;
 }
 
 .select-error {
   font-size: 12px;
-  color: #c94a35;
+  color: var(--color-error);
   margin-top: 2px;
 }
 
 .select-hint {
   font-size: 12px;
-  color: rgba(38, 66, 102, 0.5);
+  color: var(--color-text-light, var(--color-text-muted));
   margin-top: 2px;
 }
 

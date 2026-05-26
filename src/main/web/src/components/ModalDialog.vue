@@ -5,7 +5,11 @@
         <div class="modal-container" :class="sizeClass" @click.stop>
           <div class="modal-header">
             <h3>{{ title }}</h3>
-            <button v-if="showClose" class="modal-close" type="button" @click="handleClose">×</button>
+            <button v-if="showClose" class="modal-close" type="button" @click="handleClose">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
           </div>
           <div class="modal-body">
             <slot></slot>
@@ -76,9 +80,9 @@ const handleOverlayClick = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background: var(--bg-overlay, rgba(0, 0, 0, 0.5));
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,16 +90,13 @@ const handleOverlayClick = () => {
 }
 
 .modal-container {
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+  background: var(--bg-card-solid, #ffffff);
+  border-radius: 20px;
+  border: 1px solid var(--color-border, rgba(26, 30, 43, 0.06));
+  box-shadow: var(--shadow-xl, 0 20px 56px rgba(26, 30, 43, 0.12));
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  animation: modalSlideIn 0.3s ease;
 }
 
 .modal-small { width: 90%; max-width: 400px; }
@@ -103,52 +104,47 @@ const handleOverlayClick = () => {
 .modal-large { width: 90%; max-width: 800px; }
 .modal-xlarge { width: 90%; max-width: 1000px; }
 
-@keyframes modalSlideIn {
-  from {
-    transform: translateY(-30px) scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(38, 66, 102, 0.1);
+  border-bottom: 1px solid var(--color-border, rgba(26, 30, 43, 0.06));
   flex-shrink: 0;
 }
 
 .modal-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #27415d;
+  font-family: var(--font-heading, inherit);
+  color: var(--color-heading, #0f1729);
 }
 
 .modal-close {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--bg-hover, rgba(0, 0, 0, 0.05));
   border: none;
-  font-size: 24px;
-  color: #666;
-  cursor: pointer;
-  padding: 0;
   width: 36px;
   height: 36px;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--color-text-light, #8a94a8);
+  transition: all 0.2s ease;
 }
 
 .modal-close:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--bg-active, rgba(0, 0, 0, 0.1));
+  color: var(--color-text-muted, #5d667a);
   transform: scale(1.1);
+}
+
+.modal-close svg {
+  width: 100%;
+  height: 100%;
 }
 
 .modal-body {
@@ -164,17 +160,17 @@ const handleOverlayClick = () => {
 }
 
 .modal-body::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--bg-stripe, rgba(0, 0, 0, 0.05));
   border-radius: 4px;
 }
 
 .modal-body::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--color-border-strong, rgba(0, 0, 0, 0.15));
   border-radius: 4px;
 }
 
 .modal-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--color-text-light, rgba(0, 0, 0, 0.25));
 }
 
 .modal-footer {
@@ -182,29 +178,30 @@ const handleOverlayClick = () => {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 24px;
-  border-top: 1px solid rgba(38, 66, 102, 0.1);
+  border-top: 1px solid var(--color-border, rgba(26, 30, 43, 0.06));
   flex-shrink: 0;
 }
 
 .btn-primary,
 .btn-secondary {
   padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 10px;
+  font-family: var(--font-body, inherit);
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
   border: none;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #264266, #3a8ad6);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary-dark, #1e3a6f), var(--color-primary, #3a7bd5));
+  color: var(--color-text-inverse, #f8faff);
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(58, 138, 214, 0.3);
+  box-shadow: var(--shadow-glow, 0 4px 20px rgba(58, 123, 213, 0.25));
 }
 
 .btn-primary:disabled {
@@ -214,14 +211,14 @@ const handleOverlayClick = () => {
 }
 
 .btn-secondary {
-  background: white;
-  color: #27415d;
-  border: 1px solid rgba(38, 66, 102, 0.2);
+  background: var(--bg-card-solid, #ffffff);
+  color: var(--color-primary-dark, #1e3a6f);
+  border: 1px solid var(--color-border-strong, rgba(26, 30, 43, 0.12));
 }
 
 .btn-secondary:hover {
-  background: rgba(58, 138, 214, 0.05);
-  border-color: rgba(58, 138, 214, 0.4);
+  background: var(--bg-hover, rgba(58, 123, 213, 0.04));
+  border-color: var(--color-primary, #3a7bd5);
 }
 
 /* Transition */
@@ -236,21 +233,20 @@ const handleOverlayClick = () => {
 }
 
 .modal-enter-active .modal-container {
-  animation: modalSlideIn 0.3s ease;
+  animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-leave-active .modal-container {
-  animation: modalSlideOut 0.3s ease;
+  animation: modalSlideOut 0.25s ease;
+}
+
+@keyframes modalSlideIn {
+  from { transform: translateY(-20px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
 @keyframes modalSlideOut {
-  from {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(-30px) scale(0.95);
-    opacity: 0;
-  }
+  from { transform: translateY(0) scale(1); opacity: 1; }
+  to { transform: translateY(-20px) scale(0.96); opacity: 0; }
 }
 </style>

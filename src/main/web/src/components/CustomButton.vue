@@ -105,99 +105,94 @@ const handleClick = (event: MouseEvent) => {
 
 /* 类型样式 */
 .button-primary {
-  background: linear-gradient(135deg, #264266, #3a8ad6);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  color: var(--color-text-inverse);
   border-color: transparent;
 }
 
 .button-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2d4d7a, #4a9ae8);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(58, 138, 214, 0.3);
+  box-shadow: var(--shadow-glow);
 }
 
 .button-primary:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(58, 138, 214, 0.2);
 }
 
 .button-secondary {
-  background: white;
-  color: #27415d;
-  border-color: rgba(38, 66, 102, 0.2);
+  background: var(--bg-card-solid);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
 }
 
 .button-secondary:hover:not(:disabled) {
-  background: rgba(58, 138, 214, 0.05);
-  border-color: rgba(58, 138, 214, 0.4);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary);
 }
 
 .button-secondary:active:not(:disabled) {
-  background: rgba(58, 138, 214, 0.1);
+  background: var(--bg-active);
 }
 
 .button-ghost {
   background: transparent;
-  color: #27415d;
-  border-color: rgba(38, 66, 102, 0.2);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
 }
 
 .button-ghost:hover:not(:disabled) {
-  background: rgba(38, 66, 102, 0.05);
-  border-color: rgba(38, 66, 102, 0.3);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary);
 }
 
 .button-ghost:active:not(:disabled) {
-  background: rgba(38, 66, 102, 0.1);
+  background: var(--bg-active);
 }
 
 .button-danger {
-  background: white;
-  color: #c94a35;
-  border-color: rgba(201, 74, 53, 0.3);
+  background: var(--bg-card-solid);
+  color: var(--color-error);
+  border-color: var(--color-error);
 }
 
 .button-danger:hover:not(:disabled) {
-  background: rgba(201, 74, 53, 0.05);
-  border-color: rgba(201, 74, 53, 0.5);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-error);
 }
 
 .button-danger:active:not(:disabled) {
-  background: rgba(201, 74, 53, 0.1);
+  background: var(--bg-active);
 }
 
 .button-success {
-  background: linear-gradient(135deg, #238b6a, #2d9d78);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-success));
+  color: var(--color-text-inverse);
   border-color: transparent;
 }
 
 .button-success:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2a9d7a, #35b08a);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(45, 157, 120, 0.3);
 }
 
 .button-warning {
-  background: linear-gradient(135deg, #d4952f, #e8a838);
-  color: white;
+  background: linear-gradient(135deg, var(--color-warning), var(--color-warning));
+  color: var(--color-text-inverse);
   border-color: transparent;
 }
 
 .button-warning:hover:not(:disabled) {
-  background: linear-gradient(135deg, #e0a23a, #f0b848);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(232, 168, 56, 0.3);
 }
 
 .button-info {
-  background: linear-gradient(135deg, #4a7de0, #5b8def);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-info));
+  color: var(--color-text-inverse);
   border-color: transparent;
 }
 
 .button-info:hover:not(:disabled) {
-  background: linear-gradient(135deg, #588cf0, #6a9df5);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(91, 141, 239, 0.3);
 }

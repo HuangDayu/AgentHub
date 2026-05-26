@@ -27,7 +27,11 @@
 
     <!-- 主内容区 -->
     <main class="app-content">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
     </main>
 
     <template v-if="!isFullScreen">
@@ -200,10 +204,10 @@ function logout() {
   justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.9);
-  border-bottom: 1px solid rgba(22, 33, 50, 0.08);
-  box-shadow: 0 2px 8px rgba(32, 44, 68, 0.04);
-  backdrop-filter: blur(12px);
+  background: var(--bg-header, rgba(255, 255, 255, 0.78));
+  border-bottom: 1px solid var(--color-border, rgba(26, 30, 43, 0.06));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .header-left {
@@ -216,10 +220,10 @@ function logout() {
   width: 36px;
   height: 36px;
   padding: 8px;
-  background: linear-gradient(135deg, #264266, #3a8ad6);
+  background: linear-gradient(135deg, var(--color-primary-dark, #1e3a6f), var(--color-primary, #3a7bd5));
   border-radius: 10px;
-  color: white;
-  box-shadow: 0 4px 12px rgba(58, 138, 214, 0.3);
+  color: var(--color-text-inverse, #f8faff);
+  box-shadow: var(--shadow-glow, 0 4px 20px rgba(58, 123, 213, 0.25));
 }
 
 .logo svg {
@@ -231,7 +235,8 @@ function logout() {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  background: linear-gradient(135deg, #264266, #3a8ad6);
+  font-family: var(--font-heading, inherit);
+  background: linear-gradient(135deg, var(--color-primary-dark, #1e3a6f), var(--color-primary, #3a7bd5));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -240,7 +245,7 @@ function logout() {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .logout-btn {
@@ -248,13 +253,13 @@ function logout() {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border: 1px solid rgba(38, 66, 102, 0.14);
-  background: white;
+  border: 1px solid var(--color-border-strong, rgba(26, 30, 43, 0.12));
+  background: var(--bg-card-solid, #ffffff);
   border-radius: 10px;
-  font: inherit;
+  font-family: var(--font-body, inherit);
   font-size: 0.9rem;
   font-weight: 500;
-  color: #264266;
+  color: var(--color-primary-dark, #1e3a6f);
   cursor: pointer;
   transition: all 0.25s ease;
 }
@@ -265,9 +270,9 @@ function logout() {
 }
 
 .logout-btn:hover {
-  border-color: #c94a35;
-  color: #c94a35;
-  background: rgba(201, 74, 53, 0.05);
+  border-color: var(--color-error, #d44c3a);
+  color: var(--color-error, #d44c3a);
+  background: rgba(212, 76, 58, 0.05);
 }
 
 .app-content {
@@ -276,6 +281,25 @@ function logout() {
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
+}
+
+/* Page Transitions */
+.page-enter-active {
+  animation: pageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.page-leave-active {
+  animation: pageOut 0.25s ease forwards;
+}
+
+@keyframes pageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pageOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 /* Responsive */

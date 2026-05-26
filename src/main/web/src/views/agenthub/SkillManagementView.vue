@@ -1,15 +1,17 @@
 <template>
   <section class="skill-management glass-float">
     <div class="page-header">
-      <h2>技能管理</h2>
+      <div>
+      <h2>技能</h2>
       <p class="muted">管理Agent可调用的技能定义</p>
+      </div>
     </div>
 
     <div class="toolbar">
       
     </div>
 
-    <div class="skill-list">
+    <div class="skill-list float-effect">
       <table v-if="skills.length > 0">
         <thead>
           <tr>
@@ -33,11 +35,11 @@
             </td>
             <td>{{ formatDate(skill.createdAt) }}</td>
             <td>
-              <button @click="editSkill(skill)" class="btn-small">编辑</button>
-              <button @click="toggleSkill(skill)" class="btn-small">
+              <CustomButton type="ghost" @click="editSkill(skill)">编辑</CustomButton>
+              <CustomButton type="ghost" @click="toggleSkill(skill)">
                 {{ skill.enabled ? '禁用' : '启用' }}
-              </button>
-              <button @click="deleteSkillHandler(skill.id)" class="btn-small btn-danger">删除</button>
+              </CustomButton>
+              <CustomButton type="ghost" @click="deleteSkillHandler(skill.id)">删除</CustomButton>
             </td>
           </tr>
         </tbody>
@@ -236,37 +238,24 @@ function formatDate(date: string): string {
 
 .btn-primary {
   padding: 0.5rem 1rem;
-  background: #007bff;
-  color: white;
+  background: var(--color-primary); color: var(--color-text-inverse);
   border: none;
   cursor: pointer;
 }
 
 .btn-secondary {
   padding: 0.5rem 1rem;
-  background: #6c757d;
-  color: white;
+  background: var(--color-text-muted); color: var(--color-text-inverse);
   border: none;
   cursor: pointer;
 }
 
-.btn-small {
-  padding: 0.25rem 0.5rem;
-  margin-right: 0.5rem;
-  cursor: pointer;
-}
-
-.btn-danger {
-  background: #dc3545;
-  color: white;
-}
-
 .status-enabled {
-  color: #28a745;
+  color: var(--color-success);
 }
 
 .status-disabled {
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 
 table {
@@ -293,7 +282,7 @@ th, td {
 }
 
 .dialog {
-  background: white;
+  background: var(--bg-card-solid);
   padding: 2rem;
   border-radius: 8px;
   min-width: 400px;
@@ -324,6 +313,6 @@ th, td {
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 </style>

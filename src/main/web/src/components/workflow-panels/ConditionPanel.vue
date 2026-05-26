@@ -65,11 +65,11 @@ function emitUpdate() {
 .form-group { margin-bottom: 16px; }
 .form-group label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px; }
 .branch-item {
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 12px;
   margin-bottom: 12px;
-  background: #fafafa;
+  background: var(--bg-elevated);
 }
 .branch-header {
   display: flex;
@@ -81,10 +81,10 @@ function emitUpdate() {
 .branch-fields { margin-bottom: 8px; }
 .field-row { margin-bottom: 8px; }
 .sub-label { font-size: 11px; color: #888; margin-bottom: 3px; display: block; }
-.field-row input { width: 100%; padding: 6px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 12px; box-sizing: border-box; }
+.field-row input { width: 100%; padding: 6px 8px; border: 1px solid var(--color-border-strong); border-radius: 4px; font-size: 12px; box-sizing: border-box; }
 .btn-sm { padding: 2px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-.btn-danger { background: transparent; color: #ff4d4f; }
+.btn-danger { background: transparent; color: var(--color-error); }
 .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
-.btn-primary { background: #1677ff; color: white; }
+.btn-primary { background: var(--color-primary); color: var(--color-text-inverse); }
 .btn-block { width: 100%; }
 </style>

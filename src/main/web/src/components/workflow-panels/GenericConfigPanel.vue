@@ -237,7 +237,7 @@ function emitUpdate() {
 .form-group textarea {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   font-size: 13px;
   box-sizing: border-box;
@@ -251,7 +251,7 @@ function emitUpdate() {
   color: #333;
   margin: 16px 0 8px;
   padding-bottom: 4px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--bg-stripe);
 }
 .param-row {
   display: flex;
@@ -263,5 +263,5 @@ function emitUpdate() {
 .param-key { font-weight: 600; color: #333; min-width: 80px; }
 .param-type { color: #999; font-size: 11px; min-width: 60px; }
 .param-desc { color: #666; font-size: 11px; }
-.param-row input { flex: 1; padding: 6px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 12px; }
+.param-row input { flex: 1; padding: 6px 8px; border: 1px solid var(--color-border-strong); border-radius: 4px; font-size: 12px; }
 </style>

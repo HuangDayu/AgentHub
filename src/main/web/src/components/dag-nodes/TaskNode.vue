@@ -27,8 +27,8 @@ defineEmits<{
 
 <style scoped>
 .task-node {
-  background: white;
-  border: 2px solid #3498db;
+  background: var(--bg-card-solid);
+  border: 2px solid var(--color-primary);
   border-radius: 8px;
   padding: 12px 16px;
   min-width: 150px;
@@ -50,7 +50,7 @@ defineEmits<{
 
 .node-icon {
   font-size: 20px;
-  color: #3498db;
+  color: var(--color-primary);
 }
 
 .node-info {
@@ -60,12 +60,12 @@ defineEmits<{
 .node-label {
   font-size: 14px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-heading);
   margin-bottom: 4px;
 }
 
 .node-description {
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--color-text-muted);
 }
 </style>

@@ -29,8 +29,8 @@ defineEmits<{
 
 <style scoped>
 .script-node {
-  background: linear-gradient(135deg, #f9f0ff, #efdbff);
-  border: 2px solid #722ed1;
+  background: linear-gradient(135deg, var(--color-purple-subtle), #efdbff);
+  border: 2px solid var(--color-purple);
   border-radius: 8px;
   padding: 12px 16px;
   min-width: 150px;
@@ -49,6 +49,6 @@ defineEmits<{
 }
 .node-icon { font-size: 20px; }
 .node-info { flex: 1; }
-.node-label { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.node-label { font-size: 14px; font-weight: 600; color: var(--color-text); }
 .node-detail { font-size: 11px; color: #666; margin-top: 2px; }
 </style>

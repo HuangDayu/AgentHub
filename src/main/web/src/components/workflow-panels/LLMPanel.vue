@@ -65,7 +65,7 @@ function emitUpdate() {
 .form-group textarea {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   font-size: 13px;
   box-sizing: border-box;
@@ -80,7 +80,7 @@ function emitUpdate() {
   color: #333;
   margin: 16px 0 8px;
   padding-bottom: 4px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--bg-stripe);
 }
 .param-row {
   display: flex;

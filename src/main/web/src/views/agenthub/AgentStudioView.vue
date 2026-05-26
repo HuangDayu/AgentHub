@@ -1,8 +1,8 @@
 <template>
-  <section class="grid">
+  <section class="grid glass-float">
     <div class="page-header">
       <div>
-        <h2>Agent Studio</h2>
+        <h2>Agent管理</h2>
         <p class="muted">创建 Agent、配置关联关系并一键发布。</p>
       </div>
       <p class="status">{{ error }}</p>
@@ -31,7 +31,7 @@
       </ModalDialog>
 
       <!-- Agent 列表 -->
-      <article class="table-card">
+      <article class="table-card float-effect">
         <table>
           <thead>
             <tr>
@@ -186,27 +186,27 @@ function openConfigPanel(agent: Agent) {
 <style scoped>
 
 .status {
-  color: var(--color-error, #dc2626);
+  color: var(--color-error);
 }
 
 .empty-state {
   padding: 2rem;
   text-align: center;
-  color: var(--color-muted, #6b7280);
+  color: var(--color-muted, var(--color-text-muted));
 }
 
 .panel {
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 0.5rem;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .table-card {
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 0.5rem;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .field-grid {
@@ -226,7 +226,7 @@ function openConfigPanel(agent: Agent) {
 }
 
 .muted {
-  color: var(--color-muted, #6b7280);
+  color: var(--color-muted, var(--color-text-muted));
   font-size: 0.875rem;
 }
 
@@ -239,13 +239,13 @@ function openConfigPanel(agent: Agent) {
 }
 
 .tag.success {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--color-success-subtle);
+  color: var(--color-success-dark);
 }
 
 .tag.default {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--bg-stripe);
+  color: var(--color-heading);
 }
 
 table {
@@ -256,17 +256,16 @@ table {
 th, td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
 }
 
 th {
   font-weight: 600;
-  color: #374151;
+  color: var(--color-heading);
 }
 
 button.primary {
-  background: #3b82f6;
-  color: white;
+  background: var(--color-primary); color: var(--color-text-inverse);
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   border: none;
@@ -274,12 +273,12 @@ button.primary {
 }
 
 button.primary:hover {
-  background: #2563eb;
+  background: var(--color-primary-dark);
 }
 
 button.secondary {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--bg-stripe);
+  color: var(--color-heading);
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   border: none;
@@ -287,30 +286,30 @@ button.secondary {
 }
 
 button.secondary:hover {
-  background: #e5e7eb;
+  background: var(--color-border);
 }
 
 button.ghost {
   background: transparent;
-  color: #6b7280;
+  color: var(--color-text-muted);
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-strong);
   cursor: pointer;
 }
 
 button.ghost:hover {
-  background: #f3f4f6;
+  background: var(--bg-stripe);
 }
 
 input, textarea {
   padding: 0.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.25rem;
 }
 
 input:focus, textarea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
 }
 </style>

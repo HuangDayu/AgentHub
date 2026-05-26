@@ -82,14 +82,14 @@ const renderedContent = computed(() => {
 }
 
 .markdown-content :deep(blockquote) {
-  border-left: 3px solid #3a8ad6;
+  border-left: 3px solid var(--color-primary);
   padding-left: 12px;
   margin: 0.3em 0;
   color: #666;
 }
 
 .markdown-content :deep(a) {
-  color: #3a8ad6;
+  color: var(--color-primary);
   text-decoration: none;
 }
 

@@ -96,7 +96,7 @@ async function submitLogin() {
 
 .login-card {
   background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(22, 33, 50, 0.08);
+  border: 1px solid var(--color-border);
   box-shadow: 
     0 24px 40px rgba(40, 54, 79, 0.12),
     0 0 0 1px rgba(255, 255, 255, 0.5) inset;
@@ -119,9 +119,8 @@ async function submitLogin() {
   height: 56px;
   margin: 0 auto 16px;
   padding: 12px;
-  background: linear-gradient(135deg, #264266, #3a8ad6);
-  border-radius: 16px;
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  border-radius: 16px; color: var(--color-text-inverse);
   box-shadow: 0 8px 20px rgba(58, 138, 214, 0.3);
 }
 
@@ -134,7 +133,7 @@ async function submitLogin() {
   margin: 0 0 8px;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: #7a5f2b;
+  color: var(--color-warning);
   font-size: 12px;
   font-weight: 600;
 }
@@ -142,7 +141,7 @@ async function submitLogin() {
 .login-card h1 {
   margin: 0 0 8px;
   font-size: 1.75rem;
-  background: linear-gradient(135deg, #264266, #3a8ad6);
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -160,7 +159,7 @@ async function submitLogin() {
 
 .field span {
   font-weight: 600;
-  color: #264266;
+  color: var(--color-primary-dark);
   font-size: 0.9rem;
 }
 
@@ -175,7 +174,7 @@ async function submitLogin() {
   left: 14px;
   width: 18px;
   height: 18px;
-  color: #8a94a6;
+  color: var(--color-text-light);
   pointer-events: none;
   transition: color 0.25s ease;
 }
@@ -184,8 +183,8 @@ async function submitLogin() {
   width: 100%;
   padding: 14px 14px 14px 42px;
   border-radius: 14px;
-  border: 1px solid rgba(38, 66, 102, 0.14);
-  background: rgba(248, 250, 255, 0.92);
+  border: 1px solid var(--color-border);
+  background: var(--bg-card-solid);
   font: inherit;
   font-size: 0.95rem;
   transition: all 0.25s ease;
@@ -193,18 +192,18 @@ async function submitLogin() {
 
 .input-wrapper input:focus {
   outline: none;
-  border-color: #3a8ad6;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(58, 138, 214, 0.15);
+  border-color: var(--color-primary);
+  background: var(--bg-card-solid);
+  box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15);
 }
 
 .input-wrapper input:focus + .input-icon,
 .input-wrapper:focus-within .input-icon {
-  color: #3a8ad6;
+  color: var(--color-primary);
 }
 
 .status {
-  color: #c94a35;
+  color: var(--color-error);
   margin: 0;
   padding: 12px;
   background: rgba(201, 74, 53, 0.08);
@@ -217,7 +216,7 @@ async function submitLogin() {
   border: none;
   border-radius: 14px;
   padding: 14px 20px;
-  background: linear-gradient(135deg, #264266, #3a8ad6);
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
   color: #fff;
   cursor: pointer;
   font: inherit;
@@ -250,7 +249,7 @@ async function submitLogin() {
   width: 18px;
   height: 18px;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border-top-color: var(--color-text-inverse);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -260,7 +259,7 @@ async function submitLogin() {
 }
 
 .muted {
-  color: #5f6878;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
@@ -288,7 +287,7 @@ async function submitLogin() {
 .circle-1 {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(58, 138, 214, 0.2), transparent 70%);
+  background: radial-gradient(circle, rgba(58, 123, 213, 0.2), transparent 70%);
   top: -100px;
   right: -100px;
   animation-delay: 0s;

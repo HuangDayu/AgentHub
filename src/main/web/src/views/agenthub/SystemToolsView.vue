@@ -1,22 +1,13 @@
 <template>
-  <section class="grid">
+  <section class="grid glass-float">
     <div class="page-header">
-      <div class="header-content">
-        <div class="header-text">
-          <h2>System Tools 管理</h2>
-          <p class="muted">管理系统工具函数，支持启用/禁用控制</p>
-        </div>
-        <div class="header-filters">
-          <select v-model="filterCategory" class="filter-select">
-            <option value="">全部分类</option>
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-          </select>
-          <select v-model="filterEnabled" class="filter-select">
-            <option value="">全部状态</option>
-            <option value="true">已启用</option>
-            <option value="false">已禁用</option>
-          </select>
-        </div>
+      <div class="header-text">
+        <h2>系统工具</h2>
+        <p class="muted">管理系统工具函数，支持启用/禁用控制</p>
+      </div>
+      <div class="header-filters">
+        <CustomSelect v-model="filterCategory" :options="categoryOptions" />
+        <CustomSelect v-model="filterEnabled" :options="enabledOptions" />
       </div>
     </div>
 
@@ -24,7 +15,7 @@
     <article v-else-if="loading" class="empty-state">加载中...</article>
 
     <template v-else>
-      <article class="panel stack">
+      <article class="panel stack float-effect">
 
         <div v-if="filteredTools.length === 0" class="empty-state">暂无工具数据</div>
 
@@ -55,14 +46,10 @@
               <td>{{ formatDateTime(tool.createdAt) }}</td>
               <td>
                 <div class="chip-row">
-                  <button
-                    :class="['ghost', tool.enabled ? 'danger' : 'success']"
-                    type="button"
-                    @click="toggleEnabled(tool)"
-                  >
+                  <CustomButton type="ghost" @click="toggleEnabled(tool)">
                     {{ tool.enabled ? '禁用' : '启用' }}
-                  </button>
-                  <button class="ghost" type="button" @click="handleDelete(tool)">删除</button>
+                  </CustomButton>
+                  <CustomButton type="ghost" @click="handleDelete(tool)">删除</CustomButton>
                 </div>
               </td>
             </tr>
@@ -77,6 +64,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { formatDateTime } from '@/common/format'
 import { useWorkspaceStore } from '@/store/workspace-store'
+import CustomButton from '@/components/CustomButton.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
 import { 
   listSystemTools,
   syncSystemTools,
@@ -107,6 +96,17 @@ const categories = computed(() => {
   const cats = new Set(tools.value.map(t => t.category))
   return Array.from(cats).sort()
 })
+
+const categoryOptions = computed(() => [
+  { value: '', label: '全部分类' },
+  ...categories.value.map(cat => ({ value: cat, label: cat }))
+])
+
+const enabledOptions = [
+  { value: '', label: '全部状态' },
+  { value: 'true', label: '已启用' },
+  { value: 'false', label: '已禁用' }
+]
 
 const filteredTools = computed(() => {
   let result = tools.value
@@ -191,11 +191,10 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 2rem;
+.page-header {
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .header-text {
@@ -206,33 +205,6 @@ onUnmounted(() => {
   display: flex;
   gap: 12px;
   align-items: center;
-  flex: 1;
-  justify-content: flex-end;
 }
 
-.filter-select {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 8px;
-  background: var(--bg-color, white);
-  font-size: 0.875rem;
-  min-width: 150px;
-  flex: 1;
-  max-width: 200px;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: var(--primary-color, #4CAF50);
-}
-
-.success {
-  color: var(--success-color, #4CAF50);
-  border-color: var(--success-color, #4CAF50);
-}
-
-.danger {
-  color: var(--danger-color, #f44336);
-  border-color: var(--danger-color, #f44336);
-}
 </style>

@@ -1,11 +1,11 @@
 <template>
   <section class="team-management glass-float">
     <div class="page-header">
-      <h2>Agent团队管理</h2>
+      <h2>Agent团队</h2>
       <p class="muted">管理多Agent协作团队</p>
     </div>
 
-    <div class="team-list">
+    <div class="team-list float-effect">
       <table v-if="teams.length > 0">
         <thead>
           <tr>
@@ -27,11 +27,11 @@
             </td>
             <td>{{ formatDate(team.createdAt) }}</td>
             <td>
-              <button @click="editTeam(team)" class="btn-small">编辑</button>
-              <button @click="toggleTeam(team)" class="btn-small">
+              <CustomButton type="ghost" @click="editTeam(team)">编辑</CustomButton>
+              <CustomButton type="ghost" @click="toggleTeam(team)">
                 {{ team.status === 'ACTIVE' ? '停用' : '激活' }}
-              </button>
-              <button @click="deleteTeamHandler(team.id)" class="btn-small btn-danger">删除</button>
+              </CustomButton>
+              <CustomButton type="ghost" @click="deleteTeamHandler(team.id)">删除</CustomButton>
             </td>
           </tr>
         </tbody>
@@ -215,41 +215,28 @@ function getStatusClass(status: string): string {
 
 .btn-primary {
   padding: 0.5rem 1rem;
-  background: #007bff;
-  color: white;
+  background: var(--color-primary); color: var(--color-text-inverse);
   border: none;
   cursor: pointer;
 }
 
 .btn-secondary {
   padding: 0.5rem 1rem;
-  background: #6c757d;
-  color: white;
+  background: var(--color-text-muted); color: var(--color-text-inverse);
   border: none;
   cursor: pointer;
 }
 
-.btn-small {
-  padding: 0.25rem 0.5rem;
-  margin-right: 0.5rem;
-  cursor: pointer;
-}
-
-.btn-danger {
-  background: #dc3545;
-  color: white;
-}
-
 .status-active {
-  color: #28a745;
+  color: var(--color-success);
 }
 
 .status-inactive {
-  color: #dc3545;
+  color: var(--color-error);
 }
 
 .status-draft {
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 
 table {
@@ -266,6 +253,6 @@ th, td {
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 </style>

@@ -21,7 +21,7 @@
 
   <ModalDialog
     v-model:visible="showDialog"
-    title="视觉效果设置"
+    title="主题设置"
     size="small"
     :show-footer="false"
     @close="showDialog = false"
@@ -54,11 +54,10 @@ const showTooltip = ref(false)
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #264266, #3a8ad6);
-  border: none;
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  border: none; color: var(--color-text-inverse);
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(58, 138, 214, 0.4);
+  box-shadow: var(--shadow-glow);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -72,7 +71,7 @@ const showTooltip = ref(false)
 
 .floating-btn:hover {
   transform: translateY(-4px) scale(1.1);
-  box-shadow: 0 8px 24px rgba(58, 138, 214, 0.5);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 50%, transparent);
 }
 
 .floating-btn:active {
@@ -85,8 +84,7 @@ const showTooltip = ref(false)
   right: 0;
   margin-bottom: 12px;
   padding: 8px 12px;
-  background: rgba(26, 30, 41, 0.9);
-  color: white;
+  background: rgba(26, 30, 41, 0.9); color: var(--color-text-inverse);
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;

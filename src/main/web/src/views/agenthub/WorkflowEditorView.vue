@@ -156,7 +156,7 @@ function goBack() {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f7fa;
+  background: var(--bg-stripe);
 }
 
 .loading-overlay {
@@ -172,8 +172,8 @@ function goBack() {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #e8e8e8;
-  border-top: 3px solid #1677ff;
+  border: 3px solid var(--color-border);
+  border-top: 3px solid var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -193,5 +193,5 @@ function goBack() {
 }
 
 .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
-.btn-primary { background: #1677ff; color: white; }
+.btn-primary { background: var(--color-primary); color: var(--color-text-inverse); }
 </style>

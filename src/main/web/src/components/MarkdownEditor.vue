@@ -119,7 +119,7 @@ function insertTemplate(prefix: string, suffix: string) {
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.6;
-  background: white;
+  background: var(--bg-card-solid);
 }
 
 .editor-textarea:focus {
@@ -129,7 +129,7 @@ function insertTemplate(prefix: string, suffix: string) {
 .editor-preview {
   padding: 16px;
   min-height: 300px;
-  background: white;
+  background: var(--bg-card-solid);
   overflow-y: auto;
 }
 
@@ -184,7 +184,7 @@ function insertTemplate(prefix: string, suffix: string) {
 }
 
 .editor-preview :deep(blockquote) {
-  border-left: 4px solid #3a8ad6;
+  border-left: 4px solid var(--color-primary);
   padding-left: 16px;
   margin: 1em 0;
   color: #666;

@@ -1,11 +1,13 @@
 <template>
   <section class="workflow-management glass-float">
     <div class="page-header">
-      <h2>工作流管理</h2>
+      <div>
+      <h2>工作流</h2>
       <p class="muted">管理Agent的工作流图定义</p>
+      </div>
     </div>
 
-    <div class="workflow-list">
+    <div class="workflow-list float-effect">
       <table v-if="workflows.length > 0">
         <thead>
           <tr>
@@ -27,12 +29,12 @@
             </td>
             <td>{{ formatDate(workflow.createdAt) }}</td>
             <td>
-              <button @click="editWorkflow(workflow)" class="btn-small">编辑</button>
-                <button @click="openWorkflowEditor(workflow)" class="btn-small btn-workflow">工作流</button>
-              <button @click="togglePublish(workflow)" class="btn-small">
+              <CustomButton type="ghost" @click="editWorkflow(workflow)">编辑</CustomButton>
+              <CustomButton type="ghost" @click="openWorkflowEditor(workflow)">工作流</CustomButton>
+              <CustomButton type="ghost" @click="togglePublish(workflow)">
                 {{ workflow.status === 'PUBLISHED' ? '取消发布' : '发布' }}
-              </button>
-              <button @click="deleteWorkflowHandler(workflow.id)" class="btn-small btn-danger">删除</button>
+              </CustomButton>
+              <CustomButton type="ghost" @click="deleteWorkflowHandler(workflow.id)">删除</CustomButton>
             </td>
           </tr>
         </tbody>
@@ -216,42 +218,24 @@ function formatDate(date: string): string {
 
 .btn-primary {
   padding: 0.5rem 1rem;
-  background: #007bff;
-  color: white;
+  background: var(--color-primary); color: var(--color-text-inverse);
   border: none;
   cursor: pointer;
 }
 
 .btn-secondary {
   padding: 0.5rem 1rem;
-  background: #6c757d;
-  color: white;
+  background: var(--color-text-muted); color: var(--color-text-inverse);
   border: none;
   cursor: pointer;
 }
 
-.btn-small {
-  padding: 0.25rem 0.5rem;
-  margin-right: 0.5rem;
-  cursor: pointer;
-}
-
-.btn-danger {
-  background: #dc3545;
-  color: white;
-}
-
-.btn-workflow {
-  background: #1677ff;
-  color: white;
-}
-
 .status-published {
-  color: #28a745;
+  color: var(--color-success);
 }
 
 .status-draft {
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 
 table {
@@ -268,6 +252,6 @@ th, td {
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 </style>

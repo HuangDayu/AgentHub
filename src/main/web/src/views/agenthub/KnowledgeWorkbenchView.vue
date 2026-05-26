@@ -1,3 +1,5 @@
+<script setup lang="ts">
+</script>
 <template>
   <section class="grid glass-float">
     <div class="page-header">
@@ -106,7 +108,7 @@
       </ModalDialog>
 
       <!-- 知识库列表 -->
-      <article class="table-card">
+      <article class="table-card float-effect">
         <table>
           <thead>
             <tr>
@@ -223,6 +225,14 @@
     </template>
   </section>
 </template>
+
+<style scoped>
+.custom-select-wrapper{
+  width: auto;
+}
+
+
+</style>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'

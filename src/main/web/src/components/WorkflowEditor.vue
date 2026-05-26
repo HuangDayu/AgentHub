@@ -100,7 +100,7 @@
             @dragover="onDragOver"
             class="vue-flow-instance"
           >
-            <Background :gap="20" :size="1" pattern-color="#e8e8e8" />
+            <Background :gap="20" :size="1" pattern-color="var(--color-border)" />
             <MiniMap v-if="showMiniMap" :node-color="getMiniMapNodeColor" />
             <Controls show-zoom show-fit-view />
 
@@ -823,7 +823,7 @@ function goBack() {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #f5f7fa;
+  background: var(--bg-stripe);
   overflow: hidden;
 }
 
@@ -833,8 +833,8 @@ function goBack() {
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background: white;
-  border-bottom: 1px solid #e1e5eb;
+  background: var(--bg-card-solid);
+  border-bottom: 1px solid var(--color-border);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   z-index: 10;
   flex-shrink: 0;
@@ -857,21 +857,21 @@ function goBack() {
   font-weight: 600;
   border: none;
   background: transparent;
-  color: #2c3e50;
+  color: var(--color-heading);
   outline: none;
   min-width: 150px;
   padding: 4px 8px;
   border-radius: 4px;
 }
 .workflow-title-input:focus {
-  background: #f0f2f5;
+  background: var(--bg-stripe);
 }
 .workflow-title-input:disabled {
   color: #999;
 }
 
 .dirty-indicator {
-  color: #faad14;
+  color: var(--color-warning);
   font-size: 11px;
 }
 
@@ -885,26 +885,26 @@ function goBack() {
 /* ==================== Buttons ==================== */
 .btn {
   padding: 6px 14px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--color-border-strong);
   border-radius: 6px;
-  background: white;
-  color: #333;
+  background: var(--bg-card-solid);
+  color: var(--color-text);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
 }
-.btn:hover:not(:disabled) { border-color: #1677ff; color: #1677ff; }
+.btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-primary { background: #1677ff; border-color: #1677ff; color: white; }
-.btn-primary:hover:not(:disabled) { background: #4096ff; border-color: #4096ff; color: white; }
-.btn-secondary { background: #fafafa; border-color: #d9d9d9; }
-.btn-secondary:hover:not(:disabled) { border-color: #1677ff; color: #1677ff; }
+.btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-text-inverse); }
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-light); border-color: var(--color-primary-light); color: var(--color-text-inverse); }
+.btn-secondary { background: var(--bg-elevated); border-color: var(--color-border-strong); color: var(--color-text); }
+.btn-secondary:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
 .btn-icon { padding: 6px 10px; font-size: 16px; line-height: 1; }
-.btn-icon.active { background: #e6f4ff; border-color: #1677ff; color: #1677ff; }
+.btn-icon.active { background: var(--color-info-subtle); border-color: var(--color-primary); color: var(--color-primary); }
 .btn-sm { font-size: 12px; padding: 4px 8px; }
-.divider { width: 1px; height: 20px; background: #e8e8e8; margin: 0 2px; }
-.test-btn-group .btn.active { background: #e6f4ff; border-color: #1677ff; color: #1677ff; }
+.divider { width: 1px; height: 20px; background: var(--color-border); margin: 0 2px; }
+.test-btn-group .btn.active { background: var(--color-info-subtle); border-color: var(--color-primary); color: var(--color-primary); }
 
 /* ==================== Editor Body ==================== */
 .editor-body {
@@ -916,8 +916,8 @@ function goBack() {
 /* ==================== Left Node Panel ==================== */
 .node-panel {
   width: 240px;
-  background: white;
-  border-right: 1px solid #e1e5eb;
+  background: var(--bg-card-solid);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -935,8 +935,8 @@ function goBack() {
   transform: translateY(-50%);
   width: 24px;
   height: 48px;
-  background: white;
-  border: 1px solid #e1e5eb;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--color-border);
   border-radius: 0 4px 4px 0;
   display: flex;
   align-items: center;
@@ -947,25 +947,25 @@ function goBack() {
   color: #999;
 }
 .panel-toggle:hover {
-  background: #f5f5f5;
+  background: var(--bg-stripe);
 }
 
 .panel-header {
   padding: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--bg-stripe);
 }
 
 .search-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--color-border-strong);
   border-radius: 6px;
   font-size: 13px;
   outline: none;
   box-sizing: border-box;
 }
 .search-input:focus {
-  border-color: #1677ff;
+  border-color: var(--color-primary);
 }
 
 .node-categories {
@@ -998,15 +998,15 @@ function goBack() {
   align-items: flex-start;
   gap: 10px;
   padding: 8px 10px;
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-stripe);
   border-radius: 6px;
   cursor: grab;
   transition: all 0.15s;
 }
 .node-item:hover {
-  background: #e6f4ff;
-  border-color: #91caff;
+  background: var(--color-info-subtle);
+  border-color: var(--color-primary-subtle);
   transform: translateX(3px);
 }
 .node-item:active {
@@ -1027,7 +1027,7 @@ function goBack() {
 .node-name {
   font-size: 13px;
   font-weight: 500;
-  color: #333;
+  color: var(--color-text);
 }
 
 .node-desc {
@@ -1041,7 +1041,7 @@ function goBack() {
 .canvas-area {
   flex: 1;
   position: relative;
-  background: #fafafa;
+  background: var(--bg-elevated);
   overflow: hidden;
 }
 
@@ -1071,15 +1071,15 @@ function goBack() {
   line-height: 1.6;
   resize: none;
   outline: none;
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: var(--color-text);
+  color: var(--color-border-strong);
 }
 
 /* ==================== Config Panel ==================== */
 .config-panel {
   width: 320px;
-  background: white;
-  border-left: 1px solid #e1e5eb;
+  background: var(--bg-card-solid);
+  border-left: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -1099,7 +1099,7 @@ function goBack() {
 .config-header h4 {
   margin: 0;
   font-size: 14px;
-  color: #333;
+  color: var(--color-text);
   flex: 1;
 }
 
@@ -1140,14 +1140,14 @@ function goBack() {
 .form-group input {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   font-size: 13px;
   box-sizing: border-box;
 }
 .form-group input:focus {
   outline: none;
-  border-color: #1677ff;
+  border-color: var(--color-primary);
 }
 
 /* ==================== Config Panel Updates ==================== */
@@ -1160,20 +1160,20 @@ function goBack() {
 .config-name-input {
   flex: 1;
   padding: 8px 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   font-size: 14px;
   font-weight: 600;
   outline: none;
 }
 .config-name-input:focus {
-  border-color: #1677ff;
+  border-color: var(--color-primary);
 }
 
 .config-desc-input {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   font-size: 12px;
   color: #666;
@@ -1184,7 +1184,7 @@ function goBack() {
   font-family: inherit;
 }
 .config-desc-input:focus {
-  border-color: #1677ff;
+  border-color: var(--color-primary);
 }
 
 .config-actions {
@@ -1192,17 +1192,17 @@ function goBack() {
   gap: 8px;
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--bg-stripe);
 }
 
 .btn-danger {
-  color: #ff4d4f;
-  border-color: #ffccc7;
+  color: var(--color-error);
+  border-color: var(--color-error-light);
 }
 .btn-danger:hover:not(:disabled) {
-  background: #fff2f0;
-  border-color: #ff4d4f;
-  color: #ff4d4f;
+  background: var(--color-error-subtle);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 /* ==================== Test Panel Overlay ==================== */
@@ -1221,7 +1221,7 @@ function goBack() {
 
 .test-panel {
   width: 480px;
-  background: white;
+  background: var(--bg-card-solid);
   display: flex;
   flex-direction: column;
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
@@ -1233,7 +1233,7 @@ function goBack() {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--bg-stripe);
 }
 
 .test-panel .panel-header h4 {
@@ -1255,7 +1255,7 @@ function goBack() {
   justify-content: center;
 }
 .btn-close:hover {
-  background: #f5f5f5;
+  background: var(--bg-stripe);
 }
 
 .test-panel .panel-body {

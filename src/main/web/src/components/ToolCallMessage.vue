@@ -52,7 +52,7 @@ const formattedArguments = computed(() => {
 <style scoped>
 .tool-call-message {
   background: rgba(58, 138, 214, 0.08);
-  border: 1px solid rgba(58, 138, 214, 0.2);
+  border: 1px solid rgba(58, 123, 213, 0.2);
   border-radius: 8px;
   overflow: hidden;
   margin: 4px 0;
@@ -74,7 +74,7 @@ const formattedArguments = computed(() => {
 .tool-call-icon {
   width: 20px;
   height: 20px;
-  color: #3a8ad6;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -87,19 +87,19 @@ const formattedArguments = computed(() => {
 
 .tool-name {
   font-weight: 600;
-  color: #264266;
+  color: var(--color-primary-dark);
   font-size: 0.9rem;
 }
 
 .tool-label {
   font-size: 0.75rem;
-  color: #5d6678;
+  color: var(--color-text-muted);
 }
 
 .expand-icon {
   width: 16px;
   height: 16px;
-  color: #5d6678;
+  color: var(--color-text-muted);
   transition: transform 0.2s;
   flex-shrink: 0;
 }
@@ -110,7 +110,7 @@ const formattedArguments = computed(() => {
 
 .tool-call-details {
   padding: 12px;
-  border-top: 1px solid rgba(58, 138, 214, 0.15);
+  border-top: 1px solid rgba(58, 123, 213, 0.15);
   background: rgba(255, 255, 255, 0.5);
 }
 
@@ -125,7 +125,7 @@ const formattedArguments = computed(() => {
 .detail-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #5d6678;
+  color: var(--color-text-muted);
   margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -134,13 +134,13 @@ const formattedArguments = computed(() => {
 .detail-content {
   margin: 0;
   padding: 8px;
-  background: rgba(248, 250, 255, 0.8);
-  border: 1px solid rgba(38, 66, 102, 0.1);
+  background: var(--bg-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-family: 'Consolas', 'Monaco', monospace;
   font-size: 0.8rem;
   line-height: 1.4;
-  color: #264266;
+  color: var(--color-primary-dark);
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-word;

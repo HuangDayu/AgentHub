@@ -2,7 +2,7 @@
   <section class="grid glass-float">
     <div class="page-header">
       <div>
-        <h2>提示词管理</h2>
+        <h2>提示词</h2>
         <p class="muted">管理提示词模板，支持变量替换</p>
       </div>
       <p class="status">{{ error }}</p>
@@ -46,7 +46,7 @@
         </form>
       </ModalDialog>
 
-      <article class="table-card">
+      <article class="table-card float-effect">
         <table>
           <thead>
             <tr>
@@ -178,8 +178,8 @@ async function execute(action: () => Promise<void>) {
 </script>
 
 <style scoped>
-.tag-success { background: rgba(34, 197, 94, 0.14); color: #16a34a; }
-.tag-error { background: rgba(239, 68, 68, 0.14); color: #dc2626; }
+.tag-success { background: rgba(34, 197, 94, 0.14); color: var(--color-success); }
+.tag-error { background: rgba(239, 68, 68, 0.14); color: var(--color-error); }
 .content-preview { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .full-width { grid-column: 1 / -1; }
 </style>

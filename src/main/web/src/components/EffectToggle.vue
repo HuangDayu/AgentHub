@@ -7,9 +7,21 @@
           <path d="M10 6c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z" fill="currentColor"/>
         </svg>
       </span>
-      <span class="toggle-title">视觉效果设置</span>
+      <span class="toggle-title">主题设置</span>
     </div>
     
+    <!-- 主题选择 -->
+    <div class="theme-section">
+      <div class="theme-row">
+        <span class="theme-label">主题选择</span>
+        <CustomSelect
+          :model-value="themeStore.currentTheme"
+          :options="themeOptions"
+          @update:model-value="themeStore.applyTheme"
+        />
+      </div>
+    </div>
+
     <div class="toggle-controls">
       <div class="toggle-item">
         <label class="toggle-label">
@@ -55,7 +67,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useThemeStore } from '@/stores/theme'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const themeStore = useThemeStore()
+
+const themeOptions = computed(() =>
+  themeStore.themes.map(t => ({ value: t.id, label: t.name, description: t.description }))
+)
 
 const glassEnabled = ref(true)
 const floatEnabled = ref(true)
@@ -172,13 +192,13 @@ onMounted(() => {
 
 <style scoped>
 .effect-toggle-panel {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-card, var(--bg-card-hover));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.5));
 }
 
 .toggle-header {
@@ -187,7 +207,7 @@ onMounted(() => {
   gap: 12px;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid rgba(38, 66, 102, 0.1);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .toggle-icon {
@@ -196,15 +216,15 @@ onMounted(() => {
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #264266, #3a8ad6);
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
   border-radius: 10px;
-  color: white;
+  color: var(--color-text-inverse);
 }
 
 .toggle-title {
   font-size: 18px;
   font-weight: 600;
-  color: #27415d;
+  color: var(--color-heading);
 }
 
 .toggle-controls {
@@ -229,21 +249,21 @@ onMounted(() => {
 .label-text {
   font-size: 15px;
   font-weight: 500;
-  color: #1a1e29;
+  color: var(--color-text);
 }
 
 .toggle-switch {
   position: relative;
   width: 48px;
   height: 26px;
-  background: rgba(38, 66, 102, 0.15);
+  background: var(--color-border-strong);
   border-radius: 13px;
   cursor: pointer;
   transition: background 0.3s;
 }
 
 .toggle-switch.active {
-  background: linear-gradient(135deg, #264266, #3a8ad6);
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
 }
 
 .switch-slider {
@@ -252,7 +272,7 @@ onMounted(() => {
   left: 3px;
   width: 20px;
   height: 20px;
-  background: white;
+  background: var(--color-text-inverse, white);
   border-radius: 50%;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: transform 0.3s;
@@ -264,14 +284,35 @@ onMounted(() => {
 
 .toggle-hint {
   font-size: 13px;
-  color: rgba(38, 66, 102, 0.5);
+  color: var(--color-text-muted);
   margin: 0;
+}
+
+/* Theme Section */
+.theme-section {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.theme-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
 }
 
 .toggle-actions {
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid rgba(38, 66, 102, 0.1);
+  border-top: 1px solid var(--color-border);
 }
 
 .action-btn {
@@ -280,9 +321,9 @@ onMounted(() => {
   gap: 8px;
   padding: 10px 18px;
   background: transparent;
-  border: 1px solid rgba(38, 66, 102, 0.2);
+  border: 1px solid var(--color-border-strong);
   border-radius: 10px;
-  color: #27415d;
+  color: var(--color-primary-dark);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -290,12 +331,12 @@ onMounted(() => {
 }
 
 .action-btn:hover {
-  background: rgba(58, 138, 214, 0.05);
-  border-color: rgba(58, 138, 214, 0.4);
+  background: var(--color-primary-subtle, rgba(58, 123, 213, 0.05));
+  border-color: var(--color-primary, rgba(58, 138, 214, 0.4));
   transform: translateY(-2px);
 }
 
 .action-btn svg {
-  color: rgba(38, 66, 102, 0.6);
+  color: var(--color-text-muted, rgba(38, 66, 102, 0.6));
 }
 </style>

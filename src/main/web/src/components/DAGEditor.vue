@@ -485,7 +485,7 @@ function exportGraph() {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #f5f7fa;
+  background: var(--bg-stripe);
 }
 
 .toolbar {
@@ -493,15 +493,15 @@ function exportGraph() {
   justify-content: space-between;
   align-items: center;
   padding: 12px 20px;
-  background: white;
-  border-bottom: 1px solid #e1e5eb;
+  background: var(--bg-card-solid);
+  border-bottom: 1px solid var(--color-border);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .toolbar-title {
   font-size: 16px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-heading);
 }
 
 .toolbar-right {
@@ -517,8 +517,8 @@ function exportGraph() {
 
 .node-panel {
   width: 200px;
-  background: white;
-  border-right: 1px solid #e1e5eb;
+  background: var(--bg-card-solid);
+  border-right: 1px solid var(--color-border);
   padding: 16px;
   overflow-y: auto;
 }
@@ -526,10 +526,10 @@ function exportGraph() {
 .panel-title {
   font-size: 14px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-heading);
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #e1e5eb;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .node-templates {
@@ -543,16 +543,16 @@ function exportGraph() {
   align-items: center;
   gap: 8px;
   padding: 10px;
-  background: #f8f9fa;
-  border: 1px solid #e1e5eb;
+  background: var(--bg-stripe);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   cursor: grab;
   transition: all 0.2s;
 }
 
 .node-template:hover {
-  background: #e9ecef;
-  border-color: #3a8ad6;
+  background: var(--bg-stripe);
+  border-color: var(--color-primary);
 }
 
 .node-template:active {
@@ -565,14 +565,14 @@ function exportGraph() {
 
 .node-name {
   font-size: 13px;
-  color: #495057;
+  color: var(--color-text);
 }
 
 .canvas-container {
   flex: 1;
   position: relative;
   overflow: auto;
-  background: #ffffff;
+  background: var(--bg-card-solid);
   background-image:
     linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
@@ -588,25 +588,25 @@ function exportGraph() {
 
 .edge {
   fill: none;
-  stroke: #95a5a6;
+  stroke: var(--color-text-muted);
   stroke-width: 2;
   pointer-events: stroke;
   cursor: pointer;
 }
 
 .edge:hover {
-  stroke: #3a8ad6;
+  stroke: var(--color-primary);
   stroke-width: 3;
 }
 
 .edge-selected {
-  stroke: #3a8ad6;
+  stroke: var(--color-primary);
   stroke-width: 3;
 }
 
 .edge-label {
   font-size: 12px;
-  fill: #495057;
+  fill: var(--color-text);
   text-anchor: middle;
 }
 
@@ -614,8 +614,8 @@ function exportGraph() {
   position: absolute;
   width: 240px;
   min-height: 80px;
-  background: white;
-  border: 2px solid #e1e5eb;
+  background: var(--bg-card-solid);
+  border: 2px solid var(--color-border);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: move;
@@ -627,32 +627,32 @@ function exportGraph() {
 }
 
 .node-selected {
-  border-color: #3a8ad6;
+  border-color: var(--color-primary);
   box-shadow: 0 4px 12px rgba(58, 138, 214, 0.3);
 }
 
 .node-start {
-  border-color: #27ae60;
+  border-color: var(--color-success);
 }
 
 .node-end {
-  border-color: #e74c3c;
+  border-color: var(--color-error);
 }
 
 .node-task {
-  border-color: #3498db;
+  border-color: var(--color-primary);
 }
 
 .node-condition {
-  border-color: #f39c12;
+  border-color: var(--color-warning);
 }
 
 .node-parallel {
-  border-color: #9b59b6;
+  border-color: var(--color-purple);
 }
 
 .node-loop {
-  border-color: #1abc9c;
+  border-color: var(--color-success);
 }
 
 .node-header {
@@ -660,28 +660,28 @@ function exportGraph() {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e1e5eb;
+  background: var(--bg-stripe);
+  border-bottom: 1px solid var(--color-border);
   border-radius: 6px 6px 0 0;
 }
 
 .node-title {
   font-size: 14px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-heading);
 }
 
 .node-description {
   padding: 8px 12px;
   font-size: 12px;
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 
 .connection-point {
   position: absolute;
   width: 12px;
   height: 12px;
-  background: #3a8ad6;
+  background: var(--color-primary);
   border: 2px solid white;
   border-radius: 50%;
   cursor: crosshair;
@@ -711,8 +711,8 @@ function exportGraph() {
 
 .property-panel {
   width: 280px;
-  background: white;
-  border-left: 1px solid #e1e5eb;
+  background: var(--bg-card-solid);
+  border-left: 1px solid var(--color-border);
   padding: 16px;
   overflow-y: auto;
 }
@@ -732,12 +732,12 @@ function exportGraph() {
 .property-group label {
   font-size: 12px;
   font-weight: 600;
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 
 .property-empty {
   text-align: center;
-  color: #95a5a6;
+  color: var(--color-text-muted);
   font-size: 13px;
   padding: 20px;
 }
@@ -747,7 +747,7 @@ function exportGraph() {
   display: flex;
   flex-direction: column;
   padding: 16px;
-  background: white;
+  background: var(--bg-card-solid);
 }
 
 .json-textarea {
@@ -755,7 +755,7 @@ function exportGraph() {
   font-family: 'Courier New', monospace;
   font-size: 13px;
   padding: 12px;
-  border: 1px solid #e1e5eb;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   resize: none;
 }
@@ -782,31 +782,29 @@ function exportGraph() {
 }
 
 .btn-primary {
-  background: #3a8ad6;
-  color: white;
+  background: var(--color-primary); color: var(--color-text-inverse);
 }
 
 .btn-primary:hover {
-  background: #2d7bc7;
+  background: var(--color-primary-dark);
 }
 
 .btn-secondary {
-  background: #f8f9fa;
-  color: #495057;
-  border: 1px solid #e1e5eb;
+  background: var(--bg-stripe);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
 .btn-secondary:hover {
-  background: #e9ecef;
+  background: var(--bg-stripe);
 }
 
 .btn-danger {
-  background: #e74c3c;
-  color: white;
+  background: var(--color-error); color: var(--color-text-inverse);
 }
 
 .btn-danger:hover {
-  background: #c0392b;
+  background: var(--color-error-dark);
 }
 
 .btn-sm {
@@ -820,7 +818,7 @@ function exportGraph() {
 .textarea {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #e1e5eb;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 13px;
   transition: border-color 0.2s;
@@ -830,7 +828,7 @@ function exportGraph() {
 .select:focus,
 .textarea:focus {
   outline: none;
-  border-color: #3a8ad6;
+  border-color: var(--color-primary);
 }
 
 .textarea {

@@ -226,32 +226,32 @@ function onTypeChange() {
 
 <style scoped>
 .config-panel {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--bg-page) 0%, var(--bg-stripe) 100%);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px var(--color-border);
 }
 
 .panel-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--color-heading);
   margin: 0 0 24px 0;
   padding-bottom: 16px;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--color-border);
 }
 
 .config-section {
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .add-section {
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border: 2px dashed #cbd5e1;
+  background: linear-gradient(135deg, var(--bg-card-solid) 0%, var(--bg-stripe) 100%);
+  border: 2px dashed var(--color-border-strong);
 }
 
 .section-header {
@@ -264,13 +264,12 @@ function onTypeChange() {
 .section-header h4 {
   font-size: 1rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--color-text);
   margin: 0;
 }
 
 .badge {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); color: var(--color-text-inverse);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 8px;
@@ -282,16 +281,16 @@ function onTypeChange() {
   align-items: center;
   gap: 8px;
   padding: 16px;
-  background: #f8fafc;
+  background: var(--bg-page);
   border-radius: 8px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.875rem;
 }
 
 .empty-hint .icon {
   width: 20px;
   height: 20px;
-  color: #94a3b8;
+  color: var(--color-text-light);
 }
 
 .config-list {
@@ -305,14 +304,14 @@ function onTypeChange() {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--bg-page) 0%, var(--bg-stripe) 100%);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   transition: all 0.2s ease;
 }
 
 .config-item:hover {
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
@@ -325,7 +324,7 @@ function onTypeChange() {
 
 .config-category {
   font-weight: 600;
-  color: #3b82f6;
+  color: var(--color-primary);
   background: #eff6ff;
   padding: 4px 10px;
   border-radius: 6px;
@@ -334,20 +333,20 @@ function onTypeChange() {
 
 .config-type {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--color-heading);
   font-size: 0.875rem;
 }
 
 .config-arrow {
-  color: #94a3b8;
+  color: var(--color-text-light);
   font-size: 0.75rem;
 }
 
 .config-id {
   font-family: 'Monaco', 'Menlo', monospace;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.8rem;
-  background: #f1f5f9;
+  background: var(--bg-stripe);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -366,13 +365,13 @@ function onTypeChange() {
 }
 
 .config-status.enabled {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--color-success-subtle);
+  color: var(--color-success-dark);
 }
 
 .config-status.disabled {
-  background: #fef2f2;
-  color: #991b1b;
+  background: var(--color-error-subtle);
+  color: var(--color-error-dark);
 }
 
 .btn-icon {
@@ -393,13 +392,13 @@ function onTypeChange() {
 }
 
 .btn-danger {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--color-error-subtle);
+  color: var(--color-error);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-error-subtle);
+  color: var(--color-error-dark);
 }
 
 .btn-icon:disabled {
@@ -427,30 +426,30 @@ function onTypeChange() {
 .form-group label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .form-select,
 .form-input {
   padding: 10px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 0.875rem;
-  color: #1e293b;
-  background: white;
+  color: var(--color-heading);
+  background: var(--bg-card-solid);
   transition: all 0.2s ease;
 }
 
 .form-select:focus,
 .form-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .form-select:disabled {
-  background: #f8fafc;
-  color: #94a3b8;
+  background: var(--bg-page);
+  color: var(--color-text-light);
   cursor: not-allowed;
 }
 
@@ -468,12 +467,12 @@ function onTypeChange() {
 .form-checkbox-input {
   width: 18px;
   height: 18px;
-  accent-color: #3b82f6;
+  accent-color: var(--color-primary);
 }
 
 .checkbox-text {
   font-size: 0.875rem;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .btn-primary {
@@ -482,8 +481,7 @@ function onTypeChange() {
   justify-content: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); color: var(--color-text-inverse);
   border: none;
   border-radius: 8px;
   font-size: 0.875rem;
@@ -494,7 +492,7 @@ function onTypeChange() {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary-dark) 100%);
   box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
   transform: translateY(-1px);
 }

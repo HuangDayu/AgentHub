@@ -10,7 +10,7 @@
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     <template v-else>
       <!-- 检索表单 -->
-      <article class="panel glass-effect stack">
+      <article class="panel glass-effect stack float-effect">
         <form class="field-grid" @submit.prevent="handleRetrieve">
           <!-- 第一行：知识库选择 -->
           <label class="field" style="grid-column: 1 / -1">
@@ -82,7 +82,7 @@
       </article>
 
       <!-- 检索结果 -->
-      <article v-if="rewrittenQuery || chunks.length" class="panel stack">
+      <article v-if="rewrittenQuery || chunks.length" class="panel stack float-effect">
         <h3 style="margin: 0">检索结果</h3>
         <p v-if="rewrittenQuery" class="muted">重写查询: {{ rewrittenQuery }}</p>
         <p v-if="chunks.length" class="muted">找到 {{ chunks.length }} 条相关结果</p>
@@ -193,7 +193,7 @@ async function handleRetrieve() {
 
 .field span {
   font-weight: 500;
-  color: #264266;
+  color: var(--color-primary-dark);
 }
 
 .field input,
@@ -201,14 +201,14 @@ async function handleRetrieve() {
 .field textarea {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid rgba(38, 66, 102, 0.2);
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   font-size: 0.9rem;
 }
 
 .chunkResult-card {
-  background: rgba(248, 250, 255, 0.92);
-  border: 1px solid rgba(38, 66, 102, 0.1);
+  background: var(--bg-card-solid);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 16px;
   display: grid;
@@ -229,6 +229,6 @@ async function handleRetrieve() {
   font-family: inherit;
   font-size: 0.95em;
   line-height: 1.6;
-  color: #162132;
+  color: var(--color-text);
 }
 </style>

@@ -34,8 +34,8 @@ function truncateUrl(url: string): string {
 
 <style scoped>
 .api-node {
-  background: linear-gradient(135deg, #fff7e6, #ffe7ba);
-  border: 2px solid #fa8c16;
+  background: linear-gradient(135deg, var(--color-warning-subtle), var(--color-warning-subtle));
+  border: 2px solid var(--color-warning);
   border-radius: 8px;
   padding: 12px 16px;
   min-width: 180px;
@@ -54,6 +54,6 @@ function truncateUrl(url: string): string {
 }
 .node-icon { font-size: 20px; }
 .node-info { flex: 1; }
-.node-label { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.node-label { font-size: 14px; font-weight: 600; color: var(--color-text); }
 .node-detail { font-size: 11px; color: #666; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>

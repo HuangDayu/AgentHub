@@ -309,7 +309,7 @@ function getFinalOutput(): any {
 
 .section {
   padding: 16px;
-  background: #f8f9fa;
+  background: var(--bg-stripe);
   border-radius: 6px;
 }
 
@@ -317,7 +317,7 @@ function getFinalOutput(): any {
   margin: 0 0 12px 0;
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: var(--color-text);
 }
 
 .input-params {
@@ -334,24 +334,24 @@ function getFinalOutput(): any {
 
 .param-label {
   font-size: 13px;
-  color: #606266;
+  color: var(--color-text-muted);
 }
 
 .required {
-  color: #f56c6c;
+  color: var(--color-error-light);
   margin-left: 2px;
 }
 
 .param-input {
   padding: 8px 12px;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   font-size: 13px;
 }
 
 .empty-message {
   text-align: center;
-  color: #909399;
+  color: var(--color-text-muted);
   padding: 20px;
 }
 
@@ -362,7 +362,7 @@ function getFinalOutput(): any {
 
 .btn {
   padding: 8px 16px;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   font-size: 13px;
   cursor: pointer;
@@ -379,20 +379,18 @@ function getFinalOutput(): any {
 }
 
 .btn-primary {
-  background: #409eff;
-  border-color: #409eff;
-  color: white;
+  background: var(--color-primary);
+  border-color: var(--color-primary); color: var(--color-text-inverse);
 }
 
 .btn-secondary {
-  background: white;
-  color: #606266;
+  background: var(--bg-card-solid);
+  color: var(--color-text-muted);
 }
 
 .btn-danger {
-  background: #f56c6c;
-  border-color: #f56c6c;
-  color: white;
+  background: var(--color-error-light);
+  border-color: var(--color-error-light); color: var(--color-text-inverse);
 }
 
 .execution-progress {
@@ -415,28 +413,28 @@ function getFinalOutput(): any {
 }
 
 .status-badge.pending {
-  background: #f4f4f5;
-  color: #909399;
+  background: var(--bg-stripe);
+  color: var(--color-text-muted);
 }
 
 .status-badge.running {
-  background: #fdf6ec;
-  color: #e6a23c;
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
 }
 
 .status-badge.success {
-  background: #f0f9eb;
-  color: #67c23a;
+  background: var(--color-success-subtle);
+  color: var(--color-success);
 }
 
 .status-badge.failed {
-  background: #fef0f0;
-  color: #f56c6c;
+  background: var(--color-error-subtle);
+  color: var(--color-error-light);
 }
 
 .duration {
   font-size: 12px;
-  color: #909399;
+  color: var(--color-text-muted);
 }
 
 .node-status-list {
@@ -447,21 +445,21 @@ function getFinalOutput(): any {
 
 .node-status-item {
   padding: 12px;
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 4px;
-  border-left: 3px solid #dcdfe6;
+  border-left: 3px solid var(--color-border-strong);
 }
 
 .node-status-item.success {
-  border-left-color: #67c23a;
+  border-left-color: var(--color-success);
 }
 
 .node-status-item.failed {
-  border-left-color: #f56c6c;
+  border-left-color: var(--color-error-light);
 }
 
 .node-status-item.running {
-  border-left-color: #e6a23c;
+  border-left-color: var(--color-warning);
 }
 
 .node-header {
@@ -479,18 +477,18 @@ function getFinalOutput(): any {
   flex: 1;
   font-size: 13px;
   font-weight: 500;
-  color: #303133;
+  color: var(--color-text);
 }
 
 .node-duration {
   font-size: 12px;
-  color: #909399;
+  color: var(--color-text-muted);
 }
 
 .node-details {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--bg-stripe);
 }
 
 .detail-section {
@@ -500,17 +498,17 @@ function getFinalOutput(): any {
 .detail-section h5 {
   margin: 0 0 8px 0;
   font-size: 12px;
-  color: #909399;
+  color: var(--color-text-muted);
 }
 
 .detail-section.error h5 {
-  color: #f56c6c;
+  color: var(--color-error-light);
 }
 
 .code-block {
   margin: 0;
   padding: 8px;
-  background: #f5f7fa;
+  background: var(--bg-stripe);
   border-radius: 4px;
   font-size: 11px;
   font-family: 'Monaco', 'Menlo', monospace;
@@ -521,13 +519,13 @@ function getFinalOutput(): any {
   padding: 4px 8px;
   border: none;
   background: transparent;
-  color: #409eff;
+  color: var(--color-primary);
   font-size: 12px;
   cursor: pointer;
 }
 
 .result-display {
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 4px;
   padding: 12px;
 }

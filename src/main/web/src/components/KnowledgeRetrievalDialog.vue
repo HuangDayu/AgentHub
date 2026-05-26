@@ -71,7 +71,7 @@
 
       <!-- 检索结果 -->
       <div v-if="error" class="error-message">
-        <p style="color: #c94a35; font-weight: 500;">{{ error }}</p>
+        <p style="color: var(--color-error); font-weight: 500;">{{ error }}</p>
       </div>
       <div v-else-if="rewrittenQuery || chunks.length" class="retrieval-results">
         <h3 style="margin: 0 0 16px 0">检索结果</h3>
@@ -193,7 +193,7 @@ function handleClose() {
 }
 
 .retrieval-form {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-card-hover);
   backdrop-filter: blur(20px);
   border-radius: 16px;
   padding: 24px;
@@ -215,14 +215,14 @@ function handleClose() {
 
 .field span {
   font-weight: 500;
-  color: #264266;
+  color: var(--color-primary-dark);
 }
 
 .field input,
 .field select,
 .field textarea {
   padding: 0.5rem;
-  border: 1px solid rgba(38, 66, 102, 0.2);
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
   font: inherit;
   font-size: 0.9rem;
@@ -233,7 +233,7 @@ function handleClose() {
 .field select:focus,
 .field textarea:focus {
   outline: none;
-  border-color: #3a8ad6;
+  border-color: var(--color-primary);
 }
 
 .field textarea {
@@ -242,7 +242,7 @@ function handleClose() {
 }
 
 .retrieval-results {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-card-hover);
   backdrop-filter: blur(20px);
   border-radius: 16px;
   padding: 24px;
@@ -255,7 +255,7 @@ function handleClose() {
   padding: 16px;
   background: rgba(58, 138, 214, 0.05);
   border-radius: 12px;
-  border: 1px solid rgba(58, 138, 214, 0.1);
+  border: 1px solid var(--color-primary-subtle);
 }
 
 .chunk-result-header {
@@ -268,35 +268,35 @@ function handleClose() {
 .tag {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(58, 138, 214, 0.1);
-  color: #3a8ad6;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: 500;
 }
 
 .muted {
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
 .chunk-result-content {
   margin: 0;
   padding: 12px;
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 8px;
   font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
-  color: #264266;
+  color: var(--color-primary-dark);
 }
 
 .empty-state {
   text-align: center;
   padding: 48px 24px;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 0.95rem;
 }
 </style>

@@ -31,8 +31,8 @@ defineEmits<{
 
 <style scoped>
 .llm-node {
-  background: linear-gradient(135deg, #e6f4ff, #bae0ff);
-  border: 2px solid #1677ff;
+  background: linear-gradient(135deg, var(--color-info-subtle), var(--color-primary-subtle));
+  border: 2px solid var(--color-primary);
   border-radius: 8px;
   padding: 12px 16px;
   min-width: 180px;
@@ -58,7 +58,7 @@ defineEmits<{
 .node-label {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--color-text);
 }
 .node-detail {
   font-size: 11px;
@@ -74,7 +74,7 @@ defineEmits<{
   text-align: center;
 }
 .node-status.executing {
-  color: #1677ff;
+  color: var(--color-primary);
   animation: pulse 1s infinite;
 }
 @keyframes pulse {

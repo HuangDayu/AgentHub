@@ -103,22 +103,24 @@ onUnmounted(() => {
 
 .workspace-select {
   padding: 6px 12px;
-  border: 1px solid rgba(38, 66, 102, 0.2);
-  border-radius: 4px;
-  background: white;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+  background: var(--bg-input, white);
+  font-family: var(--font-body, inherit);
   font-size: 0.85rem;
-  color: #1a1e29;
+  color: var(--color-text);
   cursor: pointer;
   min-width: 150px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .workspace-select:hover {
-  border-color: rgba(58, 138, 214, 0.5);
+  border-color: var(--color-primary, rgba(58, 123, 213, 0.5));
 }
 
 .workspace-select:focus {
   outline: none;
-  border-color: #3a8ad6;
-  box-shadow: 0 0 0 2px rgba(58, 138, 214, 0.1);
+  border-color: var(--color-primary, #3a7bd5);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle, rgba(58, 123, 213, 0.1));
 }
 </style>

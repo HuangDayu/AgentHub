@@ -116,7 +116,7 @@ const formatLatency = (latencyNs: number): string => {
 }
 
 pre {
-  background: #f5f5f5;
+  background: var(--bg-stripe);
   padding: 10px;
   border-radius: 4px;
   overflow-x: auto;

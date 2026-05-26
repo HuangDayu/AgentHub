@@ -1,9 +1,10 @@
 <template>
   <section class="grid glass-float">
     <div class="page-header">
+      <div>
       <h2>大模型配置</h2>
       <p class="muted">管理大模型API配置，用于知识库嵌入和Agent对话。</p>
-      <p class="status">{{ error }}</p>
+      </div>
     </div>
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
     <template v-else>
@@ -62,8 +63,8 @@
     </ModalDialog>
 
       <!-- 配置列表 -->
-      <article class="table-card">
-          
+      <article class="table-card float-effect">
+
         <table>
           <thead>
             <tr>
@@ -335,11 +336,11 @@ async function execute(action: () => Promise<void>) {
 <style scoped>
 .tag-success {
   background: rgba(34, 197, 94, 0.14);
-  color: #16a34a;
+  color: var(--color-success);
 }
 .tag-error {
   background: rgba(239, 68, 68, 0.14);
-  color: #dc2626;
+  color: var(--color-error);
 }
 .test-loading {
   display: flex;
@@ -376,8 +377,8 @@ async function execute(action: () => Promise<void>) {
   display: inline-block;
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(22, 33, 50, 0.08);
-  border-top-color: #3a8ad6;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

@@ -29,8 +29,8 @@ defineEmits<{
 
 <style scoped>
 .retrieval-node {
-  background: linear-gradient(135deg, #e6fffb, #b5f5ec);
-  border: 2px solid #13c2c2;
+  background: linear-gradient(135deg, var(--color-success-subtle), var(--color-cyan-subtle));
+  border: 2px solid var(--color-cyan);
   border-radius: 8px;
   padding: 12px 16px;
   min-width: 150px;
@@ -49,6 +49,6 @@ defineEmits<{
 }
 .node-icon { font-size: 20px; }
 .node-info { flex: 1; }
-.node-label { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.node-label { font-size: 14px; font-weight: 600; color: var(--color-text); }
 .node-detail { font-size: 11px; color: #666; margin-top: 2px; }
 </style>

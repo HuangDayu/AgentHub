@@ -2,7 +2,7 @@
   <section class="grid glass-float">
     <div class="page-header">
       <div>
-        <h2>向量数据库配置</h2>
+        <h2>向量数据库</h2>
         <p class="muted">管理向量数据库连接配置，用于知识库的向量存储。</p>
       </div>
       <p class="status">{{ error }}</p>
@@ -65,8 +65,8 @@
       </ModalDialog>
 
       <!-- 配置列表 -->
-      <article class="table-card">
-        
+      <article class="table-card float-effect">
+
         <table>
           <thead>
             <tr>
@@ -344,11 +344,11 @@ async function execute(action: () => Promise<void>) {
 <style scoped>
 .tag-success {
   background: rgba(34, 197, 94, 0.14);
-  color: #16a34a;
+  color: var(--color-success);
 }
 .tag-error {
   background: rgba(239, 68, 68, 0.14);
-  color: #dc2626;
+  color: var(--color-error);
 }
 .test-loading {
   display: flex;
@@ -377,8 +377,8 @@ async function execute(action: () => Promise<void>) {
   display: inline-block;
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(22, 33, 50, 0.08);
-  border-top-color: #3a8ad6;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

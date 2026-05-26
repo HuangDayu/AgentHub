@@ -4,10 +4,10 @@
     
     <template v-else>
       <!-- Header -->
-      <article class="panel glass-effect header-panel">
+      <article class="panel glass-effect header-panel float-effect">
         <div class="header-row">
           <div class="header-left">
-            <h2>定时任务管理</h2>
+            <h2>定时任务</h2>
             <p class="muted">管理定时执行的任务调度</p>
           </div>
           <div class="header-right">
@@ -17,7 +17,7 @@
       </article>
 
       <!-- Task List -->
-      <article class="panel glass-effect">
+      <article class="panel glass-effect float-effect">
         <div v-if="loading" class="loading">加载中...</div>
         
         <div v-else-if="tasks.length === 0" class="empty-state">
@@ -56,15 +56,12 @@
               <td>{{ formatDateTime(task.createdAt) }}</td>
               <td>
                 <div class="action-buttons">
-                  <button class="btn-small" @click="editTask(task)">编辑</button>
-                  <button 
-                    :class="['btn-small', task.enabled ? 'btn-warning' : 'btn-success']"
-                    @click="toggleEnabled(task)"
-                  >
+                  <CustomButton type="ghost" size="small" @click="editTask(task)">编辑</CustomButton>
+                  <CustomButton type="ghost" size="small" @click="toggleEnabled(task)">
                     {{ task.enabled ? '禁用' : '启用' }}
-                  </button>
-                  <button class="btn-small btn-info" @click="executeTask(task)">执行</button>
-                  <button class="btn-small btn-danger" @click="deleteTaskHandler(task.id)">删除</button>
+                  </CustomButton>
+                  <CustomButton type="ghost" size="small" @click="executeTask(task)">执行</CustomButton>
+                  <CustomButton type="ghost" size="small" @click="deleteTaskHandler(task.id)">删除</CustomButton>
                 </div>
               </td>
             </tr>
@@ -305,15 +302,15 @@ watch(() => [store.tenantId, store.workspaceId], loadTasks)
 }
 
 .panel {
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 0.5rem;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-panel {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .header-row {
@@ -325,12 +322,12 @@ watch(() => [store.tenantId, store.workspaceId], loadTasks)
 .header-left h2 {
   margin: 0;
   font-size: 1.5rem;
-  color: #111827;
+  color: var(--color-heading);
 }
 
 .header-left .muted {
   margin: 0.25rem 0 0 0;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 0.875rem;
 }
 
@@ -341,8 +338,7 @@ watch(() => [store.tenantId, store.workspaceId], loadTasks)
 
 button.primary {
   padding: 0.5rem 1rem;
-  background: #3b82f6;
-  color: white;
+  background: var(--color-primary); color: var(--color-text-inverse);
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
@@ -350,19 +346,19 @@ button.primary {
 }
 
 button.primary:hover {
-  background: #2563eb;
+  background: var(--color-primary-dark);
 }
 
 .loading {
   text-align: center;
   padding: 2rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #9ca3af;
+  color: var(--color-text-light);
 }
 
 .empty-state svg {
@@ -377,17 +373,17 @@ table {
 th, td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
 }
 
 th {
   font-weight: 600;
-  color: #374151;
-  background: #f9fafb;
+  color: var(--color-heading);
+  background: var(--bg-elevated);
 }
 
 code {
-  background: #f3f4f6;
+  background: var(--bg-stripe);
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
@@ -396,8 +392,8 @@ code {
 .tag {
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--color-info-subtle);
+  color: var(--color-primary-dark);
   border-radius: 0.25rem;
   font-size: 0.75rem;
   font-weight: 500;
@@ -412,55 +408,18 @@ code {
 }
 
 .status-badge.enabled {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--color-success-subtle);
+  color: var(--color-success-dark);
 }
 
 .status-badge.disabled {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-error-subtle);
+  color: var(--color-error-dark);
 }
 
 .action-buttons {
   display: flex;
   gap: 0.5rem;
-}
-
-.btn-small {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #d1d5db;
-  background: white;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  font-size: 0.75rem;
-}
-
-.btn-small:hover {
-  background: #f3f4f6;
-}
-
-.btn-warning {
-  background: #fef3c7;
-  color: #92400e;
-  border-color: #fcd34d;
-}
-
-.btn-success {
-  background: #d1fae5;
-  color: #065f46;
-  border-color: #6ee7b7;
-}
-
-.btn-info {
-  background: #dbeafe;
-  color: #1e40af;
-  border-color: #93c5fd;
-}
-
-.btn-danger {
-  background: #fee2e2;
-  color: #991b1b;
-  border-color: #fca5a5;
 }
 
 .dialog-overlay {
@@ -477,7 +436,7 @@ code {
 }
 
 .dialog {
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 0.5rem;
   padding: 1.5rem;
   width: 90%;
@@ -489,7 +448,7 @@ code {
 .dialog h3 {
   margin: 0 0 1rem 0;
   font-size: 1.25rem;
-  color: #111827;
+  color: var(--color-heading);
 }
 
 .form-group {
@@ -500,7 +459,7 @@ code {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--color-heading);
 }
 
 .form-group input,
@@ -508,7 +467,7 @@ code {
 .form-group textarea {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.25rem;
   font-size: 0.875rem;
 }
@@ -517,7 +476,7 @@ code {
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -525,7 +484,7 @@ code {
   display: block;
   margin-top: 0.25rem;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .form-actions {
@@ -537,8 +496,7 @@ code {
 
 .btn-primary {
   padding: 0.5rem 1rem;
-  background: #3b82f6;
-  color: white;
+  background: var(--color-primary); color: var(--color-text-inverse);
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
@@ -547,14 +505,14 @@ code {
 }
 
 .btn-primary:hover {
-  background: #2563eb;
+  background: var(--color-primary-dark);
 }
 
 .btn-secondary {
   padding: 0.5rem 1rem;
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: var(--bg-stripe);
+  color: var(--color-heading);
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.25rem;
   cursor: pointer;
   font-size: 0.875rem;
@@ -562,6 +520,6 @@ code {
 }
 
 .btn-secondary:hover {
-  background: #e5e7eb;
+  background: var(--color-border);
 }
 </style>

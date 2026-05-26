@@ -110,8 +110,8 @@
           <td>{{ formatDate(strategy.createdAt) }}</td>
           <td>
             <div class="action-buttons">
-              <button class="ghost" @click="editStrategyHandler(strategy)">编辑</button>
-              <button class="danger" @click="deleteStrategyHandler(strategy.id)">删除</button>
+              <CustomButton type="ghost" @click="editStrategyHandler(strategy)">编辑</CustomButton>
+              <CustomButton type="ghost" @click="deleteStrategyHandler(strategy.id)">删除</CustomButton>
             </div>
           </td>
         </tr>
@@ -123,6 +123,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
 import ModalDialog from '@/components/ModalDialog.vue'
+import CustomButton from '@/components/CustomButton.vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import {
   listModelStrategies,
@@ -256,19 +257,17 @@ onMounted(loadStrategies)
 .strategy-panel { padding: 1rem; }
 .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .panel-header h3 { margin: 0; }
-.form { background: rgba(248, 250, 255, 0.5); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; }
+.form { background: var(--bg-stripe); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .form-group { margin-bottom: 1rem; }
-.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #264266; }
-.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid rgba(38, 66, 102, 0.2); border-radius: 4px; }
+.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--color-heading); }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--color-border-strong); border-radius: 4px; }
 .form-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
-.loading, .empty-state { text-align: center; padding: 2rem; color: #5f6878; }
+.loading, .empty-state { text-align: center; padding: 2rem; color: var(--color-text-muted); }
 .strategy-table { width: 100%; border-collapse: collapse; }
-.strategy-table th, .strategy-table td { border: 1px solid rgba(22, 33, 50, 0.08); padding: 0.75rem; text-align: left; }
-.strategy-table th { background: rgba(248, 250, 255, 0.95); font-weight: 600; color: #264266; }
-.strategy-table tr:hover { background: rgba(248, 250, 255, 0.5); }
+.strategy-table th, .strategy-table td { border: 1px solid var(--color-border); padding: 0.75rem; text-align: left; }
+.strategy-table th { background: var(--bg-elevated); font-weight: 600; color: var(--color-heading); }
+.strategy-table tr:hover { background: var(--bg-hover); }
 .action-buttons { display: flex; gap: 0.5rem; }
-.primary { background: linear-gradient(135deg, #264266, #3a8ad6); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: 500; }
-.ghost { background: transparent; color: #264266; border: 1px solid rgba(38, 66, 102, 0.2); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
-.danger { background: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+.primary { background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary)); color: var(--color-text-inverse); border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: 500; }
 </style>

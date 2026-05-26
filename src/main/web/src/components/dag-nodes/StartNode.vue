@@ -20,11 +20,10 @@ defineProps<{
 
 <style scoped>
 .start-node {
-  background: linear-gradient(135deg, #27ae60, #2ecc71);
-  border: 2px solid #229954;
+  background: linear-gradient(135deg, var(--color-success), var(--color-success));
+  border: 2px solid var(--color-success-dark);
   border-radius: 8px;
-  padding: 10px 20px;
-  color: white;
+  padding: 10px 20px; color: var(--color-text-inverse);
   box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 

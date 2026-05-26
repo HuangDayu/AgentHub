@@ -12,7 +12,7 @@
 
     <article v-if="!selectionReady" class="empty-state">请先在"租户空间"页选择租户与工作区。</article>
 
-    <div class="memory-list" v-else>
+    <div class="memory-list float-effect" v-else>
       <table v-if="memories.length > 0">
         <thead>
           <tr>
@@ -32,8 +32,8 @@
             <td>{{ memory.importance.toFixed(2) }}</td>
             <td>{{ formatDate(memory.createdAt) }}</td>
             <td>
-              <button @click="editMemory(memory)" class="btn-small">编辑</button>
-              <button @click="deleteMemoryHandler(memory.id)" class="btn-small btn-danger">删除</button>
+              <CustomButton type="ghost" @click="editMemory(memory)">编辑</CustomButton>
+              <CustomButton type="ghost" @click="deleteMemoryHandler(memory.id)">删除</CustomButton>
             </td>
           </tr>
         </tbody>
@@ -251,13 +251,13 @@ function formatDate(date: string): string {
   padding: 0.5rem 1rem;
   border-radius: 8px;
   border: 1px solid #ddd;
-  background: white;
+  background: var(--bg-card-solid);
   font-size: 0.9rem;
   min-width: 200px;
 }
 
 .memory-list {
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 8px;
   padding: 1rem;
 }
@@ -269,27 +269,14 @@ function formatDate(date: string): string {
 }
 
 .btn-primary {
-  background: #007bff;
-  color: white;
+  background: var(--color-primary); color: var(--color-text-inverse);
   border: none;
 }
 
 .btn-secondary {
-  background: #6c757d;
-  color: white;
+  background: var(--color-text-muted); color: var(--color-text-inverse);
   border: none;
   cursor: pointer;
-}
-
-.btn-small {
-  padding: 0.25rem 0.5rem;
-  margin-right: 0.5rem;
-  cursor: pointer;
-}
-
-.btn-danger {
-  background: #dc3545;
-  color: white;
 }
 
 table {
@@ -316,7 +303,7 @@ th, td {
 }
 
 .dialog {
-  background: white;
+  background: var(--bg-card-solid);
   padding: 2rem;
   border-radius: 8px;
   min-width: 400px;
@@ -347,6 +334,6 @@ th, td {
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <section class="workspace-page">
+  <section class="workspace-page glass-float">
     <div class="page-header fade-in">
       <div>
         <h2>工作区管理</h2>
@@ -15,7 +15,7 @@
 
     <template v-else>
       <!-- 工作区列表 -->
-      <article class="panel workspace-panel slide-in">
+      <article class="panel workspace-panel slide-in float-effect">
         <div class="panel-header">
           <h3>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="header-icon">
@@ -269,19 +269,19 @@ async function execute(action: () => Promise<void>) {
 .page-header h2 {
   margin: 0;
   font-size: 1.75rem;
-  background: linear-gradient(135deg, #264266, #3a8ad6);
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .muted {
-  color: #5d6678;
+  color: var(--color-text-muted);
   margin: 4px 0 0;
 }
 
 .status {
-  color: #c94a35;
+  color: var(--color-error);
   font-weight: 500;
   padding: 8px 16px;
   background: rgba(201, 74, 53, 0.08);
@@ -296,14 +296,14 @@ async function execute(action: () => Promise<void>) {
   justify-content: center;
   padding: 60px;
   gap: 16px;
-  color: #5d6678;
+  color: var(--color-text-muted);
 }
 
 .spinner-large {
   width: 48px;
   height: 48px;
-  border: 4px solid rgba(58, 138, 214, 0.2);
-  border-top-color: #3a8ad6;
+  border: 4px solid rgba(58, 123, 213, 0.2);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -323,7 +323,7 @@ async function execute(action: () => Promise<void>) {
   align-items: center;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid rgba(22, 33, 50, 0.08);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .panel-header h3 {
@@ -332,13 +332,13 @@ async function execute(action: () => Promise<void>) {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #264266;
+  color: var(--color-primary-dark);
 }
 
 .header-icon {
   width: 24px;
   height: 24px;
-  color: #3a8ad6;
+  color: var(--color-primary);
 }
 
 .btn-icon {
@@ -348,8 +348,8 @@ async function execute(action: () => Promise<void>) {
 
 /* Form */
 .workspace-form {
-  background: rgba(248, 250, 255, 0.6);
-  border: 1px solid rgba(38, 66, 102, 0.1);
+  background: var(--bg-stripe);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 24px;
@@ -364,7 +364,7 @@ async function execute(action: () => Promise<void>) {
 
 .form-header h4 {
   margin: 0;
-  color: #264266;
+  color: var(--color-primary-dark);
 }
 
 .close-btn {
@@ -383,7 +383,7 @@ async function execute(action: () => Promise<void>) {
 
 .close-btn:hover {
   background: rgba(201, 74, 53, 0.1);
-  color: #c94a35;
+  color: var(--color-error);
 }
 
 .close-btn svg {
@@ -406,16 +406,16 @@ async function execute(action: () => Promise<void>) {
 
 .field span {
   font-weight: 600;
-  color: #264266;
+  color: var(--color-primary-dark);
   font-size: 0.9rem;
 }
 
 .field input {
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid rgba(38, 66, 102, 0.14);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: white;
+  background: var(--bg-card-solid);
   font: inherit;
   font-size: 0.95rem;
   transition: all 0.25s ease;
@@ -423,12 +423,12 @@ async function execute(action: () => Promise<void>) {
 
 .field input:focus {
   outline: none;
-  border-color: #3a8ad6;
-  box-shadow: 0 0 0 3px rgba(58, 138, 214, 0.15);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15);
 }
 
 .field input:disabled {
-  background: rgba(248, 250, 255, 0.5);
+  background: var(--bg-hover);
   cursor: not-allowed;
 }
 
@@ -453,10 +453,9 @@ async function execute(action: () => Promise<void>) {
 }
 
 .primary {
-  background: linear-gradient(135deg, #264266, #3a8ad6);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary)); color: var(--color-text-inverse);
   border: none;
-  box-shadow: 0 4px 12px rgba(58, 138, 214, 0.2);
+  box-shadow: 0 4px 12px rgba(58, 123, 213, 0.2);
 }
 
 .primary:hover {
@@ -465,21 +464,21 @@ async function execute(action: () => Promise<void>) {
 }
 
 .secondary {
-  background: white;
-  color: #264266;
-  border: 1px solid rgba(38, 66, 102, 0.14);
+  background: var(--bg-card-solid);
+  color: var(--color-primary-dark);
+  border: 1px solid var(--color-border);
 }
 
 .secondary:hover {
-  border-color: #3a8ad6;
-  background: rgba(248, 250, 255, 0.5);
+  border-color: var(--color-primary);
+  background: var(--bg-hover);
 }
 
 /* Empty State */
 .empty-state {
   text-align: center;
   padding: 48px 24px;
-  color: #5d6678;
+  color: var(--color-text-muted);
 }
 
 .empty-icon {
@@ -487,9 +486,9 @@ async function execute(action: () => Promise<void>) {
   height: 64px;
   margin: 0 auto 16px;
   padding: 16px;
-  background: linear-gradient(135deg, rgba(58, 138, 214, 0.1), rgba(58, 138, 214, 0.05));
+  background: linear-gradient(135deg, var(--color-primary-subtle), rgba(58, 138, 214, 0.05));
   border-radius: 16px;
-  color: #3a8ad6;
+  color: var(--color-primary);
 }
 
 .empty-icon svg {
@@ -505,8 +504,8 @@ async function execute(action: () => Promise<void>) {
 }
 
 .workspace-card {
-  background: white;
-  border: 1px solid rgba(22, 33, 50, 0.08);
+  background: var(--bg-card-solid);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px;
   cursor: pointer;
@@ -528,17 +527,17 @@ async function execute(action: () => Promise<void>) {
 
 .workspace-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(32, 44, 68, 0.12);
-  border-color: rgba(58, 138, 214, 0.2);
+  box-shadow: 0 12px 24px rgba(26, 30, 43, 0.12);
+  border-color: rgba(58, 123, 213, 0.2);
 }
 
 .workspace-card.selected {
-  border-color: #3a8ad6;
-  box-shadow: 0 8px 20px rgba(58, 138, 214, 0.15);
+  border-color: var(--color-primary);
+  box-shadow: 0 8px 20px rgba(58, 123, 213, 0.15);
 }
 
 .workspace-card.selected::before {
-  background: linear-gradient(90deg, #264266, #3a8ad6);
+  background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary));
 }
 
 .card-header {
@@ -552,15 +551,14 @@ async function execute(action: () => Promise<void>) {
   width: 40px;
   height: 40px;
   padding: 10px;
-  background: rgba(58, 138, 214, 0.1);
+  background: var(--color-primary-subtle);
   border-radius: 10px;
-  color: #3a8ad6;
+  color: var(--color-primary);
   transition: all 0.3s ease;
 }
 
 .card-icon.active {
-  background: linear-gradient(135deg, #264266, #3a8ad6);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary)); color: var(--color-text-inverse);
   box-shadow: 0 4px 12px rgba(58, 138, 214, 0.3);
 }
 
@@ -592,17 +590,17 @@ async function execute(action: () => Promise<void>) {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #264266;
+  color: var(--color-primary-dark);
 }
 
 .icon-btn:hover {
-  background: rgba(58, 138, 214, 0.15);
-  color: #3a8ad6;
+  background: rgba(58, 123, 213, 0.15);
+  color: var(--color-primary);
 }
 
 .icon-btn.danger:hover {
   background: rgba(201, 74, 53, 0.1);
-  color: #c94a35;
+  color: var(--color-error);
 }
 
 .icon-btn svg {
@@ -613,7 +611,7 @@ async function execute(action: () => Promise<void>) {
 .card-body h4 {
   margin: 0 0 12px;
   font-size: 1.1rem;
-  color: #1a1e29;
+  color: var(--color-text);
 }
 
 .card-meta {
@@ -628,7 +626,7 @@ async function execute(action: () => Promise<void>) {
   align-items: center;
   gap: 6px;
   font-size: 0.85rem;
-  color: #5d6678;
+  color: var(--color-text-muted);
 }
 
 .meta-item svg {
@@ -650,7 +648,7 @@ async function execute(action: () => Promise<void>) {
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  color: #8a94a6;
+  color: var(--color-text-light);
 }
 
 .timestamp svg {
@@ -660,8 +658,7 @@ async function execute(action: () => Promise<void>) {
 
 .status-badge {
   padding: 4px 10px;
-  background: linear-gradient(135deg, #264266, #3a8ad6);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary)); color: var(--color-text-inverse);
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;

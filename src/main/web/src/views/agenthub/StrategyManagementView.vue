@@ -1,8 +1,10 @@
 <template>
   <section class="strategy-management glass-float">
     <div class="page-header">
-      <h2>策略配置管理</h2>
+      <div>
+      <h2>策略配置</h2>
       <p class="muted">管理检索策略、工具策略、模型策略和护栏策略</p>
+      </div>
     </div>
 
     <div class="tabs">
@@ -72,19 +74,19 @@ onMounted(() => {
 
 .tabs button {
   padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  background: white;
+  border: 1px solid var(--color-border);
+  background: var(--bg-card-solid);
+  color: var(--color-text);
   cursor: pointer;
 }
 
 .tabs button.active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
+  background: var(--color-primary); color: var(--color-text-inverse);
+  border-color: var(--color-primary);
 }
 
 .tab-content {
-  background: white;
+  background: var(--bg-card-solid);
   padding: 1.5rem;
   border-radius: 4px;
 }
