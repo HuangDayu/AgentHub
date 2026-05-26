@@ -13,6 +13,7 @@ import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.ai.chat.messages.Message;
 import reactor.core.publisher.Flux;
 
 import java.util.LinkedList;
@@ -22,10 +23,10 @@ import java.util.List;
  * 单个Agent运行时，封装ReactAgent的创建与执行。
  */
 @RequiredArgsConstructor
-public class AliReActAgent extends AbstractReActAgent {
+public class AlibabaReActAgent extends AbstractReActAgent {
 
     private final ReActAgentContext context;
-    private final AliReActAgentConfig config;
+    private final AlibabaReActAgentConfig config;
     private final TeamAgentFactory teamAgentFactory;
     @Getter
     private final ReactAgent agent;
@@ -61,17 +62,23 @@ public class AliReActAgent extends AbstractReActAgent {
 
     @SneakyThrows
     @Override
-    public Flux<AgentMessage> streamMessages(String sessionId, String userMessage) {
-        RunnableConfig runnableConfig = RunnableConfig.builder(config.getRunnableConfig()).threadId(sessionId).build();
-        return agent.streamMessages(userMessage, runnableConfig)
+    public Flux<AgentMessage> streamMessages(List<AgentMessage> messages) {
+        RunnableConfig runnableConfig = RunnableConfig.builder(config.getRunnableConfig()).threadId(context.getSessionId()).build();
+        return agent.streamMessages(toMsgs(messages), runnableConfig)
                 .map(AgentMessageConverter::fromMessage);
     }
 
     @SneakyThrows
     @Override
-    public AgentMessage call(String sessionId, String userMessage) {
-        RunnableConfig runnableConfig = RunnableConfig.builder(config.getRunnableConfig()).threadId(sessionId).build();
-        return AgentMessageConverter.fromMessage(agent.call(userMessage, runnableConfig));
+    public AgentMessage call(List<AgentMessage> messages) {
+        RunnableConfig runnableConfig = RunnableConfig.builder(config.getRunnableConfig()).threadId(context.getSessionId()).build();
+        return AgentMessageConverter.fromMessage(agent.call(toMsgs(messages), runnableConfig));
+    }
+
+    private List<Message> toMsgs(List<AgentMessage> messages) {
+        return messages.stream()
+                .map(AgentMessageConverter::toMessage)
+                .toList();
     }
 
     @Override

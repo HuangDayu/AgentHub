@@ -3,6 +3,13 @@ import type { ChatMessage, ChatSession, MessageRole, SelectionState, StreamMessa
 import { scopedHeaders } from '../services/workspace-service'
 import { requestJson } from './http'
 
+export interface ChatAttachment {
+  fileName: string
+  path: string
+  contentType?: string
+  size: number
+}
+
 // ── Sessions ─────────────────────────────────────────────
 
 /**
@@ -75,12 +82,12 @@ function normalizeRole(role: string): MessageRole {
  * Send a message to a session.
  * Backend endpoint: POST /api/v1/workspaces/${selection.workspaceId}/agents/{agentId}/sessions/{sessionId}/messages
  */
-export function sendMessage(selection: SelectionState, agentId: string, sessionId: string, content: string) {
+export function sendMessage(selection: SelectionState, agentId: string, sessionId: string, content: string, filePaths: string[] = []) {
   return requestJson<any>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/messages`, {
     baseUrl: runtimeConfig.runtimeApiBase,
     method: 'POST',
     headers: scopedHeaders(selection),
-    bodyJson: { content },
+    bodyJson: { content, filePaths },
   }).then((raw: any) => {
     // 适配AssistantMessage对象
     const message: ChatMessage = {
@@ -106,6 +113,7 @@ export async function sendMessageStream(
   agentId: string,
   sessionId: string,
   content: string,
+  filePaths: string[],
   callbacks: {
     onMessage: (message: StreamMessage) => void
     onDone: () => void
@@ -139,7 +147,7 @@ export async function sendMessageStream(
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ content: content }),
+      body: JSON.stringify({ content, filePaths }),
       signal: controller.signal,
     })
 
@@ -195,6 +203,30 @@ export async function sendMessageStream(
       callbacks.onError(error instanceof Error ? error : new Error(String(error)))
     }
   }
+}
+
+export async function uploadChatAttachments(
+  selection: SelectionState,
+  agentId: string,
+  sessionId: string,
+  files: File[],
+): Promise<ChatAttachment[]> {
+  const formData = new FormData()
+  files.forEach((file) => formData.append('files', file))
+  const response = await fetch(buildAttachmentUrl(selection, agentId, sessionId), {
+    method: 'POST',
+    headers: scopedHeaders(selection),
+    body: formData,
+  })
+  if (!response.ok) throw new Error(await response.text())
+  return response.json()
+}
+
+function buildAttachmentUrl(selection: SelectionState, agentId: string, sessionId: string) {
+  return new URL(
+    `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/attachments`,
+    runtimeConfig.runtimeApiBase,
+  ).toString()
 }
 
 /**

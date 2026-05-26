@@ -187,7 +187,7 @@ public class IngestionJobUseCase {
     }
 
     private String buildStoragePath(String kbId, String documentId, String fileName) {
-        return String.format("knowledge-bases/%s/documents/%s/%s", kbId, documentId, fileName);
+        return String.format("agenthub/knowledge-bases/%s/documents/%s/%s", kbId, documentId, fileName);
     }
 
     private void logStorageSuccess(String objectKey, long size) {

@@ -20,7 +20,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AliReActAgentConfig {
+public class AlibabaReActAgentConfig {
 
     private Agent agent;
     private ChatModel chatModel;

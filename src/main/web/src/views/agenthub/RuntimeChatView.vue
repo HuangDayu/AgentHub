@@ -402,22 +402,65 @@
           </div>
         </div>
         <!-- 输入区 -->
-        <form class="chat-input" @submit.prevent="handleSend">
+        <form :class="['chat-input', { expanded: inputExpanded }]" @submit.prevent="handleSend">
+          <input
+            ref="fileInputRef"
+            class="file-input"
+            type="file"
+            multiple
+            :disabled="!selectedAgentId || sending || uploadingFiles"
+            @change="handleFileSelected"
+          />
           <div class="input-container">
+            <div v-if="uploadedAttachments.length" class="attachment-list">
+              <div v-for="file in uploadedAttachments" :key="file.path" class="attachment-chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
+                <span>{{ file.fileName }}</span>
+                <small>{{ formatFileSize(file.size) }}</small>
+                <button type="button" title="移除附件" @click="removeAttachment(file.path)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <button class="input-expand-btn" type="button" :title="inputExpanded ? '缩小输入框' : '放大输入框'" @click="toggleInputExpanded">
+              <svg v-if="inputExpanded" class="input-tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 3v5H3"/>
+                <path d="M16 3v5h5"/>
+                <path d="M21 16h-5v5"/>
+                <path d="M3 16h5v5"/>
+                <path d="M9 9L4 4"/>
+                <path d="M15 9l5-5"/>
+                <path d="M15 15l5 5"/>
+                <path d="M9 15l-5 5"/>
+              </svg>
+              <svg v-else class="input-tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 3h6v6"/>
+                <path d="M9 21H3v-6"/>
+                <path d="M21 3l-7 7"/>
+                <path d="M3 21l7-7"/>
+              </svg>
+            </button>
             <textarea
               v-model="inputContent"
-              rows="2"
-              placeholder="输入消息... (Shift+Enter 换行)"
-              :disabled="!selectedSessionId || sending"
+              :rows="inputExpanded ? 8 : 3"
+              placeholder="输入消息，或先上传文件..."
+              :disabled="!selectedAgentId || sending"
               @keydown="handleKeydown"
             ></textarea>
-            <div class="input-sidebar">
-              <label class="toggle-label">
-                <input type="checkbox" v-model="useStream" />
-                <span class="toggle-slider"></span>
-                <span class="toggle-text">流式</span>
-              </label>
-              <button class="primary send-btn" type="submit" :disabled="!selectedSessionId || !inputContent.trim() || sending">
+            <div class="input-actions">
+              <button class="attach-btn" type="button" :disabled="!selectedAgentId || sending || uploadingFiles" title="上传附件" @click="openFilePicker">
+                <svg v-if="!uploadingFiles" class="input-tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3v12"/>
+                  <path d="M7 8l5-5 5 5"/>
+                  <path d="M5 15v3a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-3"/>
+                </svg>
+                <span v-else class="mini-spinner"></span>
+              </button>
+              <button class="primary send-btn" type="submit" :disabled="!canSend">
                 <svg v-if="!sending" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
                   <line x1="22" y1="2" x2="11" y2="13"/>
                   <polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -519,7 +562,15 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { listAgents } from '@/api/agent-api'
-import { createSession, deleteSession, listMessages, listSessions, sendMessage, sendMessageStream } from '@/api/runtime-api'
+import {
+  createSession,
+  deleteSession,
+  listMessages,
+  listSessions,
+  sendMessageStream,
+  uploadChatAttachments,
+  type ChatAttachment,
+} from '@/api/runtime-api'
 import { emptyRuntimeDataView, loadRuntimeDataView, type RuntimeDataView } from '@/api/runtime-data-view-api'
 import { formatDateTime } from '@/common/format'
 import type { ChatMessage, ChatSession, StreamMessage } from '@/domain/types'
@@ -558,8 +609,11 @@ const messagesContainer = ref<HTMLElement | null>(null)
 // Input
 const inputContent = ref('')
 const sending = ref(false)
-const useStream = ref(true)
 const streamingContent = ref('')
+const inputExpanded = ref(false)
+const uploadingFiles = ref(false)
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const uploadedAttachments = ref<ChatAttachment[]>([])
 
 // Runtime data view
 const activeRuntimeTab = ref<'run' | 'trace'>('run')
@@ -633,6 +687,7 @@ const runtimeChatStats = computed(() => runtimeData.value.modelInvocationData.ch
 const runtimeTotalTokens = computed(() => runtimeChatStats.value.totalTokens.totalTokens || 0)
 const traceTreeRows = computed(() => buildTraceRows(runtimeData.value.spans))
 const modelStats = computed(() => buildModelStats())
+const canSend = computed(() => Boolean(selectedAgentId.value && hasSendContent() && !sending.value && !uploadingFiles.value))
 
 // Get selection object
 function getSelection() {
@@ -664,6 +719,26 @@ function scheduleRuntimeRefresh(runId: string) {
   if (selectedSessionId.value !== runId) return
   if (isTempSession(runId)) return
   window.setTimeout(loadRuntimeData, 800)
+}
+
+async function ensureActiveSession(seed: string) {
+  let currentSessionId = selectedSessionId.value
+  if (currentSessionId && !currentSessionId.startsWith('temp-')) return currentSessionId
+  const session = await createSession(getSelection(), selectedAgentId.value, sessionName(seed))
+  replaceTempSession(currentSessionId, session)
+  selectedSessionId.value = session.sessionId
+  pendingSessionName.value = ''
+  return session.sessionId
+}
+
+function sessionName(seed: string) {
+  const text = seed.trim() || '附件会话'
+  return text.slice(0, 20) + (text.length > 20 ? '...' : '')
+}
+
+function replaceTempSession(tempSessionId: string, session: ChatSession) {
+  const index = sessions.value.findIndex(s => s.sessionId === tempSessionId)
+  index === -1 ? sessions.value.unshift(session) : sessions.value.splice(index, 1, session)
 }
 
 // Toggle sidebar
@@ -733,6 +808,7 @@ async function loadSessions() {
 function createNewSession() {
   if (!selectedAgentId.value) return
   error.value = ''
+  uploadedAttachments.value = []
 
   // 创建临时会话（不发送请求）
   const tempSessionId = 'temp-' + Date.now()
@@ -781,6 +857,7 @@ async function handleDeleteSession(sessionId: string) {
 // Select session
 function selectSession(sessionId: string) {
   selectedSessionId.value = sessionId
+  uploadedAttachments.value = []
   loadMessages()
 }
 
@@ -846,53 +923,21 @@ async function loadMessages() {
 
 // Send message
 async function handleSend() {
-  if (!selectedAgentId.value || !inputContent.value.trim() || sending.value) return
+  if (!canSend.value) return
 
-  const content = inputContent.value.trim()
+  const content = inputContent.value.trim() || '请阅读我上传的文件，并基于文件内容回复。'
+  const attachments = [...uploadedAttachments.value]
   inputContent.value = ''
   sending.value = true
   error.value = ''
 
-  let currentSessionId = selectedSessionId.value
-
-  // 如果是临时会话，先创建真正的会话
-  if (currentSessionId.startsWith('temp-')) {
-    try {
-      // 使用用户输入的前20个字符作为会话名称
-      const sessionName = content.slice(0, 20) + (content.length > 20 ? '...' : '')
-      const session = await createSession(getSelection(), selectedAgentId.value, sessionName)
-
-      // 替换临时会话
-      const tempIndex = sessions.value.findIndex(s => s.sessionId === currentSessionId)
-      if (tempIndex !== -1) {
-        sessions.value[tempIndex] = session
-      } else {
-        sessions.value.unshift(session)
-      }
-
-      currentSessionId = session.sessionId
-      selectedSessionId.value = session.sessionId
-      pendingSessionName.value = ''
-    } catch (e: any) {
-      error.value = e.message || '创建会话失败'
-      sending.value = false
-      return
-    }
-  } else if (!currentSessionId) {
-    // 如果没有选中的会话，先创建一个新会话
-    try {
-      // 使用用户输入的前20个字符作为会话名称
-      const sessionName = content.slice(0, 20) + (content.length > 20 ? '...' : '')
-      const session = await createSession(getSelection(), selectedAgentId.value, sessionName)
-      sessions.value.unshift(session)
-      currentSessionId = session.sessionId
-      selectedSessionId.value = session.sessionId
-      messages.value = []
-    } catch (e: any) {
-      error.value = e.message || '创建会话失败'
-      sending.value = false
-      return
-    }
+  let currentSessionId = ''
+  try {
+    currentSessionId = await ensureActiveSession(content)
+  } catch (e: any) {
+    error.value = e.message || '创建会话失败'
+    sending.value = false
+    return
   }
 
   // 立即添加用户消息
@@ -914,147 +959,135 @@ async function handleSend() {
   sessionMsgs.push(userMessage)
 
   try {
-    if (useStream.value) {
-      // 初始化该会话的流消息状态
-      const streamState = sessionStreamingStates.get(currentSessionId) || {
-        content: '',
-        isStreaming: false,
-        pendingMessages: []
+    uploadedAttachments.value = []
+    startStreamState(currentSessionId, userMessage)
+    scrollToBottom()
+    await sendMessageStream(getSelection(), selectedAgentId.value, currentSessionId, content, attachments.map(file => file.path), {
+      onMessage: (streamMsg: StreamMessage) => {
+        handleStreamMessage(streamMsg, currentSessionId)
+        scrollToBottom()
+      },
+      onDone: () => finishStream(currentSessionId),
+      onError: (err) => {
+        uploadedAttachments.value = attachments
+        handleStreamError(currentSessionId, userMessage, err)
       }
-      streamState.content = ''
-      streamState.isStreaming = true
-      streamState.pendingMessages = [userMessage] // 标记正在进行的消息
-      sessionStreamingStates.set(currentSessionId, streamState)
-
-      // 如果是当前会话，更新显示
-      if (selectedSessionId.value === currentSessionId) {
-        messages.value = [...sessionMsgs]
-        streamingContent.value = ''
-      }
-      scrollToBottom()
-
-      await sendMessageStream(
-        getSelection(),
-        selectedAgentId.value,
-        currentSessionId,
-        content,
-        {
-          onMessage: (streamMsg: StreamMessage) => {
-            // 始终处理流消息，传入目标会话ID
-            handleStreamMessage(streamMsg, currentSessionId)
-            scrollToBottom()
-          },
-          onDone: () => {
-            // 流式完成后，如果有剩余内容，添加为助手消息
-            const state = sessionStreamingStates.get(currentSessionId)
-            const finalContent = state?.content || ''
-
-            if (finalContent.trim()) {
-              const assistantMessage: ChatMessage = {
-                messageId: (Date.now() + 1).toString(),
-                sessionId: currentSessionId,
-                role: 'ASSISTANT',
-                content: finalContent,
-                createdAt: new Date().toISOString(),
-                messageType: 'ASSISTANT'
-              }
-
-              // 确保sessionMessages存在
-              if (!sessionMessages.value.has(currentSessionId)) {
-                sessionMessages.value.set(currentSessionId, [])
-              }
-
-              // 添加到sessionMessages
-              const sessionMsgs = sessionMessages.value.get(currentSessionId)!
-              sessionMsgs.push(assistantMessage)
-
-              // 添加到暂存消息列表（用于标记）
-              if (state && state.pendingMessages) {
-                state.pendingMessages.push(assistantMessage)
-              }
-
-              // 如果是当前会话，更新显示
-              if (selectedSessionId.value === currentSessionId) {
-                messages.value = [...sessionMsgs]
-              }
-            }
-
-            // 清空该会话的流消息状态
-            if (state) {
-              state.content = ''
-              state.isStreaming = false
-              state.pendingMessages = [] // 清空暂存标记
-            }
-            if (selectedSessionId.value === currentSessionId) {
-              streamingContent.value = ''
-            }
-            scheduleRuntimeRefresh(currentSessionId)
-            scrollToBottom()
-          },
-          onError: (err) => {
-            error.value = err.message || '发送消息失败'
-            // 清空该会话的流消息状态
-            const state = sessionStreamingStates.get(currentSessionId)
-            if (state) {
-              state.content = ''
-              state.isStreaming = false
-              state.pendingMessages = []
-            }
-
-            // 从sessionMessages中移除失败的用户消息
-            const sessionMsgs = sessionMessages.value.get(currentSessionId)
-            if (sessionMsgs) {
-              const index = sessionMsgs.findIndex(m => m.messageId === userMessage.messageId)
-              if (index !== -1) {
-                sessionMsgs.splice(index, 1)
-              }
-            }
-
-            if (selectedSessionId.value === currentSessionId) {
-              streamingContent.value = ''
-              messages.value = [...(sessionMsgs || [])]
-            }
-          }
-        }
-      )
-    } else {
-      // 非流式消息：直接添加到历史消息
-      const response = await sendMessage(
-        getSelection(),
-        selectedAgentId.value,
-        currentSessionId,
-        content
-      )
-
-      // 添加到该会话的消息列表
-      const sessionMsgs = sessionMessages.value.get(currentSessionId)
-      if (sessionMsgs) {
-        sessionMsgs.push(userMessage)
-        sessionMsgs.push(response)
-        // 如果是当前会话，更新显示
-        if (selectedSessionId.value === currentSessionId) {
-          messages.value = [...sessionMsgs]
-        }
-      }
-      scheduleRuntimeRefresh(currentSessionId)
-      scrollToBottom()
-    }
+    })
   } catch (e: any) {
+    uploadedAttachments.value = attachments
     error.value = e.message || '发送消息失败'
-    // 流式消息失败时，清空暂存消息
-    if (useStream.value) {
-      const state = sessionStreamingStates.get(currentSessionId)
-      if (state) {
-        state.pendingMessages = []
-      }
-      if (selectedSessionId.value === currentSessionId) {
-        const historyMsgs = sessionMessages.value.get(currentSessionId) || []
-        messages.value = historyMsgs
-      }
-    }
+    clearStreamState(currentSessionId)
   } finally {
     sending.value = false
   }
+}
+
+function startStreamState(sessionId: string, userMessage: ChatMessage) {
+  const streamState = sessionStreamingStates.get(sessionId) || { content: '', isStreaming: false, pendingMessages: [] }
+  streamState.content = ''
+  streamState.isStreaming = true
+  streamState.pendingMessages = [userMessage]
+  sessionStreamingStates.set(sessionId, streamState)
+  if (selectedSessionId.value === sessionId) {
+    messages.value = [...(sessionMessages.value.get(sessionId) || [])]
+    streamingContent.value = ''
+  }
+}
+
+function finishStream(sessionId: string) {
+  const state = sessionStreamingStates.get(sessionId)
+  const finalContent = state?.content || ''
+  if (finalContent.trim()) addAssistantMessage(sessionId, finalContent)
+  clearStreamState(sessionId)
+  scheduleRuntimeRefresh(sessionId)
+  scrollToBottom()
+}
+
+function addAssistantMessage(sessionId: string, content: string) {
+  const message: ChatMessage = assistantChatMessage(sessionId, content)
+  const sessionMsgs = sessionMessages.value.get(sessionId) || []
+  sessionMsgs.push(message)
+  sessionMessages.value.set(sessionId, sessionMsgs)
+  if (selectedSessionId.value === sessionId) messages.value = [...sessionMsgs]
+}
+
+function assistantChatMessage(sessionId: string, content: string): ChatMessage {
+  return {
+    messageId: (Date.now() + 1).toString(),
+    sessionId,
+    role: 'ASSISTANT',
+    content,
+    createdAt: new Date().toISOString(),
+    messageType: 'ASSISTANT'
+  }
+}
+
+function handleStreamError(sessionId: string, userMessage: ChatMessage, err: Error) {
+  error.value = err.message || '发送消息失败'
+  clearStreamState(sessionId)
+  removeMessage(sessionId, userMessage.messageId)
+}
+
+function removeMessage(sessionId: string, messageId: string) {
+  const sessionMsgs = sessionMessages.value.get(sessionId)
+  if (!sessionMsgs) return
+  const index = sessionMsgs.findIndex(m => m.messageId === messageId)
+  if (index !== -1) sessionMsgs.splice(index, 1)
+  if (selectedSessionId.value === sessionId) messages.value = [...sessionMsgs]
+}
+
+function clearStreamState(sessionId: string) {
+  const state = sessionStreamingStates.get(sessionId)
+  if (state) {
+    state.content = ''
+    state.isStreaming = false
+    state.pendingMessages = []
+  }
+  if (selectedSessionId.value === sessionId) streamingContent.value = ''
+}
+
+function openFilePicker() {
+  fileInputRef.value?.click()
+}
+
+async function handleFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const files = Array.from(input.files || [])
+  input.value = ''
+  if (!files.length || !selectedAgentId.value) return
+  await uploadSelectedFiles(files)
+}
+
+async function uploadSelectedFiles(files: File[]) {
+  uploadingFiles.value = true
+  error.value = ''
+  try {
+    const sessionId = await ensureActiveSession(inputContent.value || files[0]?.name || '')
+    const uploaded = await uploadChatAttachments(getSelection(), selectedAgentId.value, sessionId, files)
+    uploadedAttachments.value.push(...uploaded)
+  } catch (e: any) {
+    error.value = e.message || '上传附件失败'
+  } finally {
+    uploadingFiles.value = false
+  }
+}
+
+function removeAttachment(path: string) {
+  uploadedAttachments.value = uploadedAttachments.value.filter(file => file.path !== path)
+}
+
+function toggleInputExpanded() {
+  inputExpanded.value = !inputExpanded.value
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024) return `${size} B`
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
+  return `${(size / 1024 / 1024).toFixed(1)} MB`
+}
+
+function hasSendContent() {
+  return Boolean(inputContent.value.trim() || uploadedAttachments.value.length)
 }
 
 // 处理流式消息
@@ -2146,93 +2179,183 @@ onMounted(() => {
 
 /* Chat Input */
 .chat-input {
-  padding: 16px 20px;
+  padding: 14px 18px 16px;
   border-top: 1px solid rgba(22, 33, 50, 0.08);
-  background: rgba(248, 250, 255, 0.5);
-  backdrop-filter: blur(8px);
+  background: linear-gradient(180deg, rgba(248, 250, 255, 0.72), rgba(241, 246, 252, 0.92));
+  backdrop-filter: blur(12px);
 }
 
 .input-container {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(38, 66, 102, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 28px rgba(32, 44, 68, 0.1);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-container:focus-within {
+  border-color: rgba(58, 138, 214, 0.55);
+  box-shadow: 0 12px 30px rgba(58, 138, 214, 0.16);
+}
+
+.file-input {
+  display: none;
+}
+
+.attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-right: 44px;
+}
+
+.attachment-chip {
+  min-width: 0;
+  max-width: min(360px, 100%);
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 7px 0 9px;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 8px;
+  background: rgba(236, 253, 245, 0.88);
+  color: #14532d;
+  font-size: 0.78rem;
+}
+
+.attachment-chip svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.attachment-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-chip small {
+  color: #4b7f62;
+  flex-shrink: 0;
+  font-size: 0.68rem;
+}
+
+.attachment-chip button {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #22734b;
+  cursor: pointer;
+  padding: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.attachment-chip button:hover {
+  background: rgba(16, 185, 129, 0.14);
+}
+
+.input-expand-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(38, 66, 102, 0.12);
+  border-radius: 8px;
+  background: rgba(248, 250, 255, 0.95);
+  color: #264266;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.input-expand-btn:hover {
+  border-color: rgba(58, 138, 214, 0.42);
+  color: #3a8ad6;
+}
+
+.input-tool-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
 }
 
 .chat-input textarea {
   width: 100%;
   resize: none;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(38, 66, 102, 0.14);
-  background: white;
+  min-height: 84px;
+  padding: 6px 42px 6px 4px;
+  border: none;
+  background: transparent;
   font: inherit;
   font-size: 0.9rem;
   line-height: 1.5;
   transition: all 0.25s ease;
 }
 
+.chat-input.expanded textarea {
+  min-height: 220px;
+}
+
 .chat-input textarea:focus {
   outline: none;
-  border-color: #3a8ad6;
-  box-shadow: 0 0 0 3px rgba(58, 138, 214, 0.15);
 }
 
 .chat-input textarea::placeholder {
   color: #8a94a6;
 }
 
-.input-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  justify-content: space-between;
-}
-
-.toggle-label {
+.input-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  color: #5d6678;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 38px;
+}
+
+.attach-btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(38, 66, 102, 0.14);
+  border-radius: 10px;
+  background: rgba(248, 250, 255, 0.95);
+  color: #264266;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
-.toggle-label input {
-  display: none;
+.attach-btn:hover:not(:disabled) {
+  border-color: rgba(58, 138, 214, 0.42);
+  color: #3a8ad6;
+  transform: translateY(-1px);
 }
 
-.toggle-slider {
-  width: 32px;
-  height: 18px;
-  background: rgba(38, 66, 102, 0.14);
-  border-radius: 9px;
-  position: relative;
-  transition: all 0.25s ease;
-}
-
-.toggle-slider::after {
-  content: '';
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  background: white;
-  border-radius: 50%;
-  top: 2px;
-  left: 2px;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.toggle-label input:checked + .toggle-slider {
-  background: linear-gradient(135deg, #264266, #3a8ad6);
-}
-
-.toggle-label input:checked + .toggle-slider::after {
-  left: 16px;
-}
-
-.toggle-text {
-  font-size: 0.75rem;
+.attach-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .primary {
@@ -2273,6 +2396,15 @@ onMounted(() => {
   height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.mini-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(38, 66, 102, 0.18);
+  border-top-color: #3a8ad6;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -2945,14 +3077,6 @@ onMounted(() => {
   
   .message {
     max-width: 95%;
-  }
-  
-  .input-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .input-sidebar {
-    flex-direction: row;
   }
   
   .toggle-sidebar-fab {

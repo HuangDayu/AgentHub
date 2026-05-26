@@ -38,12 +38,7 @@ public class AgentScopeTeamAgent extends AbstractTeamAgent {
 
     @Override
     public Flux<AgentMessage> streamMessages(String userMessage) {
-        return switch (agentTeamType) {
-            case SEQUENTIAL_AGENT_TEAMS -> streamSequential(userMessage);
-            case PARALLEL_AGENT_TEAMS -> streamParallel(userMessage);
-            case SUB_AGENT_TEAMS, ROUTING_AGENT_TEAMS, SUPERVISOR_AGENT_TEAMS ->
-                    streamWithLeader(userMessage);
-        };
+        return Flux.empty();
     }
 
     @Override
@@ -51,26 +46,5 @@ public class AgentScopeTeamAgent extends AbstractTeamAgent {
         return followers;
     }
 
-    private Flux<AgentMessage> streamSequential(String userMessage) {
-        if (followers.isEmpty()) return Flux.empty();
-        Flux<AgentMessage> chain = Flux.empty();
-        for (AbstractReActAgent follower : followers) {
-            chain = chain.switchIfEmpty(
-                    follower.streamMessages("team-session", userMessage));
-        }
-        return chain;
-    }
-
-    private Flux<AgentMessage> streamParallel(String userMessage) {
-        if (followers.isEmpty()) return Flux.empty();
-        return Flux.merge(followers.stream()
-                .map(f -> f.streamMessages("team-session", userMessage))
-                .toList());
-    }
-
-    private Flux<AgentMessage> streamWithLeader(String userMessage) {
-        if (followers.isEmpty()) return Flux.empty();
-        return followers.get(0).streamMessages("team-session", userMessage);
-    }
 
 }

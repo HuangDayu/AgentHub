@@ -69,21 +69,25 @@ public class AgentScopeHarnessAgent extends AbstractReActAgent {
     }
 
     @Override
-    public Flux<AgentMessage> streamMessages(String sessionId, String userMessage) {
-        Msg msg = Msg.builder().role(MsgRole.USER).textContent(userMessage).build();
-        RuntimeContext ctx = RuntimeContext.builder().sessionId(sessionId).build();
+    public Flux<AgentMessage> streamMessages(List<AgentMessage> messages) {
+        RuntimeContext ctx = RuntimeContext.builder().sessionId(context.getSessionId()).build();
         StreamOptions streamOptions = StreamOptions.defaults();
-        var events = agent.stream(List.of(msg), streamOptions, ctx);
+        var events = agent.stream(toMsgs(messages), streamOptions, ctx);
         return events.map(this::toAgentMessage);
     }
 
     @Override
     @SneakyThrows
-    public AgentMessage call(String sessionId, String userMessage) {
-        Msg msg = Msg.builder().role(MsgRole.USER).textContent(userMessage).build();
-        RuntimeContext ctx = RuntimeContext.builder().sessionId(sessionId).build();
-        Msg response = agent.call(msg, ctx).block();
+    public AgentMessage call(List<AgentMessage> messages) {
+        RuntimeContext ctx = RuntimeContext.builder().sessionId(context.getSessionId()).build();
+        Msg response = agent.call(toMsgs(messages), ctx).block();
         return toAgentMessage(response);
+    }
+
+    private List<Msg> toMsgs(List<AgentMessage> messages) {
+        return messages.stream()
+                .map(message -> Msg.builder().role(MsgRole.valueOf(message.getMessageType().name())).textContent(message.getText()).build())
+                .toList();
     }
 
     @Override
@@ -104,6 +108,9 @@ public class AgentScopeHarnessAgent extends AbstractReActAgent {
     }
 
     private AgentMessage toAgentMessage(Msg msg) {
+        if (msg == null) {
+            return new AgentMessage(AgentMessage.MessageType.SYSTEM, "系统出错，大模型没有回复");
+        }
         return new AgentMessage(AgentMessage.MessageType.ASSISTANT, msg.getTextContent());
     }
 

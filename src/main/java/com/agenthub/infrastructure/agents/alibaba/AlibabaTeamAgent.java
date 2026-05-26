@@ -16,14 +16,14 @@ import java.util.List;
 /**
  * 多Agent运行时，封装FlowAgent的创建与执行。
  */
-public class AliTeamAgent extends AbstractTeamAgent {
+public class AlibabaTeamAgent extends AbstractTeamAgent {
 
     private final ReActAgentContext context;
     private final Agent leader;
     private final AgentTeamType agentTeamType;
     private final List<AbstractReActAgent> followers = new LinkedList<>();
 
-    public AliTeamAgent(AgentTeamType agentTeamType, ReActAgentContext context, Agent leader, List<AliReActAgent> followers) {
+    public AlibabaTeamAgent(AgentTeamType agentTeamType, ReActAgentContext context, Agent leader, List<AlibabaReActAgent> followers) {
         this.context = context;
         this.leader = leader;
         this.followers.addAll(followers);

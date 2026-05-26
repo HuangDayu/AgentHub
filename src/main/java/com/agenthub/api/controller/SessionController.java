@@ -3,8 +3,10 @@ package com.agenthub.api.controller;
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.*;
 import com.agenthub.api.mapper.MessageResponseMapper;
+import com.agenthub.application.dto.ChatAttachmentOutput;
 import com.agenthub.application.dto.SessionOutput;
 import com.agenthub.application.usecase.AgentChatUseCase;
+import com.agenthub.application.usecase.ChatAttachmentUseCase;
 import com.agenthub.application.usecase.SessionUseCase;
 import com.agenthub.domain.model.agent.AgentMessage;
 import com.agenthub.domain.model.agent.ChatMessage;
@@ -13,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -26,6 +29,7 @@ import java.util.List;
 public class SessionController {
     private final SessionUseCase sessionUseCase;
     private final AgentChatUseCase agentChatUseCase;
+    private final ChatAttachmentUseCase chatAttachmentUseCase;
 
 
     /**
@@ -80,7 +84,7 @@ public class SessionController {
             @PathVariable String sessionId,
             @RequestBody SendMessageRequest request
     ) {
-        AgentMessage agentMessage = agentChatUseCase.chatMessages(agentId, sessionId, request.getContent());
+        AgentMessage agentMessage = agentChatUseCase.chatMessages(agentId, sessionId, request.getContent(), request.getFilePaths());
         return BeanUtil.copyProperties(agentMessage, AgentMessageResponse.class);
     }
 
@@ -116,8 +120,31 @@ public class SessionController {
             @PathVariable String sessionId,
             @RequestBody SendMessageRequest request
     ) {
-        return agentChatUseCase.streamMessages(agentId, sessionId, request.getContent())
+        return agentChatUseCase.streamMessages(agentId, sessionId, request.getContent(), request.getFilePaths())
                 .map(v -> BeanUtil.copyProperties(v, AgentMessageResponse.class));
+    }
+
+    @PostMapping(value = "/{sessionId}/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public List<ChatAttachmentResponse> uploadAttachments(
+            @PathVariable String agentId,
+            @PathVariable String sessionId,
+            @RequestPart(name = "file", required = false) MultipartFile file,
+            @RequestPart(name = "files", required = false) List<MultipartFile> files
+    ) {
+        sessionUseCase.list(agentId, sessionId);
+        return chatAttachmentUseCase.upload(sessionId, mergeFiles(file, files)).stream()
+                .map(this::toAttachmentResponse)
+                .toList();
+    }
+
+    private List<MultipartFile> mergeFiles(MultipartFile file, List<MultipartFile> files) {
+        if (files != null && !files.isEmpty()) return files;
+        if (file != null) return List.of(file);
+        return List.of();
+    }
+
+    private ChatAttachmentResponse toAttachmentResponse(ChatAttachmentOutput output) {
+        return BeanUtil.copyProperties(output, ChatAttachmentResponse.class);
     }
 
     @DeleteMapping("/{sessionId}")

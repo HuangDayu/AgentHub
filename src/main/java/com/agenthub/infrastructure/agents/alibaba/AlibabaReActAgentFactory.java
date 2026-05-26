@@ -32,7 +32,6 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.model.tool.DefaultToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -51,7 +50,7 @@ import static com.agenthub.domain.enums.AgentToolType.*;
  */
 @RequiredArgsConstructor
 @Component
-public class AliReActAgentFactory implements ReActAgentFactory {
+public class AlibabaReActAgentFactory implements ReActAgentFactory {
 
     private final SaverFactory saverFactory;
     private final InterceptorFactory interceptorFactory;
@@ -66,12 +65,12 @@ public class AliReActAgentFactory implements ReActAgentFactory {
 
     @Override
     public AbstractReActAgent create(ReActAgentContext reActAgentContext) {
-        AliReActAgentConfig aliReActAgentConfig = buildAliReActAgentConfig(reActAgentContext);
-        ReactAgent agent = buildReactAgent(aliReActAgentConfig);
-        return new AliReActAgent(reActAgentContext, aliReActAgentConfig, teamAgentFactoryObjectProvider.getObject(), agent);
+        AlibabaReActAgentConfig alibabaReActAgentConfig = buildAliReActAgentConfig(reActAgentContext);
+        ReactAgent agent = buildReactAgent(alibabaReActAgentConfig);
+        return new AlibabaReActAgent(reActAgentContext, alibabaReActAgentConfig, teamAgentFactoryObjectProvider.getObject(), agent);
     }
 
-    private ReactAgent buildReactAgent(AliReActAgentConfig config) {
+    private ReactAgent buildReactAgent(AlibabaReActAgentConfig config) {
         Builder builder = ReactAgent.builder()
                 .name(config.getAgent().getName())
                 .description(config.getAgent().getDescription())
@@ -89,7 +88,7 @@ public class AliReActAgentFactory implements ReActAgentFactory {
         return builder.build();
     }
 
-    private ChatClient buildChatClient(AliReActAgentConfig config) {
+    private ChatClient buildChatClient(AlibabaReActAgentConfig config) {
         ChatClient.Builder builder = ChatClient.builder(config.getChatModel());
         if (config.getChatOptions() != null) {
             builder.defaultOptions(config.getChatOptions());
@@ -100,8 +99,8 @@ public class AliReActAgentFactory implements ReActAgentFactory {
         return builder.build();
     }
 
-    private AliReActAgentConfig buildAliReActAgentConfig(ReActAgentContext context) {
-        return new AliReActAgentConfig(
+    private AlibabaReActAgentConfig buildAliReActAgentConfig(ReActAgentContext context) {
+        return new AlibabaReActAgentConfig(
                 context.getAgent(),
                 resolveChatModel(context),
                 resolveAdvisors(context),
@@ -221,25 +220,25 @@ public class AliReActAgentFactory implements ReActAgentFactory {
         return storeFactory.databaseStore();
     }
 
-    private void applySystemPrompt(Builder builder, AliReActAgentConfig config) {
+    private void applySystemPrompt(Builder builder, AlibabaReActAgentConfig config) {
         if (config.getSystemPrompt() != null) {
             builder.systemPrompt(config.getSystemPrompt());
         }
     }
 
-    private void applySaver(Builder builder, AliReActAgentConfig config) {
+    private void applySaver(Builder builder, AlibabaReActAgentConfig config) {
         if (config.getSaver() != null) {
             builder.saver(config.getSaver());
         }
     }
 
-    private void applyHooks(Builder builder, AliReActAgentConfig config) {
+    private void applyHooks(Builder builder, AlibabaReActAgentConfig config) {
         if (config.getHooks() != null && !config.getHooks().isEmpty()) {
             builder.hooks(config.getHooks());
         }
     }
 
-    private void applyInterceptors(Builder builder, AliReActAgentConfig config) {
+    private void applyInterceptors(Builder builder, AlibabaReActAgentConfig config) {
         if (config.getInterceptors() != null && !config.getInterceptors().isEmpty()) {
             builder.interceptors(config.getInterceptors());
         }

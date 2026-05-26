@@ -20,9 +20,9 @@ public abstract class AbstractReActAgent {
 
     public abstract ReActAgentContext getContext();
 
-    public abstract Flux<AgentMessage> streamMessages(String sessionId, String userMessage);
+    public abstract Flux<AgentMessage> streamMessages(List<AgentMessage> messages);
 
-    public abstract AgentMessage call(String sessionId, String userMessage);
+    public abstract AgentMessage call(List<AgentMessage> messages);
 
     public abstract void interrupt();
 

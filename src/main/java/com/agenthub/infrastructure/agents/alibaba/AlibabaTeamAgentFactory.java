@@ -15,7 +15,6 @@ import com.alibaba.cloud.ai.graph.agent.flow.agent.SupervisorAgent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallback;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
@@ -28,16 +27,16 @@ import static com.agenthub.domain.enums.AgentTeamType.*;
  */
 @Component
 @RequiredArgsConstructor
-public class AliTeamAgentFactory implements TeamAgentFactory {
+public class AlibabaTeamAgentFactory implements TeamAgentFactory {
 
-    private final AliReActAgentFactory aliReActAgentFactory;
+    private final AlibabaReActAgentFactory alibabaReActAgentFactory;
     private final SpringShareObjectFactory springShareObjectFactory;
 
     @Override
     public AbstractTeamAgent create(AgentTeamType agentTeamType, ReActAgentContext leader, ReActAgentContext... followers) {
-        List<AliReActAgent> followersAgents = new LinkedList<>();
+        List<AlibabaReActAgent> followersAgents = new LinkedList<>();
         for (ReActAgentContext follower : followers) {
-            followersAgents.add((AliReActAgent) aliReActAgentFactory.create(follower));
+            followersAgents.add((AlibabaReActAgent) alibabaReActAgentFactory.create(follower));
         }
         return switch (agentTeamType) {
             case SEQUENTIAL_AGENT_TEAMS -> createAliSequentialAgentTeam(leader, followersAgents);
@@ -48,47 +47,47 @@ public class AliTeamAgentFactory implements TeamAgentFactory {
         };
     }
 
-    private AbstractTeamAgent createAliSubAgentTeam(ReActAgentContext leader, List<AliReActAgent> followersAgents) {
+    private AbstractTeamAgent createAliSubAgentTeam(ReActAgentContext leader, List<AlibabaReActAgent> followersAgents) {
         List<ToolCallback> subAgents = followersAgents.stream().map(v -> AgentTool.getFunctionToolCallback(v.getAgent())).toList();
         ChatModel chatModel = getChatModel(leader);
         ReactAgent reactAgent = ReactAgent.builder().name(leader.getAgent().getName())
                 .description(leader.getAgent().getDescription())
                 .model(chatModel).tools(subAgents).build();
-        return new AliTeamAgent(SUB_AGENT_TEAMS, leader, reactAgent, followersAgents);
+        return new AlibabaTeamAgent(SUB_AGENT_TEAMS, leader, reactAgent, followersAgents);
     }
 
-    private AliTeamAgent createAliSupervisorAgentTeam(ReActAgentContext leader, List<AliReActAgent> followersAgents) {
+    private AlibabaTeamAgent createAliSupervisorAgentTeam(ReActAgentContext leader, List<AlibabaReActAgent> followersAgents) {
         List<Agent> agents = followersAgents.stream().map(v -> (Agent) v.getAgent()).toList();
         ChatModel chatModel = getChatModel(leader);
         SupervisorAgent supervisorAgent = SupervisorAgent.builder().name(leader.getAgent().getName())
                 .description(leader.getAgent().getDescription())
                 .model(chatModel).subAgents(agents).build();
-        return new AliTeamAgent(SUPERVISOR_AGENT_TEAMS, leader, supervisorAgent, followersAgents);
+        return new AlibabaTeamAgent(SUPERVISOR_AGENT_TEAMS, leader, supervisorAgent, followersAgents);
     }
 
-    private AliTeamAgent createAliRoutingAgentTeam(ReActAgentContext leader, List<AliReActAgent> followersAgents) {
+    private AlibabaTeamAgent createAliRoutingAgentTeam(ReActAgentContext leader, List<AlibabaReActAgent> followersAgents) {
         List<Agent> agents = followersAgents.stream().map(v -> (Agent) v.getAgent()).toList();
         ChatModel chatModel = getChatModel(leader);
         LlmRoutingAgent routingAgent = LlmRoutingAgent.builder().name(leader.getAgent().getName())
                 .description(leader.getAgent().getDescription())
                 .model(chatModel).subAgents(agents).build();
-        return new AliTeamAgent(ROUTING_AGENT_TEAMS, leader, routingAgent, followersAgents);
+        return new AlibabaTeamAgent(ROUTING_AGENT_TEAMS, leader, routingAgent, followersAgents);
     }
 
-    private AliTeamAgent createAliParallelAgentTeam(ReActAgentContext leader, List<AliReActAgent> followersAgents) {
+    private AlibabaTeamAgent createAliParallelAgentTeam(ReActAgentContext leader, List<AlibabaReActAgent> followersAgents) {
         List<Agent> agents = followersAgents.stream().map(v -> (Agent) v.getAgent()).toList();
         ParallelAgent parallelAgent = ParallelAgent.builder().name(leader.getAgent().getName())
                 .description(leader.getAgent().getDescription())
                 .subAgents(agents).build();
-        return new AliTeamAgent(PARALLEL_AGENT_TEAMS, leader, parallelAgent, followersAgents);
+        return new AlibabaTeamAgent(PARALLEL_AGENT_TEAMS, leader, parallelAgent, followersAgents);
     }
 
-    private AliTeamAgent createAliSequentialAgentTeam(ReActAgentContext leader, List<AliReActAgent> followersAgents) {
+    private AlibabaTeamAgent createAliSequentialAgentTeam(ReActAgentContext leader, List<AlibabaReActAgent> followersAgents) {
         List<Agent> agents = followersAgents.stream().map(v -> (Agent) v.getAgent()).toList();
         SequentialAgent sequentialAgent = SequentialAgent.builder().name(leader.getAgent().getName())
                 .description(leader.getAgent().getDescription())
                 .subAgents(agents).build();
-        return new AliTeamAgent(SEQUENTIAL_AGENT_TEAMS, leader, sequentialAgent, followersAgents);
+        return new AlibabaTeamAgent(SEQUENTIAL_AGENT_TEAMS, leader, sequentialAgent, followersAgents);
     }
 
     private ChatModel getChatModel(ReActAgentContext context) {

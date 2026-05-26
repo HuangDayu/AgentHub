@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.agenthub.domain.model.agent.ChatMessage.*;
@@ -32,29 +32,24 @@ public class AgentChatUseCase implements AgentChatPort {
     private final AgentRepository agentRepository;
     private final SessionRepository sessionRepository;
     private final AgentPoolUseCase agentPoolUseCase;
+    private final ChatAttachmentUseCase chatAttachmentUseCase;
 
 
     @Override
-    public AgentMessage chatMessages(String agentId, String sessionId, String userMessage) {
-        sessionRepository.existSession(sessionId, agentId);
+    public AgentMessage chatMessages(String agentId, String sessionId, String userMessage, List<String> filePaths) {
         AbstractReActAgent agent = getAgent(agentId, sessionId);
-        if (agent == null) throw new NotFoundException("Agent create failed :" + agentId);
-        List<ChatMessage> messages = new LinkedList<>();
-        messages.add(user(sessionId, userMessage));
-        AgentMessage response = agent.call(sessionId, userMessage);
-        messages.add(assistant(sessionId, response.getText()));
-        sessionRepository.saveMessages(messages);
+        saveMessage(user(sessionId, userMessage));
+        AgentMessage response = agent.call(buildAgentMessages(userMessage, filePaths));
+        saveMessage(assistant(sessionId, response.getText()));
         return response;
     }
 
     @Override
-    public Flux<AgentMessage> streamMessages(String agentId, String sessionId, String userMessage) {
-        sessionRepository.existSession(sessionId, agentId);
+    public Flux<AgentMessage> streamMessages(String agentId, String sessionId, String userMessage, List<String> filePaths) {
         AbstractReActAgent agent = getAgent(agentId, sessionId);
-        if (agent == null) throw new NotFoundException("Agent create failed :" + agentId);
         StringBuilder responseBuilder = new StringBuilder();
         saveMessage(user(sessionId, userMessage));
-        return agent.streamMessages(sessionId, userMessage)
+        return agent.streamMessages(buildAgentMessages(userMessage, filePaths))
                 .doOnNext(msg -> appendMessages(sessionId, responseBuilder, msg))
                 .onErrorResume(throwable -> Flux.just(handlerThrowable(sessionId, throwable)))
                 .doFinally(signal -> finallyHandleMessage(sessionId, responseBuilder));
@@ -63,11 +58,27 @@ public class AgentChatUseCase implements AgentChatPort {
     @Override
     public void interrupt(String agentId, String sessionId) {
         AbstractReActAgent agent = getAgent(agentId, sessionId);
-        if (agent != null) agent.interrupt();
+        agent.interrupt();
     }
 
+    private List<AgentMessage> buildAgentMessages(String userMessage, List<String> filePaths) {
+        List<AgentMessage> messages = new ArrayList<>();
+        messages.add(new AgentMessage(AgentMessage.MessageType.USER, userMessage));
+        if (filePaths != null && !filePaths.isEmpty()) {
+            String messageWithContext = chatAttachmentUseCase.readFilesContent(filePaths);
+            if (messageWithContext != null && !messageWithContext.isEmpty()) {
+                messages.add(new AgentMessage(AgentMessage.MessageType.ASSISTANT, messageWithContext));
+            }
+        }
+        return messages;
+    }
+
+
     private AbstractReActAgent getAgent(String agentId, String sessionId) {
-        return agentPoolUseCase.getAgent(agentId, sessionId);
+        sessionRepository.existSession(sessionId, agentId);
+        var agent = agentPoolUseCase.getAgent(agentId, sessionId);
+        if (agent == null) throw new NotFoundException("Agent create failed :" + agentId);
+        return agent;
     }
 
     private AgentMessage handlerThrowable(String sessionId, Throwable throwable) {
