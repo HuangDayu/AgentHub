@@ -13,29 +13,6 @@ const agentHubRoutes = {
     { path: '', component: () => import('@/views/agenthub/RuntimeChatView.vue') },
     // 设置页面
     { path: 'settings', component: () => import('@/views/agenthub/SettingsView.vue') },
-    
-    // 监控和追踪功能
-    { 
-      path: 'monitor', 
-      component: () => import('@/views/monitor/MetricDashboard.vue'),
-      meta: { title: '监控仪表盘' }
-    },
-    { 
-      path: 'alerts', 
-      component: () => import('@/views/monitor/AlertList.vue'),
-      meta: { title: '告警管理' }
-    },
-    { 
-      path: 'traces', 
-      component: () => import('@/views/trace/TraceList.vue'),
-      meta: { title: '追踪列表' }
-    },
-    { 
-      path: 'traces/:traceId', 
-      component: () => import('@/views/trace/TraceDetail.vue'),
-      meta: { title: '追踪详情' }
-    },
-    
     // 其他功能页面（保留但不在导航显示）
     { path: 'workspace', component: () => import('@/views/agenthub/WorkspaceOverviewView.vue') },
     { path: 'knowledge', component: () => import('@/views/agenthub/KnowledgeWorkbenchView.vue') },

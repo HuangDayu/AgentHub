@@ -275,24 +275,12 @@ AgentHub 提供 RESTful API，统一前缀为 `/api/v1`，按功能模块划分�
 
 | 文档 | 说明 |
 |------|------|
-| [架构设计文档](docs/architecture-design.md) | 系统架构、分层设计、组件交互 |
-| [API 参考文档](docs/api-reference.md) | 完整 REST API 端点参考 |
-| [部署指南](docs/deployment-guide.md) | 环境配置与部署步骤 |
-| [配置参考](docs/configuration-reference.md) | 配置属性完整参考 |
-| [开发指南](docs/development-guide.md) | 开发者环境搭建与规范 |
-| [数据模型](docs/data-model.md) | 领域模型与数据实体定义 |
-
-### 技术设计文档
-
-| 文档 | 说明 |
-|------|------|
-| [Agent 功能实现计划](docs/agent_function_implementation_plan.md) | Agent 功能详细实现计划 |
-| [Agent 运行时实现计划](docs/agent_runtime_implementation_plan.md) | Agent 运行时架构与实现 |
-| [Agent 系统工具指南](docs/agent_system_tools_guide.md) | 系统工具集成指南 |
-| [Spring AI ChatClient vs Agent 对比](docs/spring-ai-chatclient-vs-agent.md) | 技术选型对比分析 |
-| [Harness Engineering AI Agent 设计](docs/harness-engineering-ai-agent-design.md) | AI Agent 设计文档 |
-| [技术设计文档](docs/spring-ai-harness-engineering-agent-technical-design.md) | 详细技术设计 |
-| [前端美化指南](docs/frontend-beautification-guide.md) | 前端 UI 美化指南 |
+| [架构设计文档](docs/2026-05-16-architecture-design.md) | 系统架构、分层设计、组件交互 |
+| [API 参考文档](docs/2026-05-16-api-reference.md) | 完整 REST API 端点参考 |
+| [部署指南](docs/2026-05-16-deployment-guide.md) | 环境配置与部署步骤 |
+| [配置参考](docs/2026-05-16-configuration-reference.md) | 配置属性完整参考 |
+| [开发指南](docs/2026-05-16-development-guide.md) | 开发者环境搭建与规范 |
+| [数据模型](docs/2026-05-16-data-model.md) | 领域模型与数据实体定义 |
 
 ---
 
