@@ -6,7 +6,7 @@ const LoginView = () => import('@/views/LoginView.vue')
 // ── AgentHub ──────────────────────────────────────────────
 const agentHubRoutes = {
   path: '/agenthub',
-  component: () => import('@/components/TenantLayout.vue'),
+  component: () => import('@/components/AgentHubLayout.vue'),
   meta: { requiresAuth: true },
   children: [
     // 首页改为Agent对话
@@ -14,9 +14,9 @@ const agentHubRoutes = {
     // 设置页面
     { path: 'settings', component: () => import('@/views/agenthub/SettingsView.vue') },
     // 其他功能页面（保留但不在导航显示）
-    { path: 'workspace', component: () => import('@/views/agenthub/WorkspaceOverviewView.vue') },
-    { path: 'knowledge', component: () => import('@/views/agenthub/KnowledgeWorkbenchView.vue') },
-    { path: 'agents', component: () => import('@/views/agenthub/AgentStudioView.vue') },
+    { path: 'workspace', component: () => import('@/views/agenthub/WorkspaceView.vue') },
+    { path: 'knowledge', component: () => import('@/views/agenthub/KnowledgeView.vue') },
+    { path: 'agents', component: () => import('@/views/agenthub/AgentManagementView.vue') },
     { path: 'agent-configs', component: () => import('@/views/agenthub/AgentConfigView.vue') },
     { path: 'retrieval', component: () => import('@/views/agenthub/RetrievalView.vue') },
     { path: 'chat', component: () => import('@/views/agenthub/RuntimeChatView.vue') },
