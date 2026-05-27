@@ -106,6 +106,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import { formatDateTime } from '@/common/format'
 import { listMcpTools, createMcpTool, updateMcpTool, deleteMcpTool, type McpTool } from '@/api/mcp-api'
 import { useWorkspaceStore } from '@/store/workspace-store'
@@ -221,7 +222,7 @@ function parseEnv(input: string): Record<string, string> | undefined {
 
 async function handleDelete(toolId: string) {
   if (!selectionReady.value) return
-  if (!confirm('确定要删除这个MCP工具吗？')) return
+  if (!await showConfirm('确定要删除这个MCP工具吗？')) return
   await execute(async () => {
     await deleteMcpTool({ tenantId: store.tenantId, workspaceId: store.workspaceId }, toolId)
     await loadTools()

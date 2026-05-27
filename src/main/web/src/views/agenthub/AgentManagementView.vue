@@ -70,6 +70,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import ModalDialog from '@/components/ModalDialog.vue'
 import { useRouter } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
@@ -168,7 +169,7 @@ async function handleUnpublish(agent: Agent) {
 
 async function handleDelete(agent: Agent) {
   if (!selectionReady.value) return
-  if (!confirm(`确定删除 Agent "${agent.name}" 吗？`)) return
+  if (!await showConfirm(`确定删除 Agent "${agent.name}" 吗？`)) return
   try {
     const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
     await deleteAgent(selection, agent.id)

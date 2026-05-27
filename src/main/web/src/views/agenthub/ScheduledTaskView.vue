@@ -120,6 +120,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { 
   listScheduledTasks, 
@@ -256,7 +257,7 @@ async function executeTask(task: ScheduledTask) {
 }
 
 async function deleteTaskHandler(taskId: string) {
-  if (!confirm('确定要删除这个任务吗？')) return
+  if (!await showConfirm('确定要删除这个任务吗？')) return
   try {
     await deleteScheduledTask(getSelection().workspaceId, taskId)
     await loadTasks()

@@ -82,6 +82,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listTeams, createTeam, updateTeam, activateTeam, deactivateTeam, deleteTeam } from '@/api/team-api'
 import type { AgentTeam } from '@/types/memory'
@@ -159,7 +160,7 @@ async function toggleTeam(team: AgentTeam) {
 }
 
 async function deleteTeamHandler(id: string) {
-  if (confirm('确定删除此团队？')) {
+  if (await showConfirm('确定删除此团队？')) {
     try {
       await deleteTeam(selection(), id)
       await loadTeams()

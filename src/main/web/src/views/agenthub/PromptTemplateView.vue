@@ -88,6 +88,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import { formatDateTime } from '@/common/format'
 import { listPromptTemplates, createPromptTemplate, updatePromptTemplate, deletePromptTemplate, type PromptTemplate } from '@/api/prompt-api'
 import { useWorkspaceStore } from '@/store/workspace-store'
@@ -160,7 +161,7 @@ async function submitConfig() {
 
 async function handleDelete(id: string) {
   if (!selectionReady.value) return
-  if (!confirm('确定要删除这个提示词模板吗？')) return
+  if (!await showConfirm('确定要删除这个提示词模板吗？')) return
   await execute(async () => {
     await deletePromptTemplate({ tenantId: store.tenantId, workspaceId: store.workspaceId }, id)
     await loadTemplates()

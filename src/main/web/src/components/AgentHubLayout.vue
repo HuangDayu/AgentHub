@@ -36,8 +36,14 @@
 
     <template v-if="!isFullScreen">
       <!-- 悬浮设置按钮 -->
-      <FloatingSettingsButton />
+      <FloatingSettingsButton :bottom="buttonPositions.settings" />
     </template>
+
+    <!-- 异常通知（Toast + 弹窗，不占浮动按钮位置） -->
+    <FloatingErrorButton />
+
+    <!-- 全局确认弹窗 -->
+    <ConfirmDialog />
   </div>
     <template v-if="!isFullScreen">
       <FloatingEffectButton :bottom="buttonPositions.effect" />
@@ -55,6 +61,8 @@ import { getCurrentUser } from '@/api/tenant-api'
 import WorkspaceSelector from './WorkspaceSelector.vue'
 import FloatingSettingsButton from './FloatingSettingsButton.vue'
 
+import FloatingErrorButton from './FloatingErrorButton.vue'
+import ConfirmDialog from './ConfirmDialog.vue'
 import FloatingEffectButton from './FloatingEffectButton.vue'
 import FloatingAddButton from './FloatingAddButton.vue'
 import FloatingSyncButton from './FloatingSyncButton.vue'

@@ -89,6 +89,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listSkills, createSkill, updateSkill, enableSkill, disableSkill, deleteSkill, syncSkills } from '@/api/skill-api'
 import type { Skill } from '@/types/memory'
@@ -189,7 +190,7 @@ async function toggleSkill(skill: Skill) {
 }
 
 async function deleteSkillHandler(id: string) {
-  if (confirm('确定删除此技能？')) {
+  if (await showConfirm('确定删除此技能？')) {
     try {
       await deleteSkill(selection(), id)
       await loadSkills()

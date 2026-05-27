@@ -202,6 +202,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomButton from '@/components/CustomButton.vue'
 import { useWorkspaceStore } from '@/store/workspace-store'
@@ -342,7 +343,7 @@ async function updateStrategy() {
 
 async function deleteStrategyHandler(id: string) {
   if (!store.tenantId || !store.workspaceId) return
-  if (!confirm('确定要删除这个策略吗？')) return
+  if (!await showConfirm('确定要删除这个策略吗？')) return
   await deleteRetrievalStrategy({ tenantId: store.tenantId, workspaceId: store.workspaceId }, id)
   await loadStrategies()
 }

@@ -77,6 +77,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import { useRouter } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listWorkflows, createWorkflow, updateWorkflow, publishWorkflow, unpublishWorkflow, deleteWorkflow } from '@/api/workflow-api'
@@ -166,7 +167,7 @@ async function togglePublish(workflow: Workflow) {
 }
 
 async function deleteWorkflowHandler(id: string) {
-  if (confirm('确定删除此工作流？')) {
+  if (await showConfirm('确定删除此工作流？')) {
     try {
       await deleteWorkflow(selection(), id)
       await loadWorkflows()

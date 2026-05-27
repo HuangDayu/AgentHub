@@ -62,6 +62,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import { formatDateTime } from '@/common/format'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import CustomButton from '@/components/CustomButton.vue'
@@ -161,7 +162,7 @@ const toggleEnabled = async (tool: FunctionTool) => {
 
 const handleDelete = async (tool: FunctionTool) => {
   if (!selectionReady.value) return
-  if (!confirm(`确定删除 ${tool.toolName}?`)) return
+  if (!await showConfirm(`确定删除 ${tool.toolName}?`)) return
   try {
     await deleteSystemTool(getSelection(), tool.id)
     tools.value = tools.value.filter(t => t.id !== tool.id)

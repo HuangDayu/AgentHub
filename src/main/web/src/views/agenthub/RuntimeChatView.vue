@@ -238,16 +238,16 @@
               <div class="runtime-section trace-section">
                 <div class="runtime-section-title">
                   <span>调用链</span>
-                  <small>{{ runtimeData.spans.length }} spans</small>
+                  <small>{{ flatSpanCount }} spans</small>
                 </div>
                 <input
-                  v-if="runtimeData.spans.length > 0"
+                  v-if="flatSpanCount > 0"
                   v-model="traceSearchText"
                   class="trace-search"
                   type="search"
                   placeholder="搜索 Span"
                 />
-                <div v-if="runtimeData.spans.length === 0" class="runtime-empty">暂无追踪数据</div>
+                <div v-if="runtimeData.spanTree.length === 0" class="runtime-empty">暂无追踪数据</div>
                 <div v-if="traceTreeRows.length > 0" class="trace-tree" role="tree">
                   <div v-for="node in traceTreeRows" :key="node.spanId" class="trace-node">
                     <div
@@ -284,7 +284,7 @@
                     </div>
                   </div>
                 </div>
-                <div v-else-if="runtimeData.spans.length > 0" class="runtime-empty">没有匹配的 Span</div>
+                <div v-else-if="runtimeData.spanTree.length > 0" class="runtime-empty">没有匹配的 Span</div>
               </div>
             </template>
           </div>
@@ -560,6 +560,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import { useRouter } from 'vue-router'
 import { listAgents } from '@/api/agent-api'
 import {
@@ -576,7 +577,7 @@ import { formatDateTime } from '@/common/format'
 import type { ChatMessage, ChatSession, StreamMessage } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import type { Agent } from '@/types/agent'
-import type { Span } from '@/types/span'
+import type { SpanTreeNode } from '@/api/runtime-data-view-api'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import ToolCallMessage from '@/components/ToolCallMessage.vue'
 import ToolResultMessage from '@/components/ToolResultMessage.vue'
@@ -619,7 +620,7 @@ const uploadedAttachments = ref<ChatAttachment[]>([])
 const activeRuntimeTab = ref<'run' | 'trace'>('run')
 const runtimeLoading = ref(false)
 const runtimeError = ref('')
-const selectedSpan = ref<(Span & { depth?: number }) | null>(null)
+const selectedSpan = ref<SpanTreeNode | null>(null)
 const runtimeData = ref<RuntimeDataView>(emptyRuntimeDataView())
 const traceSearchText = ref('')
 const expandedSpanIds = ref(new Set<string>())
@@ -685,7 +686,15 @@ const runtimeCanLoad = computed(() => Boolean(runtimeHasTarget.value && !isTempS
 const runtimeTrace = computed(() => runtimeData.value.trace)
 const runtimeChatStats = computed(() => runtimeData.value.modelInvocationData.chat)
 const runtimeTotalTokens = computed(() => runtimeChatStats.value.totalTokens.totalTokens || 0)
-const traceTreeRows = computed(() => buildTraceRows(runtimeData.value.spans))
+const flatSpanCount = computed(() => {
+  let count = 0
+  function walk(nodes: SpanTreeNode[]) {
+    for (const n of nodes) { count++; walk(n.children || []) }
+  }
+  walk(runtimeData.value.spanTree)
+  return count
+})
+const traceTreeRows = computed(() => flattenSpanTree(runtimeData.value.spanTree))
 const modelStats = computed(() => buildModelStats())
 const canSend = computed(() => Boolean(selectedAgentId.value && hasSendContent() && !sending.value && !uploadingFiles.value))
 
@@ -829,7 +838,7 @@ function createNewSession() {
 // Delete session
 async function handleDeleteSession(sessionId: string) {
   if (!selectedAgentId.value) return
-  if (!confirm('确定要删除这个会话吗？')) return
+  if (!await showConfirm('确定要删除这个会话吗？')) return
 
   error.value = ''
   try {
@@ -1238,80 +1247,49 @@ function scrollToBottom() {
   })
 }
 
-type TraceNode = Span & { depth: number; children: TraceNode[]; treePrefix?: string }
+type TraceRow = SpanTreeNode & { depth: number; treePrefix?: string }
 
-function buildTraceRows(spans: Span[]): TraceNode[] {
-  const nodeMap = buildTraceNodeMap(spans)
-  const roots = rootTraceNodes(spans, nodeMap)
-  const filteredRoots = filterTraceNodes(roots)
-  return filteredRoots.flatMap((node, index) => flattenTraceRoot(node, index, filteredRoots.length))
+function flatAllSpans(nodes: SpanTreeNode[]): SpanTreeNode[] {
+  const result: SpanTreeNode[] = []
+  function walk(list: SpanTreeNode[]) {
+    for (const n of list) { result.push(n); walk(n.children || []) }
+  }
+  walk(nodes)
+  return result
 }
 
-function flattenTraceRoot(node: TraceNode, index: number, total: number) {
-  return flattenTraceNode(node, 0, [], total - 1 === index)
-}
-
-function buildTraceNodeMap(spans: Span[]) {
-  const nodeMap = new Map<string, TraceNode>()
-  spans.forEach((span) => nodeMap.set(span.spanId, { ...span, depth: 0, children: [] }))
-  spans.forEach((span) => {
-    const parent = span.parentSpanId ? nodeMap.get(span.parentSpanId) : null
-    if (parent) {
-      parent.children.push(nodeMap.get(span.spanId)!)
-    }
-  })
-  nodeMap.forEach((node) => node.children.sort(compareSpanTimeDesc))
-  return nodeMap
-}
-
-function rootTraceNodes(spans: Span[], nodeMap: Map<string, TraceNode>) {
-  return spans
-    .filter((span) => !span.parentSpanId || !nodeMap.has(span.parentSpanId))
-    .map((span) => nodeMap.get(span.spanId)!)
-    .sort(compareSpanTimeDesc)
-}
-
-function filterTraceNodes(nodes: TraceNode[]): TraceNode[] {
+function flattenSpanTree(nodes: SpanTreeNode[]): TraceRow[] {
   const keyword = traceSearchText.value.trim().toLowerCase()
-  if (!keyword) return nodes
-  return nodes.map((node) => filterTraceNode(node, keyword)).filter(Boolean) as TraceNode[]
+  return nodes.flatMap((node, index) => flattenSpanNode(node, index, nodes.length, keyword))
 }
 
-function filterTraceNode(node: TraceNode, keyword: string): TraceNode | null {
-  const children = node.children.map((child) => filterTraceNode(child, keyword)).filter(Boolean) as TraceNode[]
-  if (spanMatchesKeyword(node, keyword) || children.length) return { ...node, children }
-  return null
+function flattenSpanNode(node: SpanTreeNode, index: number, total: number, keyword: string, depth = 0, ancestors: boolean[] = []): TraceRow[] {
+  const children = node.children || []
+  // 搜索过滤
+  if (keyword) {
+    const filteredChildren = children
+      .flatMap((child, i) => flattenSpanNode(child, i, children.length, keyword, depth + 1, [...ancestors, total - 1 === index]))
+    if (!spanMatchesKeyword(node, keyword) && filteredChildren.length === 0) return []
+    const row: TraceRow = { ...node, depth, treePrefix: treePrefix(ancestors, total - 1 === index) }
+    return [row, ...filteredChildren]
+  }
+  // 无搜索时按展开状态渲染
+  const row: TraceRow = { ...node, depth, treePrefix: treePrefix(ancestors, total - 1 === index) }
+  if (!isSpanExpanded(node.spanId)) return [row]
+  return [row, ...children.flatMap((child, i) => flattenSpanNode(child, i, children.length, keyword, depth + 1, [...ancestors, total - 1 === index]))]
 }
 
-function spanMatchesKeyword(span: Span, keyword: string) {
-  return [spanDisplayName(span), span.name, spanDisplayKind(span)].some((text) => text.toLowerCase().includes(keyword))
+function spanMatchesKeyword(node: SpanTreeNode, keyword: string) {
+  return [spanDisplayName(node), node.name, spanDisplayKind(node)].some((text) => text.toLowerCase().includes(keyword))
 }
 
-function flattenTraceNode(node: TraceNode, depth: number, ancestors: boolean[] = [], isLast = true): TraceNode[] {
-  const row = { ...node, depth, treePrefix: traceTreePrefix(ancestors, isLast) }
-  if (!traceSearchText.value && !isSpanExpanded(node.spanId)) return [row]
-  return [row, ...node.children.flatMap((child, index) => flattenTraceChild(child, depth, ancestors, isLast, index, node.children.length))]
-}
-
-function flattenTraceChild(child: TraceNode, depth: number, ancestors: boolean[], parentLast: boolean, index: number, total: number) {
-  return flattenTraceNode(child, depth + 1, [...ancestors, parentLast], total - 1 === index)
-}
-
-function traceTreePrefix(ancestors: boolean[], isLast: boolean) {
+function treePrefix(ancestors: boolean[], isLast: boolean) {
   const prefix = ancestors.map((last) => (last ? '   ' : '│  ')).join('')
   return `${prefix}${isLast ? '└─' : '├─'}`
 }
 
-function compareSpanTimeDesc(left: Span, right: Span) {
-  return spanTimeNumber(right) - spanTimeNumber(left)
-}
-
-function spanTimeNumber(span: Span) {
-  return Number(span.startTimeUnixNano || span.endTimeUnixNano || 0)
-}
-
 function expandRootSpans() {
-  expandedSpanIds.value = new Set(rootTraceNodes(runtimeData.value.spans, buildTraceNodeMap(runtimeData.value.spans)).map((span) => span.spanId))
+  expandedSpanIds.value = new Set(runtimeData.value.spanTree.map((node) => node.spanId))
 }
 
 function toggleSpanNode(spanId: string) {
@@ -1324,7 +1302,7 @@ function isSpanExpanded(spanId: string) {
   return expandedSpanIds.value.has(spanId)
 }
 
-function selectSpanNode(node: TraceNode) {
+function selectSpanNode(node: SpanTreeNode) {
   selectedSpan.value = node
   spanDetailVisible.value = true
 }
@@ -1333,22 +1311,22 @@ function closeSpanDetail() {
   spanDetailVisible.value = false
 }
 
-function spanDisplayName(span: Span) {
+function spanDisplayName(span: SpanTreeNode) {
   return stringAttr(span, 'agentscope.function.name') || span.name || shortId(span.spanId)
 }
 
-function spanDisplayKind(span: Span) {
+function spanDisplayKind(span: SpanTreeNode) {
   return invokeDisplayKind(span) || modelDisplayKind(span) || stringAttr(span, 'gen_ai.operation.name') || span.kind || 'Unknown'
 }
 
-function invokeDisplayKind(span: Span) {
+function invokeDisplayKind(span: SpanTreeNode) {
   const operation = stringAttr(span, 'gen_ai.operation.name')
   if (operation === 'invoke_agent') return withName(operation, stringAttr(span, 'gen_ai.agent.name'))
   if (operation === 'execute_tool') return withName(operation, stringAttr(span, 'gen_ai.tool.name'))
   return operation === 'format' ? withName(operation, stringAttr(span, 'agentscope.format.target')) : ''
 }
 
-function modelDisplayKind(span: Span) {
+function modelDisplayKind(span: SpanTreeNode) {
   const operation = stringAttr(span, 'gen_ai.operation.name')
   if (!['chat', 'chat_model', 'embeddings'].includes(operation || '')) return ''
   return withName(operation!, span.model || stringAttr(span, 'gen_ai.request.model'))
@@ -1358,12 +1336,12 @@ function withName(operation: string, name?: string) {
   return name ? `${operation}: ${name}` : operation
 }
 
-function stringAttr(span: Span, path: string) {
+function stringAttr(span: SpanTreeNode, path: string) {
   const value = span.attributes?.[path] ?? pathValue(span.attributes, path.split('.'))
   return value === undefined || value === null ? '' : String(value)
 }
 
-function spanFunctionPayload(span: Span, key: 'input' | 'output') {
+function spanFunctionPayload(span: SpanTreeNode, key: 'input' | 'output') {
   return pathValue(span.attributes, ['agentscope', 'function', key]) ?? pathValue(span.attributes, [`agentscope.function.${key}`]) ?? {}
 }
 
@@ -1411,7 +1389,7 @@ function buildModelStats() {
 
 function buildSpanModelStats() {
   const grouped = new Map<string, { calls: number; tokens: number; latencyNs: number }>()
-  runtimeData.value.spans.filter((span) => span.model).forEach((span) => {
+  flatAllSpans(runtimeData.value.spanTree).filter((span) => span.model).forEach((span) => {
     const current = grouped.get(span.model!) || { calls: 0, tokens: 0, latencyNs: 0 }
     current.calls += 1
     current.tokens += span.totalTokens || 0

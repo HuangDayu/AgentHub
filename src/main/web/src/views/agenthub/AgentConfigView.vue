@@ -146,6 +146,7 @@
 
 <script setup lang="ts">
 import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import {useRoute} from 'vue-router'
 import {useWorkspaceStore} from '@/store/workspace-store'
 import {type Agent, listAgents} from '@/api/agent-api'
@@ -498,7 +499,7 @@ async function toggleEnabled(config: AgentConfig) {
 
 async function handleDelete(configId: string) {
   if (!selectedAgentId.value) return
-  if (!confirm('确定要删除这个配置吗？')) return
+  if (!await showConfirm('确定要删除这个配置吗？')) return
   loading.value = true
   error.value = ''
   try {

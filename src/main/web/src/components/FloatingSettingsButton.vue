@@ -1,5 +1,5 @@
 <template>
-  <div class="floating-button-container">
+  <div class="floating-button-container" :style="{ bottom: `${bottom}px` }">
     <button class="floating-btn" @click="goToSettings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="3"/>
@@ -12,6 +12,10 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 
+defineProps<{
+  bottom: number
+}>()
+
 const router = useRouter()
 
 const goToSettings = () => {
@@ -22,7 +26,6 @@ const goToSettings = () => {
 <style scoped>
 .floating-button-container {
   position: fixed;
-  bottom: 24px;
   right: 24px;
   z-index: 1000;
 }

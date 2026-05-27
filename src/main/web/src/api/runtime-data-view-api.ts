@@ -1,7 +1,6 @@
 import { runtimeConfig } from '@/common/runtime-config'
 import type { SelectionState } from '@/domain/types'
 import { scopedHeaders } from '@/services/workspace-service'
-import type { Span } from '@/types/span'
 import { requestJson } from './http'
 
 export interface RuntimeRun {
@@ -71,11 +70,39 @@ export interface ModelInvocationData {
   chat: ChatInvocationStats
 }
 
+/**
+ * Span 树节点.
+ * 包含 Span 所有字段 + 嵌套子节点列表。
+ */
+export interface SpanTreeNode {
+  id: string
+  spanId: string
+  traceId: string
+  parentSpanId?: string
+  name: string
+  kind: string
+  startTimeUnixNano: string
+  endTimeUnixNano: string
+  latencyNs: number
+  attributes?: Record<string, any>
+  events?: Array<{ name: string; timeUnixNano: string; attributes?: Record<string, any> }>
+  statusCode?: number
+  statusMessage?: string
+  model?: string
+  inputTokens?: number
+  outputTokens?: number
+  totalTokens?: number
+  runId?: string
+  agentId?: string
+  createdAt: string
+  children: SpanTreeNode[]
+}
+
 export interface RuntimeDataView {
   runs: RuntimeRun[]
   selectedRun?: RuntimeRun
   trace: RuntimeTrace
-  spans: Span[]
+  spanTree: SpanTreeNode[]
   errorSpans: RuntimeSpanSummary[]
   slowSpans: RuntimeSpanSummary[]
   modelInvocationData: ModelInvocationData
@@ -84,7 +111,7 @@ export interface RuntimeDataView {
 export function emptyRuntimeDataView(): RuntimeDataView {
   return {
     runs: [],
-    spans: [],
+    spanTree: [],
     errorSpans: [],
     slowSpans: [],
     trace: { runId: '', latencyNs: 0, status: 'PENDING', spanCount: 0, totalTokens: 0 },

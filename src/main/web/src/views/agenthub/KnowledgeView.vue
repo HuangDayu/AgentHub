@@ -235,6 +235,7 @@
 </style>
 
 <script setup lang="ts">
+import { showConfirm } from '@/utils/confirm'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import {
   createKnowledgeBase,
@@ -438,7 +439,7 @@ async function submitEditKnowledgeBase() {
 }
 
 async function handleDeleteKb(kbId: string) {
-  if (!confirm('确定要删除该知识库吗？此操作不可恢复。')) return
+  if (!await showConfirm('确定要删除该知识库吗？此操作不可恢复。')) return
   await execute(async () => {
     await deleteKnowledgeBase({ tenantId: store.tenantId, workspaceId: store.workspaceId }, kbId)
     await loadKnowledgeBases()

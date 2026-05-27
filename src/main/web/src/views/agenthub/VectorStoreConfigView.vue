@@ -132,6 +132,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import ModalDialog from '@/components/ModalDialog.vue'
 import {
   listVectorStoreConfigs,
@@ -324,7 +325,7 @@ async function refreshInstance(config: VectorStoreConfig) {
 
 async function handleDelete(configId: string) {
   if (!selectionReady.value) return
-  if (!confirm('确定要删除这个向量数据库配置吗？')) return
+  if (!await showConfirm('确定要删除这个向量数据库配置吗？')) return
   await execute(async () => {
     await deleteVectorStoreConfig({ tenantId: store.tenantId, workspaceId: store.workspaceId }, configId)
     await loadConfigs()

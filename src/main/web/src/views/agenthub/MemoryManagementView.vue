@@ -79,6 +79,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listMemoriesByAgent, createMemory, updateMemory, deleteMemory } from '@/api/memory-api'
 import { listAgents } from '@/api/agent-api'
@@ -199,7 +200,7 @@ async function updateMemoryHandler() {
 
 async function deleteMemoryHandler(id: string) {
   if (!selectionReady.value) return
-  if (confirm('确定删除此记忆？')) {
+  if (await showConfirm('确定删除此记忆？')) {
     try {
       await deleteMemory(selection(), id)
       memories.value = await listMemoriesByAgent(selection(), selectedAgentId.value)

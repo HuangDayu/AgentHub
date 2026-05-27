@@ -80,20 +80,37 @@ export async function patch<T>(path: string, bodyJson?: unknown, headers?: Recor
   return requestJson<T>(path, { baseUrl: BASE_URL, method: 'PATCH', bodyJson, headers })
 }
 
+function dispatchApiError(status: number, url: string, message: string) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('api-error', {
+      detail: { status, url, message }
+    }))
+  }
+}
+
 export async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {
   const url = buildUrl(options.baseUrl, path, options.query)
   const headers = buildHeaders(options)
   injectAuthToken(headers)
   const body = buildBody(options.bodyJson)
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    body,
-  })
+  let response: Response
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+      body,
+    })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : '网络请求失败'
+    dispatchApiError(0, url, message)
+    throw err
+  }
 
   if (!response.ok) {
-    throw new Error(await readError(response))
+    const errorText = await readError(response)
+    dispatchApiError(response.status, url, errorText)
+    throw new Error(errorText)
   }
 
   const text = await response.text()

@@ -134,6 +134,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import ModalDialog from '@/components/ModalDialog.vue'
 import { formatDateTime } from '@/common/format'
 import {
@@ -230,7 +231,7 @@ async function submitWorkspace() {
 }
 
 async function handleDelete(workspaceId: string) {
-  if (!confirm('确定要删除这个工作区吗？')) return
+  if (!await showConfirm('确定要删除这个工作区吗？')) return
   await execute(async () => {
     await deleteWorkspace(workspaceId)
     // 如果删除的是当前选择的工作区，清除选择

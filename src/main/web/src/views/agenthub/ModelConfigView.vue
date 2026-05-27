@@ -130,6 +130,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { showConfirm } from '@/utils/confirm'
 import ModalDialog from '@/components/ModalDialog.vue'
 import {
   listModelConfigs,
@@ -316,7 +317,7 @@ function getDefaultBaseUrl(supplier: string): string {
 
 async function handleDelete(configId: string) {
   if (!selectionReady.value) return
-  if (!confirm('确定要删除这个大模型配置吗？')) return
+  if (!await showConfirm('确定要删除这个大模型配置吗？')) return
   await execute(async () => {
     await deleteModelConfig({ tenantId: store.tenantId, workspaceId: store.workspaceId }, configId)
     await loadConfigs()
