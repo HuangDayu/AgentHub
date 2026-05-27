@@ -1,6 +1,8 @@
 package com.agenthub.application.usecase;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.map.multi.RowKeyTable;
+import cn.hutool.core.map.multi.Table;
 import com.agenthub.application.dto.*;
 import com.agenthub.application.port.out.repositories.RunRegistrationRepository;
 import com.agenthub.application.port.out.repositories.SessionRepository;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -46,7 +49,7 @@ public class RuntimeDataViewUseCase {
         List<RuntimeRunOutput> runs = runs(agentId);
         RuntimeRunOutput selectedRun = run(selected);
         return new RuntimeDataViewOutput(runs, selectedRun, trace(selectedRun.getId(), spans),
-                outputs(spans), errorSpans(spans), slowSpans(spans), modelData(spans));
+                buildSpanTree(spans), errorSpans(spans), slowSpans(spans), modelData(spans));
     }
 
     private List<RuntimeRunOutput> runs(String agentId) {
@@ -252,16 +255,81 @@ public class RuntimeDataViewUseCase {
         return span.getAttributes() == null ? null : span.getAttributes().get(key);
     }
 
-    private List<SpanOutput> outputs(List<Span> spans) {
-        return spans.stream().map(this::output).toList();
+
+    private List<SpanTreeNodeOutput> buildSpanTree(List<Span> spans) {
+        List<SpanTreeNodeOutput> roots = new ArrayList<>();
+        for (List<Span> traceSpans : spansByTrace(spans).values()) {
+            roots.addAll(buildTraceTree(traceSpans));
+        }
+        sortNodes(roots);
+        return roots;
     }
 
-    private SpanOutput output(Span span) {
-        return BeanUtil.copyProperties(span, SpanOutput.class);
+    private Map<String, List<Span>> spansByTrace(List<Span> spans) {
+        Map<String, List<Span>> result = new HashMap<>();
+        for (Span span : spans) {
+            result.computeIfAbsent(span.getTraceId(), key -> new ArrayList<>()).add(span);
+        }
+        return result;
     }
 
-    private Instant createdAt(Span span) {
-        return span.getCreatedAt();
+    private List<SpanTreeNodeOutput> buildTraceTree(List<Span> spans) {
+        List<SpanTreeNodeOutput> nodes = spans.stream().map(this::treeNode).toList();
+        Map<String, List<SpanTreeNodeOutput>> children = childrenByParent(nodes);
+        Set<String> spanIds = spanIds(nodes);
+        nodes.forEach(node -> node.setChildren(sortedChildren(node, children)));
+        return nodes.stream().filter(node -> rootNode(node, spanIds)).sorted(nodeComparator()).toList();
+    }
+
+    private SpanTreeNodeOutput treeNode(Span span) {
+        SpanTreeNodeOutput node = new SpanTreeNodeOutput();
+        BeanUtil.copyProperties(span, node);
+        return node;
+    }
+
+    private Map<String, List<SpanTreeNodeOutput>> childrenByParent(List<SpanTreeNodeOutput> nodes) {
+        Map<String, List<SpanTreeNodeOutput>> result = new HashMap<>();
+        for (SpanTreeNodeOutput node : nodes) {
+            if (!blank(node.getParentSpanId())) {
+                result.computeIfAbsent(node.getParentSpanId(), key -> new ArrayList<>()).add(node);
+            }
+        }
+        return result;
+    }
+
+    private Set<String> spanIds(List<SpanTreeNodeOutput> nodes) {
+        Set<String> result = new HashSet<>();
+        for (SpanTreeNodeOutput node : nodes) {
+            if (!blank(node.getSpanId())) {
+                result.add(node.getSpanId());
+            }
+        }
+        return result;
+    }
+
+    private List<SpanTreeNodeOutput> sortedChildren(SpanTreeNodeOutput node, Map<String, List<SpanTreeNodeOutput>> children) {
+        if (blank(node.getSpanId())) {
+            return new ArrayList<>();
+        }
+        List<SpanTreeNodeOutput> result = new ArrayList<>(children.getOrDefault(node.getSpanId(), Collections.emptyList()));
+        sortNodes(result);
+        return result;
+    }
+
+    private boolean rootNode(SpanTreeNodeOutput node, Set<String> spanIds) {
+        return blank(node.getParentSpanId()) || !spanIds.contains(node.getParentSpanId());
+    }
+
+    private void sortNodes(List<SpanTreeNodeOutput> nodes) {
+        nodes.sort(nodeComparator());
+    }
+
+    private Comparator<SpanTreeNodeOutput> nodeComparator() {
+        return Comparator.comparing(node -> nanos(node.getStartTimeUnixNano()), Comparator.reverseOrder());
+    }
+
+    private boolean blank(String value) {
+        return value == null || value.isBlank();
     }
 
     private long nanos(String value) {

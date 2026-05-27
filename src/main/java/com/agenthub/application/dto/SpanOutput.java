@@ -2,6 +2,7 @@ package com.agenthub.application.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Map;
  * Span 输出 DTO.
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class SpanOutput {
     private String id;
