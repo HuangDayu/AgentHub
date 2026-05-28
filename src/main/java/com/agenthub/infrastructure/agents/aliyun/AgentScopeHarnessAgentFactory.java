@@ -1,9 +1,12 @@
 package com.agenthub.infrastructure.agents.aliyun;
 
 import com.agenthub.application.factory.ReActAgentFactory;
+import com.agenthub.application.port.out.etl.EtlDocumentChunkStorePort;
+import com.agenthub.application.port.out.rag.RagVectorSearchPort;
 import com.agenthub.domain.model.agent.AbstractReActAgent;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.infrastructure.agents.aliyun.filesystem.FilesystemFactory;
+import com.agenthub.infrastructure.agents.aliyun.knowledge.AgentScopeKnowledge;
 import com.agenthub.infrastructure.agents.aliyun.memory.MemoryConfigFactory;
 import com.agenthub.infrastructure.agents.aliyun.model.AgentScopeModelFactoryRegistry;
 import com.agenthub.infrastructure.agents.aliyun.session.SessionFactory;
@@ -14,6 +17,8 @@ import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import com.agenthub.infrastructure.telemetry.AgentStudioMessageHandler;
 import com.agenthub.infrastructure.tools.AgentToolsFactory;
 import io.agentscope.core.model.Model;
+import io.agentscope.core.rag.Knowledge;
+import io.agentscope.core.skill.repository.FileSystemSkillRepository;
 import io.agentscope.core.studio.StudioClient;
 import io.agentscope.core.studio.StudioConfig;
 import io.agentscope.core.studio.StudioMessageHook;
@@ -28,9 +33,12 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.domain.enums.AgentToolType.MCP_TOOL;
+import static com.agenthub.domain.enums.AgentToolType.SYSTEM_TOOL;
 
 /**
  * AgentScope Harness 框架的 Agent 运行时工厂。
@@ -55,6 +63,8 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
     private final AgentToolsFactory agentToolsFactory;
     private final AgentScopeModelFactoryRegistry agentScopeModelFactoryRegistry;
     private final MemoryConfigFactory memoryConfigFactory;
+    private final RagVectorSearchPort ragVectorSearchPort;
+    private final EtlDocumentChunkStorePort etlDocumentChunkStorePort;
     private final ToolkitFactory toolkitFactory;
     private final SessionFactory sessionFactory;
     private final WorkspaceManagerFactory workspaceManagerFactory;
@@ -75,7 +85,7 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
         Model model = resolveModel(ctx, chatModelId);
         Path workspacePath = ctx.getWorkspace() != null && ctx.getWorkspace().getRootPath() != null
                 ? ctx.getWorkspace().getRootPath()
-                : Path.of(".agentscope/workspace");
+                : Path.of(".agenthub/workspace");
         return new AgentScopeReActAgentConfig(
                 ctx.getAgent(), model, ctx.getSystemPrompt(), workspacePath,
                 ctx.getWorkspace(), List.of(), null);
@@ -99,8 +109,7 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
     }
 
     private HarnessAgent buildHarnessAgent(AgentScopeReActAgentConfig config, ReActAgentContext ctx) {
-        Toolkit toolkit = resolveToolkit();
-        HarnessAgent.Builder builder = HarnessAgent.builder()
+        return HarnessAgent.builder()
                 .name(config.getAgent().getName())
                 .sysPrompt(config.getSystemPrompt())
                 .model(config.getModel())
@@ -110,8 +119,21 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
                 .hook(resolveStudioMessageHook(config, ctx))
                 .toolExecutionContext(ToolExecutionContext.builder().register(AGENT_CONTEXT_KEY, ctx).build())
                 .toolResultEviction(memoryConfigFactory.createDefaultToolResultEvictionConfig())
-                .toolkit(toolkit);
-        return builder.build();
+                .toolkit(resolveToolkit(ctx))
+                .skillRepository(new FileSystemSkillRepository(ctx.getWorkspace().getShareSkillsPath()))
+                .knowledges(resolveKnowledge(ctx))
+                .build();
+    }
+
+    private List<Knowledge> resolveKnowledge(ReActAgentContext ctx) {
+        List<Knowledge> knowledgeList = new ArrayList<>();
+        List<String> knowledgeIds = ctx.getKnowledgeIds();
+        if (knowledgeIds != null && !knowledgeIds.isEmpty()) {
+            for (String knowledgeId : knowledgeIds) {
+                knowledgeList.add(new AgentScopeKnowledge(ragVectorSearchPort, etlDocumentChunkStorePort, knowledgeId));
+            }
+        }
+        return knowledgeList;
     }
 
     private StudioMessageHook resolveStudioMessageHook(AgentScopeReActAgentConfig config, ReActAgentContext ctx) {
@@ -125,9 +147,11 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
         return new StudioMessageHook(studioClient);
     }
 
-    private Toolkit resolveToolkit() {
-        var springTools = agentToolsFactory.getToolCallbacks();
-        return toolConverter.convertToToolkit(springTools);
+    private Toolkit resolveToolkit(ReActAgentContext ctx) {
+        var systemTools = agentToolsFactory.getToolCallbacks(SYSTEM_TOOL, ctx.getTools());
+        var mcpTools = agentToolsFactory.getToolCallbacks(MCP_TOOL, ctx.getTools());
+        systemTools.addAll(mcpTools);
+        return toolConverter.convertToToolkit(systemTools);
     }
 
 }

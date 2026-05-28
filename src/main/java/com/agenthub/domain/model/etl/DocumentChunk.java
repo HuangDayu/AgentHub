@@ -25,7 +25,7 @@ public final class DocumentChunk {
     /** 分块的向量嵌入 */
     private final float[] embedding;
 
-    private DocumentChunk(
+    public DocumentChunk(
             String chunkId,
             String documentId,
             String kbId,

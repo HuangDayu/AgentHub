@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.etl;
 
 import com.agenthub.application.command.EtlCommand;
-import com.agenthub.domain.exception.IngestionPipelineException;
 import com.agenthub.application.port.out.etl.*;
+import com.agenthub.domain.exception.IngestionPipelineException;
 import com.agenthub.domain.model.etl.DocumentChunk;
 import com.agenthub.domain.model.etl.DocumentContent;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class EtlCustomizePipelineAdapter implements ExtractTransformLoadPort {
     @Override
     public List<DocumentChunk> etl(EtlCommand etlCommand) {
         List<DocumentChunk> documentChunks = processDocument(etlCommand);
-        etlDocumentChunkStorePort.saveAll(documentChunks);
+        etlDocumentChunkStorePort.saveAll(etlCommand.getKbId(), documentChunks);
         return List.of();
     }
 

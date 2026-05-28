@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.tools;
 
-import com.agenthub.domain.model.agent.AgentToolInfo;
 import com.agenthub.domain.enums.AgentToolType;
+import com.agenthub.domain.model.agent.AgentToolInfo;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.ToolCallback;
@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * @author huangdayu
@@ -36,13 +35,9 @@ public class AgentToolsFactory {
         if (toolIds == null || toolIds.isEmpty()) {
             return Set.of();
         }
-        return TOOL_TYPE_MAP.get(toolType).getToolCallbacks(toolIds);
+        return TOOL_TYPE_MAP.get(toolType).getToolCallbacks(toolIds.stream()
+                .filter(toolInfo -> toolInfo.getType() == toolType).toList());
     }
 
-    public Set<ToolCallback> getToolCallbacks() {
-        return abstractToolsFactory.stream()
-                .map(AbstractToolsFactory::getAllToolCallbacks)
-                .flatMap(Set::stream)
-                .collect(Collectors.toSet());
-    }
+
 }

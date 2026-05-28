@@ -14,7 +14,7 @@ public interface EtlDocumentChunkStorePort {
      *
      * @param chunks 待保存的文档分块列表
      */
-    void saveAll(List<DocumentChunk> chunks);
+    void saveAll(String kbId, List<DocumentChunk> chunks);
 
     void deleteAll(String kbId, List<String> documentChunkIds);
 }

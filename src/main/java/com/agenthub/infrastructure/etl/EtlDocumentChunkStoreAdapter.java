@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.etl;
 
-import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.application.port.out.etl.EtlDocumentChunkStorePort;
+import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.etl.DocumentChunk;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import org.slf4j.Logger;
@@ -31,9 +31,9 @@ public class EtlDocumentChunkStoreAdapter implements EtlDocumentChunkStorePort {
      * @param chunks 待保存的文档分块列表
      */
     @Override
-    public void saveAll(List<DocumentChunk> chunks) {
+    public void saveAll(String kbId, List<DocumentChunk> chunks) {
         if (chunks == null || chunks.isEmpty()) return;
-        VectorStore vectorStore = getVectorStore(chunks);
+        VectorStore vectorStore = getVectorStore(kbId);
         List<Document> docs = convertToDocuments(chunks);
         vectorStore.add(docs);
         log.info("Saved {} chunks to Spring AI VectorStore", docs.size());
@@ -53,8 +53,8 @@ public class EtlDocumentChunkStoreAdapter implements EtlDocumentChunkStorePort {
     /**
      * 获取向量存储。
      */
-    private VectorStore getVectorStore(List<DocumentChunk> chunks) {
-        VectorStore vectorStore = springShareObjectFactory.getVectorStoreByKbId(chunks.getFirst().getKbId());
+    private VectorStore getVectorStore(String kbId) {
+        VectorStore vectorStore = springShareObjectFactory.getVectorStoreByKbId(kbId);
         if (vectorStore == null) {
             throw new NotFoundException("VectorStore not found");
         }
