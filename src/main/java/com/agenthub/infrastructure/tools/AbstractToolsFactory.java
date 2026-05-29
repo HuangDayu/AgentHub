@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.tools;
 
+import com.agenthub.domain.enums.AgentToolType;
 import com.agenthub.domain.model.agent.AgentToolInfo;
 import org.springframework.ai.tool.ToolCallback;
 
@@ -12,7 +13,7 @@ import java.util.Set;
 public interface AbstractToolsFactory {
 
 
-    AgentToolInfo getToolInfo();
+    AgentToolType getToolInfo();
 
     Set<ToolCallback> getAllToolCallbacks();
 

@@ -24,7 +24,7 @@ public class AgentToolsFactory {
 
     @PostConstruct
     public void init() {
-        abstractToolsFactory.forEach(factory -> TOOL_TYPE_MAP.put(factory.getToolInfo().getType(), factory));
+        abstractToolsFactory.forEach(factory -> TOOL_TYPE_MAP.put(factory.getToolInfo(), factory));
     }
 
     public Set<ToolCallback> getToolCallback(AgentToolType toolType, String toolName) {

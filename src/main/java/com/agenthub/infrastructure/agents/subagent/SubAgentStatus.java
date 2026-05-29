@@ -6,5 +6,6 @@ package com.agenthub.infrastructure.agents.subagent;
 public enum SubAgentStatus {
     RUNNING,
     COMPLETED,
-    FAILED
+    FAILED,
+    INTERRUPTED
 }

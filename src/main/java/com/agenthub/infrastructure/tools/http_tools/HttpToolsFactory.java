@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.tools.http_tools;
 
 import com.agenthub.application.port.out.repositories.HttpToolRepository;
+import com.agenthub.domain.enums.AgentToolType;
 import com.agenthub.domain.model.agent.AgentToolInfo;
 import com.agenthub.domain.model.tools.HttpTool;
 import com.agenthub.infrastructure.tools.AbstractToolsFactory;
@@ -27,8 +28,8 @@ public class HttpToolsFactory implements AbstractToolsFactory {
     private final HttpToolRepository httpToolRepository;
 
     @Override
-    public AgentToolInfo getToolInfo() {
-        return new AgentToolInfo(HTTP_TOOL);
+    public AgentToolType getToolInfo() {
+        return HTTP_TOOL;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.agents.aliyun;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.agenthub.application.factory.TeamAgentFactory;
 import com.agenthub.domain.enums.AgentLifecycleState;
 import com.agenthub.domain.enums.AgentTeamType;
@@ -144,8 +145,13 @@ public class AgentScopeHarnessAgent extends AbstractReActAgent {
 
     private List<AgentMessage.ToolCall> toToolCalls(Msg msg) {
         return msg.hasContentBlocks(ToolUseBlock.class) ? msg.getContentBlocks(ToolUseBlock.class).stream()
-                .map(v -> new AgentMessage.ToolCall(v.getId(), "tool_call", v.getName(), toJson(v.getInput())))
+                .filter(v -> !isFragmentTool(v.getName()))
+                .map(v -> new AgentMessage.ToolCall(v.getId(), "function", v.getName(), CollUtil.isNotEmpty(v.getInput()) ? toJson(v.getInput()) : v.getContent()))
                 .toList() : new ArrayList<>();
+    }
+
+    private boolean isFragmentTool(String name) {
+        return "fragment".equals(name) || "__fragment__".equals(name);
     }
 
     private List<AgentMessage.ToolResult> toToolResults(Msg msg) {

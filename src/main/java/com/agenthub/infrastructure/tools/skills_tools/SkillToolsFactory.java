@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.tools.skills_tools;
 
 import com.agenthub.application.port.out.repositories.SkillRepository;
+import com.agenthub.domain.enums.AgentToolType;
 import com.agenthub.domain.model.agent.AgentToolInfo;
 import com.agenthub.domain.model.tools.Skill;
 import com.agenthub.infrastructure.tools.AbstractToolsFactory;
@@ -26,8 +27,8 @@ public class SkillToolsFactory implements AbstractToolsFactory {
     private final SkillFileManager skillFileManager;
 
     @Override
-    public AgentToolInfo getToolInfo() {
-        return new AgentToolInfo(SKILL_TOOL);
+    public AgentToolType getToolInfo() {
+        return SKILL_TOOL;
     }
 
     @Override

@@ -24,7 +24,8 @@ public class ReActAgentContext {
     private String sessionId;
     private String chatModelId;
     private String systemPrompt;
-    private List<AgentToolInfo> tools;
+    private List<AgentToolInfo> toolInfos;
+    private List<Object> toolCallbacks;
     private List<String> knowledgeIds;
     private ModelStrategy modelStrategy;
     private ToolStrategy toolStrategy;

@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.agents.subagent;
 
 import com.agenthub.application.port.out.repositories.SessionRepository;
+import com.agenthub.application.usecase.ChatAttachmentUseCase;
 import com.agenthub.common.utils.RandomUtils;
 import com.agenthub.domain.model.agent.AbstractReActAgent;
 import com.agenthub.domain.model.agent.AgentMessage;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.agenthub.domain.model.agent.ChatMessage.*;
@@ -23,18 +25,33 @@ import static org.springframework.ai.util.json.JsonParser.toJson;
 @RequiredArgsConstructor
 public class AgentStreamExecutor {
 
-
     private final SessionRepository sessionRepository;
+    private final ChatAttachmentUseCase chatAttachmentUseCase;
 
-    public Flux<AgentMessage> streamMessages(AbstractReActAgent agent, String sessionId, String userMessage) {
+    public Flux<AgentMessage> streamMessages(AgentStreamCommand command) {
         StringBuilder responseBuilder = new StringBuilder();
-        saveMessage(user(sessionId, userMessage));
-        return agent.streamMessages(List.of(new AgentMessage(AgentMessage.MessageType.USER, userMessage)))
-                .doOnNext(msg -> appendMessages(sessionId, responseBuilder, msg))
-                .onErrorResume(throwable -> Flux.just(handlerThrowable(sessionId, throwable)))
-                .doFinally(signal -> finallyHandleMessage(sessionId, responseBuilder));
+        saveMessage(user(command.getSessionId(), command.getUserMessage()));
+        return command.getAgent().streamMessages(buildMessages(command))
+                .filter(this::shouldEmit)
+                .doOnNext(msg -> appendMessages(command.getSessionId(), responseBuilder, msg))
+                .onErrorResume(throwable -> Flux.just(handlerThrowable(command.getSessionId(), throwable)))
+                .doFinally(signal -> finallyHandleMessage(command.getSessionId(), responseBuilder));
     }
 
+    private List<AgentMessage> buildMessages(AgentStreamCommand command) {
+        List<AgentMessage> messages = new ArrayList<>();
+        messages.add(new AgentMessage(AgentMessage.MessageType.USER, command.getUserMessage()));
+        appendFileContext(messages, command.getFilePaths());
+        return messages;
+    }
+
+    private void appendFileContext(List<AgentMessage> messages, List<String> filePaths) {
+        if (filePaths == null || filePaths.isEmpty()) return;
+        String content = chatAttachmentUseCase.readFilesContent(filePaths);
+        if (content != null && !content.isEmpty()) {
+            messages.add(new AgentMessage(AgentMessage.MessageType.ASSISTANT, content));
+        }
+    }
 
     private AgentMessage handlerThrowable(String sessionId, Throwable throwable) {
         String treadId = RandomUtils.randomId();
@@ -44,9 +61,19 @@ public class AgentStreamExecutor {
         return new AgentMessage(AgentMessage.MessageType.SYSTEM, errorMessage);
     }
 
-    /**
-     * 追加响应内容。
-     */
+    private boolean shouldEmit(AgentMessage message) {
+        return !isFragmentToolCall(message);
+    }
+
+    private boolean isFragmentToolCall(AgentMessage message) {
+        if (message.getToolCalls() == null) return false;
+        return message.getToolCalls().stream().anyMatch(this::isFragmentToolCall);
+    }
+
+    private boolean isFragmentToolCall(AgentMessage.ToolCall call) {
+        return "fragment".equals(call.getName()) || "__fragment__".equals(call.getName());
+    }
+
     private void appendMessages(String sessionId, StringBuilder builder, AgentMessage message) {
         switch (message.getMessageType()) {
             case ASSISTANT -> handleAssistantMessage(sessionId, builder, message);
@@ -83,13 +110,9 @@ public class AgentStreamExecutor {
         return null;
     }
 
-    /**
-     * 保存助手消息。
-     */
     private void saveMessage(ChatMessage message) {
         if (message != null) {
             sessionRepository.saveMessage(message);
         }
     }
-
 }

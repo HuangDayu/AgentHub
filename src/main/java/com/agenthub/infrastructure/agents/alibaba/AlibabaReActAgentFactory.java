@@ -3,9 +3,7 @@ package com.agenthub.infrastructure.agents.alibaba;
 import com.agenthub.application.factory.ReActAgentFactory;
 import com.agenthub.application.factory.TeamAgentFactory;
 import com.agenthub.common.utils.TtlUtils;
-import com.agenthub.domain.enums.AgentToolType;
 import com.agenthub.domain.model.agent.AbstractReActAgent;
-import com.agenthub.domain.model.agent.AgentToolInfo;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.domain.model.strategy.ModelStrategy;
 import com.agenthub.infrastructure.agents.alibaba.hook.AgentHookFactory;
@@ -40,12 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
 import static com.agenthub.common.constants.AgentConstants.THREAD_CONTEXT_KEY;
-import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
-import static com.agenthub.domain.enums.AgentToolType.*;
 
 /**
  * Agent运行时工厂，根据配置创建AgentRuntime。
@@ -160,47 +155,15 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
 
     private List<ToolCallback> resolveTools(ReActAgentContext context) {
         List<ToolCallback> tools = new CopyOnWriteArrayList<>();
-        var collect = context.getTools().stream().collect(Collectors.groupingBy(AgentToolInfo::getType));
-        parallelStreamWithTtl(4, collect.entrySet(), entry -> {
-            if (!entry.getValue().isEmpty()) {
-                var toolCallbacks = resolveToolCallbacks(entry.getKey(), entry.getValue());
-                if (!toolCallbacks.isEmpty()) tools.addAll(toolCallbacks);
-            }
-            return null;
-        });
+        List<Object> toolCallbacks = context.getToolCallbacks();
+        if (toolCallbacks != null && !toolCallbacks.isEmpty()) {
+            tools.addAll(toolCallbacks.stream()
+                    .filter(ToolCallback.class::isInstance)
+                    .map(ToolCallback.class::cast)
+                    .toList());
+        }
         tools.addAll(graphToolsFactory.getToolCallbacks(context.getWorkspace()));
         return tools;
-    }
-
-
-    private Set<ToolCallback> resolveToolCallbacks(AgentToolType toolInfo, List<AgentToolInfo> toolIds) {
-        return switch (toolInfo) {
-            case SYSTEM_TOOL -> resolveSystemTools(toolIds);
-            case MCP_TOOL -> resolveMcpTools(toolIds);
-            case SKILL_TOOL -> resolveSkillTools(toolIds);
-            case HTTP_TOOL -> resolveHttpTools(toolIds);
-        };
-    }
-
-    /**
-     * 注意：SystemTools 是类级别的启用停用控制，所以这里需要根据 class name 进行过滤
-     *
-     * @return
-     */
-    private Set<ToolCallback> resolveSystemTools(List<AgentToolInfo> toolIds) {
-        return agentToolsFactory.getToolCallbacks(SYSTEM_TOOL, toolIds);
-    }
-
-    private Set<ToolCallback> resolveMcpTools(List<AgentToolInfo> toolIds) {
-        return agentToolsFactory.getToolCallbacks(MCP_TOOL, toolIds);
-    }
-
-    private Set<ToolCallback> resolveSkillTools(List<AgentToolInfo> toolIds) {
-        return agentToolsFactory.getToolCallbacks(SKILL_TOOL, toolIds);
-    }
-
-    private Set<ToolCallback> resolveHttpTools(List<AgentToolInfo> toolIds) {
-        return agentToolsFactory.getToolCallbacks(HTTP_TOOL, toolIds);
     }
 
     private List<ToolCallback> filterByName(Set<ToolCallback> callbacks, String name) {

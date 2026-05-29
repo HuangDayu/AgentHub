@@ -343,9 +343,24 @@
                     <small>{{ subagentMessages.length }} 条</small>
                   </div>
                   <div v-if="subagentMessages.length === 0" class="runtime-empty">暂无对话</div>
-                  <div v-for="msg in subagentMessages" :key="msg.messageId" :class="['subagent-msg', msg.role.toLowerCase()]">
-                    <div class="msg-role">{{ msg.role === 'USER' ? '用户' : '子Agent' }}</div>
-                    <div class="msg-content">{{ msg.content }}</div>
+                  <div v-for="msg in subagentMessages" :key="msg.messageId" :class="['subagent-msg', msg.role.toLowerCase(), msg.messageType?.toLowerCase()]">
+                    <div class="msg-role">{{ getMessageRoleLabel(msg) }}</div>
+                    <div class="msg-content">
+                      <template v-if="msg.role === 'USER'">{{ msg.content }}</template>
+                      <template v-else-if="msg.role === 'SYSTEM'">
+                        <div class="system-message">{{ msg.content }}</div>
+                      </template>
+                      <template v-else-if="msg.role === 'ASSISTANT' && (!msg.messageType || msg.messageType === 'ASSISTANT')">
+                        <MarkdownRenderer v-if="msg.content" :content="msg.content" />
+                        <ToolCallMessage v-for="toolCall in msg.toolCalls || []" :key="toolCall.id" :tool-call="toolCall" />
+                      </template>
+                      <template v-else-if="msg.role === 'TOOL' || msg.messageType === 'TOOL'">
+                        <ToolResultMessage v-for="response in msg.toolResponses || []" :key="response.id" :response="response" />
+                      </template>
+                      <template v-else-if="msg.messageType === 'SKILL'">
+                        <SkillMessage v-for="response in msg.toolResponses || []" :key="response.id" :response="response" />
+                      </template>
+                    </div>
                   </div>
                 </div>
               </template>
@@ -696,7 +711,7 @@ const skipRuntimeLoad = ref(false)
 const subagents = ref<import('@/types/subagent').Subagent[]>([])
 const selectedSubagentId = ref('')
 const selectedSubsessionId = ref('')
-const subagentMessages = ref<import('@/types/subagent').Subsession[]>([])
+const subagentMessages = ref<ChatMessage[]>([])
 const subsessions = ref<import('@/types/subagent').Subsession[]>([])
 const subsessionMap = ref(new Map<string, import('@/types/subagent').Subsession[]>())
 
@@ -879,8 +894,8 @@ async function onSelectSubagent(sa: import('@/types/subagent').Subagent) {
   const ss = selectedSubsession.value
   if (!ss) { subagentMessages.value = []; return }
   try {
-    const msgs = await listMessages(getSelection(), selectedAgentId.value, ss.id)
-    subagentMessages.value = msgs
+    const msgs = await listSubsessionMessages(getSelection(), selectedAgentId.value, ss.parentSessionId, ss.id)
+    subagentMessages.value = parseChatMessages(msgs)
   } catch { subagentMessages.value = [] }
 }
 
@@ -890,7 +905,7 @@ async function selectSubsession(ss: import('@/types/subagent').Subsession) {
   selectedSubsessionId.value = ss.id
   selectedSessionId.value = ss.id
   try {
-    const msgs = await listSubsessionMessages(getSelection(), selectedAgentId.value, ss.parentSessionId, ss.id)
+    const msgs = parseChatMessages(await listSubsessionMessages(getSelection(), selectedAgentId.value, ss.parentSessionId, ss.id))
     messages.value = msgs
     sessionMessages.value.set(ss.id, msgs)
   } catch { messages.value = [] }
@@ -1020,32 +1035,7 @@ async function loadMessages() {
   error.value = ''
   try {
     const rawMessages = await listMessages(getSelection(), selectedAgentId.value, selectedSessionId.value)
-    // 解析消息内容
-    const parsedMessages: ChatMessage[] = rawMessages.map(msg => {
-      const parsedMsg: ChatMessage = { ...msg }
-
-      // 解析工具调用
-      if (msg.role === 'ASSISTANT' && msg.content && msg.content.startsWith('[{')) {
-        try {
-          parsedMsg.toolCalls = JSON.parse(msg.content)
-          parsedMsg.content = '' // 清空content，避免重复显示
-        } catch (e) {
-          console.error('Failed to parse tool calls:', e)
-        }
-      }
-
-      // 解析工具响应
-      if (msg.role === 'TOOL' && msg.content && msg.content.startsWith('[{')) {
-        try {
-          parsedMsg.toolResponses = JSON.parse(msg.content)
-          parsedMsg.content = '' // 清空content，避免重复显示
-        } catch (e) {
-          console.error('Failed to parse tool responses:', e)
-        }
-      }
-
-      return parsedMsg
-    })
+    const parsedMessages = parseChatMessages(rawMessages)
 
     // 保存到该会话的消息列表
     // 注意：不要覆盖，而是合并暂存的消息
@@ -1072,6 +1062,29 @@ async function loadMessages() {
   } catch (e: any) {
     error.value = e.message || '加载消息失败'
   }
+}
+
+function parseChatMessages(rawMessages: ChatMessage[]) {
+  return rawMessages.map(parseChatMessage)
+}
+
+function parseChatMessage(message: ChatMessage): ChatMessage {
+  const parsedMessage: ChatMessage = { ...message }
+  parseToolCalls(parsedMessage)
+  parseToolResponses(parsedMessage)
+  return parsedMessage
+}
+
+function parseToolCalls(message: ChatMessage) {
+  if (message.role !== 'ASSISTANT' || !message.content?.startsWith('[{')) return
+  try { message.toolCalls = JSON.parse(message.content); message.content = '' }
+  catch (e) { console.error('Failed to parse tool calls:', e) }
+}
+
+function parseToolResponses(message: ChatMessage) {
+  if (message.role !== 'TOOL' || !message.content?.startsWith('[{')) return
+  try { message.toolResponses = JSON.parse(message.content); message.content = '' }
+  catch (e) { console.error('Failed to parse tool responses:', e) }
 }
 
 // Send message

@@ -6,20 +6,29 @@ import com.agenthub.domain.enums.AgentConfigCategory;
 import com.agenthub.domain.enums.AgentConfigType;
 import com.agenthub.domain.enums.AgentToolType;
 import com.agenthub.domain.exception.NotFoundException;
-import com.agenthub.domain.model.*;
+import com.agenthub.domain.model.PromptTemplateInfo;
+import com.agenthub.domain.model.Workspace;
 import com.agenthub.domain.model.agent.*;
 import com.agenthub.domain.model.strategy.GuardrailStrategy;
 import com.agenthub.domain.model.strategy.ModelStrategy;
 import com.agenthub.domain.model.strategy.RetrievalStrategy;
 import com.agenthub.domain.model.strategy.ToolStrategy;
+import com.agenthub.infrastructure.tools.AgentToolsFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
+
+import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
+import static com.agenthub.domain.enums.AgentToolType.*;
 
 /**
  * @author huangdayu
@@ -35,6 +44,7 @@ public class AgentContextUseCase implements AgentContextFactory {
     private final ToolStrategyRepository toolStrategyRepository;
     private final GuardrailStrategyRepository guardrailStrategyRepository;
     private final WorkspaceRepository workspaceRepository;
+    private final AgentToolsFactory agentToolsFactory;
 
     @Override
     public ReActAgentContext buildContext(String agentId, String sessionId) {
@@ -45,12 +55,14 @@ public class AgentContextUseCase implements AgentContextFactory {
 
 
     private ReActAgentContext buildContext(Agent agent, String sessionId, List<AgentConfig> configs, String workspaceId) {
+        List<AgentToolInfo> agentToolInfos = resolveTools(configs);
         return ReActAgentContext.builder()
                 .agent(agent)
                 .sessionId(sessionId)
                 .chatModelId(resolveChatModelId(configs))
                 .systemPrompt(resolveSystemPrompt(configs))
-                .tools(resolveTools(configs))
+                .toolInfos(agentToolInfos)
+                .toolCallbacks(resolveToolCallbacks(agentToolInfos))
                 .knowledgeIds(resolveKnowledgeIds(configs))
                 .modelStrategy(resolveModelStrategy(configs))
                 .toolStrategy(resolveToolStrategy(configs))
@@ -150,5 +162,50 @@ public class AgentContextUseCase implements AgentContextFactory {
                 .findFirst()
                 .map(AgentConfig::getConfigId)
                 .orElse(null);
+    }
+
+
+    private List<Object> resolveToolCallbacks(List<AgentToolInfo> agentToolInfos) {
+        List<Object> tools = new CopyOnWriteArrayList<>();
+        var collect = agentToolInfos.stream().collect(Collectors.groupingBy(AgentToolInfo::getType));
+        parallelStreamWithTtl(4, collect.entrySet(), entry -> {
+            if (!entry.getValue().isEmpty()) {
+                var toolCallbacks = resolveToolCallbacks(entry.getKey(), entry.getValue());
+                if (!toolCallbacks.isEmpty()) tools.addAll(toolCallbacks);
+            }
+            return null;
+        });
+        return tools;
+    }
+
+
+    private Set<ToolCallback> resolveToolCallbacks(AgentToolType toolInfo, List<AgentToolInfo> toolIds) {
+        return switch (toolInfo) {
+            case SYSTEM_TOOL -> resolveSystemTools(toolIds);
+            case MCP_TOOL -> resolveMcpTools(toolIds);
+            case SKILL_TOOL -> resolveSkillTools(toolIds);
+            case HTTP_TOOL -> resolveHttpTools(toolIds);
+        };
+    }
+
+    /**
+     * 注意：SystemTools 是类级别的启用停用控制，所以这里需要根据 class name 进行过滤
+     *
+     * @return
+     */
+    private Set<ToolCallback> resolveSystemTools(List<AgentToolInfo> toolIds) {
+        return agentToolsFactory.getToolCallbacks(SYSTEM_TOOL, toolIds);
+    }
+
+    private Set<ToolCallback> resolveMcpTools(List<AgentToolInfo> toolIds) {
+        return agentToolsFactory.getToolCallbacks(MCP_TOOL, toolIds);
+    }
+
+    private Set<ToolCallback> resolveSkillTools(List<AgentToolInfo> toolIds) {
+        return agentToolsFactory.getToolCallbacks(SKILL_TOOL, toolIds);
+    }
+
+    private Set<ToolCallback> resolveHttpTools(List<AgentToolInfo> toolIds) {
+        return agentToolsFactory.getToolCallbacks(HTTP_TOOL, toolIds);
     }
 }

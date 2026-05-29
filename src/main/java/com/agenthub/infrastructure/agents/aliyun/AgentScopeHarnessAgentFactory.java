@@ -36,14 +36,11 @@ import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
 import static com.agenthub.common.constants.AgentConstants.THREAD_CONTEXT_KEY;
-import static com.agenthub.domain.enums.AgentToolType.MCP_TOOL;
-import static com.agenthub.domain.enums.AgentToolType.SYSTEM_TOOL;
 
 /**
  * AgentScope Harness 框架的 Agent 运行时工厂。
@@ -161,10 +158,10 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
     }
 
     private Toolkit resolveToolkit(ReActAgentContext ctx) {
-        Set<ToolCallback> tools = new HashSet<>();
-        tools.addAll(agentToolsFactory.getToolCallbacks(MCP_TOOL, ctx.getTools()));
-        tools.addAll(agentToolsFactory.getToolCallbacks(SYSTEM_TOOL, ctx.getTools()));
-        return toolConverter.convertToToolkit(tools);
+        return toolConverter.convertToToolkit(ctx.getToolCallbacks().stream()
+                .filter(ToolCallback.class::isInstance)
+                .map(ToolCallback.class::cast)
+                .collect(Collectors.toSet()));
     }
 
 }

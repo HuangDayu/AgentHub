@@ -1,7 +1,9 @@
 package com.agenthub.application.port.out.agent;
 
 import com.agenthub.application.command.SubAgentChatCommand;
+import com.agenthub.application.command.SubagentExecutionCommand;
 import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.agent.Subagent;
 import reactor.core.publisher.Flux;
 
 /**
@@ -10,11 +12,17 @@ import reactor.core.publisher.Flux;
 public interface SubagentExecutionPort {
 
     /**
-     * 执行Subagent对话并保存消息。
-     *
-     * @return 消息流
+     * 后台执行Subagent任务。
+     */
+    void execute(SubagentExecutionCommand command);
+
+    /**
+     * 流式执行Subagent对话并保存消息。
      */
     Flux<AgentMessage> stream(SubAgentChatCommand subAgentChatCommand);
 
-
+    /**
+     * 停止Subagent执行。
+     */
+    boolean stop(Subagent subagent, String subsessionId);
 }

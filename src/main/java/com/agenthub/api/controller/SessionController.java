@@ -144,7 +144,11 @@ public class SessionController {
     public Flux<AgentMessageResponse> streamSubsessionMessage(
             @PathVariable String subsessionId,
             @RequestBody SendMessageRequest request) {
-        return subsessionUseCase.streamMessage(new SubAgentChatCommand(null, subsessionId, request.getContent(), request.getFilePaths()))
+        SubAgentChatCommand command = new SubAgentChatCommand();
+        command.setSubSessionId(subsessionId);
+        command.setUserMessage(request.getContent());
+        command.setFilePaths(request.getFilePaths());
+        return subsessionUseCase.streamMessage(command)
                 .map(v -> BeanUtil.copyProperties(v, AgentMessageResponse.class));
     }
 

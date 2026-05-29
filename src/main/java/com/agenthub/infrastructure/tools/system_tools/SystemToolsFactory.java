@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
-import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -72,8 +71,8 @@ public class SystemToolsFactory implements AbstractToolsFactory, SystemToolScann
     }
 
     @Override
-    public AgentToolInfo getToolInfo() {
-        return new AgentToolInfo(AgentToolType.SYSTEM_TOOL);
+    public AgentToolType getToolInfo() {
+        return AgentToolType.SYSTEM_TOOL;
     }
 
     public Set<ToolCallback> getAllToolCallbacks() {
@@ -83,7 +82,8 @@ public class SystemToolsFactory implements AbstractToolsFactory, SystemToolScann
     @Override
     public Set<ToolCallback> getToolCallbacks(String name) {
         return getAllToolCallbacks().stream()
-                .filter(toolCallback -> ClassUtils.getUserClass(toolCallback.getClass()).getSimpleName().equals(name))
+                .filter(toolCallback -> ClassUtils.getUserClass(toolCallback.getClass()).getSimpleName().equals(name) ||
+                        toolCallback.getToolDefinition().name().equals(name))
                 .collect(Collectors.toSet());
     }
 

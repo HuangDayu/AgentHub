@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.tools.mcp_tools;
 
 import com.agenthub.application.port.out.repositories.McpToolRepository;
+import com.agenthub.domain.enums.AgentToolType;
 import com.agenthub.domain.model.agent.AgentToolInfo;
 import com.agenthub.domain.model.tools.McpTool;
 import com.agenthub.infrastructure.tools.AbstractToolsFactory;
@@ -27,8 +28,8 @@ public class McpToolsFactory implements AbstractToolsFactory {
     private final McpToolRepository mcpToolRepository;
 
     @Override
-    public AgentToolInfo getToolInfo() {
-        return new AgentToolInfo(MCP_TOOL);
+    public AgentToolType getToolInfo() {
+        return MCP_TOOL;
     }
 
     @Override
