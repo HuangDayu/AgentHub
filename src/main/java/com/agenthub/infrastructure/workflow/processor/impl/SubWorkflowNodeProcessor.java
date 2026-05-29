@@ -3,7 +3,7 @@ package com.agenthub.infrastructure.workflow.processor.impl;
 import cn.hutool.core.convert.Convert;
 import com.agenthub.application.port.out.workflow.WorkflowExecutionPort;
 import com.agenthub.application.port.out.workflow.WorkflowStatePort;
-import com.agenthub.application.command.workflow.ExecutionCommand;
+import com.agenthub.application.command.ExecutionCommand;
 import com.agenthub.domain.enums.workflow.NodeType;
 import com.agenthub.domain.model.workflow.WorkflowContext;
 import com.agenthub.domain.model.workflow.WorkflowNode;

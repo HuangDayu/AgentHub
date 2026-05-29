@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import com.agenthub.application.command.AgentChatCommand;
 import com.agenthub.application.port.out.agent.AgentChatPort;
 import com.agenthub.application.port.out.repositories.AgentRepository;
 import com.agenthub.application.port.out.repositories.SessionRepository;
@@ -36,23 +37,23 @@ public class AgentChatUseCase implements AgentChatPort {
 
 
     @Override
-    public AgentMessage chatMessages(String agentId, String sessionId, String userMessage, List<String> filePaths) {
-        AbstractReActAgent agent = getAgent(agentId, sessionId);
-        saveMessage(user(sessionId, userMessage));
-        AgentMessage response = agent.call(buildAgentMessages(userMessage, filePaths));
-        saveMessage(assistant(sessionId, response.getText()));
+    public AgentMessage chatMessages(AgentChatCommand agentChatCommand) {
+        AbstractReActAgent agent = getAgent(agentChatCommand.getAgentId(), agentChatCommand.getSessionId());
+        saveMessage(user(agentChatCommand.getSessionId(), agentChatCommand.getUserMessage()));
+        AgentMessage response = agent.call(buildAgentMessages(agentChatCommand.getUserMessage(), agentChatCommand.getFilePaths()));
+        saveMessage(assistant(agentChatCommand.getSessionId(), response.getText()));
         return response;
     }
 
     @Override
-    public Flux<AgentMessage> streamMessages(String agentId, String sessionId, String userMessage, List<String> filePaths) {
-        AbstractReActAgent agent = getAgent(agentId, sessionId);
+    public Flux<AgentMessage> streamMessages(AgentChatCommand agentChatCommand) {
+        AbstractReActAgent agent = getAgent(agentChatCommand.getAgentId(), agentChatCommand.getSessionId());
         StringBuilder responseBuilder = new StringBuilder();
-        saveMessage(user(sessionId, userMessage));
-        return agent.streamMessages(buildAgentMessages(userMessage, filePaths))
-                .doOnNext(msg -> appendMessages(sessionId, responseBuilder, msg))
-                .onErrorResume(throwable -> Flux.just(handlerThrowable(sessionId, throwable)))
-                .doFinally(signal -> finallyHandleMessage(sessionId, responseBuilder));
+        saveMessage(user(agentChatCommand.getSessionId(), agentChatCommand.getUserMessage()));
+        return agent.streamMessages(buildAgentMessages(agentChatCommand.getUserMessage(), agentChatCommand.getFilePaths()))
+                .doOnNext(msg -> appendMessages(agentChatCommand.getSessionId(), responseBuilder, msg))
+                .onErrorResume(throwable -> Flux.just(handlerThrowable(agentChatCommand.getSessionId(), throwable)))
+                .doFinally(signal -> finallyHandleMessage(agentChatCommand.getSessionId(), responseBuilder));
     }
 
     @Override

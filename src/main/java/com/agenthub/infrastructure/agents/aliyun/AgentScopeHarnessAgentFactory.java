@@ -13,6 +13,7 @@ import com.agenthub.infrastructure.agents.aliyun.session.SessionFactory;
 import com.agenthub.infrastructure.agents.aliyun.tools.SpringToolToAgentScopeConverter;
 import com.agenthub.infrastructure.agents.aliyun.tools.ToolkitFactory;
 import com.agenthub.infrastructure.agents.aliyun.workspace.WorkspaceManagerFactory;
+import com.agenthub.infrastructure.context.TenantContextGetter;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import com.agenthub.infrastructure.telemetry.AgentStudioMessageHandler;
 import com.agenthub.infrastructure.tools.AgentToolsFactory;
@@ -28,15 +29,19 @@ import io.agentscope.harness.agent.HarnessAgent;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.common.constants.AgentConstants.THREAD_CONTEXT_KEY;
 import static com.agenthub.domain.enums.AgentToolType.MCP_TOOL;
 import static com.agenthub.domain.enums.AgentToolType.SYSTEM_TOOL;
 
@@ -72,6 +77,7 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
     private final SpringToolToAgentScopeConverter toolConverter;
     private final ObjectProvider<AgentScopeTeamAgentFactory> agentScopeTeamAgentFactory;
     private final AgentStudioMessageHandler agentStudioMessageHandler;
+    private final TenantContextGetter tenantContextGetter;
 
     @Override
     public AbstractReActAgent create(ReActAgentContext ctx) {
@@ -117,11 +123,18 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
                 .compaction(memoryConfigFactory.createDefaultCompactionConfig())
                 .enablePendingToolRecovery(true)
                 .hook(resolveStudioMessageHook(config, ctx))
-                .toolExecutionContext(ToolExecutionContext.builder().register(AGENT_CONTEXT_KEY, ctx).build())
+                .toolExecutionContext(resolveToolExecutionContext(ctx))
                 .toolResultEviction(memoryConfigFactory.createDefaultToolResultEvictionConfig())
                 .toolkit(resolveToolkit(ctx))
                 .skillRepository(new FileSystemSkillRepository(ctx.getWorkspace().getShareSkillsPath()))
                 .knowledges(resolveKnowledge(ctx))
+                .build();
+    }
+
+    private ToolExecutionContext resolveToolExecutionContext(ReActAgentContext ctx) {
+        return ToolExecutionContext.builder()
+                .register(AGENT_CONTEXT_KEY, ctx)
+                .register(THREAD_CONTEXT_KEY, tenantContextGetter.findTenantThreadContext().orElse(null))
                 .build();
     }
 
@@ -148,10 +161,10 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
     }
 
     private Toolkit resolveToolkit(ReActAgentContext ctx) {
-        var systemTools = agentToolsFactory.getToolCallbacks(SYSTEM_TOOL, ctx.getTools());
-        var mcpTools = agentToolsFactory.getToolCallbacks(MCP_TOOL, ctx.getTools());
-        systemTools.addAll(mcpTools);
-        return toolConverter.convertToToolkit(systemTools);
+        Set<ToolCallback> tools = new HashSet<>();
+        tools.addAll(agentToolsFactory.getToolCallbacks(MCP_TOOL, ctx.getTools()));
+        tools.addAll(agentToolsFactory.getToolCallbacks(SYSTEM_TOOL, ctx.getTools()));
+        return toolConverter.convertToToolkit(tools);
     }
 
 }

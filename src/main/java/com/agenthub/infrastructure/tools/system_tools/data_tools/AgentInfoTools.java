@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * Agent自身数据域工具，提供Agent身份与配置信息查询（已脱敏）。
@@ -24,9 +25,7 @@ public class AgentInfoTools {
 
     private final AgentConfigRepository agentConfigRepository;
 
-    private ReActAgentContext getAgentContext(ToolContext toolContext) {
-        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
-    }
+
 
     @Tool(description = "获取当前Agent自身信息（不含租户、工作空间等内部ID）")
     public AgentInfoDTO getAgentInfo(ToolContext toolContext) {

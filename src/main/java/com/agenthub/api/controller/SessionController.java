@@ -3,11 +3,16 @@ package com.agenthub.api.controller;
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.*;
 import com.agenthub.api.mapper.MessageResponseMapper;
+import com.agenthub.application.command.AgentChatCommand;
+import com.agenthub.application.command.SubAgentChatCommand;
+import com.agenthub.application.command.SubsessionCommand;
 import com.agenthub.application.dto.ChatAttachmentOutput;
 import com.agenthub.application.dto.SessionOutput;
+import com.agenthub.application.dto.SubsessionOutput;
 import com.agenthub.application.usecase.AgentChatUseCase;
 import com.agenthub.application.usecase.ChatAttachmentUseCase;
 import com.agenthub.application.usecase.SessionUseCase;
+import com.agenthub.application.usecase.SubsessionUseCase;
 import com.agenthub.domain.model.agent.AgentMessage;
 import com.agenthub.domain.model.agent.ChatMessage;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +26,7 @@ import reactor.core.publisher.Flux;
 import java.util.List;
 
 /**
- * 会话 API 控制器。
+ * 会话 API 控制器，管理会话及其子会话（Subsession）。
  */
 @RequiredArgsConstructor
 @RestController
@@ -30,111 +35,117 @@ public class SessionController {
     private final SessionUseCase sessionUseCase;
     private final AgentChatUseCase agentChatUseCase;
     private final ChatAttachmentUseCase chatAttachmentUseCase;
+    private final SubsessionUseCase subsessionUseCase;
 
-
-    /**
-     * 将会话输出转换为响应DTO。
-     *
-     * @param output 会话输出DTO
-     * @return 会话响应DTO
-     */
     private static SessionResponse toResponse(SessionOutput output) {
         return BeanUtil.copyProperties(output, SessionResponse.class);
     }
 
-    /**
-     * 为智能体创建新会话。
-     *
-     * @param agentId 智能体ID
-     * @param request 创建会话请求（可选）
-     * @return 创建的会话响应
-     */
     @PostMapping
-    public ResponseEntity<SessionResponse> createSession(@PathVariable String agentId, @RequestBody(required = false) CreateSessionRequest request) {
+    public ResponseEntity<SessionResponse> createSession(
+            @PathVariable String agentId,
+            @RequestBody(required = false) CreateSessionRequest request) {
         String name = request != null ? request.getName() : null;
         SessionOutput output = sessionUseCase.create(agentId, name);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(toResponse(output));
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(output));
     }
 
-    /**
-     * 查询智能体的所有会话。
-     *
-     * @param agentId 智能体ID
-     * @return 会话响应列表
-     */
     @GetMapping
     public List<SessionResponse> listSessions(@PathVariable String agentId) {
         return sessionUseCase.list(agentId).stream()
-                .map(SessionController::toResponse)
-                .toList();
+                .map(SessionController::toResponse).toList();
     }
 
-    /**
-     * 向会话发送消息并获取回复。
-     *
-     * @param agentId   智能体ID
-     * @param sessionId 会话ID
-     * @param request   消息请求体
-     * @return 回复消息响应
-     */
     @PostMapping("/{sessionId}/messages")
     public AgentMessageResponse sendMessage(
             @PathVariable String agentId,
             @PathVariable String sessionId,
-            @RequestBody SendMessageRequest request
-    ) {
-        AgentMessage agentMessage = agentChatUseCase.chatMessages(agentId, sessionId, request.getContent(), request.getFilePaths());
+            @RequestBody SendMessageRequest request) {
+        AgentMessage agentMessage = agentChatUseCase.chatMessages(new AgentChatCommand(agentId, sessionId, request.getContent(), request.getFilePaths()));
         return BeanUtil.copyProperties(agentMessage, AgentMessageResponse.class);
     }
 
-    /**
-     * 获取会话的消息历史。
-     *
-     * @param agentId   智能体ID
-     * @param sessionId 会话ID
-     * @return 消息响应列表
-     */
     @GetMapping("/{sessionId}/messages")
     public List<MessageResponse> listMessages(
             @PathVariable String agentId,
-            @PathVariable String sessionId
-    ) {
+            @PathVariable String sessionId) {
         List<ChatMessage> messages = sessionUseCase.list(agentId, sessionId);
-        return messages.stream()
-                .map(MessageResponseMapper::toResponse)
-                .toList();
+        return messages.stream().map(MessageResponseMapper::toResponse).toList();
     }
 
-    /**
-     * 流式发送消息并返回SSE响应。
-     *
-     * @param agentId   智能体ID
-     * @param sessionId 会话ID
-     * @param request   消息请求体
-     * @return SSE发射器
-     */
-    @PostMapping(value = "/{sessionId}/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/{sessionId}/messages/stream",
+            produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<AgentMessageResponse> sendMessageStream(
             @PathVariable String agentId,
             @PathVariable String sessionId,
-            @RequestBody SendMessageRequest request
-    ) {
-        return agentChatUseCase.streamMessages(agentId, sessionId, request.getContent(), request.getFilePaths())
+            @RequestBody SendMessageRequest request) {
+        return agentChatUseCase.streamMessages(new AgentChatCommand(agentId, sessionId, request.getContent(), request.getFilePaths()))
                 .map(v -> BeanUtil.copyProperties(v, AgentMessageResponse.class));
     }
 
-    @PostMapping(value = "/{sessionId}/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/{sessionId}/attachments",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public List<ChatAttachmentResponse> uploadAttachments(
             @PathVariable String agentId,
             @PathVariable String sessionId,
             @RequestPart(name = "file", required = false) MultipartFile file,
-            @RequestPart(name = "files", required = false) List<MultipartFile> files
-    ) {
+            @RequestPart(name = "files", required = false) List<MultipartFile> files) {
         sessionUseCase.list(agentId, sessionId);
         return chatAttachmentUseCase.upload(sessionId, mergeFiles(file, files)).stream()
-                .map(this::toAttachmentResponse)
+                .map(this::toAttachmentResponse).toList();
+    }
+
+    @DeleteMapping("/{sessionId}")
+    public void deleteSession(@PathVariable String sessionId) {
+        sessionUseCase.deleteSession(sessionId);
+    }
+
+
+    @PostMapping("/{sessionId}/subsessions")
+    public ResponseEntity<SubsessionResponse> createSubsession(
+            @PathVariable String sessionId,
+            @PathVariable String agentId,
+            @RequestBody SubsessionRequest request) {
+        SubsessionCommand command = new SubsessionCommand(
+                sessionId, request.getSubagentId(), request.getName());
+        SubsessionOutput output = subsessionUseCase.create(command);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(toSubsessionResponse(output));
+    }
+
+    @GetMapping("/{sessionId}/subsessions")
+    public List<SubsessionResponse> listSubsessions(@PathVariable String sessionId) {
+        return subsessionUseCase.listByParentSession(sessionId).stream()
+                .map(SessionController::toSubsessionResponse).toList();
+    }
+
+    @GetMapping("/{sessionId}/subsessions/{subsessionId}")
+    public SubsessionResponse getSubsession(@PathVariable String subsessionId) {
+        return toSubsessionResponse(subsessionUseCase.get(subsessionId));
+    }
+
+    @PostMapping("/{sessionId}/subsessions/{subsessionId}/close")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void closeSubsession(@PathVariable String subsessionId) {
+        subsessionUseCase.close(subsessionId);
+    }
+
+    @GetMapping("/{sessionId}/subsessions/{subsessionId}/messages")
+    public List<MessageResponse> listSubsessionMessages(
+            @PathVariable String agentId,
+            @PathVariable String subsessionId) {
+        return subsessionUseCase.getMessages(subsessionId).stream()
+                .map(MessageResponseMapper::toResponse)
                 .toList();
+    }
+
+    @PostMapping(value = "/{sessionId}/subsessions/{subsessionId}/messages/stream",
+            produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<AgentMessageResponse> streamSubsessionMessage(
+            @PathVariable String subsessionId,
+            @RequestBody SendMessageRequest request) {
+        return subsessionUseCase.streamMessage(new SubAgentChatCommand(null, subsessionId, request.getContent(), request.getFilePaths()))
+                .map(v -> BeanUtil.copyProperties(v, AgentMessageResponse.class));
     }
 
     private List<MultipartFile> mergeFiles(MultipartFile file, List<MultipartFile> files) {
@@ -147,9 +158,7 @@ public class SessionController {
         return BeanUtil.copyProperties(output, ChatAttachmentResponse.class);
     }
 
-    @DeleteMapping("/{sessionId}")
-    public void deleteSession(@PathVariable String sessionId) {
-        sessionUseCase.deleteSession(sessionId);
+    private static SubsessionResponse toSubsessionResponse(SubsessionOutput output) {
+        return BeanUtil.copyProperties(output, SubsessionResponse.class);
     }
-
 }

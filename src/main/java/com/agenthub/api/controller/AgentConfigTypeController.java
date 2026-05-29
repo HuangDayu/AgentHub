@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/agent-config-types")
+@RequestMapping("/api/v1/workspaces/{workspaceId}/agent-config-types")
 public class AgentConfigTypeController {
     private final AgentConfigTypeUseCase useCase;
 

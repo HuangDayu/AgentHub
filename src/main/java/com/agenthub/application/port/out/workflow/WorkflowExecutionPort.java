@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.workflow;
 
-import com.agenthub.application.command.workflow.ExecutionCommand;
+import com.agenthub.application.command.ExecutionCommand;
 import com.agenthub.domain.model.workflow.WorkflowContext;
 import com.agenthub.domain.model.workflow.NodeResult;
 import reactor.core.publisher.Flux;

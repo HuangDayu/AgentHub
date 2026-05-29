@@ -24,7 +24,7 @@ export interface AvailableConfig {
 
 export function getConfigTypes(selection: SelectionState) {
   return requestJson<ConfigTypeDefinition[]>(
-    '/api/v1/agent-config-types',
+      `/api/v1/workspaces/${selection.workspaceId}/agent-config-types`,
     { baseUrl: runtimeConfig.agentApiBase, method: 'GET', headers: scopedHeaders(selection) }
   )
 }
@@ -33,7 +33,7 @@ export function getAvailableConfigs(selection: SelectionState, category: string,
   const params = new URLSearchParams({ category, type })
   if (workspaceId) params.append('workspaceId', workspaceId)
   return requestJson<AvailableConfig[]>(
-    `/api/v1/agent-config-types/available?${params.toString()}`,
+    `/api/v1/workspaces/${workspaceId}/agent-config-types/available?${params.toString()}`,
     { baseUrl: runtimeConfig.agentApiBase, method: 'GET', headers: scopedHeaders(selection) }
   )
 }

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * 会话数据域工具，提供会话信息查询与创建（不含消息内容）。
@@ -25,9 +26,7 @@ public class SessionTools {
 
     private final SessionRepository sessionRepository;
 
-    private ReActAgentContext getAgentContext(ToolContext toolContext) {
-        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
-    }
+
 
     @Tool(description = "获取当前Agent的会话列表（不含消息内容）")
     public List<AgentSessionDTO> getSessions(ToolContext toolContext) {

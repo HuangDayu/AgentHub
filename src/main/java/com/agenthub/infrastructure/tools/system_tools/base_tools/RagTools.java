@@ -14,6 +14,7 @@ import org.springframework.ai.tool.annotation.Tool;
 import java.util.List;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * @author huangdayu
@@ -27,13 +28,13 @@ public class RagTools {
 
     @Tool(description = "获取知识库列表")
     public List<KnowledgeBase> getKnowledgeBases(ToolContext toolContext) {
-        ReActAgentContext context = (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
+        ReActAgentContext context = getAgentContext(toolContext);
         return knowledgeBaseRepository.findByIds(context.getKnowledgeIds());
     }
 
     @Tool(description = "知识库查询")
     public List<RetrievalChunk> ragQuery(String question, List<String> kdIds, ToolContext toolContext) {
-        ReActAgentContext context = (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
+        ReActAgentContext context = getAgentContext(toolContext);
         RagCommand ragCommand = RagCommand.builder().kbIds(kdIds).prompt(question)
                 .agentId(context.getAgent().getId())
                 .strategy(context.getRetrievalStrategy())

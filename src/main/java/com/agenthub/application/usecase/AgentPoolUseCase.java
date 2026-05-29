@@ -67,7 +67,7 @@ public class AgentPoolUseCase implements AgentPoolFactory {
         for (Map.Entry<String, AbstractReActAgent> entry : AGENT_POOL.getColumn(agentId).entrySet()) {
             AGENT_POOL.remove(entry.getKey(), agentId);
             CONTEXT_POOL.remove(entry.getKey(), agentId);
-            AbstractReActAgent agent = getAgent(entry.getKey(), agentId);
+            AbstractReActAgent agent = getAgent(agentId, entry.getKey());
             agent.init();
         }
     }
@@ -92,9 +92,10 @@ public class AgentPoolUseCase implements AgentPoolFactory {
             agentIds.forEach(v -> {
                 try {
                     reloadAgent(v);
-                    agentIds.remove(v);
                 } catch (Exception e) {
                     log.error("Failed to reload agent: {}", v, e);
+                } finally {
+                    agentIds.remove(v);
                 }
             });
         }

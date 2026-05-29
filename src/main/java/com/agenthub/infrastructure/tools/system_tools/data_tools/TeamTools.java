@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * 团队数据域工具，提供Agent团队信息查询（已脱敏）。
@@ -24,9 +25,7 @@ public class TeamTools {
 
     private final AgentTeamRepository agentTeamRepository;
 
-    private ReActAgentContext getAgentContext(ToolContext toolContext) {
-        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
-    }
+
 
     private Workspace getWorkspace(ToolContext toolContext) {
         return getAgentContext(toolContext).getWorkspace().getWorkspace();

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -38,27 +39,35 @@ public class TenantContextGetter {
      * @return 租户ID，若无则返回null
      */
     public String getTenantId() {
-        return findFirstTenantContext().getTenantId();
+        return getTenantThreadContext().getTenantId();
     }
 
 
     public String getWorkspaceId() {
-        return findFirstTenantContext().getWorkspaceId();
+        return getTenantThreadContext().getWorkspaceId();
     }
 
 
     public boolean isIgnoreTenantContext() {
-        return findFirstTenantContext().isIgnoreTenantContext();
+        return getTenantThreadContext().isIgnoreTenantContext();
     }
 
     public String getRequestId() {
-        return findFirstTenantContext().getRequestId();
+        return getTenantThreadContext().getRequestId();
+    }
+
+    public Optional<TenantThreadContext> findTenantThreadContext() {
+        try {
+            return Optional.ofNullable(getTenantThreadContext());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     /**
      * 查找第一个有效的上下文数据对象
      */
-    private TenantThreadContext findFirstTenantContext() {
+    public TenantThreadContext getTenantThreadContext() {
         return tenantContextSupplier.stream()
                 .flatMap(supplier -> {
                     try {

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * 工具数据域工具，提供HTTP工具、MCP工具、系统工具、工具策略查询（已脱敏）。
@@ -27,9 +28,7 @@ public class ToolTools {
     private final SystemToolsRepository systemToolsRepository;
     private final ToolStrategyRepository toolStrategyRepository;
 
-    private ReActAgentContext getAgentContext(ToolContext toolContext) {
-        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
-    }
+
 
     private Workspace getWorkspace(ToolContext toolContext) {
         return getAgentContext(toolContext).getWorkspace().getWorkspace();

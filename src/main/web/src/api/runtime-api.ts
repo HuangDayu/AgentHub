@@ -119,7 +119,9 @@ export async function sendMessageStream(
     onDone: () => void
     onError: (error: Error) => void
   },
-): Promise<void> {  const headers: Record<string, string> = {
+  subsessionId?: string,
+): Promise<void> {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'text/event-stream',
   }
@@ -134,10 +136,10 @@ export async function sendMessageStream(
     // localStorage unavailable
   }
 
-  const url = new URL(
-    `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/messages/stream`,
-    runtimeConfig.runtimeApiBase,
-  )
+  const path = subsessionId
+    ? `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/subsessions/${subsessionId}/messages/stream`
+    : `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/messages/stream`
+  const url = new URL(path, runtimeConfig.runtimeApiBase)
 
   try {
     // 创建AbortController用于超时控制
@@ -250,8 +252,49 @@ function parseStreamMessage(data: string): StreamMessage | null {
 }
 
 /**
+ * 流式发送消息到Subsession。
+ */
+export async function streamSubsessionMessage(
+  selection: SelectionState,
+  agentId: string, sessionId: string, subsessionId: string,
+  content: string,
+  callbacks: { onMessage: (t: string) => void; onDone: () => void; onError: (e: Error) => void }
+): Promise<void> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', Accept: 'text/event-stream' }
+  if (selection.tenantId) headers['X-Tenant-Id'] = selection.tenantId
+  if (selection.workspaceId) headers['X-Workspace-Id'] = selection.workspaceId
+  try { const t = localStorage.getItem('agenthub_access_token'); if (t) headers['Authorization'] = `Bearer ${t}` } catch { }
+  const url = new URL(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/subsessions/${subsessionId}/messages/stream`, runtimeConfig.runtimeApiBase)
+  try {
+    const ctrl = new AbortController()
+    const tid = setTimeout(() => ctrl.abort(), 600000)
+    const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ content }), signal: ctrl.signal })
+    clearTimeout(tid)
+    if (!res.ok) throw new Error(await res.text() || `失败: ${res.status}`)
+    if (!res.body) throw new Error('不支持 ReadableStream')
+    const reader = res.body.getReader(), decoder = new TextDecoder()
+    let buf = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buf += decoder.decode(value, { stream: true })
+      const lines = buf.split('\n'); buf = lines.pop() ?? ''
+      for (const l of lines) {
+        const s = l.trim()
+        if (!s) continue
+        if (s.startsWith('data:')) {
+          const d = s.slice(5).trim()
+          if (d === '[DONE]') { callbacks.onDone(); return }
+          callbacks.onMessage(d)
+        } else if (s.startsWith('event: done')) { callbacks.onDone(); return }
+      }
+    }
+    callbacks.onDone()
+  } catch (e) { callbacks.onError(e instanceof Error ? e : new Error(String(e))) }
+}
+
+/**
  * Delete a session.
- * Backend endpoint: DELETE /api/v1/workspaces/${selection.workspaceId}/agents/{agentId}/sessions/{sessionId}
  */
 export function deleteSession(selection: SelectionState, agentId: string, sessionId: string) {
   return requestJson<void>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}`, {
@@ -259,4 +302,24 @@ export function deleteSession(selection: SelectionState, agentId: string, sessio
     method: 'DELETE',
     headers: scopedHeaders(selection),
   })
+}
+
+/**
+ * List messages for a subsession.
+ * Backend: GET /api/v1/workspaces/{wsId}/agents/{agentId}/sessions/{sessionId}/subsessions/{subsessionId}/messages
+ */
+export function listSubsessionMessages(selection: SelectionState, agentId: string, sessionId: string, subsessionId: string) {
+  return requestJson<ChatMessage[]>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/subsessions/${subsessionId}/messages`, {
+    baseUrl: runtimeConfig.runtimeApiBase,
+    method: 'GET',
+    headers: scopedHeaders(selection),
+  }).then((items) =>
+    items.map((raw: any) => ({
+      messageId: raw.id ?? raw.messageId,
+      sessionId: raw.sessionId,
+      role: normalizeRole(raw.role),
+      content: raw.content,
+      createdAt: raw.createdAt,
+    })),
+  )
 }

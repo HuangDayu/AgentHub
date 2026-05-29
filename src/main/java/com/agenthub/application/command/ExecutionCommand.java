@@ -1,4 +1,4 @@
-package com.agenthub.application.command.workflow;
+package com.agenthub.application.command;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

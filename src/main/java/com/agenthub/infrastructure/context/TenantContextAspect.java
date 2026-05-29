@@ -6,7 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.ai.chat.model.ToolContext;
+import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
+
+import static com.agenthub.common.constants.AgentConstants.THREAD_CONTEXT_KEY;
 
 /**
  * 租户上下文AOP切面。
@@ -41,5 +46,25 @@ public class TenantContextAspect {
         }
         return joinPoint.proceed();
     }
+
+
+    @Around("@annotation(tool)")
+    public Object openToolsTenantContext(ProceedingJoinPoint joinPoint, Tool tool) throws Throwable {
+        if (TenantContextHolder.current().isEmpty()) {
+            Object[] paramValues = joinPoint.getArgs();
+            for (Object paramValue : paramValues) {
+                if (paramValue instanceof ToolContext toolContext) {
+                    Object o = toolContext.getContext().get(THREAD_CONTEXT_KEY);
+                    if (o instanceof TenantThreadContext tenantThreadContext) {
+                        try (TenantContextHolder.TenantContextScope scope = TenantContextHolder.open(tenantThreadContext)) {
+                            return joinPoint.proceed();
+                        }
+                    }
+                }
+            }
+        }
+        return joinPoint.proceed();
+    }
+
 }
 

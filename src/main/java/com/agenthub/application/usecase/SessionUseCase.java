@@ -2,9 +2,11 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.application.dto.SessionOutput;
 import com.agenthub.application.port.out.repositories.SessionRepository;
+import com.agenthub.application.port.out.repositories.SubsessionRepository;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.agent.ChatMessage;
 import com.agenthub.domain.model.agent.Session;
+import com.agenthub.domain.model.agent.Subsession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +20,7 @@ import java.util.List;
 public class SessionUseCase {
 
     private final SessionRepository sessionRepository;
+    private final SubsessionRepository subsessionRepository;
     private final AgentUseCase agentUseCase;
 
 
@@ -37,27 +40,26 @@ public class SessionUseCase {
 
 
     /**
-     * 列出指定会话的所有消息。
+     * 列出指定会话或子会话的所有消息。
      *
      * @param agentId   智能体ID
-     * @param sessionId 会话ID
+     * @param sessionId 会话ID（可为Session或Subsession ID）
      * @return 消息列表
      */
     public List<ChatMessage> list(String agentId, String sessionId) {
-        Session session = findAndValidateSession(agentId, sessionId);
-        return session.getMessages();
-    }
-
-    /**
-     * 查找并验证会话归属。
-     */
-    private Session findAndValidateSession(String agentId, String sessionId) {
-        Session session = sessionRepository.findSessionMessageById(sessionId)
-                .orElseThrow(() -> new NotFoundException("Session not found: " + sessionId));
-        if (!session.getAgentId().equals(agentId)) {
-            throw new NotFoundException("Session not owned by agent: " + agentId);
+        // 先尝试作为Session加载
+        var sessionOpt = sessionRepository.findSessionMessageById(sessionId);
+        if (sessionOpt.isPresent()) {
+            Session session = sessionOpt.get();
+            if (!session.getAgentId().equals(agentId)) {
+                throw new NotFoundException("Session not owned by agent: " + agentId);
+            }
+            return session.getMessages();
         }
-        return session;
+        // 回退：作为Subsession加载
+        return subsessionRepository.findByIdWithMessages(sessionId)
+                .map(Subsession::getMessages)
+                .orElseThrow(() -> new NotFoundException("Session/Subsession not found: " + sessionId));
     }
 
 

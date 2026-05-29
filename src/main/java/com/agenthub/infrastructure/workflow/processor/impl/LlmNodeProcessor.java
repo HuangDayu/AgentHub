@@ -1,12 +1,13 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
-import com.agenthub.domain.model.workflow.WorkflowChat;
+import com.agenthub.application.command.AgentChatCommand;
 import com.agenthub.application.port.out.agent.AgentChatPort;
 import com.agenthub.application.port.out.repositories.SessionRepository;
 import com.agenthub.domain.enums.workflow.NodeType;
+import com.agenthub.domain.model.agent.Session;
+import com.agenthub.domain.model.workflow.WorkflowChat;
 import com.agenthub.domain.model.workflow.WorkflowContext;
 import com.agenthub.domain.model.workflow.WorkflowNode;
-import com.agenthub.domain.model.agent.Session;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,7 +41,7 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
     @Override
     protected Mono<Map<String, Object>> doProcess(WorkflowNode node, WorkflowContext context) {
         return buildChatRequest(node, context)
-            .flatMap(request -> executeChat(request, node));
+                .flatMap(request -> executeChat(request, node));
     }
 
     private Mono<WorkflowChat> buildChatRequest(WorkflowNode node, WorkflowContext context) {
@@ -61,7 +63,7 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
 
     private Mono<Map<String, Object>> executeChat(WorkflowChat request, WorkflowNode node) {
         Boolean streaming = (Boolean) node.getConfig().getParameters().getOrDefault("streaming", false);
-        
+
         if (Boolean.TRUE.equals(streaming)) {
             return executeStreamingChat(request);
         } else {
@@ -73,8 +75,8 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
         return Mono.fromCallable(() -> {
             // 确保 session 存在，如果不存在则创建
             ensureSessionExists(workflowChat.getAgentId(), workflowChat.getSessionId());
-            
-            var response = agentChatPort.chatMessages(workflowChat.getAgentId(), workflowChat.getSessionId(), workflowChat.getMessage());
+
+            var response = agentChatPort.chatMessages(new AgentChatCommand(workflowChat.getAgentId(), workflowChat.getSessionId(), workflowChat.getMessage(), List.of()));
             Map<String, Object> result = new HashMap<>();
             result.put("content", response.getText());
             result.put("success", true);
@@ -85,18 +87,18 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
     private Mono<Map<String, Object>> executeStreamingChat(WorkflowChat workflowChat) {
         // 确保 session 存在，如果不存在则创建
         ensureSessionExists(workflowChat.getAgentId(), workflowChat.getSessionId());
-        
-        return agentChatPort.streamMessages(workflowChat.getAgentId(), workflowChat.getSessionId(), workflowChat.getMessage())
-            .collectList()
-            .map(messages -> {
-                Map<String, Object> result = new HashMap<>();
-                result.put("messages", messages);
-                result.put("count", messages.size());
-                result.put("success", true);
-                return result;
-            });
+
+        return agentChatPort.streamMessages(new AgentChatCommand(workflowChat.getAgentId(), workflowChat.getSessionId(), workflowChat.getMessage(), List.of()))
+                .collectList()
+                .map(messages -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("messages", messages);
+                    result.put("count", messages.size());
+                    result.put("success", true);
+                    return result;
+                });
     }
-    
+
     /**
      * 确保 Session 存在。如果不存在则创建。
      * 工作流执行时使用 executionId 作为 sessionId,但这个 session 可能还没创建。

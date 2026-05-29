@@ -32,19 +32,16 @@ public class LoggingAgentStudioMessageHandler implements AgentStudioMessageHandl
 
     @Override
     public void registerRun(RegisterRunRequest payload) {
-        log.info("Register run: {}", toJson(payload));
         saveRunRegistration(payload);
     }
 
     @Override
     public void pushMessage(PushMessageRequest payload) {
-        log.info("Push message: {}", toJson(payload));
         saveMessagePush(payload);
     }
 
     @Override
     public void requestUserInput(RequestUserInputRequest payload) {
-        log.info("Request user input: {}", toJson(payload));
         saveUserInputPrompt(payload);
     }
 

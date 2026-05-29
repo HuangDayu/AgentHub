@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * 技能数据域工具，提供技能信息查询（已脱敏）。
@@ -23,9 +24,7 @@ public class SkillTools {
 
     private final SkillRepository skillRepository;
 
-    private ReActAgentContext getAgentContext(ToolContext toolContext) {
-        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
-    }
+
 
     @Tool(description = "获取当前工作空间下Agent可用的技能列表")
     public List<AgentSkillDTO> getSkills(ToolContext toolContext) {

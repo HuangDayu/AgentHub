@@ -2,8 +2,8 @@ package com.agenthub.infrastructure.tools.system_tools;
 
 import com.agenthub.application.port.out.repositories.SystemToolsRepository;
 import com.agenthub.application.port.out.tools.SystemToolScannerPort;
-import com.agenthub.domain.model.agent.AgentToolInfo;
 import com.agenthub.domain.enums.AgentToolType;
+import com.agenthub.domain.model.agent.AgentToolInfo;
 import com.agenthub.domain.model.tools.SystemTool;
 import com.agenthub.infrastructure.tools.AbstractToolsFactory;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
@@ -13,8 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
+import org.springframework.aop.framework.AopProxyUtils;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -42,8 +45,7 @@ public class SystemToolsFactory implements AbstractToolsFactory, SystemToolScann
     @PostConstruct
     public void init() {
         Map<String, Object> beansWithAnnotation = applicationContext.getBeansWithAnnotation(AgentTools.class);
-        Object[] array = beansWithAnnotation.values().stream().filter(v -> hasTools(v.getClass())).toArray();
-        Arrays.stream(array).parallel().forEach(v -> {
+        beansWithAnnotation.values().stream().filter(v -> hasTools(AopUtils.isAopProxy(v) ? ClassUtils.getUserClass(v) : v.getClass())).forEach(v -> {
             MethodToolCallbackProvider callbackProvider = MethodToolCallbackProvider.builder().toolObjects(v).build();
             TOOL_CALLBACKS.put(v, callbackProvider.getToolCallbacks());
             SYSTEM_TOOLS.put(v, createTool(v));
@@ -81,7 +83,7 @@ public class SystemToolsFactory implements AbstractToolsFactory, SystemToolScann
     @Override
     public Set<ToolCallback> getToolCallbacks(String name) {
         return getAllToolCallbacks().stream()
-                .filter(toolCallback -> toolCallback.getClass().getSimpleName().equals(name))
+                .filter(toolCallback -> ClassUtils.getUserClass(toolCallback.getClass()).getSimpleName().equals(name))
                 .collect(Collectors.toSet());
     }
 
@@ -91,7 +93,9 @@ public class SystemToolsFactory implements AbstractToolsFactory, SystemToolScann
             return Set.of();
         }
         Set<String> collect1 = toolIds.parallelStream().map(AgentToolInfo::getName).collect(Collectors.toSet());
-        Set<Object> collect2 = SYSTEM_TOOLS.keySet().parallelStream().filter(o -> collect1.contains(o.getClass().getSimpleName())).collect(Collectors.toSet());
+        Set<Object> collect2 = SYSTEM_TOOLS.keySet().parallelStream()
+                .filter(o -> collect1.contains(ClassUtils.getUserClass(o).getSimpleName()))
+                .collect(Collectors.toSet());
         return collect2.parallelStream().flatMap(o -> Arrays.stream(TOOL_CALLBACKS.get(o))).collect(Collectors.toSet());
     }
 
@@ -101,27 +105,28 @@ public class SystemToolsFactory implements AbstractToolsFactory, SystemToolScann
 
 
     private SystemTool createTool(Object bean) {
-        AgentTools agentTools = bean.getClass().getAnnotation(AgentTools.class);
+        Class<?> userClass = ClassUtils.getUserClass(bean);
+        AgentTools agentTools = userClass.getAnnotation(AgentTools.class);
         return SystemTool.create(
-                bean.getClass().getName(),
-                bean.getClass().getSimpleName(),
+                userClass.getName(),
+                userClass.getSimpleName(),
                 agentTools.description(),
-                extractCategory(bean),
-                countToolMethods(bean),
+                extractCategory(userClass),
+                countToolMethods(userClass),
                 agentTools.defaultEnable()
         );
     }
 
     private static final Map<String, String> CATEGORY_MAP = Map.ofEntries(
-        entry("Runtime", "runtime"), entry("Fs", "filesystem"),
-        entry("Session", "session"), entry("Memory", "memory"),
-        entry("Web", "web"), entry("Browser", "browser"),
-        entry("Automation", "automation"), entry("Node", "node"),
-        entry("Media", "media"), entry("Agent", "agent")
+            entry("Runtime", "runtime"), entry("Fs", "filesystem"),
+            entry("Session", "session"), entry("Memory", "memory"),
+            entry("Web", "web"), entry("Browser", "browser"),
+            entry("Automation", "automation"), entry("Node", "node"),
+            entry("Media", "media"), entry("Agent", "agent")
     );
 
-    private String extractCategory(Object bean) {
-        String name = bean.getClass().getSimpleName();
+    private String extractCategory(Class<?> clazz) {
+        String name = clazz.getSimpleName();
         return CATEGORY_MAP.entrySet().stream()
                 .filter(e -> name.contains(e.getKey()))
                 .findFirst()
@@ -129,8 +134,8 @@ public class SystemToolsFactory implements AbstractToolsFactory, SystemToolScann
                 .orElse("system");
     }
 
-    private int countToolMethods(Object bean) {
-        return (int) java.util.Arrays.stream(bean.getClass().getDeclaredMethods())
+    private int countToolMethods(Class<?> clazz) {
+        return (int) java.util.Arrays.stream(clazz.getDeclaredMethods())
                 .filter(m -> m.isAnnotationPresent(Tool.class))
                 .count();
     }

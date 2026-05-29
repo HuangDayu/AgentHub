@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * 工作流数据域工具，提供工作流与定时任务信息查询与创建（已脱敏）。
@@ -31,9 +32,7 @@ public class WorkflowTools {
     private final WorkflowRepository workflowRepository;
     private final ScheduledTaskRepository scheduledTaskRepository;
 
-    private ReActAgentContext getAgentContext(ToolContext toolContext) {
-        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
-    }
+
 
     private Workspace getWorkspace(ToolContext toolContext) {
         return getAgentContext(toolContext).getWorkspace().getWorkspace();

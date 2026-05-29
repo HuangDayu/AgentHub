@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.agents.aliyun.tools;
 
 import com.agenthub.domain.model.agent.ReActAgentContext;
+import com.agenthub.infrastructure.context.TenantThreadContext;
 import io.agentscope.core.message.TextBlock;
 import io.agentscope.core.message.ToolResultBlock;
 import io.agentscope.core.tool.AgentTool;
@@ -10,10 +11,12 @@ import org.springframework.ai.tool.ToolCallback;
 import reactor.core.publisher.Mono;
 import tools.jackson.core.type.TypeReference;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.common.constants.AgentConstants.THREAD_CONTEXT_KEY;
 import static org.springframework.ai.util.json.JsonParser.fromJson;
 import static org.springframework.ai.util.json.JsonParser.toJson;
 
@@ -46,8 +49,10 @@ public class SpringToolAdapter implements AgentTool {
 
     @Override
     public Mono<ToolResultBlock> callAsync(ToolCallParam param) {
-        ReActAgentContext reActAgentContext = param.getContext().get(AGENT_CONTEXT_KEY, ReActAgentContext.class);
-        String result = toolCallback.call(toJson(param.getInput()), new ToolContext(Map.of(AGENT_CONTEXT_KEY, reActAgentContext)));
+        Map<String, Object> map = new HashMap<>();
+        map.put(AGENT_CONTEXT_KEY, param.getContext().get(AGENT_CONTEXT_KEY, ReActAgentContext.class));
+        map.put(THREAD_CONTEXT_KEY, param.getContext().get(THREAD_CONTEXT_KEY, TenantThreadContext.class));
+        String result = toolCallback.call(toJson(param.getInput()), new ToolContext(map));
         TextBlock textBlock = TextBlock.builder().text(result).build();
         return Mono.just(new ToolResultBlock(param.getToolUseBlock().getId(), param.getToolUseBlock().getName(), List.of(textBlock)));
     }

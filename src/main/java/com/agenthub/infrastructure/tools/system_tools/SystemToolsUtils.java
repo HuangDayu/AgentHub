@@ -12,7 +12,11 @@ import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
 public class SystemToolsUtils {
 
     public static ReActAgentWorkspace getWorkspace(ToolContext toolContext) {
-        return ((ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY)).getWorkspace();
+        return getAgentContext(toolContext).getWorkspace();
+    }
+
+    public static ReActAgentContext getAgentContext(ToolContext toolContext) {
+        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
     }
 
 }

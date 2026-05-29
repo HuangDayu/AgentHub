@@ -837,3 +837,44 @@ CREATE INDEX IF NOT EXISTS idx_workflow_execution_execution_id ON workflow_execu
 
 CREATE INDEX IF NOT EXISTS idx_workspace_tenant_id ON workspace (tenant_id);
 
+-- =========================================================
+-- Table: subagent
+-- =========================================================
+CREATE TABLE IF NOT EXISTS subagent
+(
+    id              varchar(64) NOT NULL,
+    tenant_id       varchar(255),
+    workspace_id    varchar(255),
+    parent_agent_id varchar(255),
+    parent_subagent_id varchar(255),
+    name            varchar(255),
+    description     text,
+    system_prompt   text,
+    model_config_id varchar(255),
+    status          varchar(255),
+    created_at      timestamptz,
+    updated_at      timestamptz,
+    PRIMARY KEY (id)
+);
+
+ALTER TABLE subagent ADD COLUMN IF NOT EXISTS parent_subagent_id varchar(255);
+
+-- =========================================================
+-- Table: subsession
+-- =========================================================
+CREATE TABLE IF NOT EXISTS subsession
+(
+    id                 varchar(64) NOT NULL,
+    parent_session_id  varchar(255),
+    subagent_id        varchar(255),
+    name               varchar(255),
+    status             varchar(255),
+    created_at         timestamptz,
+    updated_at         timestamptz,
+    PRIMARY KEY (id)
+);
+
+ALTER TABLE subsession ADD COLUMN IF NOT EXISTS parent_subsession_id varchar(255);
+
+
+

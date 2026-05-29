@@ -12,6 +12,7 @@ import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * 工作空间数据域工具，提供工作空间与租户信息查询（已脱敏）。
@@ -23,14 +24,11 @@ public class WorkspaceTools {
     private final WorkspaceRepository workspaceRepository;
     private final TenantRepository tenantRepository;
 
-    private ReActAgentContext getAgentContext(ToolContext toolContext) {
-        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
-    }
+
 
     @Tool(description = "获取Agent当前所在的工作空间信息")
     public AgentWorkspaceDTO getWorkspace(ToolContext toolContext) {
-        return BeanUtil.copyProperties(
-                getAgentContext(toolContext).getWorkspace().getWorkspace(), AgentWorkspaceDTO.class);
+        return BeanUtil.copyProperties(getAgentContext(toolContext).getWorkspace().getWorkspace(), AgentWorkspaceDTO.class);
     }
 
     @Tool(description = "获取当前Agent所属租户信息")

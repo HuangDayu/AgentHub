@@ -13,6 +13,7 @@ import com.agenthub.infrastructure.agents.alibaba.interceptor.InterceptorFactory
 import com.agenthub.infrastructure.agents.alibaba.saver.SaverFactory;
 import com.agenthub.infrastructure.agents.alibaba.store.StoreFactory;
 import com.agenthub.infrastructure.agents.alibaba.tools.GraphToolsFactory;
+import com.agenthub.infrastructure.context.TenantContextGetter;
 import com.agenthub.infrastructure.factory.SpringShareObjectFactory;
 import com.agenthub.infrastructure.tools.AgentToolsFactory;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
@@ -42,6 +43,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.common.constants.AgentConstants.THREAD_CONTEXT_KEY;
 import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
 import static com.agenthub.domain.enums.AgentToolType.*;
 
@@ -61,6 +63,7 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
     private final GraphToolsFactory graphToolsFactory;
     private final JdbcChatMemoryRepository jdbcChatMemoryRepository;
     private final ObjectProvider<TeamAgentFactory> teamAgentFactoryObjectProvider;
+    private final TenantContextGetter tenantContextGetter;
 
 
     @Override
@@ -135,12 +138,16 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
     }
 
     private RunnableConfig resolveRunnableConfig(ReActAgentContext context) {
-        return RunnableConfig.builder().addMetadata(AGENT_CONTEXT_KEY, context).threadId(context.getSessionId()).build();
+        return RunnableConfig.builder()
+                .addMetadata(AGENT_CONTEXT_KEY, context)
+                .addMetadata(THREAD_CONTEXT_KEY, tenantContextGetter.findTenantThreadContext().orElse(null))
+                .threadId(context.getSessionId()).build();
     }
 
     private Map<String, Object> resolveToolsContext(ReActAgentContext context) {
         Map<String, Object> map = new HashMap<>();
         map.put(AGENT_CONTEXT_KEY, context);
+        map.put(THREAD_CONTEXT_KEY, tenantContextGetter.findTenantThreadContext().orElse(null));
         map.put(ChatMemory.CONVERSATION_ID, context.getAgent().getId());
         return map;
     }

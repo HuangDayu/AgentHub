@@ -1,6 +1,6 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.application.command.workflow.ExecutionCommand;
+import com.agenthub.application.command.ExecutionCommand;
 import com.agenthub.application.dto.workflow.ExecutionOutput;
 import com.agenthub.application.port.out.workflow.WorkflowExecutionPort;
 import com.agenthub.application.port.out.workflow.WorkflowStatePort;

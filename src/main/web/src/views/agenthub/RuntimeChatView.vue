@@ -61,47 +61,64 @@
               <label class="section-label">会话列表</label>
             </div>
             <div class="session-list">
-              <div
-                v-for="session in sessions"
-                :key="session.sessionId"
-                :class="['session-item', { 'active': session.sessionId === selectedSessionId }]"
-              >
-                <div class="session-icon" @click="selectSession(session.sessionId)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  </svg>
-                </div>
-                <div class="session-info" @click="selectSession(session.sessionId)">
-                  <div class="session-name">{{ session.name || session.sessionId.slice(0, 8) + '...' }}</div>
-                  <div class="session-time">{{ formatDateTime(session.createdAt) }}</div>
-                </div>
-                <!-- 正在处理的图标 -->
-                <div v-if="isSessionStreaming(session.sessionId)" class="streaming-indicator" title="正在处理中...">
-                  <svg class="spinner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                  </svg>
-                </div>
-                <button
-                  class="session-runtime-btn"
-                  :disabled="isTempSession(session.sessionId)"
-                  @click.stop="showSessionRuntime(session.sessionId)"
-                  title="查看运行视图"
+              <template v-for="session in sessions" :key="session.sessionId">
+                <div
+                  :class="['session-item', { 'active': session.sessionId === selectedSessionId }]"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 19h16"/>
-                    <path d="M7 16V9"/>
-                    <path d="M12 16V5"/>
-                    <path d="M17 16v-4"/>
-                  </svg>
-                </button>
-                <button class="delete-btn" @click.stop="handleDeleteSession(session.sessionId)" title="删除会话">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  <div class="session-icon" @click="selectSession(session.sessionId)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <div class="session-info" @click="selectSession(session.sessionId)">
+                    <div class="session-name">{{ session.name || session.sessionId.slice(0, 8) + '...' }}</div>
+                    <div class="session-time">{{ formatDateTime(session.createdAt) }}</div>
+                  </div>
+                  <!-- 正在处理的图标 -->
+                  <div v-if="isSessionStreaming(session.sessionId)" class="streaming-indicator" title="正在处理中...">
+                    <svg class="spinner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                  </div>
+                  <button
+                    class="session-runtime-btn"
+                    :disabled="isTempSession(session.sessionId)"
+                    @click.stop="showSessionRuntime(session.sessionId)"
+                    title="查看运行视图"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M4 19h16"/>
+                      <path d="M7 16V9"/>
+                      <path d="M12 16V5"/>
+                      <path d="M17 16v-4"/>
+                    </svg>
+                  </button>
+                  <button class="delete-btn" @click.stop="handleDeleteSession(session.sessionId)" title="删除会话">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                   </svg>
                 </button>
               </div>
-              <div v-if="!sessions.length && selectedAgentId" class="empty-sessions">
+              <!-- Subsession 子节点 -->
+              <div v-if="subsessionMap.get(session.sessionId)?.length" class="subsession-children">
+                <div
+                  v-for="ss in subsessionMap.get(session.sessionId)"
+                  :key="ss.id"
+                  class="subsession-item"
+                  @click.stop="selectSubsession(ss)"
+                >
+                  <svg class="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                  </svg>
+                  <span class="sub-name">{{ ss.name || ss.subagentId.slice(0, 8) + '...' }}</span>
+                  <span :class="['sub-status', ss.status.toLowerCase()]">{{ ss.status }}</span>
+                </div>
+              </div>
+            </template>
+            <div v-if="!sessions.length && selectedAgentId" class="empty-sessions">
                 <p>暂无会话</p>
                 <p class="hint">发送消息将自动创建新会话</p>
               </div>
@@ -113,13 +130,8 @@
       <!-- 左侧：运行视图 -->
       <aside :class="['runtime-sidebar', { 'collapsed': !runtimeExpanded }]">
         <div v-if="runtimeExpanded" class="runtime-content">
-          <div class="sidebar-header">
+          <div class="runtime-header">
             <h3>运行视图</h3>
-          </div>
-
-          <div class="runtime-tabs">
-            <button :class="['runtime-tab', { active: activeRuntimeTab === 'run' }]" @click="activeRuntimeTab = 'run'">运行</button>
-            <button :class="['runtime-tab', { active: activeRuntimeTab === 'trace' }]" @click="activeRuntimeTab = 'trace'">追踪</button>
             <button class="runtime-refresh-btn" @click="loadRuntimeData" :disabled="runtimeLoading" title="刷新运行时数据">
               <svg :class="{ spinning: runtimeLoading }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 4v6h-6"/>
@@ -127,6 +139,12 @@
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
               </svg>
             </button>
+          </div>
+
+          <div class="runtime-tabs">
+            <button :class="['runtime-tab', { active: activeRuntimeTab === 'run' }]" @click="activeRuntimeTab = 'run'">运行</button>
+            <button :class="['runtime-tab', { active: activeRuntimeTab === 'trace' }]" @click="activeRuntimeTab = 'trace'">追踪</button>
+            <button :class="['runtime-tab', { active: activeRuntimeTab === 'subagent' }]" @click="activeRuntimeTab = 'subagent'; loadSubagents()">子Agent</button>
           </div>
 
           <div v-if="runtimeError" class="runtime-error">{{ runtimeError }}</div>
@@ -234,7 +252,7 @@
               </div>
             </template>
 
-            <template v-else>
+            <template v-else-if="activeRuntimeTab === 'trace'">
               <div class="runtime-section trace-section">
                 <div class="runtime-section-title">
                   <span>调用链</span>
@@ -286,6 +304,51 @@
                 </div>
                 <div v-else-if="runtimeData.spanTree.length > 0" class="runtime-empty">没有匹配的 Span</div>
               </div>
+            </template>
+
+            <template v-if="activeRuntimeTab === 'subagent'">
+              <div class="runtime-section">
+                <div class="runtime-section-title">
+                  <span>子Agent</span>
+                  <small>{{ subagents.length }} 个</small>
+                </div>
+                <div v-if="subagents.length === 0" class="runtime-empty">暂无子Agent</div>
+                <div v-for="sa in subagents" :key="sa.id"
+                     :class="['subagent-item', { selected: selectedSubagentId === sa.id }]"
+                     @click="onSelectSubagent(sa)">
+                  <div class="subagent-header">
+                    <strong>{{ sa.name }}</strong>
+                    <span :class="['status-dot', sa.status.toLowerCase()]">{{ sa.status }}</span>
+                  </div>
+                  <div class="subagent-meta">{{ sa.description || '无描述' }}</div>
+                  <div class="subagent-meta" v-if="sa.systemPrompt">📝 {{ sa.systemPrompt.slice(0, 60) }}...</div>
+                </div>
+              </div>
+
+              <!-- 当前选中Subagent的Subsession + 消息 -->
+              <template v-if="selectedSubsession">
+                <div class="runtime-section">
+                  <div class="runtime-section-title">
+                    <span>子会话</span>
+                    <small>{{ selectedSubsession.name || selectedSubsession.id.slice(0,8) }}</small>
+                  </div>
+                  <div class="subsession-info">
+                    <span>状态: {{ selectedSubsession.status }}</span>
+                    <span>创建: {{ formatDateTime(selectedSubsession.createdAt) }}</span>
+                  </div>
+                </div>
+                <div class="runtime-section">
+                  <div class="runtime-section-title">
+                    <span>对话记录</span>
+                    <small>{{ subagentMessages.length }} 条</small>
+                  </div>
+                  <div v-if="subagentMessages.length === 0" class="runtime-empty">暂无对话</div>
+                  <div v-for="msg in subagentMessages" :key="msg.messageId" :class="['subagent-msg', msg.role.toLowerCase()]">
+                    <div class="msg-role">{{ msg.role === 'USER' ? '用户' : '子Agent' }}</div>
+                    <div class="msg-content">{{ msg.content }}</div>
+                  </div>
+                </div>
+              </template>
             </template>
           </div>
         </div>
@@ -563,11 +626,13 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { showConfirm } from '@/utils/confirm'
 import { useRouter } from 'vue-router'
 import { listAgents } from '@/api/agent-api'
+import { listSubagents, listSubsessions } from '@/api/subagent-api'
 import {
   createSession,
   deleteSession,
   listMessages,
   listSessions,
+  listSubsessionMessages,
   sendMessageStream,
   uploadChatAttachments,
   type ChatAttachment,
@@ -617,7 +682,7 @@ const fileInputRef = ref<HTMLInputElement | null>(null)
 const uploadedAttachments = ref<ChatAttachment[]>([])
 
 // Runtime data view
-const activeRuntimeTab = ref<'run' | 'trace'>('run')
+const activeRuntimeTab = ref<'run' | 'trace' | 'subagent'>('run')
 const runtimeLoading = ref(false)
 const runtimeError = ref('')
 const selectedSpan = ref<SpanTreeNode | null>(null)
@@ -625,6 +690,37 @@ const runtimeData = ref<RuntimeDataView>(emptyRuntimeDataView())
 const traceSearchText = ref('')
 const expandedSpanIds = ref(new Set<string>())
 const spanDetailVisible = ref(false)
+const skipRuntimeLoad = ref(false)
+
+// Subagent runtime view
+const subagents = ref<import('@/types/subagent').Subagent[]>([])
+const selectedSubagentId = ref('')
+const selectedSubsessionId = ref('')
+const subagentMessages = ref<import('@/types/subagent').Subsession[]>([])
+const subsessions = ref<import('@/types/subagent').Subsession[]>([])
+const subsessionMap = ref(new Map<string, import('@/types/subagent').Subsession[]>())
+
+// 根据选中的Subagent或Subsession ID找到对应的Subsession
+const selectedSubsession = computed(() => {
+  const id = selectedSubsessionId.value || selectedSubagentId.value
+  if (!id) return null
+  for (const subs of subsessionMap.value.values()) {
+    const found = subs.find(s => s.id === id || s.subagentId === id)
+    if (found) return found
+  }
+  return null
+})
+
+// 判断当前选中的是否是Subsession
+const isSubsessionView = computed(() => {
+  return !!selectedSubsessionId.value && selectedSessionId.value === selectedSubsessionId.value
+})
+
+// 当前Subsession的父Session ID
+const currentSubsessionParentId = computed(() => {
+  const ss = selectedSubsession.value
+  return ss ? ss.parentSessionId : ''
+})
 
 // 流消息状态管理 - 为每个会话维护独立的流消息状态
 const sessionStreamingStates = new Map<string, {
@@ -777,6 +873,42 @@ function showSessionRuntime(sessionId: string) {
   loadRuntimeData()
 }
 
+// 选择Subagent，加载对应的Subsession消息
+async function onSelectSubagent(sa: import('@/types/subagent').Subagent) {
+  selectedSubagentId.value = sa.id
+  const ss = selectedSubsession.value
+  if (!ss) { subagentMessages.value = []; return }
+  try {
+    const msgs = await listMessages(getSelection(), selectedAgentId.value, ss.id)
+    subagentMessages.value = msgs
+  } catch { subagentMessages.value = [] }
+}
+
+// 选择Subsession，直接在对话区显示历史消息
+async function selectSubsession(ss: import('@/types/subagent').Subsession) {
+  skipRuntimeLoad.value = true
+  selectedSubsessionId.value = ss.id
+  selectedSessionId.value = ss.id
+  try {
+    const msgs = await listSubsessionMessages(getSelection(), selectedAgentId.value, ss.parentSessionId, ss.id)
+    messages.value = msgs
+    sessionMessages.value.set(ss.id, msgs)
+  } catch { messages.value = [] }
+}
+
+// Load subagents for runtime view
+async function loadSubagents() {
+  if (!selectedAgentId.value) return
+  try {
+    subagents.value = await listSubagents(getSelection(), selectedAgentId.value)
+    subsessions.value = selectedSessionId.value
+      ? await listSubsessions(getSelection(), selectedAgentId.value, selectedSessionId.value)
+      : []
+  } catch (e: any) {
+    console.error('加载子Agent失败:', e)
+  }
+}
+
 // Load agents
 async function loadAgents() {
   if (!selectionReady.value) return
@@ -808,9 +940,21 @@ async function loadSessions() {
       selectedSessionId.value = sessions.value[0].sessionId
       await loadMessages()
     }
+    await loadSubsessionsForSelected()
   } catch (e: any) {
     error.value = e.message || '加载会话失败'
   }
+}
+
+// 只加载当前选中Session的Subsession
+async function loadSubsessionsForSelected() {
+  if (!selectedSessionId.value) return
+  const map = new Map<string, import('@/types/subagent').Subsession[]>()
+  try {
+    const subs = await listSubsessions(getSelection(), selectedAgentId.value, selectedSessionId.value)
+    if (subs.length) map.set(selectedSessionId.value, subs)
+  } catch { /* 忽略 */ }
+  subsessionMap.value = map
 }
 
 // Create new session
@@ -971,17 +1115,20 @@ async function handleSend() {
     uploadedAttachments.value = []
     startStreamState(currentSessionId, userMessage)
     scrollToBottom()
-    await sendMessageStream(getSelection(), selectedAgentId.value, currentSessionId, content, attachments.map(file => file.path), {
-      onMessage: (streamMsg: StreamMessage) => {
-        handleStreamMessage(streamMsg, currentSessionId)
-        scrollToBottom()
-      },
-      onDone: () => finishStream(currentSessionId),
-      onError: (err) => {
-        uploadedAttachments.value = attachments
-        handleStreamError(currentSessionId, userMessage, err)
-      }
-    })
+    const subsessionId = isSubsessionView.value ? currentSessionId : undefined
+    await sendMessageStream(getSelection(), selectedAgentId.value,
+      isSubsessionView.value ? currentSubsessionParentId.value : currentSessionId,
+      content, attachments.map(file => file.path), {
+        onMessage: (streamMsg: StreamMessage) => {
+          handleStreamMessage(streamMsg, currentSessionId)
+          scrollToBottom()
+        },
+        onDone: () => finishStream(currentSessionId),
+        onError: (err) => {
+          uploadedAttachments.value = attachments
+          handleStreamError(currentSessionId, userMessage, err)
+        },
+      }, subsessionId)
   } catch (e: any) {
     uploadedAttachments.value = attachments
     error.value = e.message || '发送消息失败'
@@ -1237,6 +1384,8 @@ function handleKeydown(e: KeyboardEvent) {
     handleSend()
   }
 }
+
+
 
 // Scroll to bottom
 function scrollToBottom() {
@@ -1496,7 +1645,9 @@ watch(() => [store.tenantId, store.workspaceId], () => {
 })
 
 watch([selectedAgentId, selectedSessionId], () => {
+  if (skipRuntimeLoad.value) { skipRuntimeLoad.value = false; return }
   loadRuntimeData()
+  loadSubsessionsForSelected()
 })
 
 function ensureSelectedSession() {
@@ -2978,6 +3129,95 @@ onMounted(() => {
 .trace-search {
   margin-bottom: 10px;
 }
+
+/* Runtime header with refresh button */
+.runtime-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 4px;
+}
+.runtime-header h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Subsession children */
+.subsession-children {
+  padding-left: 36px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+.subsession-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-text-light);
+  transition: background 0.15s;
+}
+.subsession-item:hover {
+  background: var(--color-bg-hover, #f0f0f0);
+}
+.subsession-item .sub-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.subsession-item .sub-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.subsession-item .sub-status {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.subsession-item .sub-status.active { background: #e8f5e9; color: #2e7d32; }
+.subsession-item .sub-status.closed { background: #f5f5f5; color: #999; }
+
+.subsession-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-light, #666);
+}
+.status-dot {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.status-dot.running { background: #fff3e0; color: #e65100; }
+.status-dot.completed { background: #e8f5e9; color: #2e7d32; }
+.status-dot.failed { background: #fbe9e7; color: #c62828; }
+.status-dot.interrupted { background: #fce4ec; color: #c62828; }
+.status-dot.active { background: #e8f5e9; color: #2e7d32; }
+.subagent-item {
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.subagent-item:hover { background: var(--color-bg-hover, #f5f5f5); }
+.subagent-item.selected { background: var(--color-bg-selected, #e3f2fd); }
+.subagent-msg {
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.subagent-msg.user { background: #f5f5f5; }
+.subagent-msg.assistant { background: #e8f5e9; }
+.msg-role { font-size: 11px; color: #999; margin-bottom: 2px; }
+.msg-content { white-space: pre-wrap; word-break: break-word; }
 
 /* Animations */
 .fade-in {

@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.workflow.adapter;
 
-import com.agenthub.application.command.workflow.ExecutionCommand;
+import com.agenthub.application.command.ExecutionCommand;
 import com.agenthub.application.port.out.repositories.WorkflowRepository;
 import com.agenthub.application.port.out.workflow.WorkflowExecutionPort;
 import com.agenthub.domain.enums.workflow.NodeType;

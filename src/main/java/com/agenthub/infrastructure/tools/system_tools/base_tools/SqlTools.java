@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 /**
  * SQL tools for the SQL agent: list tables, get schema, run query.
  */
-@AgentTools(name = "SqlTools", description = "SQL 工具： list tables, get schema, run query.",defaultEnable = false)
+//@AgentTools(name = "SqlTools", description = "SQL 工具： list tables, get schema, run query.",defaultEnable = false)
 public final class SqlTools {
 
 	private final JdbcTemplate jdbcTemplate;

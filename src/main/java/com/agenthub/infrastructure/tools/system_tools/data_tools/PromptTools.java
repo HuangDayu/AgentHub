@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * 提示模板数据域工具，提供提示模板信息查询与创建（不含模板内容）。
@@ -26,9 +27,7 @@ public class PromptTools {
 
     private final PromptTemplateRepository promptTemplateRepository;
 
-    private ReActAgentContext getAgentContext(ToolContext toolContext) {
-        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
-    }
+
 
     @Tool(description = "获取当前工作空间下的提示模板列表（不含模板内容）")
     public List<AgentPromptTemplateDTO> getPromptTemplates(ToolContext toolContext) {

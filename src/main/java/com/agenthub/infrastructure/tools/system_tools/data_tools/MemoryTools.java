@@ -13,6 +13,7 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import java.util.List;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * @author huangdayu
@@ -45,7 +46,5 @@ public class MemoryTools {
         return memoryRepository.save(memory);
     }
 
-    private ReActAgentContext getAgentContext(ToolContext toolContext) {
-        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
-    }
+
 }

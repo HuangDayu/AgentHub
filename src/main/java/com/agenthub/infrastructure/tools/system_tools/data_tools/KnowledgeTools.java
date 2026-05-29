@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.agenthub.common.constants.AgentConstants.AGENT_CONTEXT_KEY;
+import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
  * 知识数据域工具，提供知识库、检索策略、向量库配置查询（已脱敏）。
@@ -26,9 +27,7 @@ public class KnowledgeTools {
     private final RetrievalStrategyRepository retrievalStrategyRepository;
     private final VectorStoreConfigRepository vectorStoreConfigRepository;
 
-    private ReActAgentContext getAgentContext(ToolContext toolContext) {
-        return (ReActAgentContext) toolContext.getContext().get(AGENT_CONTEXT_KEY);
-    }
+
 
     private Workspace getWorkspace(ToolContext toolContext) {
         return getAgentContext(toolContext).getWorkspace().getWorkspace();
