@@ -29,13 +29,15 @@ public class AutomationTools {
 
     @Tool(description = "创建定时任务。返回任务ID。")
     public ScheduledTaskResult createScheduledTask(
-            @ToolParam(description = "Cron表达式，如 '0 9 * * ?' 表示每天9点，'0 */30 * * * ?' 表示每30分钟") String cronExpression,
+            @ToolParam(description = "Cron表达式，如 '0 9 * * ?' 表示每天9点") String cronExpression,
             @ToolParam(description = "任务名称") String taskName,
             @ToolParam(description = "任务类型：AGENT_CHAT / WORKFLOW / SYSTEM") String taskType,
             @ToolParam(description = "执行提示词或命令内容") String prompt,
+            @ToolParam(description = "执行该任务的AgentID（可选，为空则使用工作空间内第一个Agent）") String agentId,
             ToolContext toolContext) {
         ReActAgentContext ctx = getAgentContext(toolContext);
         ScheduledTask task = buildTask(ctx, taskName, taskType, cronExpression, prompt);
+        if (agentId != null && !agentId.isBlank()) task.setAgentId(agentId);
         ScheduledTask saved = scheduledTaskRepository.saveOrUpdate(task);
         scheduledTaskScheduler.scheduleTask(saved);
         return toResult(saved);
@@ -137,6 +139,9 @@ public class AutomationTools {
         result.setEnabled(task.isEnabled());
         result.setStatus(task.getStatus());
         result.setScheduled(scheduledTaskScheduler.isTaskScheduled(task.getId()));
+        result.setAgentId(task.getAgentId());
+        result.setLastRunResult(task.getLastRunResult());
+        result.setRunCount(task.getRunCount());
         return result;
     }
 }

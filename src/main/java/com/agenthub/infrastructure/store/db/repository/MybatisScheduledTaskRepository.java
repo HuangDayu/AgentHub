@@ -74,6 +74,9 @@ public class MybatisScheduledTaskRepository implements ScheduledTaskRepository {
         entity.setLastExecuteTime(toInstant(task.getLastExecuteTime()));
         entity.setNextExecuteTime(toInstant(task.getNextExecuteTime()));
         entity.setStatus(task.getStatus());
+        entity.setAgentId(task.getAgentId());
+        entity.setLastRunResult(task.getLastRunResult());
+        entity.setRunCount(task.getRunCount());
         entity.setCreatedAt(toInstant(task.getCreatedAt()));
         entity.setUpdatedAt(toInstant(task.getUpdatedAt()));
         return entity;
@@ -95,6 +98,9 @@ public class MybatisScheduledTaskRepository implements ScheduledTaskRepository {
         task.setLastExecuteTime(toLocalDateTime(entity.getLastExecuteTime()));
         task.setNextExecuteTime(toLocalDateTime(entity.getNextExecuteTime()));
         task.setStatus(entity.getStatus());
+        task.setAgentId(entity.getAgentId());
+        task.setLastRunResult(entity.getLastRunResult());
+        task.setRunCount(entity.getRunCount());
         task.setCreatedAt(toLocalDateTime(entity.getCreatedAt()));
         task.setUpdatedAt(toLocalDateTime(entity.getUpdatedAt()));
         return task;

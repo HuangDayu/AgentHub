@@ -25,6 +25,7 @@ import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.ge
 public class PlanTools {
 
     private final ExecutionPlanUseCase executionPlanUseCase;
+    private final PlanExecutor planExecutor;
 
     @Tool(description = "创建执行计划，定义完成目标的步骤。返回计划ID和步骤列表。")
     public ExecutionPlanOutput createPlan(
@@ -61,10 +62,7 @@ public class PlanTools {
             @ToolParam(required = false, description = "使用的工具名称") String toolName,
             @ToolParam(required = false, description = "工具调用参数（JSON）") String toolInput,
             ToolContext toolContext) {
-        ExecutionPlanOutput plan = executionPlanUseCase.getPlan(planId);
-        List<PlanStepToolInput> newSteps = List.of(buildStepInput(description, toolName, toolInput));
-        CreatePlanCommand command = buildAddStepCommand(plan, newSteps);
-        return executionPlanUseCase.createPlan(command);
+        return executionPlanUseCase.addStepToPlan(planId, description, toolName, toolInput);
     }
 
     @Tool(description = "更新步骤状态：PENDING/RUNNING/COMPLETED/FAILED/SKIPPED")
@@ -101,6 +99,12 @@ public class PlanTools {
             @ToolParam(description = "计划ID") String planId,
             @ToolParam(description = "取消原因") String reason) {
         return executionPlanUseCase.cancelPlan(planId, reason);
+    }
+
+    @Tool(description = "自动执行计划，系统自动调用各步骤的工具并更新状态")
+    public String executePlan(
+            @ToolParam(description = "计划ID") String planId) {
+        return planExecutor.executePlan(planId);
     }
 
     private CreatePlanCommand buildCreateCommand(ReActAgentContext ctx, String goal,

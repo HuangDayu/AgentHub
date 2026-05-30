@@ -1,4 +1,4 @@
-package com.agenthub.infrastructure.tools.mcp_tools.platform;
+package com.agenthub.infrastructure.tools.mcp_platform;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

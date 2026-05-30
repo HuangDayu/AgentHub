@@ -46,6 +46,8 @@ public class AgentContextUseCase implements AgentContextFactory {
     private final GuardrailStrategyRepository guardrailStrategyRepository;
     private final WorkspaceRepository workspaceRepository;
     private final ToolCallbackResolverPort toolCallbackResolver;
+    private final SystemPromptBuilderUseCase systemPromptBuilderUseCase;
+    private final ToolFilterUseCase toolFilterUseCase;
 
     @Override
     public ReActAgentContext buildContext(String agentId, String sessionId) {
@@ -57,16 +59,17 @@ public class AgentContextUseCase implements AgentContextFactory {
 
     private ReActAgentContext buildContext(Agent agent, String sessionId, List<AgentConfig> configs, String workspaceId) {
         List<AgentToolInfo> agentToolInfos = resolveTools(configs);
+        ToolStrategy toolStrategy = resolveToolStrategy(configs);
         return ReActAgentContext.builder()
                 .agent(agent)
                 .sessionId(sessionId)
                 .chatModelId(resolveChatModelId(configs))
                 .systemPrompt(resolveSystemPrompt(configs))
                 .toolInfos(agentToolInfos)
-                .toolCallbacks(resolveToolCallbacks(agentToolInfos))
+                .toolCallbacks(resolveToolCallbacks(agentToolInfos, toolStrategy))
                 .knowledgeIds(resolveKnowledgeIds(configs))
                 .modelStrategy(resolveModelStrategy(configs))
-                .toolStrategy(resolveToolStrategy(configs))
+                .toolStrategy(toolStrategy)
                 .guardrailStrategy(resolveGuardrailStrategy(configs))
                 .retrievalStrategy(resolveRetrievalStrategy(configs))
                 .workspace(resolveReActAgentWorkspace(workspaceId))
@@ -108,8 +111,13 @@ public class AgentContextUseCase implements AgentContextFactory {
 
     private String resolveSystemPrompt(List<AgentConfig> configs) {
         String promptId = findConfigId(configs, AgentConfigCategory.PROMPT, AgentConfigType.SYSTEM_PROMPT);
-        if (promptId == null) return null;
-        return promptTemplateRepository.findById(promptId).map(PromptTemplateInfo::getContent).orElse(null);
+        String basePrompt = null;
+        if (promptId != null) {
+            basePrompt = promptTemplateRepository.findById(promptId)
+                    .map(PromptTemplateInfo::getContent).orElse(null);
+        }
+        if (basePrompt == null) basePrompt = "";
+        return systemPromptBuilderUseCase.enrichPrompt(basePrompt, configs);
     }
 
     private List<AgentToolInfo> resolveTools(List<AgentConfig> configs) {
@@ -167,7 +175,8 @@ public class AgentContextUseCase implements AgentContextFactory {
     }
 
 
-    private List<Object> resolveToolCallbacks(List<AgentToolInfo> agentToolInfos) {
+    private List<Object> resolveToolCallbacks(List<AgentToolInfo> agentToolInfos,
+                                               com.agenthub.domain.model.strategy.ToolStrategy strategy) {
         List<Object> tools = new CopyOnWriteArrayList<>();
         var collect = agentToolInfos.stream().collect(Collectors.groupingBy(AgentToolInfo::getType));
         parallelStreamWithTtl(4, collect.entrySet(), entry -> {
@@ -177,7 +186,18 @@ public class AgentContextUseCase implements AgentContextFactory {
             }
             return null;
         });
-        return tools;
+        return applyToolStrategy(tools, strategy);
+    }
+
+    private List<Object> applyToolStrategy(List<Object> tools,
+                                            com.agenthub.domain.model.strategy.ToolStrategy strategy) {
+        if (strategy == null || tools.isEmpty()) return tools;
+        Set<org.springframework.ai.tool.ToolCallback> callbacks = tools.stream()
+                .filter(org.springframework.ai.tool.ToolCallback.class::isInstance)
+                .map(org.springframework.ai.tool.ToolCallback.class::cast)
+                .collect(java.util.stream.Collectors.toSet());
+        Set<org.springframework.ai.tool.ToolCallback> filtered = toolFilterUseCase.filterByStrategy(callbacks, strategy);
+        return new java.util.ArrayList<>(filtered);
     }
 
 

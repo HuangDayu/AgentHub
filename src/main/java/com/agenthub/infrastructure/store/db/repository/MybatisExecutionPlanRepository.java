@@ -92,11 +92,7 @@ public class MybatisExecutionPlanRepository implements ExecutionPlanRepository {
     }
 
     private void saveOrUpdateStep(PlanStepEntity entity) {
-        if (entity.getId() != null && stepMapper.selectById(entity.getId()) != null) {
-            stepMapper.updateById(entity);
-        } else {
-            stepMapper.insert(entity);
-        }
+        stepMapper.insertOrUpdate(entity);
     }
 
     private List<PlanStep> findStepsByPlanId(String planId) {

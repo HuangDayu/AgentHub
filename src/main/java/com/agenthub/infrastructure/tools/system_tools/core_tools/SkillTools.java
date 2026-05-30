@@ -7,6 +7,7 @@ import com.agenthub.domain.model.tools.Skill;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.AgentSkillDTO;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.SkillDetailDTO;
+import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.SkillExecutionResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -29,6 +30,7 @@ import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.ge
 public class SkillTools {
 
     private final SkillRepository skillRepository;
+    private final SkillRunner skillRunner;
 
     @Tool(description = "获取当前工作空间下Agent可用的技能列表")
     public List<AgentSkillDTO> getSkills(ToolContext toolContext) {
@@ -84,6 +86,14 @@ public class SkillTools {
                 .filter(s -> matchesKeyword(s, keyword))
                 .map(this::toBasicDto)
                 .collect(Collectors.toList());
+    }
+
+    @Tool(description = "执行技能，解析SKILL.md中的步骤并自动调用工具")
+    public SkillExecutionResult executeSkill(
+            @ToolParam(description = "技能ID") String skillId,
+            @ToolParam(description = "执行参数（JSON格式）") String parameters) {
+        Skill skill = findSkill(skillId);
+        return skillRunner.run(skill, parameters);
     }
 
     private Skill findSkill(String skillId) {

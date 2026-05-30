@@ -17,6 +17,9 @@ public class ScheduledTask {
     private LocalDateTime lastExecuteTime;
     private LocalDateTime nextExecuteTime;
     private String status;
+    private String agentId;
+    private String lastRunResult;
+    private int runCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -63,6 +66,15 @@ public class ScheduledTask {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getAgentId() { return agentId; }
+    public void setAgentId(String agentId) { this.agentId = agentId; }
+
+    public String getLastRunResult() { return lastRunResult; }
+    public void setLastRunResult(String lastRunResult) { this.lastRunResult = lastRunResult; }
+
+    public int getRunCount() { return runCount; }
+    public void setRunCount(int runCount) { this.runCount = runCount; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

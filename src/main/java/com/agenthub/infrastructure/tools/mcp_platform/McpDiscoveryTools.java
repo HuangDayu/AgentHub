@@ -1,4 +1,4 @@
-package com.agenthub.infrastructure.tools.mcp_tools.platform;
+package com.agenthub.infrastructure.tools.mcp_platform;
 
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import lombok.RequiredArgsConstructor;

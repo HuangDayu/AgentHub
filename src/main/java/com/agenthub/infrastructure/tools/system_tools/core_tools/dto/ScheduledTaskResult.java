@@ -17,4 +17,7 @@ public class ScheduledTaskResult {
     private boolean enabled;
     private String status;
     private boolean scheduled;
+    private String agentId;
+    private String lastRunResult;
+    private int runCount;
 }

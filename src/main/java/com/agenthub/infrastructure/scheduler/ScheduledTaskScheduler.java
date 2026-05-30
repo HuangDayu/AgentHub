@@ -118,24 +118,29 @@ public class ScheduledTaskScheduler {
             command.setSessionId(sessionId);
             command.setUserMessage(task.getPrompt());
             agentChatPort.chatMessages(command);
-            updateTaskAfterExecution(task, true);
+            updateTaskAfterExecution(task, true, "执行成功");
             log.info("定时任务执行完成: {}", task.getName());
         } catch (Exception e) {
             log.error("定时任务执行失败: {}", task.getName(), e);
-            updateTaskAfterExecution(task, false);
+            updateTaskAfterExecution(task, false, e.getMessage());
         }
     }
 
     private Agent findAgentForTask(ScheduledTask task) {
+        if (task.getAgentId() != null && !task.getAgentId().isBlank()) {
+            return agentRepository.findById(task.getAgentId()).orElse(null);
+        }
         return agentRepository.findAll().stream()
                 .filter(a -> a.getWorkspaceId().equals(task.getWorkspaceId()))
                 .findFirst()
                 .orElse(null);
     }
 
-    private void updateTaskAfterExecution(ScheduledTask task, boolean success) {
+    private void updateTaskAfterExecution(ScheduledTask task, boolean success, String result) {
         task.setLastExecuteTime(LocalDateTime.now());
         task.setStatus(success ? "SUCCESS" : "FAILED");
+        task.setLastRunResult(result);
+        task.setRunCount(task.getRunCount() + 1);
         task.setUpdatedAt(LocalDateTime.now());
         scheduledTaskRepository.saveOrUpdate(task);
     }

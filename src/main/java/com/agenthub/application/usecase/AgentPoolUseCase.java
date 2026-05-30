@@ -72,6 +72,12 @@ public class AgentPoolUseCase implements AgentPoolFactory {
         }
     }
 
+    public void evict(String agentId, String sessionId) {
+        AGENT_POOL.remove(sessionId, agentId);
+        CONTEXT_POOL.remove(sessionId, agentId);
+        log.info("Agent池已驱逐: agentId={}, sessionId={}", agentId, sessionId);
+    }
+
     @Async("ttlExecutorService")
     @EventListener
     public void handleConfigDeletedEvent(AgentConfigDeletedEvent event) {

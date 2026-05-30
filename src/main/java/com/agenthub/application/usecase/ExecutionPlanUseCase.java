@@ -159,10 +159,20 @@ public class ExecutionPlanUseCase {
                 .orElseThrow(() -> new NotFoundException("Plan step not found: " + stepId));
     }
 
+    public ExecutionPlanOutput addStepToPlan(String planId, String description,
+                                              String toolName, String toolInput) {
+        ExecutionPlan plan = findPlan(planId);
+        int order = plan.getSteps().size() + 1;
+        PlanStep step = PlanStep.create(plan.getId(), order, description, toolName, toolInput);
+        plan.addStep(step);
+        return toOutput(executionPlanRepository.save(plan));
+    }
+
     private void addStepsFromCommand(ExecutionPlan plan, List<PlanStepInput> stepInputs) {
         if (stepInputs == null) return;
+        int index = 0;
         for (PlanStepInput input : stepInputs) {
-            PlanStep step = PlanStep.create(plan.getId(), 0, input.getDescription(),
+            PlanStep step = PlanStep.create(plan.getId(), index++, input.getDescription(),
                     input.getToolName(), input.getToolInput());
             step.setDependencyIds(input.getDependsOn());
             plan.addStep(step);

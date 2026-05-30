@@ -2,6 +2,7 @@ package com.agenthub.infrastructure.store.db.entity;
 
 import lombok.Data;
 import com.baomidou.mybatisplus.annotation.*;
+import org.apache.ibatis.type.JdbcType;
 
 import java.time.Instant;
 
@@ -28,6 +29,10 @@ public class ScheduledTaskEntity {
     private Instant lastExecuteTime;
     private Instant nextExecuteTime;
     private String status;
+    private String agentId;
+    @TableField(jdbcType = JdbcType.LONGVARCHAR)
+    private String lastRunResult;
+    private int runCount;
     
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;

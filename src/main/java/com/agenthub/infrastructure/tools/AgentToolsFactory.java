@@ -21,27 +21,27 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AgentToolsFactory implements ToolCallbackResolverPort {
 
     private final List<AbstractToolsFactory> abstractToolsFactory;
-    private static final Map<AgentToolType, AbstractToolsFactory> TOOL_TYPE_MAP = new ConcurrentHashMap<>();
+    private final Map<AgentToolType, AbstractToolsFactory> toolTypeMap = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
-        abstractToolsFactory.forEach(factory -> TOOL_TYPE_MAP.put(factory.getToolInfo(), factory));
+        abstractToolsFactory.forEach(factory -> toolTypeMap.put(factory.getToolInfo(), factory));
     }
 
     public Set<ToolCallback> getToolCallback(AgentToolType toolType, String toolName) {
-        AbstractToolsFactory abstractToolsFactory = TOOL_TYPE_MAP.get(toolType);
-        if (abstractToolsFactory == null) {
+        AbstractToolsFactory factory = toolTypeMap.get(toolType);
+        if (factory == null) {
             return Set.of();
         }
-        return abstractToolsFactory.getToolCallbacks(toolName);
+        return factory.getToolCallbacks(toolName);
     }
 
     public Set<ToolCallback> getToolCallbacks(AgentToolType toolType, List<AgentToolInfo> toolIds) {
-        AbstractToolsFactory abstractToolsFactory = TOOL_TYPE_MAP.get(toolType);
-        if (toolIds == null || toolIds.isEmpty() || abstractToolsFactory == null) {
+        AbstractToolsFactory factory = toolTypeMap.get(toolType);
+        if (toolIds == null || toolIds.isEmpty() || factory == null) {
             return Set.of();
         }
-        return abstractToolsFactory.getToolCallbacks(toolIds.stream()
+        return factory.getToolCallbacks(toolIds.stream()
                 .filter(toolInfo -> toolInfo.getType() == toolType).toList());
     }
 
@@ -49,5 +49,16 @@ public class AgentToolsFactory implements ToolCallbackResolverPort {
     public Set<Object> resolveToolCallbacks(AgentToolType toolType, List<AgentToolInfo> toolIds) {
         Set<ToolCallback> callbacks = getToolCallbacks(toolType, toolIds);
         return Set.copyOf(callbacks);
+    }
+
+    @Override
+    public java.util.Optional<Object> resolveByName(String toolName) {
+        for (AbstractToolsFactory factory : toolTypeMap.values()) {
+            Set<ToolCallback> callbacks = factory.getToolCallbacks(toolName);
+            if (!callbacks.isEmpty()) {
+                return java.util.Optional.of(callbacks.iterator().next());
+            }
+        }
+        return java.util.Optional.empty();
     }
 }

@@ -11,12 +11,13 @@ import java.util.Set;
  */
 public interface ToolCallbackResolverPort {
 
-    /**
-     * 根据工具类型和工具信息列表解析工具回调。
-     *
-     * @param toolType 工具类型
-     * @param toolIds  工具信息列表
-     * @return 工具回调集合
-     */
     Set<Object> resolveToolCallbacks(AgentToolType toolType, List<AgentToolInfo> toolIds);
+
+    /**
+     * 根据工具名称解析工具回调。
+     *
+     * @param toolName 工具名称
+     * @return 工具回调（可能为空）
+     */
+    java.util.Optional<Object> resolveByName(String toolName);
 }
