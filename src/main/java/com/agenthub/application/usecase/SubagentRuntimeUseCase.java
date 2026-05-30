@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.collection.CollUtil;
 import com.agenthub.application.command.RunSubagentCommand;
 import com.agenthub.application.command.SubagentExecutionCommand;
 import com.agenthub.application.dto.SubagentMessageOutput;
@@ -161,6 +162,9 @@ public class SubagentRuntimeUseCase {
     }
 
     private List<Object> parseToolCallbacks(ReActAgentContext parent, List<String> tools) {
+        if (CollUtil.isEmpty(tools)) {
+            return parent.getToolCallbacks();
+        }
         return parent.getToolCallbacks().stream()
                 .filter(v -> {
                     if (v instanceof ToolCallback toolCallback) {

@@ -24,8 +24,10 @@ public class PromptTemplateEntity {
     private String category;
     private String content;
     private String variables;
-    private boolean isActive;
+    private boolean active;
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private Instant updatedAt;
 
 

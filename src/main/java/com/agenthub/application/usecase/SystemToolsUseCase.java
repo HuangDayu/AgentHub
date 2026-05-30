@@ -7,6 +7,7 @@ import com.agenthub.domain.model.tools.SystemTool;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -22,8 +23,10 @@ public class SystemToolsUseCase {
 
     @Transactional
     public void syncTools() {
+        var now = java.time.Instant.now();
         List<SystemTool> tools = scanner.scanSystemTools();
         repository.syncTools(tools);
+        repository.deleteBefore(now.minus(5, ChronoUnit.MINUTES));
     }
 
     public List<SystemToolOutput> listAll() {

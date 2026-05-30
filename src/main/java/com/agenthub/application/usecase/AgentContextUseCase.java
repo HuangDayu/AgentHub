@@ -2,6 +2,7 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.application.factory.AgentContextFactory;
 import com.agenthub.application.port.out.repositories.*;
+import com.agenthub.application.port.out.tools.ToolCallbackResolverPort;
 import com.agenthub.domain.enums.AgentConfigCategory;
 import com.agenthub.domain.enums.AgentConfigType;
 import com.agenthub.domain.enums.AgentToolType;
@@ -13,7 +14,6 @@ import com.agenthub.domain.model.strategy.GuardrailStrategy;
 import com.agenthub.domain.model.strategy.ModelStrategy;
 import com.agenthub.domain.model.strategy.RetrievalStrategy;
 import com.agenthub.domain.model.strategy.ToolStrategy;
-import com.agenthub.infrastructure.tools.AgentToolsFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.ai.tool.ToolCallback;
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -44,7 +45,7 @@ public class AgentContextUseCase implements AgentContextFactory {
     private final ToolStrategyRepository toolStrategyRepository;
     private final GuardrailStrategyRepository guardrailStrategyRepository;
     private final WorkspaceRepository workspaceRepository;
-    private final AgentToolsFactory agentToolsFactory;
+    private final ToolCallbackResolverPort toolCallbackResolver;
 
     @Override
     public ReActAgentContext buildContext(String agentId, String sessionId) {
@@ -113,19 +114,19 @@ public class AgentContextUseCase implements AgentContextFactory {
 
     private List<AgentToolInfo> resolveTools(List<AgentConfig> configs) {
         return configs.parallelStream().filter(c -> c.getCategory() == AgentConfigCategory.TOOL)
-                .map(v -> new AgentToolInfo(AgentToolType.valueOf(v.getType().name()), v.getConfigId(), v.getName(), v.getDescription(), v.isEnabled()))
+                .map(v -> new AgentToolInfo(valueOf(v.getType().name()), v.getConfigId(), v.getName(), v.getDescription(), v.isEnabled()))
                 .toList();
     }
 
 
-    private List<java.lang.String> resolveToolIds(List<AgentConfig> configs) {
+    private List<String> resolveToolIds(List<AgentConfig> configs) {
         return configs.stream()
                 .filter(c -> c.getCategory() == AgentConfigCategory.TOOL)
                 .map(AgentConfig::getConfigId)
                 .toList();
     }
 
-    private List<java.lang.String> resolveKnowledgeIds(List<AgentConfig> configs) {
+    private List<String> resolveKnowledgeIds(List<AgentConfig> configs) {
         return configs.stream()
                 .filter(c -> c.getType() == AgentConfigType.KNOWLEDGE_BASE)
                 .map(AgentConfig::getConfigId)
@@ -158,6 +159,7 @@ public class AgentContextUseCase implements AgentContextFactory {
 
     private String findConfigId(List<AgentConfig> configs, AgentConfigCategory category, AgentConfigType type) {
         return configs.stream()
+                .sorted(Comparator.comparingInt(AgentConfig::getPriority).reversed())
                 .filter(c -> c.getCategory() == category && c.getType() == type)
                 .findFirst()
                 .map(AgentConfig::getConfigId)
@@ -183,8 +185,7 @@ public class AgentContextUseCase implements AgentContextFactory {
         return switch (toolInfo) {
             case SYSTEM_TOOL -> resolveSystemTools(toolIds);
             case MCP_TOOL -> resolveMcpTools(toolIds);
-            case SKILL_TOOL -> resolveSkillTools(toolIds);
-            case HTTP_TOOL -> resolveHttpTools(toolIds);
+            default -> Set.of();
         };
     }
 
@@ -194,18 +195,17 @@ public class AgentContextUseCase implements AgentContextFactory {
      * @return
      */
     private Set<ToolCallback> resolveSystemTools(List<AgentToolInfo> toolIds) {
-        return agentToolsFactory.getToolCallbacks(SYSTEM_TOOL, toolIds);
+        return castCallbacks(toolCallbackResolver.resolveToolCallbacks(SYSTEM_TOOL, toolIds));
     }
 
     private Set<ToolCallback> resolveMcpTools(List<AgentToolInfo> toolIds) {
-        return agentToolsFactory.getToolCallbacks(MCP_TOOL, toolIds);
+        return castCallbacks(toolCallbackResolver.resolveToolCallbacks(MCP_TOOL, toolIds));
     }
 
-    private Set<ToolCallback> resolveSkillTools(List<AgentToolInfo> toolIds) {
-        return agentToolsFactory.getToolCallbacks(SKILL_TOOL, toolIds);
-    }
-
-    private Set<ToolCallback> resolveHttpTools(List<AgentToolInfo> toolIds) {
-        return agentToolsFactory.getToolCallbacks(HTTP_TOOL, toolIds);
+    private Set<ToolCallback> castCallbacks(Set<Object> callbacks) {
+        return callbacks.stream()
+                .filter(ToolCallback.class::isInstance)
+                .map(ToolCallback.class::cast)
+                .collect(Collectors.toSet());
     }
 }

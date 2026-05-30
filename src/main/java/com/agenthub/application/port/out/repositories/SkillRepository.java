@@ -2,6 +2,7 @@ package com.agenthub.application.port.out.repositories;
 
 import com.agenthub.domain.model.tools.Skill;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,5 +24,7 @@ public interface SkillRepository {
     List<Skill> findByWorkspaceId(String workspaceId);
 
     List<Skill> findByIds(List<String> toolIds);
+
+    void deleteBefore(Instant minus);
 
 }

@@ -49,6 +49,15 @@ public class MybatisScheduledTaskRepository implements ScheduledTaskRepository {
         mapper.deleteById(id);
     }
 
+    @Override
+    public List<ScheduledTask> findAllEnabled() {
+        LambdaQueryWrapper<ScheduledTaskEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ScheduledTaskEntity::isEnabled, true);
+        return mapper.selectList(queryWrapper).stream()
+                .map(MybatisScheduledTaskRepository::toDomain)
+                .toList();
+    }
+
     public static ScheduledTaskEntity toEntity(ScheduledTask task) {
         ScheduledTaskEntity entity = new ScheduledTaskEntity();
         entity.setId(task.getId());

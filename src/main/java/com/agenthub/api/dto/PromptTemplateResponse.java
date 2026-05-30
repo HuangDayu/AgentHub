@@ -22,7 +22,7 @@ public class PromptTemplateResponse {
     private String category;
     private String content;
     private List<VariableDto> variables;
-    private boolean isActive;
+    private boolean active;
     private Instant createdAt;
     private Instant updatedAt;
 

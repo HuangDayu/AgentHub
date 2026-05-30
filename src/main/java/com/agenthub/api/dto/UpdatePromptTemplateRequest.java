@@ -17,7 +17,7 @@ public class UpdatePromptTemplateRequest {
     private String category;
     private String content;
     private List<VariableDto> variables;
-    private Boolean isActive;
+    private Boolean active;
 
     @Data
     @Builder

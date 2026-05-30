@@ -2,6 +2,7 @@ package com.agenthub.application.port.out.repositories;
 
 import com.agenthub.domain.model.tools.SystemTool;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,4 +29,5 @@ public interface SystemToolsRepository {
     List<SystemTool> findByIds(List<String> toolIds);
 
 
+    void deleteBefore(Instant minus);
 }

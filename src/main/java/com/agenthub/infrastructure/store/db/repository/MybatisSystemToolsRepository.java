@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -91,6 +92,13 @@ public class MybatisSystemToolsRepository implements SystemToolsRepository {
             return List.of();
         }
         return mapper.selectByIds(toolIds).stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public void deleteBefore(Instant minus) {
+        LambdaQueryWrapper<SystemToolsEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.le(SystemToolsEntity::getUpdatedAt, minus);
+        mapper.delete(wrapper);
     }
 
     private SystemToolsEntity toEntity(SystemTool tool) {

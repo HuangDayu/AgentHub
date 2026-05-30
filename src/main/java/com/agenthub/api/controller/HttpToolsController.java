@@ -1,10 +1,11 @@
 package com.agenthub.api.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.agenthub.api.dto.*;
+import com.agenthub.api.dto.CreateToolRequest;
+import com.agenthub.api.dto.HttpToolViewResponse;
+import com.agenthub.api.dto.UpdateToolRequest;
 import com.agenthub.api.mapper.HttpToolViewMapper;
 import com.agenthub.application.command.CreateHttpToolCommand;
-import com.agenthub.application.command.InvokeToolCommand;
 import com.agenthub.application.command.UpdateToolCommand;
 import com.agenthub.application.usecase.HttpToolsUseCase;
 import org.springframework.web.bind.annotation.*;
@@ -48,23 +49,4 @@ public class HttpToolsController {
         return toResponse(service.updateTool(toolId, command));
     }
 
-    @PostMapping("/{toolId}/invoke")
-    public HttpToolInvokeViewResponse invokeTool(
-            @PathVariable String toolId,
-            @RequestBody(required = false) InvokeToolRequest request,
-            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKeyHeader) {
-        String idempotencyKey = resolveIdempotencyKey(request, idempotencyKeyHeader);
-        return toResponse(service.invokeTool(toolId, buildInvokeCommand(request, idempotencyKey)));
-    }
-
-    private String resolveIdempotencyKey(InvokeToolRequest request, String header) {
-        if (request != null && request.getIdempotencyKey() != null) {
-            return request.getIdempotencyKey();
-        }
-        return header;
-    }
-
-    private InvokeToolCommand buildInvokeCommand(InvokeToolRequest request, String idempotencyKey) {
-        return new InvokeToolCommand(idempotencyKey, request == null ? null : request.getPayload());
-    }
 }

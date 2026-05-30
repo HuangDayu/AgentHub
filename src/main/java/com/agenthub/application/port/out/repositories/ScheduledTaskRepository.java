@@ -9,5 +9,6 @@ public interface ScheduledTaskRepository {
     ScheduledTask saveOrUpdate(ScheduledTask task);
     Optional<ScheduledTask> findById(String id);
     List<ScheduledTask> findByWorkspaceId(String workspaceId);
+    List<ScheduledTask> findAllEnabled();
     void deleteById(String id);
 }

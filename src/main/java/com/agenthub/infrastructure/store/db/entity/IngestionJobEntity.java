@@ -34,9 +34,9 @@ public class IngestionJobEntity {
     private String errorMessage;
     private Instant startedAt;
     private Instant endedAt;
-    @TableField(value = "created_at",fill = FieldFill.INSERT)
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
-    @TableField(value = "updated_at",fill = FieldFill.UPDATE)
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private Instant updatedAt;
 
 

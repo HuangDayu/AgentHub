@@ -16,7 +16,7 @@ public class ChatMessageEntity {
     private String sessionId;
     private String role;
     private String content;
-    @TableField(value = "created_at",fill = FieldFill.INSERT)
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
 
     public String getId() { return id; }

@@ -1,9 +1,8 @@
 package com.agenthub.infrastructure.store.db.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+import org.apache.ibatis.type.JdbcType;
 
 import java.time.Instant;
 
@@ -18,8 +17,11 @@ public class MessagePushEntity {
     private String messageId;
     private String runId;
     private String role;
+    @TableField(jdbcType = JdbcType.LONGVARCHAR)
     private String content;
+    @TableField(jdbcType = JdbcType.LONGVARCHAR)
     private String metadata;
     private Instant timestamp;
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
 }

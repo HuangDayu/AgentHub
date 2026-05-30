@@ -22,10 +22,10 @@
           <label class="field">
             <span>分类</span>
             <select v-model="form.category">
-              <option value="system">SYSTEM</option>
-              <option value="user">USER</option>
-              <option value="assistant">ASSISTANT</option>
-              <option value="general">GENERAL</option>
+              <option value="SYSTEM">SYSTEM</option>
+              <option value="USER">USER</option>
+              <option value="ASSISTANT">ASSISTANT</option>
+              <option value="GENERAL">GENERAL</option>
             </select>
           </label>
           <label class="field">
@@ -38,7 +38,7 @@
           </div>
           <label class="field">
             <span>启用状态</span>
-            <select v-model="form.isActive">
+            <select v-model="form.active">
               <option :value="true">启用</option>
               <option :value="false">禁用</option>
             </select>
@@ -67,8 +67,8 @@
               <td><span class="tag">{{ tpl.category }}</span></td>
               <td class="content-preview">{{ truncate(tpl.content, 50) }}</td>
               <td>
-                <span :class="['tag', tpl.isActive ? 'tag-success' : 'tag-error']">
-                  {{ tpl.isActive ? '启用' : '禁用' }}
+                <span :class="['tag', tpl.active ? 'tag-success' : 'tag-error']">
+                  {{ tpl.active ? '启用' : '禁用' }}
                 </span>
               </td>
               <td>{{ formatDateTime(tpl.createdAt) }}</td>
@@ -105,9 +105,9 @@ const showCreateForm = ref(false)
 const form = reactive({
   name: '',
   description: '',
-  category: 'general',
+  category: 'GENERAL',
   content: '',
-  isActive: true,
+  active: true,
 })
 
 const selectionReady = computed(() => Boolean(store.tenantId && store.workspaceId))
@@ -132,7 +132,7 @@ function startEdit(tpl: PromptTemplate) {
   form.description = tpl.description || ''
   form.category = tpl.category
   form.content = tpl.content
-  form.isActive = tpl.isActive
+  form.active = tpl.active
   showCreateForm.value = true
 }
 
@@ -141,9 +141,9 @@ function cancelForm() {
   showCreateForm.value = false
   form.name = ''
   form.description = ''
-  form.category = 'general'
+  form.category = 'GENERAL'
   form.content = ''
-  form.isActive = true
+  form.active = true
 }
 
 async function submitConfig() {

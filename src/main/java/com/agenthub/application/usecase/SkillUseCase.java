@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static com.agenthub.common.utils.TtlUtils.parallelStreamWithTtl;
@@ -79,9 +81,12 @@ public class SkillUseCase {
 
     public void sync() {
         List<Skill> skills = skillToolScannerPort.scanSkills(skillSharePath);
+        Instant now = Instant.now();
         parallelStreamWithTtl(4, skills, skill -> {
+            skill.setUpdatedAt(now);
             repository.saveOrUpdate(skill);
             return null;
         });
+        repository.deleteBefore(now.minus(2, ChronoUnit.MINUTES));
     }
 }

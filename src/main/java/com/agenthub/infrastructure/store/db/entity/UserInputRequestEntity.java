@@ -1,8 +1,6 @@
 package com.agenthub.infrastructure.store.db.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.time.Instant;
@@ -20,5 +18,6 @@ public class UserInputRequestEntity {
     private String agentId;
     private String agentName;
     private String structuredInput;
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
 }

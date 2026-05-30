@@ -6,6 +6,7 @@ import com.agenthub.application.port.out.repositories.*;
 import com.agenthub.domain.enums.AgentConfigCategory;
 import com.agenthub.domain.enums.AgentConfigType;
 import com.agenthub.domain.enums.ModelType;
+import com.agenthub.domain.model.PromptTemplateInfo;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -70,8 +71,8 @@ public class AgentConfigTypeUseCase {
 
     private Map<AgentConfigType, Function<String, List<AvailableConfigOutput>>> promptDispatch() {
         return Map.of(
-            AgentConfigType.SYSTEM_PROMPT, w -> getPrompts(w, "system"),
-            AgentConfigType.ASSISTANT_PROMPT, w -> getPrompts(w, "assistant")
+            AgentConfigType.SYSTEM_PROMPT, w -> getPrompts(w, PromptTemplateInfo.Category.SYSTEM.name()),
+            AgentConfigType.ASSISTANT_PROMPT, w -> getPrompts(w, PromptTemplateInfo.Category.ASSISTANT.name())
         );
     }
 

@@ -29,9 +29,9 @@ public class VectorStoreConfigEntity {
     private String collectionName;
     private String extraParams;
     private Boolean enabled;
-    @TableField(value = "created_at",fill = FieldFill.INSERT)
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
-    @TableField(value = "updated_at",fill = FieldFill.UPDATE)
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private Instant updatedAt;
 
 

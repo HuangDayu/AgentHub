@@ -50,7 +50,7 @@ public class ModelConfigEntity {
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
 
-    @TableField(value = "updated_at", fill = FieldFill.UPDATE)
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private Instant updatedAt;
 
     @TableField("created_by")

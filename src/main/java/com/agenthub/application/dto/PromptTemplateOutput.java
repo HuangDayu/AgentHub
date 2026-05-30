@@ -22,7 +22,7 @@ public class PromptTemplateOutput {
     private String category;
     private String content;
     private List<VariableResult> variables;
-    private boolean isActive;
+    private boolean active;
     private Instant createdAt;
     private Instant updatedAt;
 

@@ -19,7 +19,7 @@ public class SessionEntity {
     private String tenantId;
     @TableField(value = "workspace_id", fill = FieldFill.INSERT)
     private String workspaceId;
-    @TableField(value = "created_at",fill = FieldFill.INSERT)
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
 
 }

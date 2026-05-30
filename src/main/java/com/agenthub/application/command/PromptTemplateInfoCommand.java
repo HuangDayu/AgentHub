@@ -25,7 +25,7 @@ public class PromptTemplateInfoCommand {
     private String category;
     private String content;
     private List<VariableOutput> variables;
-    private boolean isActive;
+    private boolean active;
     private Instant createdAt;
     private Instant updatedAt;
 

@@ -55,7 +55,7 @@ class PromptTemplateControllerIntegrationTest {
                                     "category": "SYSTEM",
                                     "content": "You are a helpful assistant.",
                                     "variables": [],
-                                    "isActive": true
+                                    "active": true
                                 }
                                 """, shortId)))
                 .andExpect(status().isCreated())
@@ -96,7 +96,7 @@ class PromptTemplateControllerIntegrationTest {
                                     "category": "SYSTEM",
                                     "content": "You are an expert assistant.",
                                     "variables": [],
-                                    "isActive": true
+                                    "active": true
                                 }
                                 """))
                 .andExpect(status().isOk())

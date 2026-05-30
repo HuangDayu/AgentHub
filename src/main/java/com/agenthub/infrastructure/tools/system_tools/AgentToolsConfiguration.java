@@ -26,7 +26,7 @@ public class AgentToolsConfiguration {
      *
      * @return RestTemplate 实例
      */
-    @Bean("tool.restTemplate")
+    @Bean("restfulToolsRestTemplate")
     public RestTemplate restTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT_MS);
@@ -42,7 +42,7 @@ public class AgentToolsConfiguration {
      *
      * @return RetryTemplate 实例
      */
-    @Bean("tool.retryTemplate")
+    @Bean("restfulToolsRetryTemplate")
     public RetryTemplate retryTemplate() {
         RetryTemplate retryTemplate = new RetryTemplate();
         // 重试策略：最多重试 3 次

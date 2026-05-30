@@ -34,7 +34,7 @@ public class KnowledgeBaseEntity {
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
     private String createdBy;
-    @TableField(value = "updated_at", fill = FieldFill.UPDATE)
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private Instant updatedAt;
     private String updatedBy;
     /**

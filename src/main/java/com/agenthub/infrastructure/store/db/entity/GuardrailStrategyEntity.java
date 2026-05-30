@@ -30,6 +30,6 @@ public class GuardrailStrategyEntity {
     private Integer maxOutputLength;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
-    @TableField(value = "updated_at", fill = FieldFill.INSERT)
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private Instant updatedAt;
 }

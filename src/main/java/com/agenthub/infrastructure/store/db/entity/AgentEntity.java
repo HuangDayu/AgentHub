@@ -22,7 +22,7 @@ public class AgentEntity {
     private boolean enabled;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
-    @TableField(value = "updated_at", fill = FieldFill.INSERT)
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private Instant updatedAt;
     @TableField(value = "created_by", fill = FieldFill.INSERT)
     private String createdBy;

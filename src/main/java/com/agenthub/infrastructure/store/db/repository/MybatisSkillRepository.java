@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,6 +71,13 @@ public class MybatisSkillRepository implements SkillRepository {
             return List.of();
         }
         return mapper.selectByIds(toolIds).stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public void deleteBefore(Instant minus) {
+        LambdaQueryWrapper<SkillEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.le(SkillEntity::getUpdatedAt, minus);
+        mapper.delete(wrapper);
     }
 
     private SkillEntity toEntity(Skill skill) {

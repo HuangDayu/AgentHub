@@ -20,7 +20,9 @@ public class WorkspaceEntity {
     private String name;
     private String region;
     private String status;
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private Instant updatedAt;
 
 

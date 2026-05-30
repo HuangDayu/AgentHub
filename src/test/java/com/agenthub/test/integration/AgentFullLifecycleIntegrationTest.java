@@ -284,7 +284,7 @@ public class AgentFullLifecycleIntegrationTest {
                                     "category": "SYSTEM",
                                     "content": "You are a helpful assistant.",
                                     "variables": [],
-                                    "isActive": true
+                                    "active": true
                                 }
                                 """))
                 .andExpect(status().isCreated())

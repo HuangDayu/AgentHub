@@ -28,7 +28,9 @@ public class McpToolEntity {
     private String env;
     private boolean async;
     private boolean enabled;
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private Instant updatedAt;
 
 }

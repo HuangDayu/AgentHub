@@ -10,7 +10,7 @@ export interface PromptTemplate {
   category: string
   content: string
   variables?: Variable[]
-  isActive: boolean
+  active: boolean
   createdAt?: string
   updatedAt?: string
 }
