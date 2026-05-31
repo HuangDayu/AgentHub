@@ -82,11 +82,11 @@ public class SkillUseCase {
     public void sync() {
         List<Skill> skills = skillToolScannerPort.scanSkills(skillSharePath);
         Instant now = Instant.now();
+        repository.deleteBefore(now);
         parallelStreamWithTtl(4, skills, skill -> {
             skill.setUpdatedAt(now);
             repository.saveOrUpdate(skill);
             return null;
         });
-        repository.deleteBefore(now.minus(2, ChronoUnit.MINUTES));
     }
 }
