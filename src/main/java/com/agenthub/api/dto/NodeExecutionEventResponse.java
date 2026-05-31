@@ -1,6 +1,6 @@
 package com.agenthub.api.dto;
 
-import com.agenthub.domain.enums.workflow.NodeStatus;
+import com.agenthub.domain.enums.workflow.DagNodeStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,7 +29,7 @@ public class NodeExecutionEventResponse {
     private String nodeName;
 
     /** 执行状态 */
-    private NodeStatus status;
+    private DagNodeStatus status;
 
     /** 输出数据 */
     private Map<String, Object> outputs;
@@ -55,7 +55,7 @@ public class NodeExecutionEventResponse {
      */
     public static NodeExecutionEventResponse start(String nodeId, String nodeName) {
         return new NodeExecutionEventResponse("node_start", nodeId, nodeName, 
-                NodeStatus.EXECUTING, null, null, Instant.now(), null, 0);
+                DagNodeStatus.EXECUTING, null, null, Instant.now(), null, 0);
     }
 
     /**
@@ -70,7 +70,7 @@ public class NodeExecutionEventResponse {
                                                       Map<String, Object> outputs) {
         Instant end = Instant.now();
         return new NodeExecutionEventResponse("node_complete", nodeId, nodeName, 
-                NodeStatus.SUCCESS, outputs, null, null, end, 0);
+                DagNodeStatus.SUCCESS, outputs, null, null, end, 0);
     }
 
     /**
@@ -84,6 +84,6 @@ public class NodeExecutionEventResponse {
     public static NodeExecutionEventResponse fail(String nodeId, String nodeName, 
                                                    String errorMessage) {
         return new NodeExecutionEventResponse("node_error", nodeId, nodeName, 
-                NodeStatus.FAILED, null, errorMessage, null, Instant.now(), 0);
+                DagNodeStatus.FAILED, null, errorMessage, null, Instant.now(), 0);
     }
 }

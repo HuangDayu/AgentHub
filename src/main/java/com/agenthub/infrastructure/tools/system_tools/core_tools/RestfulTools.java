@@ -12,29 +12,33 @@ import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.http.*;
-import org.springframework.retry.RetryCallback;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.getAgentContext;
 
 /**
- * RESTful 工具，提供对 HttpToolRepository 管理的 HTTP 接口的查询和调用能力。
- * 使用 RetryTemplate 实现失败自动重试。
+ * RESTful 工具，提供对 HTTP 接口的查询和调用能力，支持 RetryTemplate。
  */
 @Slf4j
 @RequiredArgsConstructor
-@AgentTools(name = "RestfulTools", description = "RESTful接口工具，查询和调用已注册的HTTP接口，支持RetryTemplate重试")
+@AgentTools(name = "RestfulTools", description = "RESTful接口工具，查询和调用已注册的HTTP接口，支持自动重试")
 public class RestfulTools {
 
     private final HttpToolRepository httpToolRepository;
-    private final RestTemplate restfulToolsRestTemplate;
-    private final RetryTemplate restfulToolsRetryTemplate;
+    private final RestTemplate restTemplate;
+    private static final int MAX_RETRIES = 3;
+    private static final long RETRY_BACKOFF_MS = 1000;
+    private static final Set<String> ALLOWED_SCHEMES = Set.of("http", "https");
+    private static final Pattern INTERNAL_IP = Pattern.compile(
+            "127\\.\\d+\\.\\d+\\.\\d+|10\\.\\d+\\.\\d+\\.\\d+|192\\.168\\.\\d+\\.\\d+|169\\.254\\.\\d+\\.\\d+"
+    );
 
     @Tool(description = "获取当前工作空间下所有已注册的HTTP接口列表")
     public List<RestfulToolDTO> listHttpTools(ToolContext toolContext) {
@@ -46,7 +50,7 @@ public class RestfulTools {
                 .collect(Collectors.toList());
     }
 
-    @Tool(description = "获取HTTP接口的详细信息，包括端点、方法和参数定义")
+    @Tool(description = "获取HTTP接口的详细信息")
     public RestfulToolDTO getHttpToolDetail(
             @ToolParam(description = "HTTP接口ID") String toolId) {
         return toDto(findTool(toolId));
@@ -68,7 +72,15 @@ public class RestfulTools {
             @ToolParam(description = "完整的请求URL") String url,
             @ToolParam(description = "请求头（JSON格式，可选）") String headersJson,
             @ToolParam(description = "请求体（JSON格式，POST/PUT时使用）") String body) {
+        if (!isSafeUrl(url)) return errorResult("不安全的URL: " + url, method + " " + url);
         return executeWithRetry(method, url, body, method + " " + url);
+    }
+
+    private boolean isSafeUrl(String url) {
+        if (url == null) return false;
+        String lower = url.toLowerCase();
+        if (!ALLOWED_SCHEMES.stream().anyMatch(lower::startsWith)) return false;
+        return !INTERNAL_IP.matcher(lower).find();
     }
 
     private HttpTool findTool(String toolId) {
@@ -77,33 +89,32 @@ public class RestfulTools {
                         "HTTP接口不存在: " + toolId));
     }
 
-    private HttpToolResult executeWithRetry(String method, String url,
-                                            String body, String label) {
-        try {
-            return restfulToolsRetryTemplate.execute(
-                    context -> doHttpCall(method, url, body, label));
-        } catch (Exception e) {
-            log.error("HTTP调用最终失败: {}", label, e);
-            return errorResult("重试耗尽: " + e.getMessage(), label);
+    private HttpToolResult executeWithRetry(String method, String url, String body, String label) {
+        for (int i = 1; i <= MAX_RETRIES; i++) {
+            try {
+                return doHttpCall(method, url, body, label);
+            } catch (ResourceAccessException | HttpServerErrorException e) {
+                log.warn("HTTP调用失败, 第{}次重试: {}", i, e.getMessage());
+                sleep(RETRY_BACKOFF_MS * i);
+            } catch (Exception e) {
+                return errorResult(e.getMessage(), label);
+            }
         }
+        return errorResult("重试" + MAX_RETRIES + "次后仍失败", label);
     }
 
-    private HttpToolResult doHttpCall(String method, String url,
-                                      String body, String label) {
+    private HttpToolResult doHttpCall(String method, String url, String body, String label) {
         long start = System.currentTimeMillis();
         try {
             HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
             HttpEntity<String> entity = buildEntity(body);
-            ResponseEntity<String> resp = restfulToolsRestTemplate.exchange(url, httpMethod, entity, String.class);
+            ResponseEntity<String> resp = restTemplate.exchange(url, httpMethod, entity, String.class);
             return buildResult(true, resp.getStatusCode().value(),
                     resp.getBody(), System.currentTimeMillis() - start, label);
-        } catch (ResourceAccessException | HttpServerErrorException e) {
-            throw new org.springframework.retry.RetryException(label, e);
         } catch (Exception e) {
-            return errorResult(e.getMessage(), label);
+            throw e;
         }
     }
-
 
     private HttpEntity<String> buildEntity(String body) {
         HttpHeaders headers = new HttpHeaders();
@@ -111,6 +122,10 @@ public class RestfulTools {
         return (body != null && !body.isBlank())
                 ? new HttpEntity<>(body, headers)
                 : new HttpEntity<>(headers);
+    }
+
+    private void sleep(long ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
 
     private RestfulToolDTO toDto(HttpTool tool) {

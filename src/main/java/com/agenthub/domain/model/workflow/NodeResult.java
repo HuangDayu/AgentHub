@@ -1,6 +1,6 @@
 package com.agenthub.domain.model.workflow;
 
-import com.agenthub.domain.enums.workflow.NodeStatus;
+import com.agenthub.domain.enums.workflow.DagNodeStatus;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -21,14 +21,14 @@ public class NodeResult {
     private final String nodeId;
 
     /** 执行状态 */
-    private final NodeStatus status;
+    private final DagNodeStatus status;
 
     /** 输出数据 */
     private final Map<String, Object> outputs;
 
     @JsonCreator
     public NodeResult(@JsonProperty("nodeId") String nodeId,
-                      @JsonProperty("status") NodeStatus status,
+                      @JsonProperty("status") DagNodeStatus status,
                       @JsonProperty("outputs") Map<String, Object> outputs) {
         this.nodeId = nodeId;
         this.status = status;
@@ -55,7 +55,7 @@ public class NodeResult {
      * @return 成功结果
      */
     public static NodeResult success(String nodeId, Map<String, Object> outputs) {
-        return new NodeResult(nodeId, NodeStatus.SUCCESS, outputs);
+        return new NodeResult(nodeId, DagNodeStatus.SUCCESS, outputs);
     }
 
     /**
@@ -66,7 +66,7 @@ public class NodeResult {
      * @return 失败结果
      */
     public static NodeResult failure(String nodeId, String errorMessage) {
-        NodeResult result = new NodeResult(nodeId, NodeStatus.FAILED, Map.of());
+        NodeResult result = new NodeResult(nodeId, DagNodeStatus.FAILED, Map.of());
         result.errorMessage = errorMessage;
         return result;
     }
@@ -77,7 +77,7 @@ public class NodeResult {
      * @return 如果成功返回true
      */
     public boolean isSuccess() {
-        return status == NodeStatus.SUCCESS;
+        return status == DagNodeStatus.SUCCESS;
     }
 
     /**

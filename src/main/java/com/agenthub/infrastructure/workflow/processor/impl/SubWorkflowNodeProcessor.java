@@ -1,12 +1,12 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
 import cn.hutool.core.convert.Convert;
-import com.agenthub.application.port.out.workflow.WorkflowExecutionPort;
-import com.agenthub.application.port.out.workflow.WorkflowStatePort;
+import com.agenthub.application.port.out.workflow.DagWorkflowExecutionPort;
+import com.agenthub.application.port.out.workflow.DagWorkflowStatePort;
 import com.agenthub.application.command.ExecutionCommand;
-import com.agenthub.domain.enums.workflow.NodeType;
-import com.agenthub.domain.model.workflow.WorkflowContext;
-import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.enums.workflow.DagNodeType;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * 子工作流节点处理器。
- * 使用 ObjectProvider 延迟获取 WorkflowExecutionPort 以避免循环依赖。
+ * 使用 ObjectProvider 延迟获取 DagWorkflowExecutionPort 以避免循环依赖。
  *
  * @author huangdayu
  */
@@ -29,14 +29,14 @@ import java.util.Map;
 @Component
 public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
 
-    private final ObjectProvider<WorkflowExecutionPort> executionPortProvider;
-    private final WorkflowStatePort statePort;
+    private final ObjectProvider<DagWorkflowExecutionPort> executionPortProvider;
+    private final DagWorkflowStatePort statePort;
     private final VariableResolver variableResolver;
     private final ObjectMapper objectMapper;
 
     public SubWorkflowNodeProcessor(
-            ObjectProvider<WorkflowExecutionPort> executionPortProvider,
-            WorkflowStatePort statePort,
+            ObjectProvider<DagWorkflowExecutionPort> executionPortProvider,
+            DagWorkflowStatePort statePort,
             VariableResolver variableResolver,
             ObjectMapper objectMapper) {
         this.executionPortProvider = executionPortProvider;
@@ -47,16 +47,16 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
 
     @Override
     public String getSupportedType() {
-        return NodeType.SUB_WORKFLOW.name();
+        return DagNodeType.SUB_WORKFLOW.name();
     }
 
     @Override
-    protected Mono<Map<String, Object>> doProcess(WorkflowNode node, WorkflowContext context) {
+    protected Mono<Map<String, Object>> doProcess(DagWorkflowNode node, DagWorkflowContext context) {
         ExecutionCommand command = buildCommand(node, context);
         return executeSubWorkflow(command, node, context);
     }
 
-    private ExecutionCommand buildCommand(WorkflowNode node, WorkflowContext context) {
+    private ExecutionCommand buildCommand(DagWorkflowNode node, DagWorkflowContext context) {
         Map<String, Object> config = node.getConfig().getParameters();
         ExecutionCommand command = new ExecutionCommand();
 
@@ -72,7 +72,7 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
         return (String) config.getOrDefault("subWorkflowId", "");
     }
 
-    private Map<String, Object> resolveInput(Map<String, Object> config, WorkflowContext context) {
+    private Map<String, Object> resolveInput(Map<String, Object> config, DagWorkflowContext context) {
         String mappingJson = (String) config.getOrDefault("inputMapping", "{}");
         Map<String, Object> mapping = parseMapping(mappingJson);
         return resolveVariables(mapping, context);
@@ -88,7 +88,7 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
     }
 
     private Map<String, Object> resolveVariables(
-            Map<String, Object> mapping, WorkflowContext context) {
+            Map<String, Object> mapping, DagWorkflowContext context) {
         Map<String, Object> resolved = new HashMap<>();
 
         for (Map.Entry<String, Object> entry : mapping.entrySet()) {
@@ -104,11 +104,11 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
     }
 
     private Mono<Map<String, Object>> executeSubWorkflow(
-            ExecutionCommand command, WorkflowNode node, WorkflowContext context) {
+            ExecutionCommand command, DagWorkflowNode node, DagWorkflowContext context) {
         log.info("Executing sub-workflow: {}", command.getWorkflowId());
 
         // 延迟获取 executionPort
-        WorkflowExecutionPort executionPort = executionPortProvider.getObject();
+        DagWorkflowExecutionPort executionPort = executionPortProvider.getObject();
         
         int timeout = getTimeout(node);
         return executionPort.initializeContext(command)
@@ -120,15 +120,15 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
             .onErrorResume(error -> handleError(error));
     }
 
-    private int getTimeout(WorkflowNode node) {
+    private int getTimeout(DagWorkflowNode node) {
         Map<String, Object> config = node.getConfig().getParameters();
         Object timeout = config.getOrDefault("timeout", 300);
         return Convert.toInt(timeout);
     }
 
     private Map<String, Object> processResult(
-            WorkflowContext ctx, ExecutionCommand command,
-            WorkflowNode node, WorkflowContext context) {
+            DagWorkflowContext ctx, ExecutionCommand command,
+            DagWorkflowNode node, DagWorkflowContext context) {
         Map<String, Object> result = createBaseResult(ctx, command);
         Map<String, Object> mappedOutput = applyOutputMapping(ctx, node);
 
@@ -140,7 +140,7 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
     }
 
     private Map<String, Object> createBaseResult(
-            WorkflowContext ctx, ExecutionCommand command) {
+            DagWorkflowContext ctx, ExecutionCommand command) {
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         result.put("executionId", ctx.getExecutionId());
@@ -149,7 +149,7 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
     }
 
     private Map<String, Object> applyOutputMapping(
-            WorkflowContext ctx, WorkflowNode node) {
+            DagWorkflowContext ctx, DagWorkflowNode node) {
         Map<String, Object> config = node.getConfig().getParameters();
         String mappingJson = (String) config.getOrDefault("outputMapping", "{}");
         Map<String, Object> mapping = parseMapping(mappingJson);
@@ -190,7 +190,7 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
         return null;
     }
 
-    private void saveToContext(Map<String, Object> output, WorkflowContext context) {
+    private void saveToContext(Map<String, Object> output, DagWorkflowContext context) {
         for (Map.Entry<String, Object> entry : output.entrySet()) {
             context.setVariable(entry.getKey(), entry.getValue());
         }

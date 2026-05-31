@@ -107,6 +107,25 @@ public class PlanTools {
         return planExecutor.executePlan(planId);
     }
 
+    @Tool(description = "获取计划摘要，包含步骤依赖关系可视化")
+    public String getPlanSummary(
+            @ToolParam(description = "计划ID") String planId) {
+        ExecutionPlanOutput plan = executionPlanUseCase.getPlan(planId);
+        StringBuilder sb = new StringBuilder();
+        sb.append("计划: ").append(plan.getGoal()).append("\n");
+        sb.append("状态: ").append(plan.getStatus()).append("\n");
+        sb.append("步骤: ").append(plan.getStepCount()).append(" 个\n");
+        sb.append("完成: ").append(plan.getCompletedStepCount()).append(" 个\n\n");
+        sb.append("步骤依赖图:\n");
+        for (PlanStepOutput step : plan.getSteps()) {
+            String deps = step.getDependencyIds() != null && !step.getDependencyIds().isEmpty()
+                    ? " ← " + String.join(",", step.getDependencyIds()) : "";
+            sb.append("  [").append(step.getStatus()).append("] ")
+                    .append(step.getDescription()).append(deps).append("\n");
+        }
+        return sb.toString();
+    }
+
     private CreatePlanCommand buildCreateCommand(ReActAgentContext ctx, String goal,
                                                  List<PlanStepToolInput> stepInputs) {
         CreatePlanCommand command = new CreatePlanCommand();

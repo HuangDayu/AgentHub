@@ -1,9 +1,9 @@
 package com.agenthub.infrastructure.workflow.processor;
 
-import com.agenthub.domain.enums.workflow.NodeStatus;
+import com.agenthub.domain.enums.workflow.DagNodeStatus;
 import com.agenthub.domain.model.workflow.NodeResult;
-import com.agenthub.domain.model.workflow.WorkflowContext;
-import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -27,7 +27,7 @@ public abstract class AbstractNodeProcessor implements NodeProcessor {
      * @return 处理结果的Mono
      */
     @Override
-    public Mono<NodeResult> process(WorkflowNode node, WorkflowContext context) {
+    public Mono<NodeResult> process(DagWorkflowNode node, DagWorkflowContext context) {
         log.info("开始执行节点: {} [{}]", node.getName(), node.getId());
         Instant startTime = Instant.now();
         
@@ -46,7 +46,7 @@ public abstract class AbstractNodeProcessor implements NodeProcessor {
      * @return 输出数据的Mono
      */
     protected abstract Mono<Map<String, Object>> doProcess(
-            WorkflowNode node, WorkflowContext context);
+            DagWorkflowNode node, DagWorkflowContext context);
 
     /**
      * 创建成功的执行结果。
@@ -56,7 +56,7 @@ public abstract class AbstractNodeProcessor implements NodeProcessor {
      * @param startTime 开始时间
      * @return 节点结果
      */
-    private NodeResult createSuccessResult(WorkflowNode node, 
+    private NodeResult createSuccessResult(DagWorkflowNode node, 
                                            Map<String, Object> outputs, 
                                            Instant startTime) {
         NodeResult result = NodeResult.success(node.getId(), outputs);
@@ -74,7 +74,7 @@ public abstract class AbstractNodeProcessor implements NodeProcessor {
      * @param startTime 开始时间
      * @return 失败结果的Mono
      */
-    private Mono<NodeResult> handleFailure(WorkflowNode node, 
+    private Mono<NodeResult> handleFailure(DagWorkflowNode node, 
                                            Throwable error, 
                                            Instant startTime) {
         log.error("节点执行失败: {} [{}]", node.getName(), node.getId(), error);
@@ -91,7 +91,7 @@ public abstract class AbstractNodeProcessor implements NodeProcessor {
      * @param node 工作流节点
      * @param result 执行结果
      */
-    private void logResult(WorkflowNode node, NodeResult result) {
+    private void logResult(DagWorkflowNode node, NodeResult result) {
         if (result.isSuccess()) {
             log.info("节点执行成功: {} [{}], 耗时: {}ms", 
                 node.getName(), node.getId(), result.getDurationMs());
@@ -108,7 +108,7 @@ public abstract class AbstractNodeProcessor implements NodeProcessor {
      * @return 验证结果的Mono
      */
     @Override
-    public Mono<Void> validate(WorkflowNode node) {
+    public Mono<Void> validate(DagWorkflowNode node) {
         return Mono.fromRunnable(() -> validateNodeConfig(node));
     }
 
@@ -117,7 +117,7 @@ public abstract class AbstractNodeProcessor implements NodeProcessor {
      *
      * @param node 工作流节点
      */
-    protected void validateNodeConfig(WorkflowNode node) {
+    protected void validateNodeConfig(DagWorkflowNode node) {
         if (node.getConfig() == null) {
             throw new IllegalArgumentException("节点配置不能为空");
         }
@@ -129,7 +129,7 @@ public abstract class AbstractNodeProcessor implements NodeProcessor {
      * @param node 工作流节点
      * @param status 新状态
      */
-    protected void updateNodeStatus(WorkflowNode node, NodeStatus status) {
+    protected void updateDagNodeStatus(DagWorkflowNode node, DagNodeStatus status) {
         node.updateStatus(status);
     }
 }

@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.workflow.variable;
 
 import com.agenthub.domain.model.workflow.NodeResult;
-import com.agenthub.domain.model.workflow.WorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -28,7 +28,7 @@ public class VariableResolver {
      * @param context 执行上下文
      * @return 解析后的值
      */
-    public Object resolve(String expression, WorkflowContext context) {
+    public Object resolve(String expression, DagWorkflowContext context) {
         if (expression == null || !expression.contains("${")) {
             return expression;
         }
@@ -42,7 +42,7 @@ public class VariableResolver {
      * @param context 执行上下文
      * @return 解析后的值
      */
-    private Object resolveVariableExpression(String expression, WorkflowContext context) {
+    private Object resolveVariableExpression(String expression, DagWorkflowContext context) {
         Matcher matcher = VARIABLE_PATTERN.matcher(expression);
         if (!matcher.find()) {
             return expression;
@@ -59,7 +59,7 @@ public class VariableResolver {
      * @return 解析后的值
      */
     private Object resolveSingleVariable(String expression, 
-                                         WorkflowContext context, 
+                                         DagWorkflowContext context, 
                                          Matcher matcher) {
         matcher.reset();
         if (isSingleVariable(expression, matcher)) {
@@ -87,7 +87,7 @@ public class VariableResolver {
      * @param context 执行上下文
      * @return 解析后的字符串
      */
-    public String resolveTemplateString(String template, WorkflowContext context) {
+    public String resolveTemplateString(String template, DagWorkflowContext context) {
         Matcher matcher = VARIABLE_PATTERN.matcher(template);
         StringBuffer result = new StringBuffer();
         while (matcher.find()) {
@@ -106,7 +106,7 @@ public class VariableResolver {
      * @param context 执行上下文
      * @return 变量值
      */
-    private Object resolveVariableValue(String variable, WorkflowContext context) {
+    private Object resolveVariableValue(String variable, DagWorkflowContext context) {
         String[] parts = variable.split("\\.", 2);
         String scope = parts[0];
         String path = parts.length > 1 ? parts[1] : "";
@@ -127,7 +127,7 @@ public class VariableResolver {
      * @param context 执行上下文
      * @return 变量值
      */
-    private Object resolveUserVariable(String path, WorkflowContext context) {
+    private Object resolveUserVariable(String path, DagWorkflowContext context) {
         return context.getVariable(path);
     }
 
@@ -138,7 +138,7 @@ public class VariableResolver {
      * @param context 执行上下文
      * @return 变量值
      */
-    private Object resolveSystemVariable(String path, WorkflowContext context) {
+    private Object resolveSystemVariable(String path, DagWorkflowContext context) {
         return switch (path) {
             case "executionId" -> context.getExecutionId();
             case "workflowId" -> context.getWorkflowId();
@@ -164,7 +164,7 @@ public class VariableResolver {
      * @param context 执行上下文
      * @return 变量值
      */
-    private Object resolveNodeVariableFromPath(String path, WorkflowContext context) {
+    private Object resolveNodeVariableFromPath(String path, DagWorkflowContext context) {
         String[] parts = path.split("\\.", 2);
         if (parts.length < 2) {
             return resolveNodeVariable(parts[0], "", context);
@@ -180,7 +180,7 @@ public class VariableResolver {
      * @param context 执行上下文
      * @return 变量值
      */
-    private Object resolveNodeVariable(String nodeId, String path, WorkflowContext context) {
+    private Object resolveNodeVariable(String nodeId, String path, DagWorkflowContext context) {
         NodeResult result = context.getNodeResults().get(nodeId);
         if (result == null) {
             return null;
@@ -209,7 +209,7 @@ public class VariableResolver {
      * @param context 执行上下文
      * @return 解析后的Map
      */
-    public Map<String, Object> resolveMap(Map<String, Object> map, WorkflowContext context) {
+    public Map<String, Object> resolveMap(Map<String, Object> map, DagWorkflowContext context) {
         Map<String, Object> result = new HashMap<>();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             result.put(entry.getKey(), resolveEntryValue(entry.getValue(), context));
@@ -224,7 +224,7 @@ public class VariableResolver {
      * @param context 执行上下文
      * @return 解析后的值
      */
-    private Object resolveEntryValue(Object value, WorkflowContext context) {
+    private Object resolveEntryValue(Object value, DagWorkflowContext context) {
         if (value instanceof String str) {
             return resolve(str, context);
         }

@@ -1,127 +1,95 @@
-/*
- * Copyright 2025-2026 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.agenthub.infrastructure.tools.system_tools.core_tools;
 
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
-import org.springframework.ai.support.ToolCallbacks;
-import org.springframework.ai.tool.ToolCallback;
-import org.springframework.ai.tool.annotation.Tool;
-import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * SQL tools for the SQL agent: list tables, get schema, run query.
+ * SQL 工具，提供数据库表查询和只读 SQL 执行能力。
  */
-@AgentTools(name = "SqlTools", description = "SQL 工具： list tables, get schema, run query.",defaultEnable = false)
+@AgentTools(name = "SqlTools", description = "SQL 工具：查询表结构、执行只读SQL查询", defaultEnable = false)
 public class SqlTools {
 
-	private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
+    private static final Pattern SAFE_TABLE_NAME = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+    private static final Set<String> WRITE_KEYWORDS = Set.of(
+            "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE",
+            "TRUNCATE", "GRANT", "REVOKE", "EXEC", "EXECUTE"
+    );
 
-	public SqlTools(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
+    public SqlTools(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
-	@Tool(name = "sql_db_list_tables", description = "Input is an empty string, output is a comma-separated list of tables in the database.")
-	public String listTables(@ToolParam(description = "Empty string") String ignored) {
-		List<String> tables = jdbcTemplate.queryForList(
-				"SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_TYPE = 'BASE TABLE'",
-				String.class);
-		return String.join(", ", tables);
-	}
+    @org.springframework.ai.tool.annotation.Tool(
+            name = "sql_db_list_tables",
+            description = "列出数据库中所有表名")
+    public String listTables(String ignored) {
+        List<String> tables = jdbcTemplate.queryForList(
+                "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_TYPE = 'BASE TABLE'",
+                String.class);
+        return String.join(", ", tables);
+    }
 
-	@Tool(name = "sql_db_schema", description = "Input is a comma-separated list of tables, output is the schema and sample rows for those tables.")
-	public String getSchema(@ToolParam(description = "Comma-separated table names") String tableNames) {
-		String[] tables = tableNames.split(",");
-		StringBuilder sb = new StringBuilder();
-		for (String table : tables) {
-			String t = table.trim();
-			if (t.isEmpty())
-				continue;
-			try {
-				List<Map<String, Object>> rows = jdbcTemplate.queryForList("SELECT * FROM " + t + " LIMIT 3");
-				sb.append("CREATE TABLE \"").append(t).append("\" (");
-				List<Map<String, Object>> columns = jdbcTemplate
-						.queryForList("SELECT COLUMN_NAME, TYPE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?",
-								t.toUpperCase());
-				sb.append(columns.stream()
-						.map(c -> "\"" + c.get("COLUMN_NAME") + "\" " + c.get("TYPE_NAME"))
-						.collect(Collectors.joining(", ")));
-				sb.append(")\n\n");
-				if (!rows.isEmpty()) {
-					sb.append("Sample rows:\n");
-					rows.forEach(r -> sb.append(r.toString()).append("\n"));
-				}
-				sb.append("\n");
-			}
-			catch (Exception e) {
-				sb.append("Error for table ").append(t).append(": ").append(e.getMessage()).append("\n");
-			}
-		}
-		return sb.toString();
-	}
+    @org.springframework.ai.tool.annotation.Tool(
+            name = "sql_db_schema",
+            description = "获取指定表的结构和示例数据")
+    public String getSchema(String tableNames) {
+        StringBuilder sb = new StringBuilder();
+        for (String table : tableNames.split(",")) {
+            String t = table.trim();
+            if (t.isEmpty() || !isSafeTableName(t)) continue;
+            appendTableSchema(sb, t);
+        }
+        return sb.toString();
+    }
 
-	@Tool(name = "sql_db_query", description = "Execute a SQL query. Input is a detailed and correct SQL query. Output is the result.")
-	public String runQuery(@ToolParam(description = "SQL query to execute") String query) {
-		if (query.toUpperCase().contains("INSERT") || query.toUpperCase().contains("UPDATE")
-				|| query.toUpperCase().contains("DELETE") || query.toUpperCase().contains("DROP")) {
-			return "Error: Only SELECT queries are allowed.";
-		}
-		try {
-			List<Map<String, Object>> rows = jdbcTemplate.queryForList(query);
-			return rows.toString();
-		}
-		catch (Exception e) {
-			return "Error: " + e.getMessage();
-		}
-	}
+    @org.springframework.ai.tool.annotation.Tool(
+            name = "sql_db_query",
+            description = "执行只读SQL查询（仅允许SELECT）")
+    public String runQuery(String query) {
+        if (isWriteQuery(query)) return "Error: 只允许 SELECT 查询";
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(query);
+            return rows.toString();
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
 
-	public List<ToolCallback> allTools() {
-		return Arrays.asList(ToolCallbacks.from(this));
-	}
+    private boolean isSafeTableName(String name) {
+        return SAFE_TABLE_NAME.matcher(name).matches();
+    }
 
-	public ToolCallback getSchemaTool() {
-		return findByName("sql_db_schema");
-	}
+    private boolean isWriteQuery(String query) {
+        String upper = query.toUpperCase();
+        return WRITE_KEYWORDS.stream().anyMatch(upper::contains);
+    }
 
-	public ToolCallback runQueryTool() {
-		return findByName("sql_db_query");
-	}
-
-	public ToolCallback listTablesTool() {
-		return findByName("sql_db_list_tables");
-	}
-
-	private ToolCallback findByName(String name) {
-		return allTools().stream()
-				.filter(t -> name.equals(t.getToolDefinition().name()))
-				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("Unknown tool: " + name));
-	}
-
-	/**
-	 * Resolver for ToolNode that resolves tools by name from this SqlTools instance.
-	 */
-	public ToolCallbackResolver resolver() {
-		return name -> findByName(name);
-	}
-
+    private void appendTableSchema(StringBuilder sb, String tableName) {
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "SELECT * FROM " + tableName + " LIMIT 3");
+            List<Map<String, Object>> columns = jdbcTemplate.queryForList(
+                    "SELECT COLUMN_NAME, TYPE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?",
+                    tableName.toUpperCase());
+            sb.append("CREATE TABLE \"").append(tableName).append("\" (");
+            sb.append(columns.stream()
+                    .map(c -> "\"" + c.get("COLUMN_NAME") + "\" " + c.get("TYPE_NAME"))
+                    .collect(Collectors.joining(", ")));
+            sb.append(")\n\n");
+            if (!rows.isEmpty()) {
+                sb.append("Sample rows:\n");
+                rows.forEach(r -> sb.append(r.toString()).append("\n"));
+            }
+            sb.append("\n");
+        } catch (Exception e) {
+            sb.append("Error for table ").append(tableName).append(": ").append(e.getMessage()).append("\n");
+        }
+    }
 }

@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
-import com.agenthub.domain.enums.workflow.NodeType;
-import com.agenthub.domain.model.workflow.WorkflowContext;
-import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.enums.workflow.DagNodeType;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -26,7 +26,7 @@ public class StartNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     public String getSupportedType() {
-        return NodeType.START.name();
+        return DagNodeType.START.name();
     }
 
     /**
@@ -38,7 +38,7 @@ public class StartNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     protected Mono<Map<String, Object>> doProcess(
-            WorkflowNode node, WorkflowContext context) {
+            DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromSupplier(() -> initializeOutputs(node, context));
     }
 
@@ -49,8 +49,8 @@ public class StartNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      * @return 初始化的输出数据
      */
-    private Map<String, Object> initializeOutputs(WorkflowNode node, 
-                                                   WorkflowContext context) {
+    private Map<String, Object> initializeOutputs(DagWorkflowNode node, 
+                                                   DagWorkflowContext context) {
         Map<String, Object> outputs = new HashMap<>();
         outputs.put("started", true);
         outputs.put("startTime", System.currentTimeMillis());
@@ -64,7 +64,7 @@ public class StartNodeProcessor extends AbstractNodeProcessor {
      * @param outputs 输出数据
      * @param node 工作流节点
      */
-    private void addInitialVariables(Map<String, Object> outputs, WorkflowNode node) {
+    private void addInitialVariables(Map<String, Object> outputs, DagWorkflowNode node) {
         if (node.getConfig() != null && node.getConfig().getParameters() != null) {
             outputs.putAll(node.getConfig().getParameters());
         }
@@ -76,7 +76,7 @@ public class StartNodeProcessor extends AbstractNodeProcessor {
      * @param node 工作流节点
      */
     @Override
-    protected void validateNodeConfig(WorkflowNode node) {
+    protected void validateNodeConfig(DagWorkflowNode node) {
         // 开始节点不需要强制配置
     }
 }

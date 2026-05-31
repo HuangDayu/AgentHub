@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
-import com.agenthub.domain.enums.workflow.NodeType;
-import com.agenthub.domain.model.workflow.WorkflowContext;
-import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.enums.workflow.DagNodeType;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class VariableAssignNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     public String getSupportedType() {
-        return NodeType.VARIABLE.name();
+        return DagNodeType.VARIABLE.name();
     }
 
     /**
@@ -44,7 +44,7 @@ public class VariableAssignNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     protected Mono<Map<String, Object>> doProcess(
-            WorkflowNode node, WorkflowContext context) {
+            DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromSupplier(() -> assignVariables(node, context));
     }
 
@@ -55,7 +55,7 @@ public class VariableAssignNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      * @return 赋值结果
      */
-    private Map<String, Object> assignVariables(WorkflowNode node, WorkflowContext context) {
+    private Map<String, Object> assignVariables(DagWorkflowNode node, DagWorkflowContext context) {
         List<VariableAssignment> assignments = parseAssignments(node);
         Map<String, Object> results = new HashMap<>();
         for (VariableAssignment assignment : assignments) {
@@ -73,7 +73,7 @@ public class VariableAssignNodeProcessor extends AbstractNodeProcessor {
      * @return 赋值列表
      */
     @SuppressWarnings("unchecked")
-    private List<VariableAssignment> parseAssignments(WorkflowNode node) {
+    private List<VariableAssignment> parseAssignments(DagWorkflowNode node) {
         Map<String, Object> config = node.getConfig().getParameters();
         List<Map<String, Object>> assignmentConfigs = 
             (List<Map<String, Object>>) config.getOrDefault("assignments", List.of());
@@ -102,7 +102,7 @@ public class VariableAssignNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      * @return 解析后的值
      */
-    private Object resolveValue(VariableAssignment assignment, WorkflowContext context) {
+    private Object resolveValue(VariableAssignment assignment, DagWorkflowContext context) {
         if (assignment.expression() != null) {
             return variableResolver.resolve(assignment.expression(), context);
         }

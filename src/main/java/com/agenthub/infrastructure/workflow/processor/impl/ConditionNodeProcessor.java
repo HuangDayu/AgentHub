@@ -1,9 +1,9 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
-import com.agenthub.domain.enums.workflow.NodeType;
-import com.agenthub.domain.model.workflow.WorkflowContext;
-import com.agenthub.domain.model.workflow.WorkflowEdge;
-import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.enums.workflow.DagNodeType;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowEdge;
+import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class ConditionNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     public String getSupportedType() {
-        return NodeType.CONDITION.name();
+        return DagNodeType.CONDITION.name();
     }
 
     /**
@@ -45,7 +45,7 @@ public class ConditionNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     protected Mono<Map<String, Object>> doProcess(
-            WorkflowNode node, WorkflowContext context) {
+            DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromSupplier(() -> evaluateConditions(node, context));
     }
 
@@ -56,7 +56,7 @@ public class ConditionNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      * @return 评估结果
      */
-    private Map<String, Object> evaluateConditions(WorkflowNode node, WorkflowContext context) {
+    private Map<String, Object> evaluateConditions(DagWorkflowNode node, DagWorkflowContext context) {
         List<ConditionBranch> branches = parseBranches(node);
         String selectedBranch = findMatchingBranch(branches, context);
         return buildResult(selectedBranch, branches);
@@ -69,7 +69,7 @@ public class ConditionNodeProcessor extends AbstractNodeProcessor {
      * @return 分支列表
      */
     @SuppressWarnings("unchecked")
-    private List<ConditionBranch> parseBranches(WorkflowNode node) {
+    private List<ConditionBranch> parseBranches(DagWorkflowNode node) {
         Map<String, Object> config = node.getConfig().getParameters();
         List<Map<String, Object>> branchConfigs = 
             (List<Map<String, Object>>) config.getOrDefault("branches", List.of());
@@ -98,7 +98,7 @@ public class ConditionNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      * @return 匹配的分支名称
      */
-    private String findMatchingBranch(List<ConditionBranch> branches, WorkflowContext context) {
+    private String findMatchingBranch(List<ConditionBranch> branches, DagWorkflowContext context) {
         return branches.stream()
             .filter(branch -> evaluateExpression(branch.expression(), context))
             .findFirst()
@@ -113,7 +113,7 @@ public class ConditionNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      * @return 评估结果
      */
-    private boolean evaluateExpression(String expression, WorkflowContext context) {
+    private boolean evaluateExpression(String expression, DagWorkflowContext context) {
         if (expression == null || expression.isBlank()) {
             return false;
         }

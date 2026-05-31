@@ -22,6 +22,8 @@ import org.springframework.stereotype.Component;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -189,15 +191,14 @@ public class AgentContextUseCase implements AgentContextFactory {
         return applyToolStrategy(tools, strategy);
     }
 
-    private List<Object> applyToolStrategy(List<Object> tools,
-                                            com.agenthub.domain.model.strategy.ToolStrategy strategy) {
+    private List<Object> applyToolStrategy(List<Object> tools, ToolStrategy strategy) {
         if (strategy == null || tools.isEmpty()) return tools;
-        Set<org.springframework.ai.tool.ToolCallback> callbacks = tools.stream()
-                .filter(org.springframework.ai.tool.ToolCallback.class::isInstance)
-                .map(org.springframework.ai.tool.ToolCallback.class::cast)
-                .collect(java.util.stream.Collectors.toSet());
-        Set<org.springframework.ai.tool.ToolCallback> filtered = toolFilterUseCase.filterByStrategy(callbacks, strategy);
-        return new java.util.ArrayList<>(filtered);
+        Set<ToolCallback> callbacks = tools.stream()
+                .filter(ToolCallback.class::isInstance)
+                .map(ToolCallback.class::cast)
+                .collect(Collectors.toSet());
+        Set<ToolCallback> filtered = toolFilterUseCase.filterByStrategy(callbacks, strategy);
+        return new ArrayList<>(filtered);
     }
 
 

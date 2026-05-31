@@ -106,15 +106,14 @@ public class SkillTools {
         if (skill.getSkillPath() == null || skill.getSkillPath().isBlank()) {
             return "技能没有关联的文件路径";
         }
-        Path file = Paths.get(skill.getSkillPath(), filePath);
-        if (!Files.exists(file)) {
-            return "文件不存在: " + filePath;
+        Path skillDir = Paths.get(skill.getSkillPath()).toAbsolutePath().normalize();
+        Path file = skillDir.resolve(filePath).normalize();
+        if (!file.startsWith(skillDir)) {
+            return "不允许访问技能目录外的文件";
         }
-        try {
-            return Files.readString(file);
-        } catch (IOException e) {
-            return "读取文件失败: " + e.getMessage();
-        }
+        if (!Files.exists(file)) return "文件不存在: " + filePath;
+        try { return Files.readString(file); }
+        catch (IOException e) { return "读取文件失败: " + e.getMessage(); }
     }
 
     private String listFilesRecursive(Path current, Path root) {

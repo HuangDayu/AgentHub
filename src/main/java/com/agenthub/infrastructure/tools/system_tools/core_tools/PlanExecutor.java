@@ -9,7 +9,6 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * 计划自动执行引擎，读取计划并自动调度工具调用。
@@ -25,29 +24,34 @@ public class PlanExecutor {
 
     public String executePlan(String planId) {
         executionPlanUseCase.startExecution(planId);
-        int stepCount = 0;
-        int completedCount = 0;
+        int[] counts = {0, 0};
+        executeAllSteps(planId, counts);
+        return finishPlan(planId, counts);
+    }
 
-        while (stepCount < MAX_STEPS) {
+    private void executeAllSteps(String planId, int[] counts) {
+        while (counts[0] < MAX_STEPS) {
             List<PlanStepOutput> steps = executionPlanUseCase.getNextSteps(planId);
             if (steps.isEmpty()) break;
-
-            for (PlanStepOutput step : steps) {
-                stepCount++;
-                executionPlanUseCase.updateStep(planId, step.getId(), "RUNNING", null);
-                String result = executeStep(step);
-                String status = isErrorResult(result) ? "FAILED" : "COMPLETED";
-                executionPlanUseCase.updateStep(planId, step.getId(), status, result);
-                if ("COMPLETED".equals(status)) completedCount++;
-            }
+            for (PlanStepOutput step : steps) executeOneStep(planId, step, counts);
         }
+    }
 
-        if (stepCount >= MAX_STEPS) {
+    private void executeOneStep(String planId, PlanStepOutput step, int[] counts) {
+        counts[0]++;
+        executionPlanUseCase.updateStep(planId, step.getId(), "RUNNING", null);
+        String result = executeStep(step);
+        String status = isErrorResult(result) ? "FAILED" : "COMPLETED";
+        executionPlanUseCase.updateStep(planId, step.getId(), status, result);
+        if ("COMPLETED".equals(status)) counts[1]++;
+    }
+
+    private String finishPlan(String planId, int[] counts) {
+        if (counts[0] >= MAX_STEPS) {
             executionPlanUseCase.failPlan(planId, "超过最大步骤数限制");
             return "执行失败: 超过最大步骤数限制 " + MAX_STEPS;
         }
-
-        String summary = "自动执行完成: " + completedCount + "/" + stepCount + " 个步骤成功";
+        String summary = "自动执行完成: " + counts[1] + "/" + counts[0] + " 个步骤成功";
         executionPlanUseCase.completePlan(planId, summary);
         return summary;
     }
@@ -63,12 +67,8 @@ public class PlanExecutor {
 
     private String callTool(Object callback, String input) {
         if (callback instanceof ToolCallback tc) {
-            try {
-                return tc.call(input != null ? input : "{}");
-            } catch (Exception e) {
-                log.error("工具调用失败", e);
-                return "执行失败: " + e.getMessage();
-            }
+            try { return tc.call(input != null ? input : "{}"); }
+            catch (Exception e) { log.error("工具调用失败", e); return "执行失败: " + e.getMessage(); }
         }
         return "工具类型不支持";
     }

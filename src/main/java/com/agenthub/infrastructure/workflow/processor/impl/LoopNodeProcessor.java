@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
-import com.agenthub.domain.enums.workflow.NodeType;
+import com.agenthub.domain.enums.workflow.DagNodeType;
 import com.agenthub.domain.model.workflow.*;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.processor.NodeProcessor;
@@ -22,12 +22,12 @@ import java.util.Map;
 public class LoopNodeProcessor extends AbstractNodeProcessor {
 
     private final VariableResolver variableResolver;
-    private final Map<NodeType, NodeProcessor> processorMap;
+    private final Map<DagNodeType, NodeProcessor> processorMap;
 
     /**
      * 构造函数.
      */
-    public LoopNodeProcessor(VariableResolver variableResolver, Map<NodeType, NodeProcessor> processorMap) {
+    public LoopNodeProcessor(VariableResolver variableResolver, Map<DagNodeType, NodeProcessor> processorMap) {
         this.variableResolver = variableResolver;
         this.processorMap = processorMap;
     }
@@ -36,11 +36,11 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
      * 执行循环节点.
      */
     @Override
-    protected Mono<Map<String, Object>> doProcess(WorkflowNode node, WorkflowContext context) {
+    protected Mono<Map<String, Object>> doProcess(DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromCallable(() -> {
             NodeConfig config = node.getConfig();
             List<?> items = getLoopItems(config, context);
-            WorkflowNode loopBody = getLoopBody(config);
+            DagWorkflowNode loopBody = getLoopBody(config);
             return executeLoop(items, loopBody, context, node);
         });
     }
@@ -48,7 +48,7 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
     /**
      * 获取循环项列表.
      */
-    private List<?> getLoopItems(NodeConfig config, WorkflowContext context) {
+    private List<?> getLoopItems(NodeConfig config, DagWorkflowContext context) {
         String itemsExpression = (String) config.getParameters().get("items");
         Object items = variableResolver.resolve(itemsExpression, context);
         return items instanceof List ? (List<?>) items : new ArrayList<>();
@@ -58,7 +58,7 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
      * 获取循环体节点.
      */
     @SuppressWarnings("unchecked")
-    private WorkflowNode getLoopBody(NodeConfig config) {
+    private DagWorkflowNode getLoopBody(NodeConfig config) {
         Map<String, Object> bodyConfig = (Map<String, Object>) config.getParameters().get("body");
         
         // 如果没有配置 body，创建一个空操作的循环体
@@ -73,8 +73,8 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
     /**
      * 创建空操作的循环体节点.
      */
-    private WorkflowNode createNoOpLoopBody() {
-        WorkflowNode node = WorkflowNode.create(NodeType.CODE, "EmptyLoopBody");
+    private DagWorkflowNode createNoOpLoopBody() {
+        DagWorkflowNode node = DagWorkflowNode.create(DagNodeType.CODE, "EmptyLoopBody");
         Map<String, Object> params = new HashMap<>();
         params.put("script", "{}; // No-op");
         node.setConfig(new NodeConfig(params, 5000L, 0));
@@ -85,9 +85,9 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
      * 构建循环体节点.
      */
     @SuppressWarnings("unchecked")
-    private WorkflowNode buildLoopBodyNode(Map<String, Object> bodyConfig) {
-        WorkflowNode node = WorkflowNode.create(
-            NodeType.valueOf((String) bodyConfig.get("type")),
+    private DagWorkflowNode buildLoopBodyNode(Map<String, Object> bodyConfig) {
+        DagWorkflowNode node = DagWorkflowNode.create(
+            DagNodeType.valueOf((String) bodyConfig.get("type")),
             (String) bodyConfig.get("name")
         );
         node.setConfig(buildNodeConfig((Map<String, Object>) bodyConfig.get("config")));
@@ -110,8 +110,8 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
     /**
      * 执行循环.
      */
-    private Map<String, Object> executeLoop(List<?> items, WorkflowNode loopBody, 
-                                            WorkflowContext context, WorkflowNode node) {
+    private Map<String, Object> executeLoop(List<?> items, DagWorkflowNode loopBody, 
+                                            DagWorkflowContext context, DagWorkflowNode node) {
         List<Map<String, Object>> results = new ArrayList<>();
         int maxIterations = getMaxIterations(node.getConfig());
         int iterationCount = 0;
@@ -143,9 +143,9 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
     /**
      * 执行单次迭代.
      */
-    private Map<String, Object> executeIteration(Object item, WorkflowNode loopBody, 
-                                                  WorkflowContext context, int index) {
-        WorkflowContext iterationContext = createIterationContext(context, item, index);
+    private Map<String, Object> executeIteration(Object item, DagWorkflowNode loopBody, 
+                                                  DagWorkflowContext context, int index) {
+        DagWorkflowContext iterationContext = createIterationContext(context, item, index);
         NodeProcessor processor = processorMap.get(loopBody.getType());
         NodeResult result = processor.process(loopBody, iterationContext).block();
         return result != null ? result.getOutputs() : new HashMap<>();
@@ -154,7 +154,7 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
     /**
      * 创建迭代上下文.
      */
-    private WorkflowContext createIterationContext(WorkflowContext context, Object item, int index) {
+    private DagWorkflowContext createIterationContext(DagWorkflowContext context, Object item, int index) {
         Map<String, Object> loopVars = new HashMap<>();
         loopVars.put("item", item);
         loopVars.put("index", index);
@@ -167,6 +167,6 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     public String getSupportedType() {
-        return NodeType.LOOP.name();
+        return DagNodeType.LOOP.name();
     }
 }

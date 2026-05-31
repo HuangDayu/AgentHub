@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.workflow.processor;
 
 import com.agenthub.domain.model.workflow.NodeResult;
-import com.agenthub.domain.model.workflow.WorkflowContext;
-import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import reactor.core.publisher.Mono;
 
 /**
@@ -27,7 +27,7 @@ public interface NodeProcessor {
      * @param context 执行上下文
      * @return 处理结果的Mono
      */
-    Mono<NodeResult> process(WorkflowNode node, WorkflowContext context);
+    Mono<NodeResult> process(DagWorkflowNode node, DagWorkflowContext context);
 
     /**
      * 判断是否支持指定节点。
@@ -35,7 +35,7 @@ public interface NodeProcessor {
      * @param node 工作流节点
      * @return 如果支持返回true
      */
-    default boolean supports(WorkflowNode node) {
+    default boolean supports(DagWorkflowNode node) {
         return getSupportedType().equals(node.getType().name());
     }
 
@@ -45,5 +45,5 @@ public interface NodeProcessor {
      * @param node 工作流节点
      * @return 验证结果的Mono
      */
-    Mono<Void> validate(WorkflowNode node);
+    Mono<Void> validate(DagWorkflowNode node);
 }

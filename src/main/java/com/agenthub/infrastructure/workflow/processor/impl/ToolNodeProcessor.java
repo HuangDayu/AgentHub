@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
 import com.agenthub.application.port.out.tools.ToolExecutionPort;
-import com.agenthub.domain.enums.workflow.NodeType;
+import com.agenthub.domain.enums.workflow.DagNodeType;
 import com.agenthub.domain.model.workflow.*;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
@@ -34,7 +34,7 @@ public class ToolNodeProcessor extends AbstractNodeProcessor {
      * 执行工具调用.
      */
     @Override
-    protected Mono<Map<String, Object>> doProcess(WorkflowNode node, WorkflowContext context) {
+    protected Mono<Map<String, Object>> doProcess(DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromCallable(() -> {
             NodeConfig config = node.getConfig();
             String toolName = getToolName(config);
@@ -54,7 +54,7 @@ public class ToolNodeProcessor extends AbstractNodeProcessor {
      * 解析工具参数.
      */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> resolveParameters(NodeConfig config, WorkflowContext context) {
+    private Map<String, Object> resolveParameters(NodeConfig config, DagWorkflowContext context) {
         Map<String, Object> paramsTemplate = (Map<String, Object>) config.getParameters().getOrDefault("parameters", Map.of());
         return variableResolver.resolveMap(paramsTemplate, context);
     }
@@ -85,6 +85,6 @@ public class ToolNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     public String getSupportedType() {
-        return NodeType.TOOL.name();
+        return DagNodeType.TOOL.name();
     }
 }

@@ -1,9 +1,9 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
-import com.agenthub.domain.enums.workflow.NodeType;
+import com.agenthub.domain.enums.workflow.DagNodeType;
 import com.agenthub.domain.model.workflow.NodeConfig;
-import com.agenthub.domain.model.workflow.WorkflowContext;
-import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class ApiNodeProcessor extends AbstractNodeProcessor {
      * 执行API调用.
      */
     @Override
-    protected Mono<Map<String, Object>> doProcess(WorkflowNode node, WorkflowContext context) {
+    protected Mono<Map<String, Object>> doProcess(DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromCallable(() -> {
             NodeConfig config = node.getConfig();
             String url = resolveUrl(config, context);
@@ -49,7 +49,7 @@ public class ApiNodeProcessor extends AbstractNodeProcessor {
     /**
      * 解析URL.
      */
-    private String resolveUrl(NodeConfig config, WorkflowContext context) {
+    private String resolveUrl(NodeConfig config, DagWorkflowContext context) {
         String urlTemplate = (String) config.getParameters().getOrDefault("url", "");
         return variableResolver.resolveTemplateString(urlTemplate, context);
     }
@@ -65,7 +65,7 @@ public class ApiNodeProcessor extends AbstractNodeProcessor {
      * 执行HTTP请求.
      */
     private Map<String, Object> executeRequest(String url, String method, 
-                                               NodeConfig config, WorkflowContext context) {
+                                               NodeConfig config, DagWorkflowContext context) {
         try {
             return doExecuteRequest(url, method, config, context);
         } catch (Exception e) {
@@ -77,7 +77,7 @@ public class ApiNodeProcessor extends AbstractNodeProcessor {
      * 执行具体的HTTP请求.
      */
     private Map<String, Object> doExecuteRequest(String url, String method, 
-                                                  NodeConfig config, WorkflowContext context) {
+                                                  NodeConfig config, DagWorkflowContext context) {
         return switch (method.toUpperCase()) {
             case "GET" -> executeGet(url);
             case "POST" -> executePost(url, config, context);
@@ -115,7 +115,7 @@ public class ApiNodeProcessor extends AbstractNodeProcessor {
      * 执行POST请求.
      */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> executePost(String url, NodeConfig config, WorkflowContext context) {
+    private Map<String, Object> executePost(String url, NodeConfig config, DagWorkflowContext context) {
         Map<String, Object> body = buildRequestBody(config, context);
         return webClient.post()
             .uri(url)
@@ -130,7 +130,7 @@ public class ApiNodeProcessor extends AbstractNodeProcessor {
      * 执行PUT请求.
      */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> executePut(String url, NodeConfig config, WorkflowContext context) {
+    private Map<String, Object> executePut(String url, NodeConfig config, DagWorkflowContext context) {
         Map<String, Object> body = buildRequestBody(config, context);
         return webClient.put()
             .uri(url)
@@ -158,7 +158,7 @@ public class ApiNodeProcessor extends AbstractNodeProcessor {
      * 构建请求体.
      */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> buildRequestBody(NodeConfig config, WorkflowContext context) {
+    private Map<String, Object> buildRequestBody(NodeConfig config, DagWorkflowContext context) {
         Map<String, Object> bodyTemplate = (Map<String, Object>) config.getParameters().get("body");
         if (bodyTemplate == null) return new HashMap<>();
         return variableResolver.resolveMap(bodyTemplate, context);
@@ -169,6 +169,6 @@ public class ApiNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     public String getSupportedType() {
-        return NodeType.API.name();
+        return DagNodeType.API.name();
     }
 }

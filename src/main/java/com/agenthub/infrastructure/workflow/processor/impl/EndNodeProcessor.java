@@ -1,8 +1,8 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
-import com.agenthub.domain.enums.workflow.NodeType;
-import com.agenthub.domain.model.workflow.WorkflowContext;
-import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.enums.workflow.DagNodeType;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -26,7 +26,7 @@ public class EndNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     public String getSupportedType() {
-        return NodeType.END.name();
+        return DagNodeType.END.name();
     }
 
     /**
@@ -38,7 +38,7 @@ public class EndNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     protected Mono<Map<String, Object>> doProcess(
-            WorkflowNode node, WorkflowContext context) {
+            DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromSupplier(() -> finalizeOutputs(node, context));
     }
 
@@ -49,8 +49,8 @@ public class EndNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      * @return 最终输出数据
      */
-    private Map<String, Object> finalizeOutputs(WorkflowNode node, 
-                                                 WorkflowContext context) {
+    private Map<String, Object> finalizeOutputs(DagWorkflowNode node, 
+                                                 DagWorkflowContext context) {
         Map<String, Object> outputs = new HashMap<>();
         outputs.put("completed", true);
         outputs.put("endTime", System.currentTimeMillis());
@@ -66,7 +66,7 @@ public class EndNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      */
     private void addFinalVariables(Map<String, Object> outputs, 
-                                    WorkflowContext context) {
+                                    DagWorkflowContext context) {
         if (context.getVariables() != null) {
             outputs.putAll(context.getVariables());
         }
@@ -79,7 +79,7 @@ public class EndNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      */
     private void addExecutionSummary(Map<String, Object> outputs, 
-                                      WorkflowContext context) {
+                                      DagWorkflowContext context) {
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalNodes", context.getNodeResults().size());
         summary.put("successNodes", countSuccessNodes(context));
@@ -93,7 +93,7 @@ public class EndNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      * @return 成功节点数量
      */
-    private long countSuccessNodes(WorkflowContext context) {
+    private long countSuccessNodes(DagWorkflowContext context) {
         return context.getNodeResults().values().stream()
             .filter(result -> result.isSuccess())
             .count();
@@ -105,7 +105,7 @@ public class EndNodeProcessor extends AbstractNodeProcessor {
      * @param context 执行上下文
      * @return 失败节点数量
      */
-    private long countFailedNodes(WorkflowContext context) {
+    private long countFailedNodes(DagWorkflowContext context) {
         return context.getNodeResults().values().stream()
             .filter(result -> !result.isSuccess())
             .count();
@@ -117,7 +117,7 @@ public class EndNodeProcessor extends AbstractNodeProcessor {
      * @param node 工作流节点
      */
     @Override
-    protected void validateNodeConfig(WorkflowNode node) {
+    protected void validateNodeConfig(DagWorkflowNode node) {
         // 结束节点不需要强制配置
     }
 }

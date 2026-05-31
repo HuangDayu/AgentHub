@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
-import com.agenthub.domain.enums.workflow.NodeType;
+import com.agenthub.domain.enums.workflow.DagNodeType;
 import com.agenthub.domain.model.workflow.*;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.processor.NodeProcessor;
@@ -21,12 +21,12 @@ import java.util.Map;
 @Component
 public class ParallelNodeProcessor extends AbstractNodeProcessor {
 
-    private final Map<NodeType, NodeProcessor> processorMap;
+    private final Map<DagNodeType, NodeProcessor> processorMap;
 
     /**
      * 构造函数.
      */
-    public ParallelNodeProcessor(Map<NodeType, NodeProcessor> processorMap) {
+    public ParallelNodeProcessor(Map<DagNodeType, NodeProcessor> processorMap) {
         this.processorMap = processorMap;
     }
 
@@ -34,10 +34,10 @@ public class ParallelNodeProcessor extends AbstractNodeProcessor {
      * 执行并行节点.
      */
     @Override
-    protected Mono<Map<String, Object>> doProcess(WorkflowNode node, WorkflowContext context) {
+    protected Mono<Map<String, Object>> doProcess(DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromCallable(() -> {
             NodeConfig config = node.getConfig();
-            List<WorkflowNode> parallelNodes = getParallelNodes(config);
+            List<DagWorkflowNode> parallelNodes = getParallelNodes(config);
             int concurrency = getConcurrency(config);
             return executeParallel(parallelNodes, context, concurrency);
         });
@@ -47,7 +47,7 @@ public class ParallelNodeProcessor extends AbstractNodeProcessor {
      * 获取并行节点列表.
      */
     @SuppressWarnings("unchecked")
-    private List<WorkflowNode> getParallelNodes(NodeConfig config) {
+    private List<DagWorkflowNode> getParallelNodes(NodeConfig config) {
         List<Map<String, Object>> nodesConfig = (List<Map<String, Object>>) config.getParameters().get("nodes");
         if (nodesConfig == null) return new ArrayList<>();
         return nodesConfig.stream()
@@ -59,9 +59,9 @@ public class ParallelNodeProcessor extends AbstractNodeProcessor {
      * 构建并行节点.
      */
     @SuppressWarnings("unchecked")
-    private WorkflowNode buildParallelNode(Map<String, Object> nodeConfig) {
-        WorkflowNode node = WorkflowNode.create(
-            NodeType.valueOf((String) nodeConfig.get("type")),
+    private DagWorkflowNode buildParallelNode(Map<String, Object> nodeConfig) {
+        DagWorkflowNode node = DagWorkflowNode.create(
+            DagNodeType.valueOf((String) nodeConfig.get("type")),
             (String) nodeConfig.get("name")
         );
         node.setConfig(buildNodeConfig((Map<String, Object>) nodeConfig.get("config")));
@@ -95,8 +95,8 @@ public class ParallelNodeProcessor extends AbstractNodeProcessor {
     /**
      * 并行执行节点.
      */
-    private Map<String, Object> executeParallel(List<WorkflowNode> nodes, 
-                                                 WorkflowContext context, int concurrency) {
+    private Map<String, Object> executeParallel(List<DagWorkflowNode> nodes, 
+                                                 DagWorkflowContext context, int concurrency) {
         List<Map<String, Object>> results = Flux.fromIterable(nodes)
             .flatMap(node -> executeNodeAsync(node, context), concurrency)
             .collectList()
@@ -111,7 +111,7 @@ public class ParallelNodeProcessor extends AbstractNodeProcessor {
     /**
      * 异步执行单个节点.
      */
-    private Mono<Map<String, Object>> executeNodeAsync(WorkflowNode node, WorkflowContext context) {
+    private Mono<Map<String, Object>> executeNodeAsync(DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromCallable(() -> {
             NodeProcessor processor = processorMap.get(node.getType());
             NodeResult result = processor.process(node, context).block();
@@ -124,6 +124,6 @@ public class ParallelNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     public String getSupportedType() {
-        return NodeType.PARALLEL.name();
+        return DagNodeType.PARALLEL.name();
     }
 }

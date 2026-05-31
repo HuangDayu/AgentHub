@@ -3,11 +3,11 @@ package com.agenthub.infrastructure.workflow.processor.impl;
 import com.agenthub.application.command.AgentChatCommand;
 import com.agenthub.application.port.out.agent.AgentChatPort;
 import com.agenthub.application.port.out.repositories.SessionRepository;
-import com.agenthub.domain.enums.workflow.NodeType;
+import com.agenthub.domain.enums.workflow.DagNodeType;
 import com.agenthub.domain.model.agent.Session;
-import com.agenthub.domain.model.workflow.WorkflowChat;
-import com.agenthub.domain.model.workflow.WorkflowContext;
-import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.model.workflow.DagWorkflowChat;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
 import lombok.RequiredArgsConstructor;
@@ -35,33 +35,33 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
 
     @Override
     public String getSupportedType() {
-        return NodeType.LLM.name();
+        return DagNodeType.LLM.name();
     }
 
     @Override
-    protected Mono<Map<String, Object>> doProcess(WorkflowNode node, WorkflowContext context) {
+    protected Mono<Map<String, Object>> doProcess(DagWorkflowNode node, DagWorkflowContext context) {
         return buildChatRequest(node, context)
                 .flatMap(request -> executeChat(request, node));
     }
 
-    private Mono<WorkflowChat> buildChatRequest(WorkflowNode node, WorkflowContext context) {
+    private Mono<DagWorkflowChat> buildChatRequest(DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromSupplier(() -> parseChatConfig(node, context));
     }
 
-    private WorkflowChat parseChatConfig(WorkflowNode node, WorkflowContext context) {
+    private DagWorkflowChat parseChatConfig(DagWorkflowNode node, DagWorkflowContext context) {
         Map<String, Object> config = node.getConfig().getParameters();
         String agentId = (String) config.getOrDefault("agentId", "default");
         String userMessage = resolveMessage(config, context);
         String sessionId = context.getExecutionId();
-        return new WorkflowChat(agentId, sessionId, userMessage);
+        return new DagWorkflowChat(agentId, sessionId, userMessage);
     }
 
-    private String resolveMessage(Map<String, Object> config, WorkflowContext context) {
+    private String resolveMessage(Map<String, Object> config, DagWorkflowContext context) {
         String promptTemplate = (String) config.getOrDefault("prompt", "");
         return variableResolver.resolveTemplateString(promptTemplate, context);
     }
 
-    private Mono<Map<String, Object>> executeChat(WorkflowChat request, WorkflowNode node) {
+    private Mono<Map<String, Object>> executeChat(DagWorkflowChat request, DagWorkflowNode node) {
         Boolean streaming = (Boolean) node.getConfig().getParameters().getOrDefault("streaming", false);
 
         if (Boolean.TRUE.equals(streaming)) {
@@ -71,7 +71,7 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
         }
     }
 
-    private Mono<Map<String, Object>> executeSyncChat(WorkflowChat workflowChat) {
+    private Mono<Map<String, Object>> executeSyncChat(DagWorkflowChat workflowChat) {
         return Mono.fromCallable(() -> {
             // 确保 session 存在，如果不存在则创建
             ensureSessionExists(workflowChat.getAgentId(), workflowChat.getSessionId());
@@ -84,7 +84,7 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
         });
     }
 
-    private Mono<Map<String, Object>> executeStreamingChat(WorkflowChat workflowChat) {
+    private Mono<Map<String, Object>> executeStreamingChat(DagWorkflowChat workflowChat) {
         // 确保 session 存在，如果不存在则创建
         ensureSessionExists(workflowChat.getAgentId(), workflowChat.getSessionId());
 

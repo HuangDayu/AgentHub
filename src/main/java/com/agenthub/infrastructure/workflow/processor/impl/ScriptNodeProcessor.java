@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.workflow.processor.impl;
 
-import com.agenthub.domain.enums.workflow.NodeType;
+import com.agenthub.domain.enums.workflow.DagNodeType;
 import com.agenthub.domain.model.workflow.*;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
@@ -50,7 +50,7 @@ public class ScriptNodeProcessor extends AbstractNodeProcessor {
      * 执行代码节点.
      */
     @Override
-    protected Mono<Map<String, Object>> doProcess(WorkflowNode node, WorkflowContext context) {
+    protected Mono<Map<String, Object>> doProcess(DagWorkflowNode node, DagWorkflowContext context) {
         return Mono.fromCallable(() -> {
             NodeConfig config = node.getConfig();
             String script = getScript(config);
@@ -68,7 +68,7 @@ public class ScriptNodeProcessor extends AbstractNodeProcessor {
     /**
      * 执行脚本.
      */
-    private Map<String, Object> executeScript(String script, WorkflowContext context) {
+    private Map<String, Object> executeScript(String script, DagWorkflowContext context) {
         try {
             if (scriptEngine == null) {
                 return handleEngineNotAvailable();
@@ -93,7 +93,7 @@ public class ScriptNodeProcessor extends AbstractNodeProcessor {
     /**
      * 安全执行脚本.
      */
-    private Map<String, Object> executeScriptSafely(String script, WorkflowContext context) throws Exception {
+    private Map<String, Object> executeScriptSafely(String script, DagWorkflowContext context) throws Exception {
         injectVariables(context);
         Object result = scriptEngine.eval(script);
         Map<String, Object> output = new HashMap<>();
@@ -116,7 +116,7 @@ public class ScriptNodeProcessor extends AbstractNodeProcessor {
     /**
      * 注入变量到脚本上下文.
      */
-    private void injectVariables(WorkflowContext context) {
+    private void injectVariables(DagWorkflowContext context) {
         scriptEngine.getBindings(javax.script.ScriptContext.ENGINE_SCOPE).put("variables", context.getVariables());
     }
 
@@ -125,6 +125,6 @@ public class ScriptNodeProcessor extends AbstractNodeProcessor {
      */
     @Override
     public String getSupportedType() {
-        return NodeType.CODE.name();
+        return DagNodeType.CODE.name();
     }
 }

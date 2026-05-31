@@ -4,9 +4,9 @@ import com.agenthub.application.command.RetrievalCommand;
 import com.agenthub.application.dto.RetrievalOutput;
 import com.agenthub.application.dto.RetrievalResultOutput;
 import com.agenthub.application.port.out.rag.RagRetrievalPort;
-import com.agenthub.domain.enums.workflow.NodeType;
-import com.agenthub.domain.model.workflow.WorkflowContext;
-import com.agenthub.domain.model.workflow.WorkflowNode;
+import com.agenthub.domain.enums.workflow.DagNodeType;
+import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
 import lombok.RequiredArgsConstructor;
@@ -32,16 +32,16 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
 
     @Override
     public String getSupportedType() {
-        return NodeType.RETRIEVAL.name();
+        return DagNodeType.RETRIEVAL.name();
     }
 
     @Override
-    protected Mono<Map<String, Object>> doProcess(WorkflowNode node, WorkflowContext context) {
+    protected Mono<Map<String, Object>> doProcess(DagWorkflowNode node, DagWorkflowContext context) {
         RetrievalCommand command = buildCommand(node, context);
         return executeRetrieval(command, node, context);
     }
 
-    private RetrievalCommand buildCommand(WorkflowNode node, WorkflowContext context) {
+    private RetrievalCommand buildCommand(DagWorkflowNode node, DagWorkflowContext context) {
         Map<String, Object> config = node.getConfig().getParameters();
         RetrievalCommand command = new RetrievalCommand();
 
@@ -58,7 +58,7 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
         return (String) config.getOrDefault("knowledgeBaseId", "");
     }
 
-    private String resolveQuery(Map<String, Object> config, WorkflowContext context) {
+    private String resolveQuery(Map<String, Object> config, DagWorkflowContext context) {
         String template = (String) config.getOrDefault("query", "");
         return variableResolver.resolveTemplateString(template, context);
     }
@@ -94,13 +94,13 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
     }
 
     private Mono<Map<String, Object>> executeRetrieval(
-            RetrievalCommand command, WorkflowNode node, WorkflowContext context) {
+            RetrievalCommand command, DagWorkflowNode node, DagWorkflowContext context) {
         log.info("Retrieving from KB: {}, query: {}", command.getKbId(), command.getQuery());
         return Mono.fromCallable(() -> doRetrieve(command, node, context));
     }
 
     private Map<String, Object> doRetrieve(
-            RetrievalCommand command, WorkflowNode node, WorkflowContext context) {
+            RetrievalCommand command, DagWorkflowNode node, DagWorkflowContext context) {
         try {
             return executeRetrievalSafely(command, node, context);
         } catch (Exception e) {
@@ -112,7 +112,7 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
      * 安全执行检索。
      */
     private Map<String, Object> executeRetrievalSafely(
-            RetrievalCommand command, WorkflowNode node, WorkflowContext context) {
+            RetrievalCommand command, DagWorkflowNode node, DagWorkflowContext context) {
         RetrievalOutput output = ragRetrievalPort.retrieve(command);
         return processResult(output, node, context);
     }
@@ -121,7 +121,7 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
      * 处理检索失败，返回空结果。
      */
     private Map<String, Object> handleRetrievalFailure(
-            WorkflowNode node, WorkflowContext context, Exception e) {
+            DagWorkflowNode node, DagWorkflowContext context, Exception e) {
         log.warn("Retrieval failed, returning empty result: {}", e.getMessage());
         Map<String, Object> result = createEmptyResult(e);
         saveResultToContext(result, node, context);
@@ -143,13 +143,13 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
     /**
      * 保存结果到上下文。
      */
-    private void saveResultToContext(Map<String, Object> result, WorkflowNode node, WorkflowContext context) {
+    private void saveResultToContext(Map<String, Object> result, DagWorkflowNode node, DagWorkflowContext context) {
         Map<String, Object> config = node.getConfig().getParameters();
         saveToContext(result, config, context);
     }
 
     private Map<String, Object> processResult(
-            RetrievalOutput output, WorkflowNode node, WorkflowContext context) {
+            RetrievalOutput output, DagWorkflowNode node, DagWorkflowContext context) {
         Map<String, Object> config = node.getConfig().getParameters();
         List<RetrievalResultOutput> results = output.getResults();
 
@@ -232,7 +232,7 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
     }
 
     private void saveToContext(
-            Map<String, Object> result, Map<String, Object> config, WorkflowContext context) {
+            Map<String, Object> result, Map<String, Object> config, DagWorkflowContext context) {
         String varName = (String) config.getOrDefault("outputVariable", "retrievedDocs");
         context.setVariable(varName, result);
     }
