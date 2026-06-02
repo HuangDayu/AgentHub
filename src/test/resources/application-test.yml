@@ -95,11 +95,11 @@ agenthub:
       secret-key: minioadmin
       bucket: agenthub
   rag:
-    impl-type: spring
+    type: spring
     reranker:
       type: keyword
   etl:
-    impl-type: spring
+    type: spring
 
 # JWT
 jwt.secret: monolith-dev-secret-key-please-change-in-production-2026

@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "agenthub.etl.impl-type", havingValue = "spring", matchIfMissing = true)
+@ConditionalOnProperty(name = "agenthub.etl.type", havingValue = "spring", matchIfMissing = true)
 public class EtlSpringPipelineAdapter implements ExtractTransformLoadPort {
     private final SpringShareObjectFactory springShareObjectFactory;
 

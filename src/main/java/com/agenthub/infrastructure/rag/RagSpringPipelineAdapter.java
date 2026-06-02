@@ -46,7 +46,7 @@ import static com.agenthub.infrastructure.rag.RagContextPromptTemplater.*;
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "agenthub.rag.impl-type", havingValue = "spring", matchIfMissing = true)
+@ConditionalOnProperty(name = "agenthub.rag.type", havingValue = "spring", matchIfMissing = true)
 public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPort {
 
     private final SpringShareObjectFactory springShareObjectFactory;

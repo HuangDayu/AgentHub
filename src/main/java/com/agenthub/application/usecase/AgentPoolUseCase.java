@@ -100,10 +100,9 @@ public class AgentPoolUseCase implements AgentPoolFactory {
                     reloadAgent(v);
                 } catch (Exception e) {
                     log.error("Failed to reload agent: {}", v, e);
-                } finally {
-                    agentIds.remove(v);
                 }
             });
+            agentIds.clear();
         }
     }
 }

@@ -19,7 +19,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "agenthub.etl.impl-type", havingValue = "customize")
+@ConditionalOnProperty(name = "agenthub.etl.type", havingValue = "customize")
 public class EtlCustomizePipelineAdapter implements ExtractTransformLoadPort {
 
     private static final int DEFAULT_CHUNK_SIZE = 512;

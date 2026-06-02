@@ -24,7 +24,7 @@ import static com.agenthub.domain.enums.AgentConfigType.CHAT_MODEL;
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "agenthub.rag.impl-type", havingValue = "customize")
+@ConditionalOnProperty(name = "agenthub.rag.type", havingValue = "customize")
 public class RagCustomizePipelineAdapter implements RetrievalAugmentedGenerationPort {
     private final RagRetrievalPort ragRetrievalPort;
     private final RagModelChatPort ragModelChatPort;

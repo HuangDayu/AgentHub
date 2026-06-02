@@ -21,6 +21,7 @@ public class McpToolResponse {
     private List<String> args;
     private Map<String, String> env;
     private boolean enabled;
+    private boolean async;
     private Instant createdAt;
     private Instant updatedAt;
 }
