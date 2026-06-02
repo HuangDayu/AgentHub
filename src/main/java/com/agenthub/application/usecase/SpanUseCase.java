@@ -36,12 +36,6 @@ public class SpanUseCase {
             .toList();
     }
 
-    public List<SpanOutput> list() {
-        return repository.findAll().stream()
-            .map(this::toOutput)
-            .toList();
-    }
-
     public void delete(String spanId) {
         repository.findBySpanId(spanId)
             .ifPresent(span -> repository.deleteById(span.getId()));

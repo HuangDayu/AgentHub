@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.connection.DataType;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.core.types.Expiration;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -39,7 +40,7 @@ public class RedisKeyValueRepository implements KeyValueRepository {
 
     @Override
     public void setex(String key, String value, long expire, TimeUnit unit) {
-        stringRedisTemplate.opsForValue().set(key, value, expire, unit);
+        stringRedisTemplate.opsForValue().set(key, value, Expiration.from( expire, unit));
     }
 
     @Override
@@ -628,6 +629,6 @@ public class RedisKeyValueRepository implements KeyValueRepository {
 
     @Override
     public <T> void setex(String key, T value, long expire, TimeUnit unit) {
-        redisTemplate.opsForValue().set(key, value, expire, unit);
+        redisTemplate.opsForValue().set(key, value, Expiration.from(expire, unit));
     }
 }

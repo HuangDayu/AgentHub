@@ -1,35 +1,29 @@
 package com.agenthub.application.dto;
 
 import java.time.Instant;
+import java.util.List;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 /**
- * 技能输出。
+ * 技能配置输出。
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SkillOutput {
+public class SkillConfigOutput {
     private String id;
     private String tenantId;
     private String workspaceId;
-    private String skillCode;
     private String name;
     private String description;
-    private String skillType;
-    private String skillPath;
-    private String skillFilesTree;
-    private String source;
-    private String sourcePath;
-    private String zipStoragePath;
-    private String configId;
-    private int fileCount;
-    private long totalSize;
+    private List<String> skillPaths;
+    private boolean syncEnabled;
+    private int syncInterval;
+    private boolean autoSync;
     private boolean enabled;
     private Instant createdAt;
     private Instant updatedAt;
-    private Instant lastSyncAt;
 }

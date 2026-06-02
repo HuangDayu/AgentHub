@@ -12,7 +12,7 @@ import java.util.List;
  * Trace Controller.
  */
 @RestController
-@RequestMapping("/api/v1/traces")
+@RequestMapping("/api/v1/workspaces/{workspaceId}/traces")
 public class TraceController {
     private final TraceUseCase useCase;
 

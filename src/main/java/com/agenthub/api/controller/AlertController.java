@@ -13,7 +13,7 @@ import java.util.List;
  * Alert Controller.
  */
 @RestController
-@RequestMapping("/api/v1/alerts")
+@RequestMapping("/api/v1/workspaces/{workspaceId}/alerts")
 public class AlertController {
     private final AlertUseCase useCase;
 

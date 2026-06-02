@@ -24,14 +24,12 @@ public class MybatisSkillRepository implements SkillRepository {
     @Override
     public Skill saveOrUpdate(Skill skill) {
         SkillEntity entity = toEntity(skill);
-        LambdaQueryWrapper<SkillEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SkillEntity::getName, entity.getName());
-        queryWrapper.eq(SkillEntity::getSkillPath, entity.getSkillPath());
-        SkillEntity skillEntity = mapper.selectOne(queryWrapper);
-        if (skillEntity != null) {
-            entity.setId(skillEntity.getId());
+        SkillEntity existing = mapper.selectById(entity.getId());
+        if (existing != null) {
+            mapper.updateById(entity);
+        } else {
+            mapper.insert(entity);
         }
-        mapper.insertOrUpdate(entity);
         return toDomain(entity);
     }
 
@@ -80,6 +78,25 @@ public class MybatisSkillRepository implements SkillRepository {
         mapper.delete(wrapper);
     }
 
+    @Override
+    public void updateFileStats(String skillId, int fileCount, long totalSize) {
+        SkillEntity entity = mapper.selectById(skillId);
+        if (entity != null) {
+            entity.setFileCount(fileCount);
+            entity.setTotalSize(totalSize);
+            mapper.updateById(entity);
+        }
+    }
+
+    @Override
+    public void updateSyncTime(String skillId) {
+        SkillEntity entity = mapper.selectById(skillId);
+        if (entity != null) {
+            entity.setLastSyncAt(Instant.now());
+            mapper.updateById(entity);
+        }
+    }
+
     private SkillEntity toEntity(Skill skill) {
         SkillEntity entity = new SkillEntity();
         entity.setId(skill.getId());
@@ -91,9 +108,16 @@ public class MybatisSkillRepository implements SkillRepository {
         entity.setSkillType(skill.getSkillType());
         entity.setSkillFilesTree(skill.getSkillFilesTree());
         entity.setSkillPath(skill.getSkillPath());
+        entity.setSource(skill.getSource());
+        entity.setSourcePath(skill.getSourcePath());
+        entity.setZipStoragePath(skill.getZipStoragePath());
+        entity.setConfigId(skill.getConfigId());
+        entity.setFileCount(skill.getFileCount());
+        entity.setTotalSize(skill.getTotalSize());
         entity.setEnabled(skill.isEnabled());
         entity.setCreatedAt(skill.getCreatedAt());
         entity.setUpdatedAt(skill.getUpdatedAt());
+        entity.setLastSyncAt(skill.getLastSyncAt());
         return entity;
     }
 
@@ -108,9 +132,16 @@ public class MybatisSkillRepository implements SkillRepository {
         skill.setSkillType(entity.getSkillType());
         skill.setSkillFilesTree(entity.getSkillFilesTree());
         skill.setSkillPath(entity.getSkillPath());
+        skill.setSource(entity.getSource());
+        skill.setSourcePath(entity.getSourcePath());
+        skill.setZipStoragePath(entity.getZipStoragePath());
+        skill.setConfigId(entity.getConfigId());
+        skill.setFileCount(entity.getFileCount());
+        skill.setTotalSize(entity.getTotalSize());
         skill.setEnabled(entity.isEnabled());
         skill.setCreatedAt(entity.getCreatedAt());
         skill.setUpdatedAt(entity.getUpdatedAt());
+        skill.setLastSyncAt(entity.getLastSyncAt());
         return skill;
     }
 }

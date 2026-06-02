@@ -49,8 +49,9 @@ public class MemoryUseCase {
     }
 
     private MemoryOutput toOutput(Memory memory) {
+        String memoryType = memory.getMemoryType() != null ? memory.getMemoryType().name() : null;
         return new MemoryOutput(memory.getId(), memory.getTenantId(), memory.getWorkspaceId(),
-                memory.getAgentId(), memory.getName(), memory.getMemoryType().name(), memory.getContent(),
+                memory.getAgentId(), memory.getName(), memoryType, memory.getContent(),
                 memory.getMetadata(), memory.getImportance(), memory.getExpiresAt(),
                 memory.getCreatedAt(), memory.getUpdatedAt());
     }

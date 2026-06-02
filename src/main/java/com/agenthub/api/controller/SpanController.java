@@ -12,7 +12,7 @@ import java.util.List;
  * Span Controller.
  */
 @RestController
-@RequestMapping("/api/v1/spans")
+@RequestMapping("/api/v1/workspaces/{workspaceId}/spans")
 public class SpanController {
     private final SpanUseCase useCase;
 
@@ -39,12 +39,6 @@ public class SpanController {
             .toList();
     }
 
-    @GetMapping
-    public List<SpanResponse> list() {
-        return useCase.list().stream()
-            .map(this::toResponse)
-            .toList();
-    }
 
     @DeleteMapping("/{spanId}")
     public void delete(@PathVariable String spanId) {

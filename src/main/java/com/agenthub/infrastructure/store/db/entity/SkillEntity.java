@@ -31,9 +31,23 @@ public class SkillEntity {
     private String skillPath;
     @TableField(value = "skill_files_tree", jdbcType = JdbcType.LONGVARCHAR)
     private String skillFilesTree;
+    @TableField(value = "source")
+    private String source;
+    @TableField(value = "source_path", jdbcType = JdbcType.LONGVARCHAR)
+    private String sourcePath;
+    @TableField(value = "zip_storage_path", jdbcType = JdbcType.LONGVARCHAR)
+    private String zipStoragePath;
+    @TableField(value = "config_id")
+    private String configId;
+    @TableField(value = "file_count")
+    private int fileCount;
+    @TableField(value = "total_size")
+    private long totalSize;
     private boolean enabled;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private Instant updatedAt;
+    @TableField(value = "last_sync_at")
+    private Instant lastSyncAt;
 }

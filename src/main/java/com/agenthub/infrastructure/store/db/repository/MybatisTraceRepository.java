@@ -52,7 +52,7 @@ public class MybatisTraceRepository implements TraceRepository {
 
     @Override
     public List<Trace> findAll() {
-        return mapper.selectList(null).stream()
+        return mapper.selectList(new LambdaQueryWrapper<>()).stream()
             .map(this::toDomain)
             .toList();
     }

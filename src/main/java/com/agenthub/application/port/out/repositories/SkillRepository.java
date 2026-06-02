@@ -27,4 +27,8 @@ public interface SkillRepository {
 
     void deleteBefore(Instant minus);
 
+    void updateFileStats(String skillId, int fileCount, long totalSize);
+
+    void updateSyncTime(String skillId);
+
 }

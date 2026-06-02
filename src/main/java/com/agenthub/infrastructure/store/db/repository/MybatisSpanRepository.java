@@ -66,7 +66,7 @@ public class MybatisSpanRepository implements SpanRepository {
 
     @Override
     public List<Span> findAll() {
-        return mapper.selectList(null).stream()
+        return mapper.selectList(new LambdaQueryWrapper<>()).stream()
                 .map(this::toDomain)
                 .toList();
     }

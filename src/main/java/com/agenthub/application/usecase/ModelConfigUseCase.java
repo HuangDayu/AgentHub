@@ -128,7 +128,11 @@ public class ModelConfigUseCase {
      * 根据ID删除。
      */
     public boolean deleteById(String id) {
-        return modelConfigRepository.deleteById(id);
+        boolean deleted = modelConfigRepository.deleteById(id);
+        if (!deleted) {
+            throw new ModelNotFoundException("Model config not found: id=" + id);
+        }
+        return true;
     }
 
     /**

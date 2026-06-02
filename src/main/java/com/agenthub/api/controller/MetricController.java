@@ -13,7 +13,7 @@ import java.util.List;
  * Metric Controller.
  */
 @RestController
-@RequestMapping("/api/v1/metrics")
+@RequestMapping("/api/v1/workspaces/{workspaceId}/metrics")
 public class MetricController {
     private final MetricUseCase useCase;
 
