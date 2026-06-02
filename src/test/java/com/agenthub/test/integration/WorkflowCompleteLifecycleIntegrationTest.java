@@ -66,7 +66,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows", WORKSPACE_ID)
+        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows", WORKSPACE_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(workflowJson))
                 .andExpect(status().isCreated())
@@ -90,7 +90,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(nodeJson))
@@ -116,7 +116,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(nodeJson))
@@ -142,7 +142,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(nodeJson))
@@ -170,7 +170,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(nodeJson))
@@ -201,7 +201,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(nodeJson))
@@ -229,7 +229,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(nodeJson))
@@ -254,7 +254,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(nodeJson))
@@ -286,7 +286,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(nodeJson))
@@ -322,7 +322,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(nodeJson))
@@ -343,7 +343,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
             }
             """;
 
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(nodeJson))
@@ -356,7 +356,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
     @Order(12)
     @DisplayName("Step 12: 查询所有节点")
     void step12_listAllNodes() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/nodes", 
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/nodes", 
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
@@ -368,7 +368,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
     @Order(13)
     @DisplayName("Step 13: 发布工作流")
     void step13_publishWorkflow() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/publish", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/publish", 
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isOk());
         
@@ -379,7 +379,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
     @Order(14)
     @DisplayName("Step 14: 取消发布工作流")
     void step14_unpublishWorkflow() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/unpublish", 
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/unpublish", 
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isOk());
         
@@ -390,7 +390,7 @@ public class WorkflowCompleteLifecycleIntegrationTest {
     @Order(15)
     @DisplayName("Step 15: 删除工作流")
     void step15_deleteWorkflow() throws Exception {
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}", 
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}", 
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isNoContent());
         

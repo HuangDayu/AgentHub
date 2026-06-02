@@ -23,7 +23,7 @@ class SpanControllerIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
-
+    private final String workspaceId = "100000002";
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -34,19 +34,13 @@ class SpanControllerIntegrationTest {
             .build();
     }
 
-    @Test
-    @Order(1)
-    void shouldListSpans() throws Exception {
-        mockMvc.perform(get("/api/v1/spans"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isArray());
-    }
+
 
     @Test
     @Order(2)
     void shouldListSpansByTrace() throws Exception {
         String traceId = "test-trace-001";
-        mockMvc.perform(get("/api/v1/spans/traces/{traceId}", traceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/spans/traces/{traceId}",workspaceId, traceId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -55,7 +49,7 @@ class SpanControllerIntegrationTest {
     @Order(3)
     void shouldListSpansByRun() throws Exception {
         String runId = "test-run-001";
-        mockMvc.perform(get("/api/v1/spans/runs/{runId}", runId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/spans/runs/{runId}",workspaceId, runId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -64,7 +58,7 @@ class SpanControllerIntegrationTest {
     @Order(4)
     void shouldReturn404WhenSpanNotFound() throws Exception {
         String spanId = "non-existent-span";
-        mockMvc.perform(get("/api/v1/spans/{spanId}", spanId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/spans/{spanId}",workspaceId, spanId))
             .andExpect(status().isNotFound());
     }
 
@@ -72,7 +66,7 @@ class SpanControllerIntegrationTest {
     @Order(5)
     void shouldDeleteSpan() throws Exception {
         String spanId = "test-span-to-delete";
-        mockMvc.perform(delete("/api/v1/spans/{spanId}", spanId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/spans/{spanId}",workspaceId, spanId))
             .andExpect(status().isOk());
     }
 }

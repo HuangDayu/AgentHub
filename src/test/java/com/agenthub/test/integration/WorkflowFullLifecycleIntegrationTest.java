@@ -342,7 +342,7 @@ public class WorkflowFullLifecycleIntegrationTest {
     void initDatabase() {
         try (var conn = dataSource.getConnection();
              var stmt = conn.createStatement()) {
-            stmt.execute("ALTER TABLE app.workflow ALTER COLUMN graph_definition TYPE TEXT");
+            stmt.execute("ALTER TABLE app.dag_workflow ALTER COLUMN graph_definition TYPE TEXT");
             log.info("\u2705 已确保 workflow.graph_definition 列类型为 TEXT");
         } catch (Exception e) {
             log.warn("\u26a0\ufe0f 修改 graph_definition 列类型失败: {}", e.getMessage());
@@ -669,7 +669,7 @@ public class WorkflowFullLifecycleIntegrationTest {
     @Order(12)
     @DisplayName("Step 1: 创建空工作流")
     void step1_shouldCreateWorkflow() throws Exception {
-        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows", WORKSPACE_ID)
+        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows", WORKSPACE_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                     {
@@ -698,7 +698,7 @@ public class WorkflowFullLifecycleIntegrationTest {
                 "复杂工作流集成测试",
                 "覆盖所有12种节点类型的完整生命周期测试");
 
-        String response = mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}",
+        String response = mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}",
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
@@ -717,7 +717,7 @@ public class WorkflowFullLifecycleIntegrationTest {
     @Order(14)
     @DisplayName("Step 3: 验证graphDefinition包含所有节点类型")
     void step3_shouldVerifyComplexGraphDefinition() throws Exception {
-        String response = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}",
+        String response = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}",
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(workflowId))
@@ -787,7 +787,7 @@ public class WorkflowFullLifecycleIntegrationTest {
     @Order(15)
     @DisplayName("Step 4: 验证复杂graphDefinition的JSON结构完整性")
     void step4_shouldVerifyGraphDefinitionStructure() throws Exception {
-        String response = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}",
+        String response = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}",
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
@@ -854,7 +854,7 @@ public class WorkflowFullLifecycleIntegrationTest {
                 "复杂工作流-已更新",
                 "验证graphDefinition持久化-更新版本");
 
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}",
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}",
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
@@ -862,7 +862,7 @@ public class WorkflowFullLifecycleIntegrationTest {
                 .andExpect(jsonPath("$.name").value("复杂工作流-已更新"));
 
         // 验证更新持久化
-        String response = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}",
+        String response = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}",
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
@@ -882,7 +882,7 @@ public class WorkflowFullLifecycleIntegrationTest {
     @Order(17)
     @DisplayName("Step 6: 发布工作流")
     void step6_shouldPublishWorkflow() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/publish",
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/publish",
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
@@ -894,7 +894,7 @@ public class WorkflowFullLifecycleIntegrationTest {
     @Order(18)
     @DisplayName("Step 7: 发布后查询 - 验证graphDefinition不变")
     void step7_shouldVerifyGraphAfterPublish() throws Exception {
-        String response = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}",
+        String response = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}",
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"))
@@ -917,7 +917,7 @@ public class WorkflowFullLifecycleIntegrationTest {
     @Order(19)
     @DisplayName("Step 8: 执行已发布的工作流")
     void step8_shouldExecutePublishedWorkflow() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/execute",
+        MvcResult mvcResult = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/execute",
                 WORKSPACE_ID, workflowId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"input\":{},\"triggeredBy\":\"test\"}"))
@@ -944,7 +944,7 @@ public class WorkflowFullLifecycleIntegrationTest {
         String finalStatus = null;
         long deadline = System.currentTimeMillis() + 120000; // 增加到2分钟，因为要真实调用LLM
         while (System.currentTimeMillis() < deadline) {
-            MvcResult pollResult = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/executions/{executionId}",
+            MvcResult pollResult = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/executions/{executionId}",
                     WORKSPACE_ID, workflowId, executionId))
                     .andExpect(request().asyncStarted())
                     .andReturn();
@@ -976,7 +976,7 @@ public class WorkflowFullLifecycleIntegrationTest {
     @Order(21)
     @DisplayName("Step 10: 取消发布工作流")
     void step10_shouldUnpublishWorkflow() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}/unpublish",
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/unpublish",
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("DRAFT"));
@@ -988,7 +988,7 @@ public class WorkflowFullLifecycleIntegrationTest {
     @Order(22)
     @DisplayName("Step 11: 取消发布后查询 - 验证状态回滚")
     void step11_shouldVerifyGraphAfterUnpublish() throws Exception {
-        String response = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}",
+        String response = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}",
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("DRAFT"))
@@ -1009,12 +1009,12 @@ public class WorkflowFullLifecycleIntegrationTest {
     @Order(23)
     @DisplayName("Step 12: 删除工作流")
     void step12_shouldDeleteWorkflow() throws Exception {
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}",
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}",
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isNoContent());
 
         // 验证删除后查询返回404
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}",
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}",
                 WORKSPACE_ID, workflowId))
                 .andExpect(status().isNotFound());
 
@@ -1029,7 +1029,7 @@ public class WorkflowFullLifecycleIntegrationTest {
                 "复杂工作流-一步创建",
                 "complex-direct-create");
 
-        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/workflows", WORKSPACE_ID)
+        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/dag-workflows", WORKSPACE_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
                 .andExpect(status().isCreated())
@@ -1046,7 +1046,7 @@ public class WorkflowFullLifecycleIntegrationTest {
                 "graphDefinition应包含start-001节点");
 
         // 清理
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/workflows/{workflowId}",
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}",
                 WORKSPACE_ID, createdWorkflowId))
                 .andExpect(status().isNoContent());
 

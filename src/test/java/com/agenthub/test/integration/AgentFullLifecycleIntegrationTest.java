@@ -1,6 +1,7 @@
 package com.agenthub.test.integration;
 
 import cn.hutool.core.io.FileUtil;
+import com.agenthub.common.utils.RandomUtils;
 import com.agenthub.test.TestAgentHubApplication;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+import static com.agenthub.common.utils.RandomUtils.randomId;
+import static com.agenthub.common.utils.RandomUtils.randomShortId;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.ai.util.json.JsonParser.toJson;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -73,15 +76,15 @@ public class AgentFullLifecycleIntegrationTest {
     void step1_shouldCreateVectorStoreConfig() throws Exception {
         String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "name": "test-qdrant-config",
+                                    "name": "test-qdrant-%s",
                                     "type": "QDRANT",
                                     "host": "localhost",
                                     "port": 6334,
                                     "collectionName": "test-collection"
                                 }
-                                """))
+                                """, randomShortId())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
@@ -149,7 +152,7 @@ public class AgentFullLifecycleIntegrationTest {
                                 {
                                     "tenantId": "%s",
                                     "workspaceId": "%s",
-                                    "kbCode": "test-kb-full",
+                                    "kbCode": "test-kb-%s",
                                     "name": "Test Knowledge Base",
                                     "description": "Knowledge base for full lifecycle test",
                                     "indexProvider": "QDRANT",
@@ -157,7 +160,7 @@ public class AgentFullLifecycleIntegrationTest {
                                     "embeddingModelConfigId": "%s",
                                     "chatModelConfigId": "%s"
                                 }
-                                """, TENANT_ID, WORKSPACE_ID, vectorStoreConfigId, embeddingModelConfigId, chatModelConfigId)))
+                                """, TENANT_ID, WORKSPACE_ID, randomShortId(),vectorStoreConfigId, embeddingModelConfigId, chatModelConfigId)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
@@ -334,10 +337,10 @@ public class AgentFullLifecycleIntegrationTest {
                                     "tenantId": "%s",
                                     "workspaceId": "%s",
                                     "agentCode": "test-agent-full",
-                                    "name": "test-full-lifecycle-agent",
+                                    "name": "test-agent-%s",
                                     "description": "Agent for full lifecycle integration test"
                                 }
-                                """, TENANT_ID, WORKSPACE_ID)))
+                                """, TENANT_ID, WORKSPACE_ID,randomShortId())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
@@ -512,9 +515,9 @@ public class AgentFullLifecycleIntegrationTest {
                                     "content": "Hello, this is a test message."
                                 }
                                 """))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.content").exists())
-                .andExpect(jsonPath("$.role").value("assistant"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.text").exists())
+                .andExpect(jsonPath("$.messageType").value("ASSISTANT"))
                 .andReturn().getResponse().getContentAsString();
         log.info("step14 Response: {}", response);
     }

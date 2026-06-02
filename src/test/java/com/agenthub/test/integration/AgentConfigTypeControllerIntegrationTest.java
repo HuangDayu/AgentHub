@@ -41,7 +41,7 @@ class AgentConfigTypeControllerIntegrationTest {
     @Test
     @Order(1)
     void getConfigTypes_shouldReturnAllCategories() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/v1/agent-config-types")
+        MvcResult result = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agent-config-types", WORKSPACE_ID)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -57,7 +57,7 @@ class AgentConfigTypeControllerIntegrationTest {
     @Test
     @Order(2)
     void getAvailableConfigs_retrieval_shouldReturnStrategies() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/v1/agent-config-types/available")
+        MvcResult result = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agent-config-types/available", WORKSPACE_ID)
                         .param("type", "RETRIEVAL_STRATEGY")
                         .param("category", "STRATEGY")
                         .param("workspaceId", WORKSPACE_ID)
@@ -69,7 +69,7 @@ class AgentConfigTypeControllerIntegrationTest {
     @Test
     @Order(3)
     void getAvailableConfigs_modelStrategy_shouldReturnStrategies() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/v1/agent-config-types/available")
+        MvcResult result = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agent-config-types/available", WORKSPACE_ID)
                         .param("type", "MODEL_STRATEGY")
                         .param("category", "STRATEGY")
                         .param("workspaceId", WORKSPACE_ID)
@@ -81,7 +81,7 @@ class AgentConfigTypeControllerIntegrationTest {
     @Test
     @Order(4)
     void getAvailableConfigs_toolStrategy_shouldReturnStrategies() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/v1/agent-config-types/available")
+        MvcResult result = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agent-config-types/available", WORKSPACE_ID)
                         .param("type", "TOOL_STRATEGY")
                         .param("category", "STRATEGY")
                         .param("workspaceId", WORKSPACE_ID)
@@ -93,7 +93,7 @@ class AgentConfigTypeControllerIntegrationTest {
     @Test
     @Order(5)
     void getAvailableConfigs_guardrail_shouldReturnStrategies() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/v1/agent-config-types/available")
+        MvcResult result = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agent-config-types/available", WORKSPACE_ID)
                         .param("type", "GUARDRAIL_STRATEGY")
                         .param("category", "STRATEGY")
                         .param("workspaceId", WORKSPACE_ID)
@@ -105,7 +105,7 @@ class AgentConfigTypeControllerIntegrationTest {
     @Test
     @Order(6)
     void getAvailableConfigs_chatModel_shouldReturnModelConfigs() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/v1/agent-config-types/available")
+        MvcResult result = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agent-config-types/available", WORKSPACE_ID)
                         .param("type", "CHAT_MODEL")
                         .param("category", "MODEL")
                         .param("workspaceId", WORKSPACE_ID)
@@ -117,7 +117,7 @@ class AgentConfigTypeControllerIntegrationTest {
     @Test
     @Order(7)
     void getAvailableConfigs_withoutWorkspaceId_shouldReturnEmpty() throws Exception {
-        mockMvc.perform(get("/api/v1/agent-config-types/available")
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agent-config-types/available", WORKSPACE_ID)
                         .param("type", "RETRIEVAL_STRATEGY")
                         .param("category", "STRATEGY")
                         .accept(MediaType.APPLICATION_JSON))
@@ -127,7 +127,7 @@ class AgentConfigTypeControllerIntegrationTest {
     @Test
     @Order(8)
     void getAvailableConfigs_unknownType_shouldReturnEmpty() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/v1/agent-config-types/available")
+        MvcResult result = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agent-config-types/available", WORKSPACE_ID)
                         .param("type", "UNKNOWN")
                         .param("category", "UNKNOWN")
                         .param("workspaceId", WORKSPACE_ID)

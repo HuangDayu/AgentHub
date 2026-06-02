@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.common.utils.RandomUtils.randomShortId;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -22,12 +23,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SkillControllerIntegrationTest {
+
     @Autowired
     private WebApplicationContext webApplicationContext;
 
     private MockMvc mockMvc;
     private String createdSkillId;
     private final String workspaceId = "100000002";
+    private final String tenantId = "100000001";
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -40,27 +43,28 @@ class SkillControllerIntegrationTest {
 
     @Test
     @Order(1)
-    void shouldCreateSkill() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/skills", workspaceId)
+    void shouldCreateSyncedSkill() throws Exception {
+        String skillCode = "test-synced-skill-" + randomShortId();
+        var result = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/skills", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
                                     "tenantId": "100000001",
-                                    "workspaceId": "100000002",
-                                    "skillCode": "test-skill-001",
-                                    "name": "Test Skill",
-                                    "description": "Test skill description",
-                                    "skillType": "FUNCTION",
-                                    "definition": "{}",
-                                    "parameters": "{}"
+                                    "skillCode": "%s",
+                                    "name": "Test Synced Skill",
+                                    "description": "A synced skill for testing",
+                                    "skillPath": "C:/Users/huang/.agents/skills/weather"
                                 }
-                                """))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("Test Skill"))
-                .andReturn().getResponse().getContentAsString();
+                                """, skillCode)))
+                .andReturn();
 
-        createdSkillId = objectMapper.readTree(responseBody).get("id").asText();
+        int status = result.getResponse().getStatus();
+        String body = result.getResponse().getContentAsString();
+        System.out.println("=== CREATE STATUS: " + status);
+        System.out.println("=== CREATE BODY: " + body);
+        Assertions.assertEquals(201, status, "Expected 201 but got " + status + ": " + body);
+        Assertions.assertTrue(body.contains("id"), "Response should contain id: " + body);
+        createdSkillId = objectMapper.readTree(body).get("id").asText();
     }
 
     @Test
@@ -77,7 +81,8 @@ class SkillControllerIntegrationTest {
         Assertions.assertNotNull(createdSkillId, "Skill should be created first");
         mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skills/{skillId}", workspaceId, createdSkillId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(createdSkillId));
+                .andExpect(jsonPath("$.id").value(createdSkillId))
+                .andExpect(jsonPath("$.skillCode").value(org.hamcrest.Matchers.startsWith("test-synced-skill-")));
     }
 
     @Test
@@ -88,14 +93,15 @@ class SkillControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "name": "Updated Skill",
+                                    "tenantId": "100000001",
+                                    "skillCode": "test-synced-skill",
+                                    "name": "Updated Synced Skill",
                                     "description": "Updated description",
-                                    "definition": "{}",
-                                    "parameters": "{}"
+                                    "skillPath": "/tmp/test-skill-updated"
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Skill"));
+                .andExpect(jsonPath("$.name").value("Updated Synced Skill"));
     }
 
     @Test
@@ -118,13 +124,20 @@ class SkillControllerIntegrationTest {
 
     @Test
     @Order(7)
+    void shouldSyncAllSkills() throws Exception {
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/skills/sync-all", workspaceId))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(8)
     void shouldReturnNotFoundForUnknownId() throws Exception {
         mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skills/{skillId}", workspaceId, "non-existent-id"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     void shouldDeleteSkill() throws Exception {
         Assertions.assertNotNull(createdSkillId, "Skill should be created first");
         mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/skills/{skillId}", workspaceId, createdSkillId))

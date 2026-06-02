@@ -23,7 +23,7 @@ class AlertControllerIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
-
+    private final String workspaceId = "100000002";
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -37,7 +37,7 @@ class AlertControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateAlert() throws Exception {
-        mockMvc.perform(post("/api/v1/alerts")
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/alerts",workspaceId)
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -56,7 +56,7 @@ class AlertControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListAlerts() throws Exception {
-        mockMvc.perform(get("/api/v1/alerts"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts",workspaceId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -65,7 +65,7 @@ class AlertControllerIntegrationTest {
     @Order(3)
     void shouldListAlertsByRun() throws Exception {
         String runId = "test-run-001";
-        mockMvc.perform(get("/api/v1/alerts/runs/{runId}", runId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts/runs/{runId}",workspaceId, runId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -73,7 +73,7 @@ class AlertControllerIntegrationTest {
     @Test
     @Order(4)
     void shouldListUnresolvedAlerts() throws Exception {
-        mockMvc.perform(get("/api/v1/alerts/unresolved"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts/unresolved",workspaceId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -82,7 +82,7 @@ class AlertControllerIntegrationTest {
     @Order(5)
     void shouldReturn404WhenAlertNotFound() throws Exception {
         String id = "non-existent-alert";
-        mockMvc.perform(get("/api/v1/alerts/{id}", id))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts/{id}",workspaceId, id))
             .andExpect(status().isNotFound());
     }
 
@@ -90,7 +90,7 @@ class AlertControllerIntegrationTest {
     @Order(6)
     void shouldDeleteAlert() throws Exception {
         String id = "test-alert-to-delete";
-        mockMvc.perform(delete("/api/v1/alerts/{id}", id))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/alerts/{id}",workspaceId, id))
             .andExpect(status().isOk());
     }
 }

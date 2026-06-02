@@ -1,4 +1,4 @@
-package com.agenthub.test.integration;
+package com.agenthub.test.unit;
 
 import com.agenthub.application.command.CreatePlanCommand;
 import com.agenthub.application.command.PlanStepInput;

@@ -1,4 +1,4 @@
-package com.agenthub.test.integration;
+package com.agenthub.test.unit;
 
 import com.agenthub.application.dto.ExecutionPlanOutput;
 import com.agenthub.application.usecase.ExecutionPlanUseCase;

@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.common.utils.RandomUtils.randomShortId;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -64,15 +65,16 @@ class KnowledgeBaseControllerIntegrationTest {
     void shouldCreateKnowledgeBase() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "kbCode": "kb-create-test",
+                                    "kbCode": "kb-%s",
                                     "name": "Create Test KB",
                                     "description": "Test knowledge base"
                                 }
-                                """))
+                                """,randomShortId())))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.kbCode").value("kb-create-test"))
+                .andExpect(jsonPath("$.kbCode").isString())
+                .andExpect(jsonPath("$.kbCode").value(org.hamcrest.Matchers.startsWith("kb-")))
                 .andExpect(jsonPath("$.name").value("Create Test KB")).andReturn();
         // 提取id供可能的后续使用
         createdKbId = objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
@@ -129,16 +131,17 @@ class KnowledgeBaseControllerIntegrationTest {
     @Test
     @Order(7)
     void shouldGetPatchAndDeleteKnowledgeBase() throws Exception {
+        String kbCode = "kb-crud-" + randomShortId();
         // 先创建一个 KB
         MvcResult createResult = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "kbCode": "kb-crud-test",
+                                    "kbCode": "%s",
                                     "name": "CRUD KB",
                                     "description": "For CRUD testing"
                                 }
-                                """))
+                                """, kbCode)))
                 .andExpect(status().isCreated())
                 .andReturn();
         String kbId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asText();
@@ -147,7 +150,7 @@ class KnowledgeBaseControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/{kbId}", workspaceId, kbId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(kbId))
-                .andExpect(jsonPath("$.kbCode").value("kb-crud-test"))
+                .andExpect(jsonPath("$.kbCode").value(kbCode))
                 .andExpect(jsonPath("$.name").value("CRUD KB"));
 
         // PATCH — 更新
@@ -187,26 +190,27 @@ class KnowledgeBaseControllerIntegrationTest {
     @Test
     @Order(9)
     void shouldReturnConflictForDuplicateKnowledgeBase() throws Exception {
+        String kbCode = "kb-dup-" + randomShortId();
         // 创建
         mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "kbCode": "kb-dup-test",
+                                    "kbCode": "%s",
                                     "name": "Dup KB"
                                 }
-                                """))
+                                """, kbCode)))
                 .andExpect(status().isCreated());
 
         // 再创建同 ID — 409
         mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "kbCode": "kb-dup-test",
+                                    "kbCode": "%s",
                                     "name": "Duplicate KB"
                                 }
-                                """))
+                                """, kbCode)))
                 .andExpect(status().isConflict());
     }
 

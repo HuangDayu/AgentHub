@@ -111,14 +111,14 @@ class RuntimeDataViewControllerIntegrationTest {
         withTenant(() -> mockMvc.perform(get(path(agentId, sessionId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trace.spanCount").value(0))
-                .andExpect(jsonPath("$.spans.length()").value(0)));
+                .andExpect(jsonPath("$.spanTree.length()").value(0)));
     }
 
     private void expectSortedDataView(String agentId, String sessionId, String runId, String spanId) throws Exception {
         withTenant(() -> mockMvc.perform(get(path(agentId, sessionId)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.runs[0].id").value(runId))
-                .andExpect(jsonPath("$.spans[0].spanId").value(spanId)));
+                .andExpect(jsonPath("$.selectedRun.id").value(runId))
+                .andExpect(jsonPath("$.spanTree[0].spanId").value(spanId)));
     }
 
     private void expectProblemSummary(String agentId, String sessionId) throws Exception {

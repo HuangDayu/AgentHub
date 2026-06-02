@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.common.utils.RandomUtils.randomShortId;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -85,18 +86,18 @@ class VectorStoreConfigControllerIntegrationTest {
     void shouldCreateChromaVectorStoreConfig() throws Exception {
         String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "name": "chroma-test",
+                                    "name": "chroma-%s",
                                     "type": "CHROMA",
                                     "host": "localhost",
                                     "port": 8000,
                                     "collectionName": "chroma-collection",
                                     "extraParams": null
                                 }
-                                """))
+                                """,randomShortId())))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("chroma-test"))
+                .andExpect(jsonPath("$.name").value(org.hamcrest.Matchers.startsWith("chroma-")))
                 .andExpect(jsonPath("$.type").value("CHROMA"))
                 .andReturn()
                 .getResponse()
@@ -109,20 +110,21 @@ class VectorStoreConfigControllerIntegrationTest {
     @Test
     @Order(3)
     void shouldCreateRedisVectorStoreConfig() throws Exception {
+        String redisName = "redis-" + randomShortId();
         mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "name": "redis-vector",
+                                    "name": "%s",
                                     "type": "REDIS",
                                     "host": "localhost",
                                     "port": 6379,
                                     "collectionName": "redis-idx",
                                     "extraParams": null
                                 }
-                                """))
+                                """, redisName)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("redis-vector"))
+                .andExpect(jsonPath("$.name").value(redisName))
                 .andExpect(jsonPath("$.type").value("REDIS"));
     }
 
@@ -132,20 +134,21 @@ class VectorStoreConfigControllerIntegrationTest {
     @Test
     @Order(4)
     void shouldCreateMilvusVectorStoreConfig() throws Exception {
+        String milvusName = "milvus-" + randomShortId();
         String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "name": "milvus-store",
+                                    "name": "%s",
                                     "type": "MILVUS",
                                     "host": "localhost",
                                     "port": 19530,
                                     "collectionName": "milvus-collection",
                                     "extraParams": null
                                 }
-                                """))
+                                """, milvusName)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("milvus-store"))
+                .andExpect(jsonPath("$.name").value(milvusName))
                 .andExpect(jsonPath("$.type").value("MILVUS"))
                 .andReturn()
                 .getResponse()
@@ -265,34 +268,34 @@ class VectorStoreConfigControllerIntegrationTest {
     @Test
     @Order(13)
     void shouldReturnConflictForDuplicateName() throws Exception {
-        String dupTenantId = "550e8400-e29b-41d4-a716-446655440001";
+        String dupName = "dup-vs-" + randomShortId();
 
         // 先创建一个
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId, dupTenantId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "name": "dup-vs-test",
+                                    "name": "%s",
                                     "type": "QDRANT",
                                     "host": "localhost",
                                     "port": 6334,
                                     "collectionName": "dup-test-collection"
                                 }
-                                """))
+                                """, dupName)))
                 .andExpect(status().isCreated());
 
         // 再创建同名 — 409 Conflict
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId, dupTenantId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "name": "dup-vs-test",
+                                    "name": "%s",
                                     "type": "CHROMA",
                                     "host": "other-host",
                                     "port": 8000,
                                     "collectionName": "dup-test-collection-2"
                                 }
-                                """))
+                                """, dupName)))
                 .andExpect(status().isConflict());
     }
 

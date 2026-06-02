@@ -22,7 +22,7 @@ class TraceControllerIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
-
+    private final String workspaceId = "100000002";
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -36,7 +36,7 @@ class TraceControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldListTraces() throws Exception {
-        mockMvc.perform(get("/api/v1/traces"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/traces",workspaceId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -45,7 +45,7 @@ class TraceControllerIntegrationTest {
     @Order(2)
     void shouldListTracesByRun() throws Exception {
         String runId = "test-run-001";
-        mockMvc.perform(get("/api/v1/traces/runs/{runId}", runId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/traces/runs/{runId}",workspaceId, runId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -54,7 +54,7 @@ class TraceControllerIntegrationTest {
     @Order(3)
     void shouldReturn404WhenTraceNotFound() throws Exception {
         String traceId = "non-existent-trace";
-        mockMvc.perform(get("/api/v1/traces/{traceId}", traceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/traces/{traceId}",workspaceId, traceId))
             .andExpect(status().isNotFound());
     }
 
@@ -62,7 +62,7 @@ class TraceControllerIntegrationTest {
     @Order(4)
     void shouldDeleteTrace() throws Exception {
         String traceId = "test-trace-to-delete";
-        mockMvc.perform(delete("/api/v1/traces/{traceId}", traceId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/traces/{traceId}",workspaceId, traceId))
             .andExpect(status().isOk());
     }
 }
