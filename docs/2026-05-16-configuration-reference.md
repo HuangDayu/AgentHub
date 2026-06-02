@@ -226,14 +226,14 @@ agenthub:
 ```yaml
 agenthub:
   rag:
-    impl-type: customize                   # RAG 实现类型（customize/spring）
+    type: customize                   # RAG 实现类型（customize/spring）
     reranker:
       type: keyword                        # 重排器类型（keyword/cross-encoder）
 ```
 
 | 属性 | 默认值 | 说明 |
 |------|--------|------|
-| `agenthub.rag.impl-type` | customize | RAG 管道实现类型 |
+| `agenthub.rag.type` | customize | RAG 管道实现类型 |
 | `agenthub.rag.reranker.type` | keyword | 重排器类型 |
 
 ---
@@ -243,12 +243,12 @@ agenthub:
 ```yaml
 agenthub:
   etl:
-    impl-type: customize                   # ETL 实现类型（customize/spring）
+    type: customize                   # ETL 实现类型（customize/spring）
 ```
 
 | 属性 | 默认值 | 说明 |
 |------|--------|------|
-| `agenthub.etl.impl-type` | customize | ETL 管道实现类型 |
+| `agenthub.etl.type` | customize | ETL 管道实现类型 |
 
 ---
 
@@ -413,11 +413,11 @@ agenthub:
       secret-key: minioadmin
       bucket: agenthub
   rag:
-    impl-type: customize
+    type: customize
     reranker:
       type: keyword
   etl:
-    impl-type: customize
+    type: customize
 
 management:
   endpoints:

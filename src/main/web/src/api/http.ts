@@ -119,3 +119,31 @@ export async function requestJson<T>(path: string, options: RequestOptions): Pro
   }
   return JSON.parse(text) as T
 }
+
+export async function requestBlob(path: string, options: RequestOptions): Promise<Blob> {
+  const url = buildUrl(options.baseUrl, path, options.query)
+  const headers = buildHeaders(options)
+  injectAuthToken(headers)
+  const body = buildBody(options.bodyJson)
+
+  let response: Response
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+      body,
+    })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : '网络请求失败'
+    dispatchApiError(0, url, message)
+    throw err
+  }
+
+  if (!response.ok) {
+    const errorText = await readError(response)
+    dispatchApiError(response.status, url, errorText)
+    throw new Error(errorText)
+  }
+
+  return response.blob()
+}

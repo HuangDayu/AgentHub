@@ -47,6 +47,7 @@
   </div>
     <template v-if="!isFullScreen">
       <FloatingEffectButton :bottom="buttonPositions.effect" />
+      <FloatingSkillConfigButton v-if="showSkillConfigButton" :bottom="buttonPositions.skillConfig" />
       <FloatingHomeButton v-if="showHomeButton" :bottom="buttonPositions.home" />
       <FloatingSyncButton v-if="showSyncButton" :bottom="buttonPositions.sync" @sync="handleSync" />
       <FloatingAddButton v-if="showAddButton" :bottom="buttonPositions.add" @add="handleAdd" />
@@ -67,6 +68,7 @@ import FloatingEffectButton from './FloatingEffectButton.vue'
 import FloatingAddButton from './FloatingAddButton.vue'
 import FloatingSyncButton from './FloatingSyncButton.vue'
 import FloatingHomeButton from './FloatingHomeButton.vue'
+import FloatingSkillConfigButton from './FloatingSkillConfigButton.vue'
 const store = useWorkspaceStore()
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -106,6 +108,11 @@ const showSyncButton = computed(() => {
   return path.includes('skill') || path.includes('system-tools') || path.includes('agent-configs')
 })
 
+// 判断是否显示技能配置按钮
+const showSkillConfigButton = computed(() => {
+  return route.path.includes('skill')
+})
+
 // 判断是否显示返回首页按钮（非首页时显示）
 const showHomeButton = computed(() => {
   const path = route.path
@@ -135,6 +142,7 @@ const buttonPositions = computed(() => {
   const positions = {
     settings: currentBottom,
     effect: 0,
+    skillConfig: 0,
     home: 0,
     sync: 0,
     add: 0
@@ -145,7 +153,13 @@ const buttonPositions = computed(() => {
   // 主题按钮
   positions.effect = currentBottom
 
-  // 返回首页按钮（在主题按钮上面）
+  // 技能配置按钮（在主题按钮上面，同步按钮下面）
+  if (showSkillConfigButton.value) {
+    currentBottom += BUTTON_HEIGHT + BUTTON_GAP
+    positions.skillConfig = currentBottom
+  }
+
+  // 返回首页按钮（在技能配置按钮上面）
   if (showHomeButton.value) {
     currentBottom += BUTTON_HEIGHT + BUTTON_GAP
     positions.home = currentBottom

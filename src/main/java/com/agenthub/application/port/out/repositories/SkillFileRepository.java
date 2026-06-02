@@ -16,9 +16,7 @@ public interface SkillFileRepository {
 
     Optional<SkillFile> findById(String id);
 
-    Optional<SkillFile> findBySkillIdAndPath(String skillId, String filePath);
-
-    Optional<SkillFile> findBySkillIdAndFilePath(String skillId, String filePath);
+    Optional<SkillFile> findBySkillIdAndFileId(String skillId, String fileId);
 
     List<SkillFile> findBySkillId(String skillId);
 
@@ -30,11 +28,10 @@ public interface SkillFileRepository {
 
     void deleteBySkillId(String skillId);
 
-    void deleteBySkillIdAndPath(String skillId, String filePath);
-
-    void deleteBySkillIdAndFilePath(String skillId, String filePath);
+    void deleteBySkillIdAndFileId(String skillId, String filePath);
 
     FileStats getStats(String skillId);
 
-    record FileStats(int fileCount, long totalSize) {}
+    record FileStats(int fileCount, long totalSize) {
+    }
 }

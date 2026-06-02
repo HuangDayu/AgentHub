@@ -39,7 +39,7 @@ interface Props {
   confirmText?: string
   confirmDisabled?: boolean
   closeOnOverlay?: boolean
-  size?: 'small' | 'medium' | 'large' | 'xlarge'
+  size?: 'small' | 'medium' | 'large' | 'xlarge' | 'xxlarge'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -103,6 +103,7 @@ const handleOverlayClick = () => {
 .modal-medium { width: 90%; max-width: 600px; }
 .modal-large { width: 90%; max-width: 800px; }
 .modal-xlarge { width: 90%; max-width: 1000px; }
+.modal-xxlarge { width: 90%; max-width: 1200px; }
 
 .modal-header {
   display: flex;

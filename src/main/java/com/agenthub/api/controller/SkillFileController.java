@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 技能文件控制器。
@@ -33,36 +33,37 @@ public class SkillFileController {
     /**
      * 获取文件元数据。
      */
-    @GetMapping("/{filePath}")
+    @GetMapping("/{fileId}")
     public ResponseEntity<SkillFileOutput> getFile(
             @PathVariable String workspaceId,
             @PathVariable String skillId,
-            @PathVariable String filePath) {
-        return skillFileUseCase.getFile(skillId, filePath)
+            @PathVariable String fileId) {
+        return skillFileUseCase.getFile(skillId, fileId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     /**
-     * 下载文件内容。
+     * 获取文件文本内容。二进制文件返回提示信息。
      */
-    @GetMapping("/{filePath}/content")
-    public ResponseEntity<InputStream> getFileContent(
+    @GetMapping("/{fileId}/content")
+    public ResponseEntity<Map<String, String>> getFileContent(
             @PathVariable String workspaceId,
             @PathVariable String skillId,
-            @PathVariable String filePath) {
-        return ResponseEntity.ok(skillFileUseCase.getFileContent(skillId, filePath));
+            @PathVariable String fileId) {
+        String content = skillFileUseCase.getFileContent(skillId, fileId);
+        return ResponseEntity.ok(Map.of("content", content));
     }
 
     /**
      * 删除文件。
      */
-    @DeleteMapping("/{filePath}")
+    @DeleteMapping("/{fileId}")
     public ResponseEntity<Void> deleteFile(
             @PathVariable String workspaceId,
             @PathVariable String skillId,
-            @PathVariable String filePath) {
-        skillFileUseCase.deleteFile(skillId, filePath);
+            @PathVariable String fileId) {
+        skillFileUseCase.deleteFile(skillId, fileId);
         return ResponseEntity.noContent().build();
     }
 

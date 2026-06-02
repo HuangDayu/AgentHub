@@ -190,7 +190,7 @@ function editWorkflow(workflow: Workflow) {
 }
 
 function openWorkflowEditor(workflow: Workflow) {
-  router.push(`/agenthub/workflows/${workflow.id}`)
+  router.push(`/agenthub/dag-workflows/${workflow.id}`)
 }
 
 function resetForm() {

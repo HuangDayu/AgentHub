@@ -38,7 +38,8 @@ public class SkillFile {
      */
     public static SkillFile create(String skillId, String tenantId,
                                     String workspaceId, String filePath,
-                                    long fileSize, String encoding) {
+                                    long fileSize, String encoding,
+                                    String skillCode,String storagePath) {
         SkillFile file = new SkillFile();
         file.id = randomId();
         file.skillId = skillId;
@@ -50,18 +51,11 @@ public class SkillFile {
         file.fileSize = fileSize;
         file.fileType = detectFileType(file.fileExt);
         file.encoding = encoding;
-        file.storagePath = buildStoragePath(skillId, filePath);
+        file.storagePath = storagePath;
         file.version = 1;
         file.createdAt = Instant.now();
         file.updatedAt = Instant.now();
         return file;
-    }
-
-    /**
-     * 构建 MinIO 存储路径。
-     */
-    private static String buildStoragePath(String skillId, String filePath) {
-        return String.format("agenthub/skills/%s/%s", skillId, filePath);
     }
 
     /**

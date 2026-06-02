@@ -156,11 +156,11 @@ npm install
 ### 路由配置示例
 ```typescript
 {
-  path: '/workflows',
+  path: '/dag-workflows',
   component: () => import('@/views/workflow/WorkflowListView.vue')
 },
 {
-  path: '/workflows/:id',
+  path: '/dag-workflows/:id',
   component: () => import('@/views/workflow/WorkflowEditorView.vue')
 }
 ```

@@ -41,7 +41,7 @@ const router = createRouter({
     { path: '/', redirect: '/login' },
     { path: '/login', component: LoginView },
     {
-      path: '/agenthub/workflows/:id',
+      path: '/agenthub/dag-workflows/:id',
       component: () => import('@/views/agenthub/WorkflowEditorView.vue'),
       meta: { requiresAuth: true, fullScreen: true },
     },

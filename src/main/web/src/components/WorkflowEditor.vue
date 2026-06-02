@@ -813,7 +813,7 @@ function handleKeyboard(event: KeyboardEvent) {
 }
 
 function goBack() {
-  router.push('/agenthub/workflows')
+  router.push('/agenthub/dag-workflows')
 }
 </script>
 

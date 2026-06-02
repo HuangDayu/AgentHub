@@ -15,12 +15,12 @@ describe('http utility functions', () => {
     }
 
     it('应正确拼接基础URL和路径', () => {
-      const result = buildUrl('http://localhost:8080', '/api/workflows')
-      expect(result).toBe('http://localhost:8080/api/workflows')
+      const result = buildUrl('http://localhost:8080', '/api/dag-workflows')
+      expect(result).toBe('http://localhost:8080/api/dag-workflows')
     })
 
     it('应正确处理查询参数', () => {
-      const result = buildUrl('http://localhost:8080', '/api/workflows', { page: 1, size: 20 })
+      const result = buildUrl('http://localhost:8080', '/api/dag-workflows', { page: 1, size: 20 })
       expect(result).toContain('page=1')
       expect(result).toContain('size=20')
     })

@@ -24,12 +24,13 @@ public class MybatisSkillRepository implements SkillRepository {
     @Override
     public Skill saveOrUpdate(Skill skill) {
         SkillEntity entity = toEntity(skill);
-        SkillEntity existing = mapper.selectById(entity.getId());
+        LambdaQueryWrapper<SkillEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SkillEntity::getSkillCode, skill.getSkillCode());
+        SkillEntity existing = mapper.selectOne(queryWrapper);
         if (existing != null) {
-            mapper.updateById(entity);
-        } else {
-            mapper.insert(entity);
+            entity.setId(existing.getId());
         }
+        mapper.insertOrUpdate(entity);
         return toDomain(entity);
     }
 

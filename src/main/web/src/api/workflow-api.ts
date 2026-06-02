@@ -31,7 +31,7 @@ function buildHeaders(selection: Selection) {
  * 列出工作流
  */
 export async function listWorkflows(selection: Selection): Promise<Workflow[]> {
-  return requestJson<Workflow[]>(`/api/v1/workspaces/${selection.workspaceId}/workflows`, {
+  return requestJson<Workflow[]>(`/api/v1/workspaces/${selection.workspaceId}/dag-workflows`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'GET',
     headers: buildHeaders(selection),
@@ -48,7 +48,7 @@ export async function createWorkflow(
   description: string,
   graphDefinition: string
 ): Promise<Workflow> {
-  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/workflows`, {
+  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/dag-workflows`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'POST',
     headers: buildHeaders(selection),
@@ -67,7 +67,7 @@ export async function createWorkflow(
  * 获取工作流详情
  */
 export async function getWorkflow(selection: Selection, workflowId: string): Promise<Workflow> {
-  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}`, {
+  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'GET',
     headers: buildHeaders(selection),
@@ -84,7 +84,7 @@ export async function updateWorkflow(
   description: string,
   graphDefinition: string
 ): Promise<Workflow> {
-  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}`, {
+  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'PUT',
     headers: buildHeaders(selection),
@@ -102,7 +102,7 @@ export async function updateWorkflow(
  * 删除工作流
  */
 export async function deleteWorkflow(selection: Selection, workflowId: string): Promise<void> {
-  return requestJson<void>(`/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}`, {
+  return requestJson<void>(`/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'DELETE',
     headers: buildHeaders(selection),
@@ -113,7 +113,7 @@ export async function deleteWorkflow(selection: Selection, workflowId: string): 
  * 发布工作流
  */
 export async function publishWorkflow(selection: Selection, workflowId: string): Promise<Workflow> {
-  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/publish`, {
+  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/publish`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'POST',
     headers: buildHeaders(selection),
@@ -124,7 +124,7 @@ export async function publishWorkflow(selection: Selection, workflowId: string):
  * 取消发布工作流
  */
 export async function unpublishWorkflow(selection: Selection, workflowId: string): Promise<Workflow> {
-  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/unpublish`, {
+  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/unpublish`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'POST',
     headers: buildHeaders(selection),
@@ -142,7 +142,7 @@ export async function executeWorkflow(
   input: Record<string, any>
 ): Promise<WorkflowExecution> {
   return requestJson<WorkflowExecution>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/execute`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/execute`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'POST',
@@ -161,7 +161,7 @@ export async function getExecutionResult(
   taskId: string
 ): Promise<WorkflowExecution> {
   return requestJson<WorkflowExecution>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/executions/${taskId}`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/executions/${taskId}`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'GET',
@@ -179,7 +179,7 @@ export async function stopExecution(
   taskId: string
 ): Promise<void> {
   return requestJson<void>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/executions/${taskId}/stop`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/executions/${taskId}/stop`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'POST',
@@ -197,7 +197,7 @@ export async function getExecutionHistory(
   limit: number = 20
 ): Promise<WorkflowExecution[]> {
   return requestJson<WorkflowExecution[]>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/executions`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/executions`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'GET',
@@ -219,7 +219,7 @@ export function createWorkflowEventStream(
   onEvent: (event: SSEEvent) => void,
   onError: (error: Error) => void
 ): EventSource {
-  const url = `${runtimeConfig.agentApiBase}/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/executions/${taskId}/events`
+  const url = `${runtimeConfig.agentApiBase}/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/executions/${taskId}/events`
   
   const eventSource = new EventSource(url, {
     withCredentials: true
@@ -265,7 +265,7 @@ export async function createDebugSession(
   input: Record<string, any>
 ): Promise<DebugSession> {
   return requestJson<DebugSession>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/debug`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/debug`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'POST',
@@ -284,7 +284,7 @@ export async function stepDebug(
   sessionId: string
 ): Promise<NodeResult> {
   return requestJson<NodeResult>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/debug/${sessionId}/step`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/debug/${sessionId}/step`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'POST',
@@ -302,7 +302,7 @@ export async function continueDebug(
   sessionId: string
 ): Promise<WorkflowExecution> {
   return requestJson<WorkflowExecution>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/debug/${sessionId}/continue`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/debug/${sessionId}/continue`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'POST',
@@ -321,7 +321,7 @@ export async function setBreakpoints(
   nodeIds: string[]
 ): Promise<DebugSession> {
   return requestJson<DebugSession>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/debug/${sessionId}/breakpoints`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/debug/${sessionId}/breakpoints`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'POST',
@@ -340,7 +340,7 @@ export async function getDebugVariables(
   sessionId: string
 ): Promise<Record<string, any>> {
   return requestJson<Record<string, any>>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/debug/${sessionId}/variables`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/debug/${sessionId}/variables`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'GET',
@@ -358,7 +358,7 @@ export async function endDebugSession(
   sessionId: string
 ): Promise<void> {
   return requestJson<void>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/debug/${sessionId}`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/debug/${sessionId}`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'DELETE',
@@ -400,7 +400,7 @@ export async function validateWorkflow(
   graph: WorkflowGraph
 ): Promise<ValidationResult> {
   return requestJson<ValidationResult>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/validate`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/validate`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'POST',

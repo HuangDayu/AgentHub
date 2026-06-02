@@ -124,7 +124,7 @@ async function handleSave(graphData: WorkflowGraph) {
       workflowStore.setWorkflowInfo(newWf.id, newWf.name, newWf.description)
       
       // 更新URL
-      router.replace(`/agenthub/workflows/${newWf.id}`)
+      router.replace(`/agenthub/dag-workflows/${newWf.id}`)
     } catch (err) {
       console.error('创建工作流失败:', err)
     }
@@ -147,7 +147,7 @@ async function handleSave(graphData: WorkflowGraph) {
 }
 
 function goBack() {
-  router.push('/agenthub/workflows')
+  router.push('/agenthub/dag-workflows')
 }
 </script>
 

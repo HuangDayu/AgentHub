@@ -442,19 +442,19 @@ files: @文档1.pdf, @文档2.docx
 
 ## 9. 工作流 API
 
-基础路径：`/api/v1/workspaces/{workspaceId}/workflows`
+基础路径：`/api/v1/workspaces/{workspaceId}/dag-workflows`
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `.../workflows` | 查询工作流列表 |
-| POST | `.../workflows` | 创建工作流 |
-| GET | `.../workflows/{workflowId}` | 获取工作流详情 |
-| PUT | `.../workflows/{workflowId}` | 更新工作流 |
-| DELETE | `.../workflows/{workflowId}` | 删除工作流 |
-| POST | `.../workflows/{workflowId}/publish` | 发布工作流 |
-| POST | `.../workflows/{workflowId}/unpublish` | 取消发布工作流 |
+| GET | `.../dag-workflows` | 查询工作流列表 |
+| POST | `.../dag-workflows` | 创建工作流 |
+| GET | `.../dag-workflows/{workflowId}` | 获取工作流详情 |
+| PUT | `.../dag-workflows/{workflowId}` | 更新工作流 |
+| DELETE | `.../dag-workflows/{workflowId}` | 删除工作流 |
+| POST | `.../dag-workflows/{workflowId}/publish` | 发布工作流 |
+| POST | `.../dag-workflows/{workflowId}/unpublish` | 取消发布工作流 |
 
-### POST /api/v1/workspaces/{workspaceId}/workflows
+### POST /api/v1/workspaces/{workspaceId}/dag-workflows
 
 创建工作流。
 

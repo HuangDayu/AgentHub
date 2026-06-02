@@ -1,6 +1,6 @@
 -- =========================================================
 -- AgentHub - Auto-generated Schema
--- Generated: 2026-05-25T06:29:54.734494600Z
+-- Generated: 2026-06-02T08:47:53.057982900Z
 -- Source: MyBatis-Plus Entity Classes
 -- =========================================================
 
@@ -12,8 +12,7 @@ SET search_path TO app, public;
 -- Drop existing tables (dependency order)
 -- =========================================================
 -- DROP TABLE IF EXISTS workspace CASCADE;
--- DROP TABLE IF EXISTS workflow_execution CASCADE;
--- DROP TABLE IF EXISTS workflow CASCADE;
+-- DROP TABLE IF EXISTS workflow_stage CASCADE;
 -- DROP TABLE IF EXISTS vector_store_config CASCADE;
 -- DROP TABLE IF EXISTS user_input_requests CASCADE;
 -- DROP TABLE IF EXISTS traces CASCADE;
@@ -21,7 +20,11 @@ SET search_path TO app, public;
 -- DROP TABLE IF EXISTS tool_policy CASCADE;
 -- DROP TABLE IF EXISTS tenant CASCADE;
 -- DROP TABLE IF EXISTS system_tools CASCADE;
+-- DROP TABLE IF EXISTS subsession CASCADE;
+-- DROP TABLE IF EXISTS subagent CASCADE;
 -- DROP TABLE IF EXISTS spans CASCADE;
+-- DROP TABLE IF EXISTS skill_file CASCADE;
+-- DROP TABLE IF EXISTS skill_config CASCADE;
 -- DROP TABLE IF EXISTS skill CASCADE;
 -- DROP TABLE IF EXISTS session CASCADE;
 -- DROP TABLE IF EXISTS scheduled_task CASCADE;
@@ -35,17 +38,28 @@ SET search_path TO app, public;
 -- DROP TABLE IF EXISTS message_pushes CASCADE;
 -- DROP TABLE IF EXISTS memory CASCADE;
 -- DROP TABLE IF EXISTS mcp_tool CASCADE;
+-- DROP TABLE IF EXISTS kv_zset CASCADE;
+-- DROP TABLE IF EXISTS kv_store CASCADE;
+-- DROP TABLE IF EXISTS kv_set CASCADE;
+-- DROP TABLE IF EXISTS kv_list CASCADE;
+-- DROP TABLE IF EXISTS kv_hash CASCADE;
 -- DROP TABLE IF EXISTS knowledge_base CASCADE;
 -- DROP TABLE IF EXISTS ingestion_job CASCADE;
 -- DROP TABLE IF EXISTS ingestion_document CASCADE;
 -- DROP TABLE IF EXISTS iam_refresh_token_session CASCADE;
 -- DROP TABLE IF EXISTS http_tools CASCADE;
 -- DROP TABLE IF EXISTS guardrail_policy CASCADE;
+-- DROP TABLE IF EXISTS dynamic_workflow CASCADE;
 -- DROP TABLE IF EXISTS document_chunk CASCADE;
+-- DROP TABLE IF EXISTS dag_workflow_execution CASCADE;
+-- DROP TABLE IF EXISTS dag_workflow CASCADE;
 -- DROP TABLE IF EXISTS chat_message CASCADE;
 -- DROP TABLE IF EXISTS app_user CASCADE;
 -- DROP TABLE IF EXISTS alerts CASCADE;
 -- DROP TABLE IF EXISTS agent_team CASCADE;
+-- DROP TABLE IF EXISTS agent_task CASCADE;
+-- DROP TABLE IF EXISTS agent_plan_step CASCADE;
+-- DROP TABLE IF EXISTS agent_execution_plan CASCADE;
 -- DROP TABLE IF EXISTS agent_config CASCADE;
 -- DROP TABLE IF EXISTS agent CASCADE;
 
@@ -85,6 +99,58 @@ CREATE TABLE IF NOT EXISTS agent_config
     enabled     boolean,
     created_at  timestamptz,
     updated_at  timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: agent_execution_plan
+CREATE TABLE IF NOT EXISTS agent_execution_plan
+(
+    id                 varchar(64) NOT NULL,
+    agent_id           varchar(255),
+    session_id         varchar(255),
+    goal               varchar(255),
+    status             varchar(255),
+    current_step_index integer,
+    result             varchar(255),
+    created_at         timestamptz,
+    updated_at         timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: agent_plan_step
+CREATE TABLE IF NOT EXISTS agent_plan_step
+(
+    id            varchar(64) NOT NULL,
+    plan_id       varchar(255),
+    step_order    integer,
+    description   text,
+    tool_name     varchar(255),
+    tool_input    varchar(255),
+    status        varchar(255),
+    output        varchar(255),
+    subagent_id   varchar(255),
+    subsession_id varchar(255),
+    depends_on    varchar(255),
+    created_at    timestamptz,
+    updated_at    timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: agent_task
+CREATE TABLE IF NOT EXISTS agent_task
+(
+    id               varchar(64) NOT NULL,
+    stage_id         varchar(255),
+    workflow_id      varchar(255),
+    task_description text,
+    subagent_id      varchar(255),
+    subsession_id    varchar(255),
+    status           varchar(255),
+    result           varchar(255),
+    model_config_id  varchar(255),
+    tool_names       varchar(255),
+    created_at       timestamptz,
+    updated_at       timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -153,6 +219,42 @@ CREATE TABLE IF NOT EXISTS chat_message
     PRIMARY KEY (id)
 );
 
+-- Table: dag_workflow
+CREATE TABLE IF NOT EXISTS dag_workflow
+(
+    id               varchar(64) NOT NULL,
+    tenant_id        varchar(255),
+    workspace_id     varchar(255),
+    workflow_code    varchar(255),
+    name             varchar(255),
+    description      text,
+    graph_definition text,
+    status           varchar(255),
+    created_at       timestamptz,
+    updated_at       timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: dag_workflow_execution
+CREATE TABLE IF NOT EXISTS dag_workflow_execution
+(
+    id           varchar(64) NOT NULL,
+    workflow_id  varchar(255),
+    tenant_id    varchar(255),
+    workspace_id varchar(255),
+    execution_id varchar(255),
+    status       varchar(255),
+    input        varchar(255),
+    output       varchar(255),
+    error_info   varchar(255),
+    start_time   timestamptz,
+    end_time     timestamptz,
+    duration     bigint,
+    created_at   timestamptz,
+    updated_at   timestamptz,
+    PRIMARY KEY (id)
+);
+
 -- Table: document_chunk
 CREATE TABLE IF NOT EXISTS document_chunk
 (
@@ -162,6 +264,23 @@ CREATE TABLE IF NOT EXISTS document_chunk
     kb_id       varchar(255),
     chunk_index integer,
     token_count integer,
+    PRIMARY KEY (id)
+);
+
+-- Table: dynamic_workflow
+CREATE TABLE IF NOT EXISTS dynamic_workflow
+(
+    id                    varchar(64) NOT NULL,
+    agent_id              varchar(255),
+    session_id            varchar(255),
+    task                  varchar(255),
+    pattern               varchar(255),
+    status                varchar(255),
+    result                varchar(255),
+    max_concurrent_agents integer,
+    total_tokens_used     integer,
+    created_at            timestamptz,
+    updated_at            timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -269,6 +388,53 @@ CREATE TABLE IF NOT EXISTS knowledge_base
     PRIMARY KEY (id)
 );
 
+-- Table: kv_hash
+CREATE TABLE IF NOT EXISTS kv_hash
+(
+    kv_key   varchar(255) NOT NULL,
+    field    varchar(255),
+    kv_value varchar(255),
+    PRIMARY KEY (kv_key)
+);
+
+-- Table: kv_list
+CREATE TABLE IF NOT EXISTS kv_list
+(
+    kv_key     varchar(255) NOT NULL,
+    list_index bigint,
+    kv_value   varchar(255),
+    PRIMARY KEY (kv_key)
+);
+
+-- Table: kv_set
+CREATE TABLE IF NOT EXISTS kv_set
+(
+    kv_key varchar(255) NOT NULL,
+    member varchar(255),
+    PRIMARY KEY (kv_key)
+);
+
+-- Table: kv_store
+CREATE TABLE IF NOT EXISTS kv_store
+(
+    kv_key      varchar(255) NOT NULL,
+    kv_value    varchar(255),
+    kv_type     varchar(255),
+    expire_time bigint,
+    created_at  timestamptz,
+    updated_at  timestamptz,
+    PRIMARY KEY (kv_key)
+);
+
+-- Table: kv_zset
+CREATE TABLE IF NOT EXISTS kv_zset
+(
+    kv_key varchar(255) NOT NULL,
+    member varchar(255),
+    score  double precision,
+    PRIMARY KEY (kv_key)
+);
+
 -- Table: mcp_tool
 CREATE TABLE IF NOT EXISTS mcp_tool
 (
@@ -315,7 +481,7 @@ CREATE TABLE IF NOT EXISTS message_pushes
     run_id     varchar(255),
     role       varchar(255),
     content    text,
-    metadata   varchar(255),
+    metadata   text,
     timestamp  timestamptz,
     created_at timestamptz,
     PRIMARY KEY (id)
@@ -407,7 +573,7 @@ CREATE TABLE IF NOT EXISTS prompt_template
     category     varchar(255),
     content      text,
     variables    varchar(255),
-    is_active    boolean,
+    active       boolean,
     created_at   timestamptz,
     updated_at   timestamptz,
     PRIMARY KEY (id)
@@ -467,6 +633,9 @@ CREATE TABLE IF NOT EXISTS scheduled_task
     last_execute_time timestamptz,
     next_execute_time timestamptz,
     status            varchar(255),
+    agent_id          varchar(255),
+    last_run_result   text,
+    run_count         integer,
     created_at        timestamptz,
     updated_at        timestamptz,
     created_by        varchar(255),
@@ -498,9 +667,57 @@ CREATE TABLE IF NOT EXISTS skill
     skill_type       varchar(255),
     skill_path       text,
     skill_files_tree text,
+    source           varchar(255),
+    source_path      text,
+    zip_storage_path text,
+    config_id        varchar(255),
+    file_count       integer,
+    total_size       bigint,
     enabled          boolean,
     created_at       timestamptz,
     updated_at       timestamptz,
+    last_sync_at     timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: skill_config
+CREATE TABLE IF NOT EXISTS skill_config
+(
+    id            varchar(64) NOT NULL,
+    tenant_id     varchar(255),
+    workspace_id  varchar(255),
+    name          varchar(255),
+    description   text,
+    skill_paths   text,
+    sync_enabled  boolean,
+    sync_interval integer,
+    auto_sync     boolean,
+    enabled       boolean,
+    created_at    timestamptz,
+    updated_at    timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: skill_file
+CREATE TABLE IF NOT EXISTS skill_file
+(
+    id           varchar(64) NOT NULL,
+    skill_id     varchar(255),
+    tenant_id    varchar(255),
+    workspace_id varchar(255),
+    file_path    varchar(255),
+    file_name    varchar(255),
+    file_ext     varchar(255),
+    file_size    bigint,
+    file_type    varchar(255),
+    encoding     varchar(255),
+    storage_path varchar(255),
+    checksum     varchar(255),
+    is_directory boolean,
+    metadata     text,
+    version      integer,
+    created_at   timestamptz,
+    updated_at   timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -524,9 +741,9 @@ CREATE TABLE IF NOT EXISTS spans
     resource             text,
     scope                text,
     model                varchar(255),
-    input_tokens         integer,
-    output_tokens        integer,
-    total_tokens         integer,
+    input_tokens         bigint,
+    output_tokens        bigint,
+    total_tokens         bigint,
     conversation_id      varchar(255),
     operation_name       varchar(255),
     service_name         varchar(255),
@@ -540,6 +757,36 @@ CREATE TABLE IF NOT EXISTS spans
     tenant_id            varchar(255),
     workspace_id         varchar(255),
     created_at           timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: subagent
+CREATE TABLE IF NOT EXISTS subagent
+(
+    id              varchar(64) NOT NULL,
+    tenant_id       varchar(255),
+    workspace_id    varchar(255),
+    parent_agent_id varchar(255),
+    name            varchar(255),
+    description     text,
+    system_prompt   varchar(255),
+    model_config_id varchar(255),
+    status          varchar(255),
+    created_at      timestamptz,
+    updated_at      timestamptz,
+    PRIMARY KEY (id)
+);
+
+-- Table: subsession
+CREATE TABLE IF NOT EXISTS subsession
+(
+    id                varchar(64) NOT NULL,
+    parent_session_id varchar(255),
+    subagent_id       varchar(255),
+    name              varchar(255),
+    status            varchar(255),
+    created_at        timestamptz,
+    updated_at        timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -618,7 +865,7 @@ CREATE TABLE IF NOT EXISTS traces
     duration_ns          bigint,
     status_code          integer,
     error_message        varchar(255),
-    total_tokens         integer,
+    total_tokens         bigint,
     tenant_id            varchar(255),
     workspace_id         varchar(255),
     created_at           timestamptz,
@@ -657,39 +904,23 @@ CREATE TABLE IF NOT EXISTS vector_store_config
     PRIMARY KEY (id)
 );
 
--- Table: workflow
-CREATE TABLE IF NOT EXISTS workflow
+-- Table: workflow_stage
+CREATE TABLE IF NOT EXISTS workflow_stage
 (
-    id               varchar(64) NOT NULL,
-    tenant_id        varchar(255),
-    workspace_id     varchar(255),
-    workflow_code    varchar(255),
-    name             varchar(255),
-    description      text,
-    graph_definition varchar(255),
-    status           varchar(255),
-    created_at       timestamptz,
-    updated_at       timestamptz,
-    PRIMARY KEY (id)
-);
-
--- Table: workflow_execution
-CREATE TABLE IF NOT EXISTS workflow_execution
-(
-    id           varchar(64) NOT NULL,
-    workflow_id  varchar(255),
-    tenant_id    varchar(255),
-    workspace_id varchar(255),
-    execution_id varchar(255),
-    status       varchar(255),
-    input        varchar(255),
-    output       varchar(255),
-    error_info   varchar(255),
-    start_time   timestamptz,
-    end_time     timestamptz,
-    duration     bigint,
-    created_at   timestamptz,
-    updated_at   timestamptz,
+    id                   varchar(64) NOT NULL,
+    workflow_id          varchar(255),
+    stage_order          integer,
+    name                 varchar(255),
+    stage_type           varchar(255),
+    system_prompt        varchar(255),
+    task_template        varchar(255),
+    depends_on           varchar(255),
+    status               varchar(255),
+    output               varchar(255),
+    completed_task_count integer,
+    total_task_count     integer,
+    created_at           timestamptz,
+    updated_at           timestamptz,
     PRIMARY KEY (id)
 );
 
@@ -717,6 +948,19 @@ CREATE INDEX IF NOT EXISTS idx_agent_workspace_id ON agent (workspace_id);
 CREATE INDEX IF NOT EXISTS idx_agent_config_agent_id ON agent_config (agent_id);
 CREATE INDEX IF NOT EXISTS idx_agent_config_config_id ON agent_config (config_id);
 
+CREATE INDEX IF NOT EXISTS idx_agent_execution_plan_agent_id ON agent_execution_plan (agent_id);
+CREATE INDEX IF NOT EXISTS idx_agent_execution_plan_session_id ON agent_execution_plan (session_id);
+
+CREATE INDEX IF NOT EXISTS idx_agent_plan_step_plan_id ON agent_plan_step (plan_id);
+CREATE INDEX IF NOT EXISTS idx_agent_plan_step_subagent_id ON agent_plan_step (subagent_id);
+CREATE INDEX IF NOT EXISTS idx_agent_plan_step_subsession_id ON agent_plan_step (subsession_id);
+
+CREATE INDEX IF NOT EXISTS idx_agent_task_stage_id ON agent_task (stage_id);
+CREATE INDEX IF NOT EXISTS idx_agent_task_workflow_id ON agent_task (workflow_id);
+CREATE INDEX IF NOT EXISTS idx_agent_task_subagent_id ON agent_task (subagent_id);
+CREATE INDEX IF NOT EXISTS idx_agent_task_subsession_id ON agent_task (subsession_id);
+CREATE INDEX IF NOT EXISTS idx_agent_task_model_config_id ON agent_task (model_config_id);
+
 CREATE INDEX IF NOT EXISTS idx_agent_team_tenant_id ON agent_team (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_agent_team_workspace_id ON agent_team (workspace_id);
 
@@ -730,9 +974,20 @@ CREATE INDEX IF NOT EXISTS idx_app_user_tenant_id ON app_user (tenant_id);
 
 CREATE INDEX IF NOT EXISTS idx_chat_message_session_id ON chat_message (session_id);
 
+CREATE INDEX IF NOT EXISTS idx_dag_workflow_tenant_id ON dag_workflow (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_dag_workflow_workspace_id ON dag_workflow (workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_dag_workflow_execution_workflow_id ON dag_workflow_execution (workflow_id);
+CREATE INDEX IF NOT EXISTS idx_dag_workflow_execution_tenant_id ON dag_workflow_execution (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_dag_workflow_execution_workspace_id ON dag_workflow_execution (workspace_id);
+CREATE INDEX IF NOT EXISTS idx_dag_workflow_execution_execution_id ON dag_workflow_execution (execution_id);
+
 CREATE INDEX IF NOT EXISTS idx_document_chunk_chunk_id ON document_chunk (chunk_id);
 CREATE INDEX IF NOT EXISTS idx_document_chunk_document_id ON document_chunk (document_id);
 CREATE INDEX IF NOT EXISTS idx_document_chunk_kb_id ON document_chunk (kb_id);
+
+CREATE INDEX IF NOT EXISTS idx_dynamic_workflow_agent_id ON dynamic_workflow (agent_id);
+CREATE INDEX IF NOT EXISTS idx_dynamic_workflow_session_id ON dynamic_workflow (session_id);
 
 CREATE INDEX IF NOT EXISTS idx_guardrail_policy_tenant_id ON guardrail_policy (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_guardrail_policy_workspace_id ON guardrail_policy (workspace_id);
@@ -788,6 +1043,7 @@ CREATE INDEX IF NOT EXISTS idx_retrieval_policy_workspace_id ON retrieval_policy
 
 CREATE INDEX IF NOT EXISTS idx_scheduled_task_tenant_id ON scheduled_task (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_scheduled_task_workspace_id ON scheduled_task (workspace_id);
+CREATE INDEX IF NOT EXISTS idx_scheduled_task_agent_id ON scheduled_task (agent_id);
 
 CREATE INDEX IF NOT EXISTS idx_session_agent_id ON session (agent_id);
 CREATE INDEX IF NOT EXISTS idx_session_tenant_id ON session (tenant_id);
@@ -795,6 +1051,14 @@ CREATE INDEX IF NOT EXISTS idx_session_workspace_id ON session (workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_skill_tenant_id ON skill (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_skill_workspace_id ON skill (workspace_id);
+CREATE INDEX IF NOT EXISTS idx_skill_config_id ON skill (config_id);
+
+CREATE INDEX IF NOT EXISTS idx_skill_config_tenant_id ON skill_config (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_skill_config_workspace_id ON skill_config (workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_skill_file_skill_id ON skill_file (skill_id);
+CREATE INDEX IF NOT EXISTS idx_skill_file_tenant_id ON skill_file (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_skill_file_workspace_id ON skill_file (workspace_id);
 
 CREATE INDEX IF NOT EXISTS idx_spans_span_id ON spans (span_id);
 CREATE INDEX IF NOT EXISTS idx_spans_trace_id ON spans (trace_id);
@@ -804,6 +1068,14 @@ CREATE INDEX IF NOT EXISTS idx_spans_run_id ON spans (run_id);
 CREATE INDEX IF NOT EXISTS idx_spans_agent_id ON spans (agent_id);
 CREATE INDEX IF NOT EXISTS idx_spans_tenant_id ON spans (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_spans_workspace_id ON spans (workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_subagent_tenant_id ON subagent (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_subagent_workspace_id ON subagent (workspace_id);
+CREATE INDEX IF NOT EXISTS idx_subagent_parent_agent_id ON subagent (parent_agent_id);
+CREATE INDEX IF NOT EXISTS idx_subagent_model_config_id ON subagent (model_config_id);
+
+CREATE INDEX IF NOT EXISTS idx_subsession_parent_session_id ON subsession (parent_session_id);
+CREATE INDEX IF NOT EXISTS idx_subsession_subagent_id ON subsession (subagent_id);
 
 CREATE INDEX IF NOT EXISTS idx_system_tools_tenant_id ON system_tools (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_system_tools_workspace_id ON system_tools (workspace_id);
@@ -827,54 +1099,7 @@ CREATE INDEX IF NOT EXISTS idx_user_input_requests_agent_id ON user_input_reques
 CREATE INDEX IF NOT EXISTS idx_vector_store_config_tenant_id ON vector_store_config (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_vector_store_config_workspace_id ON vector_store_config (workspace_id);
 
-CREATE INDEX IF NOT EXISTS idx_workflow_tenant_id ON workflow (tenant_id);
-CREATE INDEX IF NOT EXISTS idx_workflow_workspace_id ON workflow (workspace_id);
-
-CREATE INDEX IF NOT EXISTS idx_workflow_execution_workflow_id ON workflow_execution (workflow_id);
-CREATE INDEX IF NOT EXISTS idx_workflow_execution_tenant_id ON workflow_execution (tenant_id);
-CREATE INDEX IF NOT EXISTS idx_workflow_execution_workspace_id ON workflow_execution (workspace_id);
-CREATE INDEX IF NOT EXISTS idx_workflow_execution_execution_id ON workflow_execution (execution_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_stage_workflow_id ON workflow_stage (workflow_id);
 
 CREATE INDEX IF NOT EXISTS idx_workspace_tenant_id ON workspace (tenant_id);
-
--- =========================================================
--- Table: subagent
--- =========================================================
-CREATE TABLE IF NOT EXISTS subagent
-(
-    id              varchar(64) NOT NULL,
-    tenant_id       varchar(255),
-    workspace_id    varchar(255),
-    parent_agent_id varchar(255),
-    parent_subagent_id varchar(255),
-    name            varchar(255),
-    description     text,
-    system_prompt   text,
-    model_config_id varchar(255),
-    status          varchar(255),
-    created_at      timestamptz,
-    updated_at      timestamptz,
-    PRIMARY KEY (id)
-);
-
-ALTER TABLE subagent ADD COLUMN IF NOT EXISTS parent_subagent_id varchar(255);
-
--- =========================================================
--- Table: subsession
--- =========================================================
-CREATE TABLE IF NOT EXISTS subsession
-(
-    id                 varchar(64) NOT NULL,
-    parent_session_id  varchar(255),
-    subagent_id        varchar(255),
-    name               varchar(255),
-    status             varchar(255),
-    created_at         timestamptz,
-    updated_at         timestamptz,
-    PRIMARY KEY (id)
-);
-
-ALTER TABLE subsession ADD COLUMN IF NOT EXISTS parent_subsession_id varchar(255);
-
-
 

@@ -15,12 +15,7 @@ import java.util.List;
 @Mapper
 public interface SkillFileMybatisMapper extends BaseMapper<SkillFileEntity> {
 
-    /**
-     * 根据 skillId 和路径查找。
-     */
-    @Select("SELECT * FROM skill_file WHERE skill_id = #{skillId} AND file_path = #{filePath}")
-    SkillFileEntity selectBySkillIdAndPath(@Param("skillId") String skillId,
-                                           @Param("filePath") String filePath);
+
 
     /**
      * 根据扩展名查找。

@@ -23,11 +23,11 @@ public class MybatisSkillFileRepository implements SkillFileRepository {
     @Override
     public SkillFile saveOrUpdate(SkillFile file) {
         SkillFileEntity entity = toEntity(file);
-        if (entity.getId() == null) {
-            mapper.insert(entity);
-        } else {
-            mapper.updateById(entity);
+        SkillFileEntity existing = mapper.selectById(entity.getId());
+        if (existing != null) {
+            entity.setId(existing.getId());
         }
+        mapper.insertOrUpdate(entity);
         return toDomain(entity);
     }
 
@@ -42,22 +42,17 @@ public class MybatisSkillFileRepository implements SkillFileRepository {
     }
 
     @Override
-    public Optional<SkillFile> findBySkillIdAndPath(String skillId, String filePath) {
-        return Optional.ofNullable(mapper.selectBySkillIdAndPath(skillId, filePath))
+    public Optional<SkillFile> findBySkillIdAndFileId(String skillId, String fileId) {
+        return Optional.ofNullable(mapper.selectById(fileId))
                 .map(this::toDomain);
-    }
-
-    @Override
-    public Optional<SkillFile> findBySkillIdAndFilePath(String skillId, String filePath) {
-        return findBySkillIdAndPath(skillId, filePath);
     }
 
     @Override
     public List<SkillFile> findBySkillId(String skillId) {
         return mapper.selectList(
-                new LambdaQueryWrapper<SkillFileEntity>()
-                        .eq(SkillFileEntity::getSkillId, skillId)
-                        .orderByAsc(SkillFileEntity::getFilePath))
+                        new LambdaQueryWrapper<SkillFileEntity>()
+                                .eq(SkillFileEntity::getSkillId, skillId)
+                                .orderByAsc(SkillFileEntity::getFilePath))
                 .stream().map(this::toDomain).toList();
     }
 
@@ -85,17 +80,13 @@ public class MybatisSkillFileRepository implements SkillFileRepository {
     }
 
     @Override
-    public void deleteBySkillIdAndPath(String skillId, String filePath) {
+    public void deleteBySkillIdAndFileId(String skillId, String filePath) {
         mapper.delete(
                 new LambdaQueryWrapper<SkillFileEntity>()
                         .eq(SkillFileEntity::getSkillId, skillId)
                         .eq(SkillFileEntity::getFilePath, filePath));
     }
 
-    @Override
-    public void deleteBySkillIdAndFilePath(String skillId, String filePath) {
-        deleteBySkillIdAndPath(skillId, filePath);
-    }
 
     @Override
     public FileStats getStats(String skillId) {

@@ -799,7 +799,7 @@ export function useWorkflowExecution() {
     const executionId = await initExecution()
     
     eventSource = new EventSource(
-      `/api/v1/workflows/${workflowId}/executions/${executionId}/stream`
+      `/api/v1/dag-workflows/${workflowId}/executions/${executionId}/stream`
     )
     
     eventSource.addEventListener('node_start', (event) => {
@@ -858,7 +858,7 @@ export interface Workflow {
 }
 
 export async function listWorkflows(selection: Selection): Promise<Workflow[]> {
-  return requestJson<Workflow[]>(`/api/v1/workspaces/${selection.workspaceId}/workflows`, {
+  return requestJson<Workflow[]>(`/api/v1/workspaces/${selection.workspaceId}/dag-workflows`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'GET',
     headers: buildHeaders(selection),
@@ -869,7 +869,7 @@ export async function createWorkflow(
   selection: Selection,
   workflow: CreateWorkflowRequest
 ): Promise<Workflow> {
-  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/workflows`, {
+  return requestJson<Workflow>(`/api/v1/workspaces/${selection.workspaceId}/dag-workflows`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'POST',
     headers: buildHeaders(selection),
@@ -883,7 +883,7 @@ export async function executeWorkflow(
   input: Record<string, any>
 ): Promise<string> {
   return requestJson<string>(
-    `/api/v1/workspaces/${selection.workspaceId}/workflows/${workflowId}/execute`,
+    `/api/v1/workspaces/${selection.workspaceId}/dag-workflows/${workflowId}/execute`,
     {
       baseUrl: runtimeConfig.agentApiBase,
       method: 'POST',

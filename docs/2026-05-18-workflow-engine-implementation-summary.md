@@ -272,22 +272,22 @@
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | /api/v1/workspaces/{workspaceId}/workflows | 创建工作流 |
-| GET | /api/v1/workspaces/{workspaceId}/workflows | 列出工作流 |
-| GET | /api/v1/workspaces/{workspaceId}/workflows/{workflowId} | 获取工作流 |
-| PUT | /api/v1/workspaces/{workspaceId}/workflows/{workflowId} | 更新工作流 |
-| DELETE | /api/v1/workspaces/{workspaceId}/workflows/{workflowId} | 删除工作流 |
-| POST | /api/v1/workspaces/{workspaceId}/workflows/{workflowId}/publish | 发布工作流 |
-| POST | /api/v1/workspaces/{workspaceId}/workflows/{workflowId}/unpublish | 取消发布 |
+| POST | /api/v1/workspaces/{workspaceId}/dag-workflows | 创建工作流 |
+| GET | /api/v1/workspaces/{workspaceId}/dag-workflows | 列出工作流 |
+| GET | /api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId} | 获取工作流 |
+| PUT | /api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId} | 更新工作流 |
+| DELETE | /api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId} | 删除工作流 |
+| POST | /api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/publish | 发布工作流 |
+| POST | /api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/unpublish | 取消发布 |
 
 ### 6.2 工作流执行接口
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | /api/v1/workspaces/{workspaceId}/workflows/{workflowId}/execute | 执行工作流 |
-| GET | /api/v1/workspaces/{workspaceId}/workflows/{workflowId}/executions/{executionId}/stream | SSE事件流 |
-| POST | /api/v1/workspaces/{workspaceId}/workflows/{workflowId}/executions/{executionId}/stop | 停止执行 |
-| GET | /api/v1/workspaces/{workspaceId}/workflows/{workflowId}/executions/{executionId} | 获取执行结果 |
+| POST | /api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/execute | 执行工作流 |
+| GET | /api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/executions/{executionId}/stream | SSE事件流 |
+| POST | /api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/executions/{executionId}/stop | 停止执行 |
+| GET | /api/v1/workspaces/{workspaceId}/dag-workflows/{workflowId}/executions/{executionId} | 获取执行结果 |
 
 ## 七、依赖项
 

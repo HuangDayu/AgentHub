@@ -6,11 +6,13 @@ import com.agenthub.application.port.out.repositories.SkillFileRepository;
 import com.agenthub.domain.model.skill.SkillFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tika.Tika;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 技能文件用例。
@@ -19,6 +21,15 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class SkillFileUseCase {
+
+    private static final Tika TIKA = new Tika();
+    private static final Set<String> BINARY_EXTENSIONS = Set.of(
+            "png", "jpg", "jpeg", "gif", "bmp", "ico", "webp",
+            "mp3", "mp4", "avi", "mov", "wav", "flac",
+            "zip", "tar", "gz", "rar", "7z",
+            "exe", "dll", "so", "class",
+            "woff", "woff2", "ttf", "otf", "eot"
+    );
 
     private final SkillFileRepository skillFileRepository;
     private final DocumentFileStoragePort documentFileStoragePort;
@@ -35,28 +46,39 @@ public class SkillFileUseCase {
     /**
      * 获取文件元数据。
      */
-    public Optional<SkillFileOutput> getFile(String skillId, String filePath) {
-        return skillFileRepository.findBySkillIdAndFilePath(skillId, filePath)
+    public Optional<SkillFileOutput> getFile(String skillId, String fileId) {
+        return skillFileRepository.findBySkillIdAndFileId(skillId, fileId)
                 .map(this::toOutput);
     }
 
     /**
-     * 获取文件内容。
+     * 获取文件文本内容。二进制文件返回提示信息。
      */
-    public InputStream getFileContent(String skillId, String filePath) {
-        SkillFile file = skillFileRepository.findBySkillIdAndFilePath(skillId, filePath)
-                .orElseThrow(() -> new RuntimeException("File not found: " + filePath));
-        return documentFileStoragePort.retrieve(file.getStoragePath());
+    public String getFileContent(String skillId, String fileId) {
+        SkillFile file = skillFileRepository.findBySkillIdAndFileId(skillId, fileId)
+                .orElseThrow(() -> new RuntimeException("File not found: " + fileId));
+
+        String ext = file.getFileExt() != null ? file.getFileExt().toLowerCase() : "";
+        if (BINARY_EXTENSIONS.contains(ext)) {
+            return "[二进制文件: " + file.getFileName() + "]";
+        }
+
+        try (InputStream is = documentFileStoragePort.retrieve(file.getStoragePath())) {
+            return TIKA.parseToString(is);
+        } catch (Exception e) {
+            log.warn("读取文件内容失败: {}", file.getStoragePath(), e);
+            return "[读取失败: " + e.getMessage() + "]";
+        }
     }
 
     /**
      * 删除文件。
      */
-    public void deleteFile(String skillId, String filePath) {
-        SkillFile file = skillFileRepository.findBySkillIdAndFilePath(skillId, filePath)
-                .orElseThrow(() -> new RuntimeException("File not found: " + filePath));
+    public void deleteFile(String skillId, String fileId) {
+        SkillFile file = skillFileRepository.findBySkillIdAndFileId(skillId, fileId)
+                .orElseThrow(() -> new RuntimeException("File not found: " + fileId));
         documentFileStoragePort.delete(file.getStoragePath());
-        skillFileRepository.deleteBySkillIdAndFilePath(skillId, filePath);
+        skillFileRepository.deleteBySkillIdAndFileId(skillId, fileId);
     }
 
     /**

@@ -4,6 +4,7 @@ import com.agenthub.api.dto.CreateSkillConfigRequest;
 import com.agenthub.application.command.CreateSkillConfigCommand;
 import com.agenthub.application.dto.SkillConfigOutput;
 import com.agenthub.application.usecase.SkillConfigUseCase;
+import com.agenthub.application.usecase.SkillUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.util.List;
 public class SkillConfigController {
 
     private final SkillConfigUseCase useCase;
+    private final SkillUseCase skillUseCase;
 
     /**
      * 创建配置。
@@ -78,6 +80,15 @@ public class SkillConfigController {
                                         @PathVariable String configId,
                                         @RequestParam String path) {
         return useCase.removeSkillPath(configId, path);
+    }
+
+    /**
+     * 按配置同步技能。
+     */
+    @PostMapping("/{configId}/sync")
+    public void syncWithConfig(@PathVariable String workspaceId,
+                               @PathVariable String configId) {
+        skillUseCase.syncWithConfig(configId);
     }
 
     /**

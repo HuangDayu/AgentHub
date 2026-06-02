@@ -251,7 +251,7 @@ AgentHub 提供 RESTful API，统一前缀为 `/api/v1`，按功能模块划分�
 | Agent 团队 | `/api/v1/workspaces/{wsId}/teams` | 多 Agent 团队管理 |
 | 会话 | `/api/v1/workspaces/{wsId}/agents/{id}/sessions` | 会话创建、消息发送（含 SSE 流式） |
 | 知识库 | `/api/v1/workspaces/{wsId}/knowledge-bases` | 知识库 CRUD、文档管理、检索 |
-| 工作流 | `/api/v1/workspaces/{wsId}/workflows` | 工作流定义与编排 |
+| 工作流 | `/api/v1/workspaces/{wsId}/dag-workflows` | 工作流定义与编排 |
 | 模型配置 | `/api/v1/workspaces/{wsId}/model-configs` | AI 模型配置管理 |
 | 记忆 | `/api/v1/workspaces/{wsId}/agents/{id}/memories` | Agent 记忆管理 |
 | 向量存储 | `/api/v1/workspaces/{wsId}/vector-store-configs` | 向量数据库配置 |

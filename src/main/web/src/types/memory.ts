@@ -21,9 +21,51 @@ export interface Skill {
   name: string
   description: string
   skillType: string
-  definition: string
-  parameters: string
+  skillPath: string
+  skillFilesTree: string
+  source: string
+  sourcePath: string
+  zipStoragePath: string
+  configId: string
+  fileCount: number
+  totalSize: number
   enabled: boolean
+  createdAt: string
+  updatedAt: string
+  lastSyncAt: string
+}
+
+export interface SkillConfig {
+  id: string
+  tenantId: string
+  workspaceId: string
+  name: string
+  description: string
+  skillPaths: string[]
+  syncEnabled: boolean
+  syncInterval: number
+  autoSync: boolean
+  enabled: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SkillFile {
+  id: string
+  skillId: string
+  tenantId: string
+  workspaceId: string
+  filePath: string
+  fileName: string
+  fileExt: string
+  fileSize: number
+  fileType: string
+  encoding: string
+  storagePath: string
+  checksum: string
+  isDirectory: boolean
+  metadata: string
+  version: number
   createdAt: string
   updatedAt: string
 }

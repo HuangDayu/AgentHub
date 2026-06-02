@@ -1129,42 +1129,42 @@ export const workflowApi = {
     pageSize?: number
     name?: string
   }): Promise<WorkflowListResponse> => {
-    return http.get('/api/workflows', { params })
+    return http.get('/api/dag-workflows', { params })
   },
   
   // 获取详情
   get: async (id: string): Promise<Workflow> => {
-    return http.get(`/api/workflows/${id}`)
+    return http.get(`/api/dag-workflows/${id}`)
   },
   
   // 创建
   create: async (data: WorkflowCreateRequest): Promise<Workflow> => {
-    return http.post('/api/workflows', data)
+    return http.post('/api/dag-workflows', data)
   },
   
   // 更新
   update: async (id: string, data: WorkflowUpdateRequest): Promise<Workflow> => {
-    return http.put(`/api/workflows/${id}`, data)
+    return http.put(`/api/dag-workflows/${id}`, data)
   },
   
   // 删除
   delete: async (id: string): Promise<void> => {
-    return http.delete(`/api/workflows/${id}`)
+    return http.delete(`/api/dag-workflows/${id}`)
   },
   
   // 复制
   copy: async (id: string, name: string): Promise<Workflow> => {
-    return http.post(`/api/workflows/${id}/copy`, { name })
+    return http.post(`/api/dag-workflows/${id}/copy`, { name })
   },
   
   // 验证
   validate: async (workflow: Workflow): Promise<ValidationResult> => {
-    return http.post('/api/workflows/validate', workflow)
+    return http.post('/api/dag-workflows/validate', workflow)
   },
   
   // 导出
   export: async (id: string): Promise<Blob> => {
-    return http.get(`/api/workflows/${id}/export`, {
+    return http.get(`/api/dag-workflows/${id}/export`, {
       responseType: 'blob'
     })
   },
@@ -1173,7 +1173,7 @@ export const workflowApi = {
   import: async (file: File): Promise<Workflow> => {
     const formData = new FormData()
     formData.append('file', file)
-    return http.post('/api/workflows/import', formData, {
+    return http.post('/api/dag-workflows/import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
   }
@@ -1197,7 +1197,7 @@ export const workflowExecutionApi = {
   startExecution: async (request: ExecutionRequest): Promise<{
     executionId: string
   }> => {
-    return http.post('/api/workflows/execute', request)
+    return http.post('/api/dag-workflows/execute', request)
   },
   
   // 停止执行
@@ -1220,7 +1220,7 @@ export const workflowExecutionApi = {
   startDebugExecution: async (request: DebugRequest): Promise<{
     executionId: string
   }> => {
-    return http.post('/api/workflows/debug', request)
+    return http.post('/api/dag-workflows/debug', request)
   },
   
   // 单步执行
@@ -1348,7 +1348,7 @@ onMounted(async () => {
       store.loadWorkflow(workflow)
     } catch (error) {
       message.error('加载工作流失败')
-      router.push('/workflows')
+      router.push('/dag-workflows')
     }
   } else {
     store.createNewWorkflow()
@@ -1411,7 +1411,7 @@ const goBack = () => {
   if (store.isDirty) {
     // 提示保存
   } else {
-    router.push('/workflows')
+    router.push('/dag-workflows')
   }
 }
 </script>
@@ -1578,11 +1578,11 @@ const loadWorkflows = async () => {
 }
 
 const createWorkflow = () => {
-  router.push('/workflows/new/edit')
+  router.push('/dag-workflows/new/edit')
 }
 
 const editWorkflow = (id: string) => {
-  router.push(`/workflows/${id}/edit`)
+  router.push(`/dag-workflows/${id}/edit`)
 }
 
 const copyWorkflow = async (workflow: any) => {
@@ -1633,7 +1633,7 @@ const routes = [
   // ... 其他路由
   
   {
-    path: '/workflows',
+    path: '/dag-workflows',
     children: [
       {
         path: '',
