@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.skills;
 
 import com.agenthub.application.port.out.tools.SkillToolScannerPort;
-import com.agenthub.domain.model.tools.Skill;
+import com.agenthub.domain.model.skill.Skill;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

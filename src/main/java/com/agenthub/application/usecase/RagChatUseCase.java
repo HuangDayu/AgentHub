@@ -2,7 +2,7 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.application.command.RagCommand;
 import com.agenthub.application.dto.AgentOutput;
-import com.agenthub.application.dto.ValidationOutput;
+import com.agenthub.domain.model.strategy.ValidationResult;
 import com.agenthub.application.port.out.rag.RetrievalAugmentedGenerationPort;
 import com.agenthub.application.port.out.repositories.*;
 import com.agenthub.domain.enums.AgentConfigCategory;
@@ -43,7 +43,7 @@ public class RagChatUseCase {
     public Flux<AgentMessage> streamChat(String agentId, String sessionId, String userPrompt) {
         AgentOutput agent = agentUseCase.get(agentId);
         validatePublished(agent);
-        ValidationOutput validation = validateInput(agentId, userPrompt);
+        ValidationResult validation = validateInput(agentId, userPrompt);
         if (!validation.isValid()) return createErrorFlux(validation);
         return retrievalAugmentedGenerationPort.ragStream(buildRagCommand(agentId, sessionId, userPrompt));
     }
@@ -51,12 +51,12 @@ public class RagChatUseCase {
     public AgentMessage chat(String agentId, String sessionId, String userPrompt) {
         AgentOutput agent = agentUseCase.get(agentId);
         validatePublished(agent);
-        ValidationOutput validation = validateInput(agentId, userPrompt);
+        ValidationResult validation = validateInput(agentId, userPrompt);
         if (!validation.isValid()) return new AgentMessage(AgentMessage.MessageType.SYSTEM, "输入验证失败");
         ArrayList<ChatMessage> messages = new ArrayList<>();
         messages.add(ChatMessage.user(sessionId, userPrompt));
         AgentMessage response = retrievalAugmentedGenerationPort.ragChat(buildRagCommand(agentId, sessionId, userPrompt));
-        ValidationOutput outputValidation = validateOutput(agentId, response.getText());
+        ValidationResult outputValidation = validateOutput(agentId, response.getText());
         if (!outputValidation.isValid()) return new AgentMessage(AgentMessage.MessageType.SYSTEM, "输出验证失败");
         messages.add(ChatMessage.assistant(sessionId, response.getText()));
         saveSession(sessionId, agentId, messages, response.getText());
@@ -94,16 +94,16 @@ public class RagChatUseCase {
         }
     }
 
-    private Flux<AgentMessage> createErrorFlux(ValidationOutput validation) {
+    private Flux<AgentMessage> createErrorFlux(ValidationResult validation) {
         return Flux.error(new IllegalStateException(String.join(",", validation.getViolations())));
     }
 
-    private ValidationOutput validateInput(String agentId, String input) {
+    private ValidationResult validateInput(String agentId, String input) {
         String guardrailId = agentConfigRepository.getConfigId(agentId, STRATEGY, GUARDRAIL_STRATEGY);
         return strategyUseCase.validateInput(guardrailId, input);
     }
 
-    private ValidationOutput validateOutput(String agentId, String output) {
+    private ValidationResult validateOutput(String agentId, String output) {
         String guardrailId = agentConfigRepository.getConfigId(agentId, STRATEGY, GUARDRAIL_STRATEGY);
         return strategyUseCase.validateOutput(guardrailId, output);
     }

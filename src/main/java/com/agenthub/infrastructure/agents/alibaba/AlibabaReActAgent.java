@@ -41,6 +41,7 @@ public class AlibabaReActAgent extends AbstractReActAgent {
         state = AgentLifecycleState.RUNNING;
     }
 
+    @Override
     public String getName() {
         return context.getAgent().getName();
     }
@@ -63,16 +64,28 @@ public class AlibabaReActAgent extends AbstractReActAgent {
     @SneakyThrows
     @Override
     public Flux<AgentMessage> streamMessages(List<AgentMessage> messages) {
-        RunnableConfig runnableConfig = RunnableConfig.builder(config.getRunnableConfig()).threadId(context.getSessionId()).build();
+        beforeInference(messages);
+        RunnableConfig runnableConfig = buildRunnableConfig();
         return agent.streamMessages(toMsgs(messages), runnableConfig)
-                .map(AgentMessageConverter::fromMessage);
+                .map(AgentMessageConverter::fromMessage)
+                .map(msg -> afterInference(messages, msg));
     }
 
     @SneakyThrows
     @Override
     public AgentMessage call(List<AgentMessage> messages) {
-        RunnableConfig runnableConfig = RunnableConfig.builder(config.getRunnableConfig()).threadId(context.getSessionId()).build();
-        return AgentMessageConverter.fromMessage(agent.call(toMsgs(messages), runnableConfig));
+        beforeInference(messages);
+        RunnableConfig runnableConfig = buildRunnableConfig();
+        AgentMessage response = AgentMessageConverter.fromMessage(
+                agent.call(toMsgs(messages), runnableConfig));
+        return afterInference(messages, response);
+    }
+
+    /** 构建运行时配置。 */
+    private RunnableConfig buildRunnableConfig() {
+        return RunnableConfig.builder(config.getRunnableConfig())
+                .threadId(context.getSessionId())
+                .build();
     }
 
     private List<Message> toMsgs(List<AgentMessage> messages) {
@@ -94,8 +107,9 @@ public class AlibabaReActAgent extends AbstractReActAgent {
     }
 
     @Override
-    public void createTeam(AgentTeamType agentTeamType, ReActAgentContext leader, ReActAgentContext... followers) {
+    public void createTeam(AgentTeamType agentTeamType,
+                           ReActAgentContext leader,
+                           ReActAgentContext... followers) {
         teams.add(teamAgentFactory.create(agentTeamType, leader, followers));
     }
-
 }

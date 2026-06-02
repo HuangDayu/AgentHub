@@ -1,4 +1,4 @@
-package com.agenthub.domain.model.tools;
+package com.agenthub.domain.model.skill;
 
 import java.time.Instant;
 

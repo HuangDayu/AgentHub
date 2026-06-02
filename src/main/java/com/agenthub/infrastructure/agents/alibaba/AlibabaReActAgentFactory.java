@@ -60,12 +60,12 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
     private final ObjectProvider<TeamAgentFactory> teamAgentFactoryObjectProvider;
     private final TenantContextGetter tenantContextGetter;
 
-
     @Override
-    public AbstractReActAgent create(ReActAgentContext reActAgentContext) {
-        AlibabaReActAgentConfig alibabaReActAgentConfig = buildAliReActAgentConfig(reActAgentContext);
-        ReactAgent agent = buildReactAgent(alibabaReActAgentConfig);
-        return new AlibabaReActAgent(reActAgentContext, alibabaReActAgentConfig, teamAgentFactoryObjectProvider.getObject(), agent);
+    public AbstractReActAgent create(ReActAgentContext ctx) {
+        AlibabaReActAgentConfig config = buildAliReActAgentConfig(ctx);
+        ReactAgent agent = buildReactAgent(config);
+        return new AlibabaReActAgent(ctx, config,
+                teamAgentFactoryObjectProvider.getObject(), agent);
     }
 
     private ReactAgent buildReactAgent(AlibabaReActAgentConfig config) {
@@ -106,7 +106,7 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
                 context.getSystemPrompt(),
                 resolveTools(context),
                 resolveHooks(context),
-                resolveInterceptors(),
+                resolveInterceptors(context),
                 resolveSaver(),
                 resolveStore(),
                 resolveToolsContext(context),
@@ -166,20 +166,16 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
         return tools;
     }
 
-    private List<ToolCallback> filterByName(Set<ToolCallback> callbacks, String name) {
-        return callbacks.stream()
-                .filter(cb -> cb.getToolDefinition().name().equals(name))
-                .toList();
-    }
-
     private List<com.alibaba.cloud.ai.graph.agent.hook.Hook> resolveHooks(ReActAgentContext context) {
         return List.of(agentHookFactory.loggingHook(),
+                agentHookFactory.modelStrategyHook(context),
                 agentHookFactory.skillsAgentHook(context.getWorkspace()),
                 agentHookFactory.shellToolAgentHook(context.getWorkspace()));
     }
 
-    private List<com.alibaba.cloud.ai.graph.agent.interceptor.Interceptor> resolveInterceptors() {
-        return List.of(interceptorFactory.monitoringInterceptor());
+    private List<com.alibaba.cloud.ai.graph.agent.interceptor.Interceptor> resolveInterceptors(ReActAgentContext context) {
+        return List.of(interceptorFactory.monitoringInterceptor(),
+                interceptorFactory.toolStrategyInterceptor(context));
     }
 
     private BaseCheckpointSaver resolveSaver() {
@@ -213,5 +209,4 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
             builder.interceptors(config.getInterceptors());
         }
     }
-
 }

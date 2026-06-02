@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import com.agenthub.application.port.out.repositories.SkillRepository;
-import com.agenthub.domain.model.tools.Skill;
+import com.agenthub.domain.model.skill.Skill;
 import com.agenthub.infrastructure.store.db.entity.SkillEntity;
 import com.agenthub.infrastructure.store.db.mapper.SkillMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

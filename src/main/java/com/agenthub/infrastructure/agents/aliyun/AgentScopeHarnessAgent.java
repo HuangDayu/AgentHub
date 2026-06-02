@@ -71,29 +71,43 @@ public class AgentScopeHarnessAgent extends AbstractReActAgent {
 
     @Override
     public Flux<AgentMessage> streamMessages(List<AgentMessage> messages) {
-        RuntimeContext ctx = RuntimeContext.builder().sessionId(context.getSessionId()).build();
+        beforeInference(messages);
+        RuntimeContext ctx = buildRuntimeContext();
         StreamOptions streamOptions = StreamOptions.defaults();
         var events = agent.stream(toMsgs(messages), streamOptions, ctx);
-        return events.map(this::toAgentMessage);
+        return events.map(event -> toAgentMessage(event, messages));
     }
 
     @Override
     @SneakyThrows
     public AgentMessage call(List<AgentMessage> messages) {
-        RuntimeContext ctx = RuntimeContext.builder().sessionId(context.getSessionId()).build();
+        beforeInference(messages);
+        RuntimeContext ctx = buildRuntimeContext();
         Msg response = agent.call(toMsgs(messages), ctx).block();
-        return toAgentMessage(response);
+        AgentMessage result = toAgentMessage(response);
+        return afterInference(messages, result);
+    }
+
+    /** 构建运行时上下文。 */
+    private RuntimeContext buildRuntimeContext() {
+        return RuntimeContext.builder()
+                .sessionId(context.getSessionId())
+                .build();
     }
 
     private List<Msg> toMsgs(List<AgentMessage> messages) {
         return messages.stream()
-                .map(message -> Msg.builder().role(MsgRole.valueOf(message.getMessageType().name())).textContent(message.getText()).build())
+                .map(message -> Msg.builder()
+                        .role(MsgRole.valueOf(message.getMessageType().name()))
+                        .textContent(message.getText())
+                        .build())
                 .toList();
     }
 
     @Override
     public void interrupt() {
         state = AgentLifecycleState.STOPPING;
+        agent.interrupt();
         state = AgentLifecycleState.STOPPED;
     }
 
@@ -103,37 +117,62 @@ public class AgentScopeHarnessAgent extends AbstractReActAgent {
     }
 
     @Override
-    public void createTeam(AgentTeamType agentTeamType, ReActAgentContext leader,
+    public void createTeam(AgentTeamType agentTeamType,
+                           ReActAgentContext leader,
                            ReActAgentContext... followers) {
         teams.add(teamAgentFactory.create(agentTeamType, leader, followers));
     }
 
+    /** 将原生 Msg 转换为 AgentMessage。 */
     private AgentMessage toAgentMessage(Msg msg) {
         if (msg == null) {
-            return new AgentMessage(AgentMessage.MessageType.SYSTEM, "系统出错，大模型没有回复");
+            return new AgentMessage(AgentMessage.MessageType.SYSTEM,
+                    "系统出错，大模型没有回复");
         }
-        return new AgentMessage(AgentMessage.MessageType.ASSISTANT, msg.getTextContent());
+        return new AgentMessage(AgentMessage.MessageType.ASSISTANT,
+                msg.getTextContent());
     }
 
-
-    private AgentMessage toAgentMessage(Event event) {
+    /** 将 Event 转换为 AgentMessage（含生命周期钩子）。 */
+    private AgentMessage toAgentMessage(Event event, List<AgentMessage> messages) {
         Msg msg = event.getMessage();
-        AgentMessage.MessageType messageType = AgentMessage.MessageType.valueOf(msg.getRole().name());
+        AgentMessage.MessageType messageType = AgentMessage.MessageType
+                .valueOf(msg.getRole().name());
         if (event.isLast() && msg.getChatUsage() != null) {
-            AgentMessage.ChatUsage chatUsage = BeanUtil.copyProperties(msg.getChatUsage(), AgentMessage.ChatUsage.class);
-            chatUsage.setTotalTokens(msg.getChatUsage().getTotalTokens());
-            return new AgentMessage(messageType, chatUsage, toMetadata(event, "STOP"));
+            return buildUsageMessage(msg, messageType, event);
         }
+        return buildContentMessage(msg, messageType, event);
+    }
+
+    /** 构建含 token 使用量的消息。 */
+    private AgentMessage buildUsageMessage(Msg msg,
+                                           AgentMessage.MessageType messageType,
+                                           Event event) {
+        AgentMessage.ChatUsage chatUsage = BeanUtil.copyProperties(
+                msg.getChatUsage(), AgentMessage.ChatUsage.class);
+        chatUsage.setTotalTokens(msg.getChatUsage().getTotalTokens());
+        return new AgentMessage(messageType, chatUsage,
+                toMetadata(event, "STOP"));
+    }
+
+    /** 构建含内容的消息。 */
+    private AgentMessage buildContentMessage(Msg msg,
+                                             AgentMessage.MessageType messageType,
+                                             Event event) {
         List<AgentMessage.ToolCall> toolCalls = toToolCalls(msg);
-        String finishReason = !toolCalls.isEmpty() ? "TOOL_CALLS" : event.getType().name();
-        AgentMessage agentMessage = new AgentMessage(messageType, event.isLast() ? "" : msg.getTextContent(), toMetadata(event, finishReason));
+        String finishReason = !toolCalls.isEmpty()
+                ? "TOOL_CALLS" : event.getType().name();
+        AgentMessage agentMessage = new AgentMessage(messageType,
+                event.isLast() ? "" : msg.getTextContent(),
+                toMetadata(event, finishReason));
         agentMessage.setToolCalls(toolCalls);
         agentMessage.setResponses(toToolResults(msg));
         return agentMessage;
     }
 
     private Map<String, Object> toMetadata(Event event, String finishReason) {
-        AgentMessage.MessageType messageType = AgentMessage.MessageType.valueOf(event.getMessage().getRole().name());
+        AgentMessage.MessageType messageType = AgentMessage.MessageType
+                .valueOf(event.getMessage().getRole().name());
         Map<String, Object> metadata = event.getMessage().getMetadata();
         metadata.put("role", messageType);
         metadata.put("finishReason", finishReason);
@@ -144,10 +183,21 @@ public class AgentScopeHarnessAgent extends AbstractReActAgent {
     }
 
     private List<AgentMessage.ToolCall> toToolCalls(Msg msg) {
-        return msg.hasContentBlocks(ToolUseBlock.class) ? msg.getContentBlocks(ToolUseBlock.class).stream()
+        if (!msg.hasContentBlocks(ToolUseBlock.class)) {
+            return new ArrayList<>();
+        }
+        return msg.getContentBlocks(ToolUseBlock.class).stream()
                 .filter(v -> !isFragmentTool(v.getName()))
-                .map(v -> new AgentMessage.ToolCall(v.getId(), "function", v.getName(), CollUtil.isNotEmpty(v.getInput()) ? toJson(v.getInput()) : v.getContent()))
-                .toList() : new ArrayList<>();
+                .map(this::toToolCall)
+                .toList();
+    }
+
+    /** 转换单个工具调用。 */
+    private AgentMessage.ToolCall toToolCall(ToolUseBlock block) {
+        String args = CollUtil.isNotEmpty(block.getInput())
+                ? toJson(block.getInput()) : block.getContent();
+        return new AgentMessage.ToolCall(block.getId(),
+                "function", block.getName(), args);
     }
 
     private boolean isFragmentTool(String name) {
@@ -155,13 +205,22 @@ public class AgentScopeHarnessAgent extends AbstractReActAgent {
     }
 
     private List<AgentMessage.ToolResult> toToolResults(Msg msg) {
-        return msg.hasContentBlocks(ToolResultBlock.class) ? msg.getContentBlocks(ToolResultBlock.class).stream()
-                .map(v -> new AgentMessage.ToolResult(v.getId(), v.getName(), v.getOutput().stream()
-                        .filter(TextBlock.class::isInstance)
-                        .map(TextBlock.class::cast)
-                        .map(TextBlock::getText)
-                        .collect(Collectors.joining("\n"))))
-                .toList() : new ArrayList<>();
+        if (!msg.hasContentBlocks(ToolResultBlock.class)) {
+            return new ArrayList<>();
+        }
+        return msg.getContentBlocks(ToolResultBlock.class).stream()
+                .map(this::toToolResult)
+                .toList();
     }
 
+    /** 转换单个工具结果。 */
+    private AgentMessage.ToolResult toToolResult(ToolResultBlock block) {
+        String output = block.getOutput().stream()
+                .filter(TextBlock.class::isInstance)
+                .map(TextBlock.class::cast)
+                .map(TextBlock::getText)
+                .collect(Collectors.joining("\n"));
+        return new AgentMessage.ToolResult(block.getId(),
+                block.getName(), output);
+    }
 }

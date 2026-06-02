@@ -1,15 +1,21 @@
 package com.agenthub.domain.model.strategy;
 
+import com.agenthub.domain.model.agent.AgentMessage;
+import com.agenthub.domain.model.agent.ReActAgentContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 
 import static com.agenthub.common.utils.RandomUtils.randomId;
 
 /**
  * 模型策略聚合根。
+ * <p>
+ * 控制 LLM 推理参数，并在推理前后执行生命周期钩子。
+ * </p>
  */
 @Data
 @NoArgsConstructor
@@ -32,7 +38,7 @@ public class ModelStrategy {
 
     private ModelStrategy(String id, String workspaceId, Instant createdAt) {
         this.id = id;
-        this.tenantId = null; // tenantId由MyBatis-Plus拦截器自动填充
+        this.tenantId = null;
         this.workspaceId = workspaceId;
         this.createdAt = createdAt;
         this.temperature = 0.7;
@@ -42,6 +48,13 @@ public class ModelStrategy {
         this.presencePenalty = 0.0;
     }
 
+    /**
+     * 创建模型策略实例。
+     *
+     * @param workspaceId 工作空间ID
+     * @param name 策略名称
+     * @return 策略实例
+     */
     public static ModelStrategy create(String workspaceId, String name) {
         ModelStrategy strategy = new ModelStrategy(randomId(), workspaceId, Instant.now());
         strategy.name = name;
@@ -50,7 +63,7 @@ public class ModelStrategy {
     }
 
     /**
-     * 从持久化层重建对象（保留所有原始数据）。
+     * 从持久化层重建对象。
      */
     public static ModelStrategy rebuild(
             String id, String workspaceId, String name, String description,
@@ -69,12 +82,50 @@ public class ModelStrategy {
         return strategy;
     }
 
+    /**
+     * 推理前生命周期钩子。
+     *
+     * @param context Agent 上下文
+     * @param messages 输入消息列表
+     */
+    public void beforeInference(ReActAgentContext context,
+                                List<AgentMessage> messages) {
+        // 可用于动态调整参数、日志记录
+    }
+
+    /**
+     * 推理后生命周期钩子。
+     *
+     * @param context Agent 上下文
+     * @param messages 输入消息列表
+     * @param response 模型响应
+     * @return 处理后的响应
+     */
+    public AgentMessage afterInference(ReActAgentContext context,
+                                       List<AgentMessage> messages,
+                                       AgentMessage response) {
+        return response;
+    }
+
+    /**
+     * 更新基本信息。
+     *
+     * @param name 策略名称
+     * @param description 策略描述
+     */
     public void updateBasicInfo(String name, String description) {
         this.name = name;
         this.description = description;
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * 配置推理参数。
+     *
+     * @param temperature 温度
+     * @param maxTokens 最大token数
+     * @param topP 核采样参数
+     */
     public void configureParameters(double temperature, int maxTokens, double topP) {
         this.temperature = temperature;
         this.maxTokens = maxTokens;
@@ -82,11 +133,15 @@ public class ModelStrategy {
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * 设置惩罚参数。
+     *
+     * @param frequencyPenalty 频率惩罚
+     * @param presencePenalty 存在惩罚
+     */
     public void setPenalties(double frequencyPenalty, double presencePenalty) {
         this.frequencyPenalty = frequencyPenalty;
         this.presencePenalty = presencePenalty;
         this.updatedAt = Instant.now();
     }
-
-
 }

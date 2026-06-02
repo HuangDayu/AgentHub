@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.tools.Skill;
+import com.agenthub.domain.model.skill.Skill;
 
 import java.time.Instant;
 import java.util.List;

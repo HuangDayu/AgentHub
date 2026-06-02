@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.tools.system_tools.core_tools;
 
 import com.agenthub.application.port.out.tools.ToolCallbackResolverPort;
-import com.agenthub.domain.model.tools.Skill;
+import com.agenthub.domain.model.skill.Skill;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.SkillExecutionResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

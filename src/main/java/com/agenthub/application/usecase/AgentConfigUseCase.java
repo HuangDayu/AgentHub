@@ -13,7 +13,7 @@ import com.agenthub.domain.enums.AgentConfigType;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.agent.AgentConfig;
 import com.agenthub.domain.model.tools.McpTool;
-import com.agenthub.domain.model.tools.Skill;
+import com.agenthub.domain.model.skill.Skill;
 import com.agenthub.domain.model.tools.SystemTool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

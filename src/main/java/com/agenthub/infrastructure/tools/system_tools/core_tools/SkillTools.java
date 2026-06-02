@@ -1,9 +1,8 @@
 package com.agenthub.infrastructure.tools.system_tools.core_tools;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.SkillRepository;
 import com.agenthub.domain.model.agent.ReActAgentContext;
-import com.agenthub.domain.model.tools.Skill;
+import com.agenthub.domain.model.skill.Skill;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.AgentSkillDTO;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.SkillDetailDTO;

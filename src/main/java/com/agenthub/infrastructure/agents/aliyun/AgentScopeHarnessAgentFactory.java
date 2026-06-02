@@ -7,6 +7,8 @@ import com.agenthub.domain.model.agent.AbstractReActAgent;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.infrastructure.agents.aliyun.filesystem.FilesystemFactory;
 import com.agenthub.infrastructure.agents.aliyun.knowledge.AgentScopeKnowledge;
+import com.agenthub.infrastructure.agents.aliyun.hook.RetrievalStrategyHook;
+import com.agenthub.infrastructure.agents.aliyun.hook.ToolStrategyHook;
 import com.agenthub.infrastructure.agents.aliyun.memory.MemoryConfigFactory;
 import com.agenthub.infrastructure.agents.aliyun.model.AgentScopeModelFactoryRegistry;
 import com.agenthub.infrastructure.agents.aliyun.session.SessionFactory;
@@ -47,6 +49,7 @@ import static com.agenthub.common.constants.AgentConstants.THREAD_CONTEXT_KEY;
  * <p>
  * 根据 {@link ReActAgentContext} 构建 {@link HarnessAgent}，
  * 适配为项目的 {@link AbstractReActAgent} 接口。
+ * </p>
  * <p>
  * 模型实例支持两种路径：
  * <ul>
@@ -80,7 +83,8 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
     public AbstractReActAgent create(ReActAgentContext ctx) {
         AgentScopeReActAgentConfig config = buildConfig(ctx);
         HarnessAgent agent = buildHarnessAgent(config, ctx);
-        return new AgentScopeHarnessAgent(ctx, config, agentScopeTeamAgentFactory.getObject(), agent);
+        return new AgentScopeHarnessAgent(ctx, config,
+                agentScopeTeamAgentFactory.getObject(), agent);
     }
 
     private AgentScopeReActAgentConfig buildConfig(ReActAgentContext ctx) {
@@ -120,6 +124,8 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
                 .compaction(memoryConfigFactory.createDefaultCompactionConfig())
                 .enablePendingToolRecovery(true)
                 .hook(resolveStudioMessageHook(config, ctx))
+                .hook(new ToolStrategyHook(ctx))
+                .hook(new RetrievalStrategyHook(ctx))
                 .toolExecutionContext(resolveToolExecutionContext(ctx))
                 .toolResultEviction(memoryConfigFactory.createDefaultToolResultEvictionConfig())
                 .toolkit(resolveToolkit(ctx))
@@ -163,5 +169,4 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
                 .map(ToolCallback.class::cast)
                 .collect(Collectors.toSet()));
     }
-
 }
