@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.skills;
 
+import cn.hutool.core.util.StrUtil;
 import com.agenthub.application.port.out.tools.SkillToolScannerPort;
 import com.agenthub.domain.model.skill.Skill;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -73,9 +74,9 @@ public class SkillFileManager implements SkillToolScannerPort {
     private Optional<Skill> parseSkillMd(Path skillPath, Path skillMdPath) throws IOException {
         List<String> lines = Files.readAllLines(skillMdPath);
         if (lines.size() < 4) return Optional.empty();
-        String skillCode = skillPath.getFileName().toString();
-        String name = lines.get(1).trim().replace("name:", "");
-        String description = lines.get(2).trim().replace("description:", "");
+        String name = lines.get(1).replace("name:", "").replaceAll("\"", "").trim();
+        String skillCode = StrUtil.isNotBlank(name) ? name : skillPath.getFileName().toString().trim();
+        String description = lines.get(2).replace("description:", "");
         String path = skillPath.toString();
         String skillFilesTree = buildFilesTreeJson(skillPath);
         return Optional.of(createSkill(skillCode, name, description, path, skillFilesTree));

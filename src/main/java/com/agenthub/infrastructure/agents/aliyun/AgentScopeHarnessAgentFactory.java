@@ -6,9 +6,9 @@ import com.agenthub.application.port.out.rag.RagVectorSearchPort;
 import com.agenthub.domain.model.agent.AbstractReActAgent;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.infrastructure.agents.aliyun.filesystem.FilesystemFactory;
-import com.agenthub.infrastructure.agents.aliyun.knowledge.AgentScopeKnowledge;
 import com.agenthub.infrastructure.agents.aliyun.hook.RetrievalStrategyHook;
 import com.agenthub.infrastructure.agents.aliyun.hook.ToolStrategyHook;
+import com.agenthub.infrastructure.agents.aliyun.knowledge.AgentScopeKnowledge;
 import com.agenthub.infrastructure.agents.aliyun.memory.MemoryConfigFactory;
 import com.agenthub.infrastructure.agents.aliyun.model.AgentScopeModelFactoryRegistry;
 import com.agenthub.infrastructure.agents.aliyun.session.SessionFactory;
@@ -21,6 +21,7 @@ import com.agenthub.infrastructure.telemetry.AgentStudioMessageHandler;
 import com.agenthub.infrastructure.tools.AgentToolsFactory;
 import io.agentscope.core.model.Model;
 import io.agentscope.core.rag.Knowledge;
+import io.agentscope.core.skill.repository.AgentSkillRepository;
 import io.agentscope.core.skill.repository.FileSystemSkillRepository;
 import io.agentscope.core.studio.StudioClient;
 import io.agentscope.core.studio.StudioConfig;
@@ -129,9 +130,12 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
                 .toolExecutionContext(resolveToolExecutionContext(ctx))
                 .toolResultEviction(memoryConfigFactory.createDefaultToolResultEvictionConfig())
                 .toolkit(resolveToolkit(ctx))
-                .skillRepository(new FileSystemSkillRepository(ctx.getWorkspace().getShareSkillsPath()))
                 .knowledges(resolveKnowledge(ctx))
                 .build();
+    }
+
+    private AgentSkillRepository resolveSkillRepository(ReActAgentContext ctx) {
+        return new FileSystemSkillRepository(ctx.getWorkspace().getShareSkillsPath());
     }
 
     private ToolExecutionContext resolveToolExecutionContext(ReActAgentContext ctx) {

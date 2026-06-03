@@ -20,6 +20,7 @@ public class SkillConfig {
     private int syncInterval;
     private boolean autoSync;
     private boolean enabled;
+    private Instant lastSyncAt;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -102,6 +103,15 @@ public class SkillConfig {
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    /**
+     * 标记已同步。
+     */
+    public void markSynced() {
+        this.lastSyncAt = Instant.now();
+    }
+
+    public Instant getLastSyncAt() { return lastSyncAt; }
+    public void setLastSyncAt(Instant lastSyncAt) { this.lastSyncAt = lastSyncAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

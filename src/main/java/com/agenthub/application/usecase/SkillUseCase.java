@@ -136,8 +136,8 @@ public class SkillUseCase {
     /**
      * 搜索技能。
      */
-    public List<SkillOutput> search(String keyword, String tenantId, String workspaceId) {
-        return skillRepository.search(keyword, tenantId, workspaceId)
+    public List<SkillOutput> search(String keyword) {
+        return skillRepository.search(keyword)
                 .stream().map(this::toOutput).toList();
     }
 

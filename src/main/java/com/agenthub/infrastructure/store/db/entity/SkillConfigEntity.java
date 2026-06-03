@@ -40,6 +40,9 @@ public class SkillConfigEntity {
 
     private Boolean enabled;
 
+    @TableField(value = "last_sync_at")
+    private Instant lastSyncAt;
+
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
 

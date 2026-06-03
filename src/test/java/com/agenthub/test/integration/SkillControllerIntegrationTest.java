@@ -30,7 +30,7 @@ class SkillControllerIntegrationTest {
     private MockMvc mockMvc;
     private String createdSkillId;
     private final String workspaceId = "100000002";
-    private final String tenantId = "100000001";
+    private final String tenantId = "100000002";
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -49,7 +49,7 @@ class SkillControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
-                                    "tenantId": "100000001",
+                                    "tenantId": "100000002",
                                     "skillCode": "%s",
                                     "name": "Test Synced Skill",
                                     "description": "A synced skill for testing",
@@ -115,7 +115,7 @@ class SkillControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "100000001",
+                                    "tenantId": "100000002",
                                     "skillCode": "test-synced-skill",
                                     "name": "Updated Synced Skill",
                                     "description": "Updated description",

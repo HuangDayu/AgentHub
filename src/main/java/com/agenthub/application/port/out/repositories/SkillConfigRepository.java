@@ -18,5 +18,10 @@ public interface SkillConfigRepository {
 
     List<SkillConfig> findAll();
 
+    /**
+     * 查找所有启用自动同步的配置。
+     */
+    List<SkillConfig> findAllEnabledAutoSync();
+
     void deleteById(String id);
 }

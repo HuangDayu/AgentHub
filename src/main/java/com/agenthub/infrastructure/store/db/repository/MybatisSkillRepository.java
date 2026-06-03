@@ -105,21 +105,34 @@ public class MybatisSkillRepository implements SkillRepository {
     }
 
     @Override
-    public List<Skill> search(String keyword, String tenantId, String workspaceId) {
+    public List<Skill> search(String keyword) {
         LambdaQueryWrapper<SkillEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SkillEntity::getTenantId, tenantId)
-                .eq(SkillEntity::getWorkspaceId, workspaceId)
-                .and(w -> w.like(SkillEntity::getName, keyword)
+        wrapper.and(w -> w.like(SkillEntity::getName, keyword)
                         .or().like(SkillEntity::getSkillCode, keyword)
                         .or().like(SkillEntity::getDescription, keyword));
         return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public Optional<Skill> findBySkillCode(String skillCode) {
+        LambdaQueryWrapper<SkillEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SkillEntity::getSkillCode, skillCode)
+                        .or().eq(SkillEntity::getName, skillCode);
+        SkillEntity skillEntity = mapper.selectOne(queryWrapper);
+        return Optional.ofNullable(toDomain(skillEntity));
+    }
+
     private SkillEntity toEntity(Skill skill) {
+        if (skill == null) {
+            return null;
+        }
         return BeanUtil.copyProperties(skill, SkillEntity.class);
     }
 
     private Skill toDomain(SkillEntity entity) {
+        if (entity == null) {
+            return null;
+        }
         return BeanUtil.copyProperties(entity, Skill.class);
     }
 }

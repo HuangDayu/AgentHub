@@ -1,5 +1,5 @@
 import { runtimeConfig } from '@/common/runtime-config'
-import type { Skill, SkillConfig, SkillFile } from '@/types/memory'
+import type { Skill, SkillConfig, SkillFile, MarketInfo, MarketSkillSummary, MarketSkillDetail } from '@/types/memory'
 import { requestJson } from './http'
 
 export interface Selection {
@@ -207,6 +207,51 @@ export async function syncSkillWithConfig(selection: Selection, configId: string
   return requestJson<void>(`/api/v1/workspaces/${selection.workspaceId}/skill-configs/${configId}/sync`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'POST',
+    headers: buildHeaders(selection),
+  })
+}
+
+/** 获取所有可用市场 */
+export async function listSkillMarkets(selection: Selection): Promise<MarketInfo[]> {
+  return requestJson<MarketInfo[]>(`/api/v1/workspaces/${selection.workspaceId}/skills/market/list`, {
+    baseUrl: runtimeConfig.agentApiBase,
+    method: 'GET',
+    headers: buildHeaders(selection),
+  })
+}
+
+/** 并行搜索所有市场 */
+export async function searchMarketSkills(selection: Selection, data: {
+  keyword?: string
+  category?: string
+  sortBy?: string
+  page?: number
+  pageSize?: number
+}): Promise<Record<string, MarketSkillSummary[]>> {
+  return requestJson<Record<string, MarketSkillSummary[]>>(`/api/v1/workspaces/${selection.workspaceId}/skills/market/search`, {
+    baseUrl: runtimeConfig.agentApiBase,
+    method: 'POST',
+    bodyJson: data,
+    headers: buildHeaders(selection),
+  })
+}
+
+/** 获取市场技能详情 */
+export async function getMarketSkillDetail(selection: Selection, marketId: string, skillId: string): Promise<MarketSkillDetail> {
+  return requestJson<MarketSkillDetail>(`/api/v1/workspaces/${selection.workspaceId}/skills/market/detail`, {
+    baseUrl: runtimeConfig.agentApiBase,
+    method: 'GET',
+    query: { marketId, skillId },
+    headers: buildHeaders(selection),
+  })
+}
+
+/** 从市场安装技能 */
+export async function installMarketSkill(selection: Selection, data: { marketId: string; skillId: string }): Promise<{ message: string }> {
+  return requestJson<{ message: string }>(`/api/v1/workspaces/${selection.workspaceId}/skills/market/install`, {
+    baseUrl: runtimeConfig.agentApiBase,
+    method: 'POST',
+    bodyJson: data,
     headers: buildHeaders(selection),
   })
 }

@@ -70,6 +70,46 @@ export interface SkillFile {
   updatedAt: string
 }
 
+/** 市场信息 */
+export interface MarketInfo {
+  marketId: string
+  marketName: string
+}
+
+/** 市场技能搜索结果摘要 */
+export interface MarketSkillSummary {
+  marketId: string
+  skillId: string
+  skillCode: string
+  name: string
+  description: string
+  author: string
+  version: string
+  downloadCount: number
+  starCount: number
+  thumbnailUrl: string
+  updatedAt: string
+}
+
+/** 市场技能详情 */
+export interface MarketSkillDetail {
+  marketId: string
+  skillId: string
+  skillCode: string
+  name: string
+  description: string
+  author: string
+  version: string
+  license: string
+  homepage: string
+  downloadUrl: string
+  tags: string[]
+  downloadCount: number
+  starCount: number
+  updatedAt: string
+  readmeContent: string
+}
+
 export interface Workflow {
   id: string
   tenantId: string

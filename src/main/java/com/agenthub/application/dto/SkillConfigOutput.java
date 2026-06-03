@@ -24,6 +24,7 @@ public class SkillConfigOutput {
     private int syncInterval;
     private boolean autoSync;
     private boolean enabled;
+    private Instant lastSyncAt;
     private Instant createdAt;
     private Instant updatedAt;
 }

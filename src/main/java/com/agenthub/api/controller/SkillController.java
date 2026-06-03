@@ -7,6 +7,7 @@ import com.agenthub.api.dto.SkillResponse;
 import com.agenthub.application.command.CreateSkillCommand;
 import com.agenthub.application.dto.SkillOutput;
 import com.agenthub.application.usecase.SkillUseCase;
+import com.agenthub.infrastructure.context.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ public class SkillController {
     public SkillResponse create(@PathVariable String workspaceId,
                                 @RequestBody CreateSkillRequest request) {
         CreateSkillCommand createSkillCommand = BeanUtil.copyProperties(request, CreateSkillCommand.class);
+        createSkillCommand.setWorkspaceId(workspaceId);
         createSkillCommand.setSkillType("SYNCED");
         createSkillCommand.setSource("LOCAL");
         createSkillCommand.setSourcePath(request.getSkillPath());
@@ -47,6 +49,7 @@ public class SkillController {
     public SkillResponse createFromUrl(@PathVariable String workspaceId,
                                        @RequestBody CreateSkillFromUrlRequest request) {
         CreateSkillCommand createSkillCommand = BeanUtil.copyProperties(request, CreateSkillCommand.class);
+        createSkillCommand.setWorkspaceId(workspaceId);
         createSkillCommand.setSkillType("UPLOADED");
         createSkillCommand.setSource("URL");
         createSkillCommand.setSourcePath(request.getZipUrl());
@@ -99,11 +102,9 @@ public class SkillController {
      * 搜索技能。
      */
     @GetMapping("/search")
-    public List<SkillResponse> search(@RequestParam String keyword,
-                                      @RequestHeader("X-Tenant-Id") String tenantId,
-                                      @RequestHeader("X-Workspace-Id") String workspaceId) {
-        return useCase.search(keyword, tenantId, workspaceId)
-                .stream().map(this::toResponse).toList();
+    public List<SkillResponse> search(@PathVariable String workspaceId,
+                                      @RequestParam String keyword) {
+        return useCase.search(keyword).stream().map(this::toResponse).toList();
     }
 
     /**

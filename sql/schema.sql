@@ -693,6 +693,7 @@ CREATE TABLE IF NOT EXISTS skill_config
     sync_interval integer,
     auto_sync     boolean,
     enabled       boolean,
+    last_sync_at  timestamptz,
     created_at    timestamptz,
     updated_at    timestamptz,
     PRIMARY KEY (id)

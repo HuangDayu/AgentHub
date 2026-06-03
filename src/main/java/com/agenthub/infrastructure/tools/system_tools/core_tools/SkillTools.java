@@ -1,21 +1,21 @@
 package com.agenthub.infrastructure.tools.system_tools.core_tools;
 
+import com.agenthub.application.port.out.DocumentFileStoragePort;
+import com.agenthub.application.port.out.repositories.SkillFileRepository;
 import com.agenthub.application.port.out.repositories.SkillRepository;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.domain.model.skill.Skill;
+import com.agenthub.domain.model.skill.SkillFile;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.AgentSkillDTO;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.SkillDetailDTO;
-import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.SkillExecutionResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,7 +29,8 @@ import static com.agenthub.infrastructure.tools.system_tools.SystemToolsUtils.ge
 public class SkillTools {
 
     private final SkillRepository skillRepository;
-    private final SkillRunner skillRunner;
+    private final DocumentFileStoragePort documentFileStoragePort;
+    private final SkillFileRepository skillFileRepository;
 
     @Tool(description = "获取当前工作空间下Agent可用的技能列表")
     public List<AgentSkillDTO> getSkills(ToolContext toolContext) {
@@ -40,105 +41,76 @@ public class SkillTools {
     }
 
     @Tool(description = "获取技能详情，包含文件路径和文件树结构")
-    public SkillDetailDTO getSkillDetail(
-            @ToolParam(description = "技能ID") String skillId) {
-        Skill skill = findSkill(skillId);
+    public SkillDetailDTO getSkillDetail(@ToolParam(description = "技能标识") String skillCode) {
+        Skill skill = findSkill(skillCode);
         return toDetailDto(skill);
     }
 
     @Tool(description = "读取技能的SKILL.md文件内容，了解技能的使用说明")
-    public String readSkillDocumentation(
-            @ToolParam(description = "技能ID") String skillId) {
-        Skill skill = findSkill(skillId);
-        return readSkillFile(skill, "SKILL.md");
+    public String readSkillDocumentation(@ToolParam(description = "技能标识") String skillCode) {
+        Skill skill = findSkill(skillCode);
+        return readSkillFileFromMinio(skill, "SKILL.md");
     }
 
-    @Tool(description = "读取技能目录下的指定文件")
-    public String readSkillFile(
-            @ToolParam(description = "技能ID") String skillId,
-            @ToolParam(description = "文件路径（相对于技能目录）") String filePath) {
-        Skill skill = findSkill(skillId);
-        return readSkillFile(skill, filePath);
+    @Tool(description = "读取技能中的指定文件（从MinIO存储读取）")
+    public String readSkillFile(@ToolParam(description = "技能标识") String skillCode,
+                                @ToolParam(description = "文件路径（相对于技能目录）") String filePath) {
+        Skill skill = findSkill(skillCode);
+        return readSkillFileFromMinio(skill, filePath);
     }
 
-    @Tool(description = "列出技能目录下的所有文件")
+    @Tool(description = "列出技能下的所有文件（从数据库查询）")
     public String listSkillFiles(
-            @ToolParam(description = "技能ID") String skillId) {
-        Skill skill = findSkill(skillId);
-        if (skill.getSkillPath() == null || skill.getSkillPath().isBlank()) {
-            return "技能没有关联的文件路径";
-        }
-        Path skillDir = Paths.get(skill.getSkillPath());
-        if (!Files.exists(skillDir)) {
-            return "技能目录不存在: " + skill.getSkillPath();
-        }
-        return listFilesRecursive(skillDir, skillDir);
+            @ToolParam(description = "技能标识") String skillCode) {
+        List<SkillFile> files = skillFileRepository.findBySkillId(findSkill(skillCode).getId());
+        return formatFileList(files);
     }
 
     @Tool(description = "搜索技能名称或描述中包含关键词的技能")
     public List<AgentSkillDTO> searchSkills(
             @ToolParam(description = "搜索关键词") String keyword,
             ToolContext toolContext) {
-        ReActAgentContext ctx = getAgentContext(toolContext);
-        return skillRepository.findByWorkspaceId(ctx.getWorkspace().getWorkspace().getId())
-                .stream()
-                .filter(s -> matchesKeyword(s, keyword))
-                .map(this::toBasicDto)
-                .collect(Collectors.toList());
+        return skillRepository.search(keyword)
+                .stream().map(this::toBasicDto).collect(Collectors.toList());
     }
 
-    @Tool(description = "执行技能，解析SKILL.md中的步骤并自动调用工具")
-    public SkillExecutionResult executeSkill(
-            @ToolParam(description = "技能ID") String skillId,
-            @ToolParam(description = "执行参数（JSON格式）") String parameters) {
-        Skill skill = findSkill(skillId);
-        return skillRunner.run(skill, parameters);
+    private Skill findSkill(String skillCode) {
+        return skillRepository.findBySkillCode(skillCode)
+                .orElseThrow(() -> new com.agenthub.domain.exception.NotFoundException("技能不存在: " + skillCode));
     }
 
-    private Skill findSkill(String skillId) {
-        return skillRepository.findById(skillId)
-                .orElseThrow(() -> new com.agenthub.domain.exception.NotFoundException(
-                        "技能不存在: " + skillId));
-    }
-
-    private String readSkillFile(Skill skill, String filePath) {
-        if (skill.getSkillPath() == null || skill.getSkillPath().isBlank()) {
-            return "技能没有关联的文件路径";
+    /**
+     * 从 MinIO 读取技能文件内容。
+     */
+    private String readSkillFileFromMinio(Skill skill, String filePath) {
+        String storagePath = buildStoragePath(skill.getSkillCode(), filePath);
+        try (InputStream is = documentFileStoragePort.retrieve(storagePath)) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return "读取文件失败: " + e.getMessage();
         }
-        Path skillDir = Paths.get(skill.getSkillPath()).toAbsolutePath().normalize();
-        Path file = skillDir.resolve(filePath).normalize();
-        if (!file.startsWith(skillDir)) {
-            return "不允许访问技能目录外的文件";
-        }
-        if (!Files.exists(file)) return "文件不存在: " + filePath;
-        try { return Files.readString(file); }
-        catch (IOException e) { return "读取文件失败: " + e.getMessage(); }
     }
 
-    private String listFilesRecursive(Path current, Path root) {
+    /**
+     * 构建 MinIO 存储路径。
+     */
+    private String buildStoragePath(String skillCode, String filePath) {
+        return String.format("skills/%s/%s", skillCode, filePath);
+    }
+
+    /**
+     * 格式化文件列表为字符串。
+     */
+    private String formatFileList(List<SkillFile> files) {
+        if (files.isEmpty()) {
+            return "技能没有关联的文件";
+        }
         StringBuilder sb = new StringBuilder();
-        try {
-            Files.list(current).sorted().forEach(path -> {
-                String relative = root.relativize(path).toString();
-                if (Files.isDirectory(path)) {
-                    sb.append(relative).append("/\n");
-                    sb.append(listFilesRecursive(path, root));
-                } else {
-                    sb.append(relative).append("\n");
-                }
-            });
-        } catch (IOException e) {
-            sb.append("读取目录失败: ").append(e.getMessage());
+        for (SkillFile f : files) {
+            sb.append(f.getFilePath());
+            sb.append(" (").append(f.getFileSize()).append(" bytes)\n");
         }
         return sb.toString();
-    }
-
-    private boolean matchesKeyword(Skill skill, String keyword) {
-        if (keyword == null || keyword.isBlank()) return true;
-        String lower = keyword.toLowerCase();
-        return (skill.getName() != null && skill.getName().toLowerCase().contains(lower))
-                || (skill.getDescription() != null && skill.getDescription().toLowerCase().contains(lower))
-                || (skill.getSkillType() != null && skill.getSkillType().toLowerCase().contains(lower));
     }
 
     private AgentSkillDTO toBasicDto(Skill skill) {
@@ -148,6 +120,9 @@ public class SkillTools {
         dto.setDescription(skill.getDescription());
         dto.setSkillType(skill.getSkillType());
         dto.setEnabled(skill.isEnabled());
+        dto.setSkillCode(skill.getSkillCode());
+        dto.setFileCount(skill.getFileCount());
+        dto.setTotalSize(skill.getTotalSize());
         return dto;
     }
 
@@ -160,6 +135,9 @@ public class SkillTools {
         dto.setSkillPath(skill.getSkillPath());
         dto.setSkillFilesTree(skill.getSkillFilesTree());
         dto.setEnabled(skill.isEnabled());
+        dto.setFileCount(skill.getFileCount());
+        dto.setTotalSize(skill.getTotalSize());
+        dto.setLastSyncAt(skill.getLastSyncAt());
         return dto;
     }
 }

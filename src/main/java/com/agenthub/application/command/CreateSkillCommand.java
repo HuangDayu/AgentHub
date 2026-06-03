@@ -12,7 +12,6 @@ import java.io.InputStream;
 @AllArgsConstructor
 @Builder
 public class CreateSkillCommand {
-    private String tenantId;
     private String workspaceId;
     private String skillCode;
     private String name;

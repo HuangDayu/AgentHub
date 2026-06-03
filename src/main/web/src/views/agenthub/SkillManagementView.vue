@@ -257,6 +257,80 @@
           </div>
         </div>
       </form>
+
+      <!-- 技能市场 -->
+      <div v-if="activeCreateTab === 'market'" class="market-search">
+        <div class="market-search-bar">
+          <input
+            v-model="marketSearchKeyword"
+            type="text"
+            placeholder="搜索技能市场..."
+            class="form-input"
+            @keyup.enter="handleMarketSearch"
+          />
+          <button class="btn-primary market-search-btn" @click="handleMarketSearch" :disabled="marketSearching">
+            {{ marketSearching ? '搜索中...' : '搜索' }}
+          </button>
+        </div>
+
+        <div v-if="Object.keys(marketResults).length > 0" class="market-results">
+          <div v-for="(skills, marketId) in marketResults" :key="marketId" class="market-group">
+            <h4 class="market-title">{{ marketId }}</h4>
+            <div class="market-cards">
+              <div
+                v-for="skill in skills"
+                :key="skill.skillId"
+                class="market-card"
+                @click="viewMarketSkill(skill)"
+              >
+                <div class="market-card-header">
+                  <span class="market-card-name">{{ skill.name }}</span>
+                  <span class="market-card-version">v{{ skill.version }}</span>
+                </div>
+                <p class="market-card-desc">{{ skill.description }}</p>
+                <div class="market-card-meta">
+                  <span>{{ skill.author }}</span>
+                  <span>&#11015; {{ skill.downloadCount }}</span>
+                  <span>&#9733; {{ skill.starCount }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="!marketSearching && marketSearchKeyword" class="empty-state">
+          <p>未找到相关技能</p>
+        </div>
+        <div v-else class="empty-state">
+          <p>输入关键词搜索技能市场</p>
+        </div>
+      </div>
+    </ModalDialog>
+
+    <!-- 市场技能详情弹窗 -->
+    <ModalDialog
+      v-model:visible="showMarketDetail"
+      title="技能详情"
+      size="large"
+      :show-footer="true"
+      confirm-text="安装"
+      @confirm="handleInstallFromMarket"
+      @close="showMarketDetail = false; selectedMarketSkill = null; marketDetail = null"
+    >
+      <div v-if="selectedMarketSkill" class="market-detail">
+        <h3 class="market-detail-name">{{ selectedMarketSkill.name }}</h3>
+        <p class="market-detail-meta">
+          作者: {{ selectedMarketSkill.author }} | 版本: v{{ selectedMarketSkill.version }}
+          | 下载: {{ selectedMarketSkill.downloadCount }} | 收藏: {{ selectedMarketSkill.starCount }}
+        </p>
+        <p class="market-detail-desc">{{ selectedMarketSkill.description }}</p>
+        <div v-if="loadingMarketDetail" class="empty-state">
+          <p>加载详情中...</p>
+        </div>
+        <div v-else-if="marketDetail?.readmeContent" class="market-detail-readme">
+          <MarkdownRenderer :content="marketDetail.readmeContent" />
+        </div>
+      </div>
     </ModalDialog>
 
     <!-- 编辑技能对话框 -->
@@ -310,11 +384,15 @@ import {
   enableSkill,
   disableSkill,
   deleteSkill,
-  syncAllSkills
+  syncAllSkills,
+  searchMarketSkills,
+  getMarketSkillDetail,
+  installMarketSkill
 } from '@/api/skill-api'
-import type { Skill } from '@/types/memory'
+import type { Skill, MarketSkillSummary, MarketSkillDetail } from '@/types/memory'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomButton from '@/components/CustomButton.vue'
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import SkillDetailModal from './SkillDetailModal.vue'
 
 const store = useWorkspaceStore()
@@ -348,6 +426,12 @@ const createTabs = [
     label: '本地上传',
     desc: '上传ZIP文件',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 8 12 3 7 8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  },
+  {
+    key: 'market',
+    label: '技能市场',
+    desc: '从市场安装',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke-linecap="round" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 10a4 4 0 01-8 0" stroke-linecap="round" stroke-linejoin="round"/></svg>'
   }
 ]
 
@@ -359,6 +443,15 @@ const uploadForm = ref({ skillCode: '', name: '', file: null as File | null })
 const editForm = ref({ skillCode: '', name: '', description: '', skillPath: '' })
 const editingSkillId = ref('')
 const selectedSkill = ref<Skill | null>(null)
+
+const marketSearchKeyword = ref('')
+const marketResults = ref<Record<string, MarketSkillSummary[]>>({})
+const marketSearching = ref(false)
+const selectedMarketSkill = ref<MarketSkillSummary | null>(null)
+const showMarketDetail = ref(false)
+const marketDetail = ref<MarketSkillDetail | null>(null)
+const loadingMarketDetail = ref(false)
+const installingFromMarket = ref(false)
 
 const selection = () => ({
   tenantId: store.tenantId,
@@ -579,6 +672,11 @@ function closeCreateDialog() {
   createForm.value = { skillCode: '', name: '', skillPath: '' }
   urlForm.value = { skillCode: '', name: '', zipUrl: '' }
   uploadForm.value = { skillCode: '', name: '', file: null }
+  marketSearchKeyword.value = ''
+  marketResults.value = {}
+  selectedMarketSkill.value = null
+  showMarketDetail.value = false
+  marketDetail.value = null
 }
 
 function closeEditDialog() {
@@ -589,6 +687,48 @@ function closeEditDialog() {
 function closeDetailDialog() {
   showDetailDialog.value = false
   selectedSkill.value = null
+}
+
+async function handleMarketSearch() {
+  if (!marketSearchKeyword.value.trim()) return
+  marketSearching.value = true
+  try {
+    marketResults.value = await searchMarketSkills(selection(), { keyword: marketSearchKeyword.value })
+  } catch (e: any) {
+    console.error(e.message || '搜索失败')
+  } finally {
+    marketSearching.value = false
+  }
+}
+
+async function viewMarketSkill(skill: MarketSkillSummary) {
+  selectedMarketSkill.value = skill
+  showMarketDetail.value = true
+  loadingMarketDetail.value = true
+  try {
+    marketDetail.value = await getMarketSkillDetail(selection(), skill.marketId, skill.skillId)
+  } catch (e: any) {
+    console.error(e.message || '获取详情失败')
+  } finally {
+    loadingMarketDetail.value = false
+  }
+}
+
+async function handleInstallFromMarket() {
+  if (!selectedMarketSkill.value) return
+  installingFromMarket.value = true
+  try {
+    await installMarketSkill(selection(), { marketId: selectedMarketSkill.value.marketId, skillId: selectedMarketSkill.value.skillId })
+    console.info('安装成功')
+    showMarketDetail.value = false
+    selectedMarketSkill.value = null
+    marketDetail.value = null
+    await loadSkills()
+  } catch (e: any) {
+    console.error(e.message || '安装失败')
+  } finally {
+    installingFromMarket.value = false
+  }
 }
 </script>
 
@@ -716,7 +856,7 @@ th {
 /* Tab navigation */
 .skill-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
@@ -992,5 +1132,138 @@ th {
   text-align: center;
   padding: 2rem;
   color: var(--color-text-muted);
+}
+
+/* Market search */
+.market-search {
+  margin-top: 8px;
+}
+
+.market-search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.market-search-bar .form-input {
+  flex: 1;
+}
+
+.btn-primary {
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.market-search-btn {
+  flex-shrink: 0;
+}
+
+.market-group {
+  margin-bottom: 20px;
+}
+
+.market-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.market-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.market-card {
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg-input);
+}
+
+.market-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.market-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.market-card-name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.market-card-version {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.market-card-desc {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0 0 8px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.market-card-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Market detail */
+.market-detail-name {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.market-detail-meta {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+}
+
+.market-detail-desc {
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.market-detail-readme {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--bg-input);
+  border-radius: 6px;
 }
 </style>

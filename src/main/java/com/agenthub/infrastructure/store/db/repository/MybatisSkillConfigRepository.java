@@ -54,6 +54,18 @@ public class MybatisSkillConfigRepository implements SkillConfigRepository {
         return mapper.selectList(null).stream().map(this::toDomain).toList();
     }
 
+    /**
+     * 查找所有启用自动同步的配置。
+     */
+    @Override
+    public List<SkillConfig> findAllEnabledAutoSync() {
+        LambdaQueryWrapper<SkillConfigEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SkillConfigEntity::getAutoSync, true)
+               .eq(SkillConfigEntity::getSyncEnabled, true)
+               .eq(SkillConfigEntity::getEnabled, true);
+        return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
+    }
+
     @Override
     public void deleteById(String id) {
         mapper.deleteById(id);
@@ -76,6 +88,7 @@ public class MybatisSkillConfigRepository implements SkillConfigRepository {
         entity.setEnabled(domain.isEnabled());
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
+        entity.setLastSyncAt(domain.getLastSyncAt());
         return entity;
     }
 
@@ -96,6 +109,7 @@ public class MybatisSkillConfigRepository implements SkillConfigRepository {
         domain.setEnabled(entity.getEnabled() != null ? entity.getEnabled() : true);
         domain.setCreatedAt(entity.getCreatedAt());
         domain.setUpdatedAt(entity.getUpdatedAt());
+        domain.setLastSyncAt(entity.getLastSyncAt());
         return domain;
     }
 

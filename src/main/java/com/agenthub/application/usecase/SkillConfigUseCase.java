@@ -2,6 +2,7 @@ package com.agenthub.application.usecase;
 
 import com.agenthub.application.command.CreateSkillConfigCommand;
 import com.agenthub.application.dto.SkillConfigOutput;
+import com.agenthub.application.port.out.SkillSyncSchedulerPort;
 import com.agenthub.application.port.out.repositories.SkillConfigRepository;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.skill.SkillConfig;
@@ -19,6 +20,7 @@ import java.util.List;
 public class SkillConfigUseCase {
 
     private final SkillConfigRepository repository;
+    private final SkillSyncSchedulerPort skillSyncScheduler;
 
     /**
      * 创建配置。
@@ -32,6 +34,7 @@ public class SkillConfigUseCase {
         config.setSyncInterval(command.getSyncInterval());
         config.setAutoSync(command.isAutoSync());
         SkillConfig saved = repository.saveOrUpdate(config);
+        skillSyncScheduler.reschedule(saved);
         return toOutput(saved);
     }
 
@@ -66,6 +69,7 @@ public class SkillConfigUseCase {
                 command.getSkillPaths(), command.isSyncEnabled(),
                 command.getSyncInterval(), command.isAutoSync());
         SkillConfig saved = repository.saveOrUpdate(existing);
+        skillSyncScheduler.reschedule(saved);
         return toOutput(saved);
     }
 
@@ -99,6 +103,7 @@ public class SkillConfigUseCase {
     @Transactional
     public void delete(String configId) {
         repository.deleteById(configId);
+        skillSyncScheduler.unschedule(configId);
     }
 
     /**
@@ -116,6 +121,7 @@ public class SkillConfigUseCase {
         output.setSyncInterval(config.getSyncInterval());
         output.setAutoSync(config.isAutoSync());
         output.setEnabled(config.isEnabled());
+        output.setLastSyncAt(config.getLastSyncAt());
         output.setCreatedAt(config.getCreatedAt());
         output.setUpdatedAt(config.getUpdatedAt());
         return output;

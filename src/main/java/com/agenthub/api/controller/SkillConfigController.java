@@ -3,6 +3,8 @@ package com.agenthub.api.controller;
 import com.agenthub.api.dto.CreateSkillConfigRequest;
 import com.agenthub.application.command.CreateSkillConfigCommand;
 import com.agenthub.application.dto.SkillConfigOutput;
+import com.agenthub.application.port.out.SkillSyncSchedulerPort;
+import com.agenthub.application.port.out.repositories.SkillConfigRepository;
 import com.agenthub.application.usecase.SkillConfigUseCase;
 import com.agenthub.application.usecase.SkillUseCase;
 import lombok.RequiredArgsConstructor;

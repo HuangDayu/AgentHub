@@ -14,6 +14,9 @@ public class AgentSkillDTO {
     private String id;
     private String name;
     private String description;
+    private String skillCode;
     private String skillType;
     private boolean enabled;
+    private int fileCount;
+    private long totalSize;
 }

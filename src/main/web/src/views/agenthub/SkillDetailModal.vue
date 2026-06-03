@@ -33,6 +33,10 @@
             <label>最后同步</label>
             <span>{{ skill.lastSyncAt ? formatDate(skill.lastSyncAt) : '未同步' }}</span>
           </div>
+          <div class="info-item">
+            <label>源路径</label>
+            <span>{{ skill.sourcePath }}</span>
+          </div>
         </div>
       </div>
 
