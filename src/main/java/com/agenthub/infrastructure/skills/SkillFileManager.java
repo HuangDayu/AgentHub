@@ -58,7 +58,8 @@ public class SkillFileManager implements SkillToolScannerPort {
         return cache;
     }
 
-    private Optional<Skill> loadSkillFromPath(Path skillPath) {
+    @Override
+    public Optional<Skill> loadSkillFromPath(Path skillPath) {
         Path skillMdPath = skillPath.resolve("SKILL.md");
         if (!Files.exists(skillMdPath)) return Optional.empty();
         try {

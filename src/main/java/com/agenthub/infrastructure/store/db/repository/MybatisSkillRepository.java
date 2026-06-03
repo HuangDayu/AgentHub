@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.SkillRepository;
 import com.agenthub.domain.model.skill.Skill;
 import com.agenthub.infrastructure.store.db.entity.SkillEntity;
@@ -98,51 +99,16 @@ public class MybatisSkillRepository implements SkillRepository {
         }
     }
 
+    @Override
+    public void updateById(Skill skill) {
+        mapper.updateById(toEntity(skill));
+    }
+
     private SkillEntity toEntity(Skill skill) {
-        SkillEntity entity = new SkillEntity();
-        entity.setId(skill.getId());
-        entity.setTenantId(skill.getTenantId());
-        entity.setWorkspaceId(skill.getWorkspaceId());
-        entity.setSkillCode(skill.getSkillCode());
-        entity.setName(skill.getName());
-        entity.setDescription(skill.getDescription());
-        entity.setSkillType(skill.getSkillType());
-        entity.setSkillFilesTree(skill.getSkillFilesTree());
-        entity.setSkillPath(skill.getSkillPath());
-        entity.setSource(skill.getSource());
-        entity.setSourcePath(skill.getSourcePath());
-        entity.setZipStoragePath(skill.getZipStoragePath());
-        entity.setConfigId(skill.getConfigId());
-        entity.setFileCount(skill.getFileCount());
-        entity.setTotalSize(skill.getTotalSize());
-        entity.setEnabled(skill.isEnabled());
-        entity.setCreatedAt(skill.getCreatedAt());
-        entity.setUpdatedAt(skill.getUpdatedAt());
-        entity.setLastSyncAt(skill.getLastSyncAt());
-        return entity;
+        return BeanUtil.copyProperties(skill, SkillEntity.class);
     }
 
     private Skill toDomain(SkillEntity entity) {
-        Skill skill = new Skill();
-        skill.setId(entity.getId());
-        skill.setTenantId(entity.getTenantId());
-        skill.setWorkspaceId(entity.getWorkspaceId());
-        skill.setSkillCode(entity.getSkillCode());
-        skill.setName(entity.getName());
-        skill.setDescription(entity.getDescription());
-        skill.setSkillType(entity.getSkillType());
-        skill.setSkillFilesTree(entity.getSkillFilesTree());
-        skill.setSkillPath(entity.getSkillPath());
-        skill.setSource(entity.getSource());
-        skill.setSourcePath(entity.getSourcePath());
-        skill.setZipStoragePath(entity.getZipStoragePath());
-        skill.setConfigId(entity.getConfigId());
-        skill.setFileCount(entity.getFileCount());
-        skill.setTotalSize(entity.getTotalSize());
-        skill.setEnabled(entity.isEnabled());
-        skill.setCreatedAt(entity.getCreatedAt());
-        skill.setUpdatedAt(entity.getUpdatedAt());
-        skill.setLastSyncAt(entity.getLastSyncAt());
-        return skill;
+        return BeanUtil.copyProperties(entity, Skill.class);
     }
 }

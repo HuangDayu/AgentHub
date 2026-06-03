@@ -1,6 +1,7 @@
 package com.agenthub.application.port.out.repositories;
 
 import com.agenthub.domain.model.skill.SkillFile;
+import com.agenthub.domain.model.skill.SkillFileStats;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,8 +31,6 @@ public interface SkillFileRepository {
 
     void deleteBySkillIdAndFileId(String skillId, String filePath);
 
-    FileStats getStats(String skillId);
+    SkillFileStats getStats(String skillId);
 
-    record FileStats(int fileCount, long totalSize) {
-    }
 }

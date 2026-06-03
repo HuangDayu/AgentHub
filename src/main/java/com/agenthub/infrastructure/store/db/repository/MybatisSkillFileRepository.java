@@ -2,6 +2,7 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import com.agenthub.application.port.out.repositories.SkillFileRepository;
 import com.agenthub.domain.model.skill.SkillFile;
+import com.agenthub.domain.model.skill.SkillFileStats;
 import com.agenthub.infrastructure.store.db.entity.SkillFileEntity;
 import com.agenthub.infrastructure.store.db.mapper.SkillFileMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -89,15 +90,8 @@ public class MybatisSkillFileRepository implements SkillFileRepository {
 
 
     @Override
-    public FileStats getStats(String skillId) {
-        Object[] stats = mapper.selectStats(skillId);
-        if (stats != null && stats.length >= 2) {
-            return new FileStats(
-                    stats[0] != null ? ((Number) stats[0]).intValue() : 0,
-                    stats[1] != null ? ((Number) stats[1]).longValue() : 0L
-            );
-        }
-        return new FileStats(0, 0L);
+    public SkillFileStats getStats(String skillId) {
+        return mapper.selectStats(skillId);
     }
 
     /**

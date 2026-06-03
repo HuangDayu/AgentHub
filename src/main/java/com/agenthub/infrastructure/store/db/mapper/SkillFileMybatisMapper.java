@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.mapper;
 
+import com.agenthub.domain.model.skill.SkillFileStats;
 import com.agenthub.infrastructure.store.db.entity.SkillFileEntity;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
@@ -29,5 +30,5 @@ public interface SkillFileMybatisMapper extends BaseMapper<SkillFileEntity> {
      */
     @Select("SELECT COUNT(*) as file_count, COALESCE(SUM(file_size), 0) as total_size " +
             "FROM skill_file WHERE skill_id = #{skillId} AND is_directory = false")
-    Object[] selectStats(@Param("skillId") String skillId);
+    SkillFileStats selectStats(@Param("skillId") String skillId);
 }

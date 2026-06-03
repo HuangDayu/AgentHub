@@ -4,6 +4,7 @@ import com.agenthub.application.dto.SkillFileOutput;
 import com.agenthub.application.port.out.DocumentFileStoragePort;
 import com.agenthub.application.port.out.repositories.SkillFileRepository;
 import com.agenthub.domain.model.skill.SkillFile;
+import com.agenthub.domain.model.skill.SkillFileStats;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
@@ -93,7 +94,7 @@ public class SkillFileUseCase {
     /**
      * 获取文件统计。
      */
-    public SkillFileRepository.FileStats getStats(String skillId) {
+    public SkillFileStats getStats(String skillId) {
         return skillFileRepository.getStats(skillId);
     }
 

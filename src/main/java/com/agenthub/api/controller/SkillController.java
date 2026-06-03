@@ -1,10 +1,12 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateSkillFromUrlRequest;
 import com.agenthub.api.dto.CreateSkillRequest;
 import com.agenthub.api.dto.SkillResponse;
-import com.agenthub.application.usecase.SkillUseCase;
+import com.agenthub.application.command.CreateSkillCommand;
 import com.agenthub.application.dto.SkillOutput;
+import com.agenthub.application.usecase.SkillUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -29,9 +31,11 @@ public class SkillController {
     @ResponseStatus(HttpStatus.CREATED)
     public SkillResponse create(@PathVariable String workspaceId,
                                 @RequestBody CreateSkillRequest request) {
-        SkillOutput result = useCase.createSynced(request.getTenantId(), workspaceId,
-                request.getSkillCode(), request.getName(),
-                request.getDescription(), request.getSkillPath());
+        CreateSkillCommand createSkillCommand = BeanUtil.copyProperties(request, CreateSkillCommand.class);
+        createSkillCommand.setSkillType("SYNCED");
+        createSkillCommand.setSource("LOCAL");
+        createSkillCommand.setSourcePath(request.getSkillPath());
+        SkillOutput result = useCase.createSynced(createSkillCommand);
         return toResponse(result);
     }
 
@@ -42,9 +46,11 @@ public class SkillController {
     @ResponseStatus(HttpStatus.CREATED)
     public SkillResponse createFromUrl(@PathVariable String workspaceId,
                                        @RequestBody CreateSkillFromUrlRequest request) {
-        SkillOutput result = useCase.createFromUrl(request.getTenantId(), workspaceId,
-                request.getSkillCode(), request.getName(),
-                request.getDescription(), request.getZipUrl());
+        CreateSkillCommand createSkillCommand = BeanUtil.copyProperties(request, CreateSkillCommand.class);
+        createSkillCommand.setSkillType("UPLOADED");
+        createSkillCommand.setSource("URL");
+        createSkillCommand.setSourcePath(request.getZipUrl());
+        SkillOutput result = useCase.createFromUrl(createSkillCommand);
         return toResponse(result);
     }
 
@@ -55,14 +61,21 @@ public class SkillController {
     @ResponseStatus(HttpStatus.CREATED)
     public SkillResponse createFromUpload(
             @PathVariable String workspaceId,
-            @RequestParam String tenantId,
-            @RequestParam String skillCode,
-            @RequestParam String name,
-            @RequestParam String description,
+            @RequestParam(required = false) String skillCode,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String description,
             @RequestParam("file") MultipartFile file) throws Exception {
-        SkillOutput result = useCase.createFromUpload(tenantId, workspaceId,
-                skillCode, name, description,
-                file.getInputStream(), file.getSize());
+        SkillOutput result = useCase.createFromUpload(CreateSkillCommand.builder()
+                .workspaceId(workspaceId)
+                .skillCode(skillCode)
+                .name(name)
+                .skillType("UPLOADED")
+                .source("UPLOAD")
+                .sourcePath(file.getOriginalFilename())
+                .description(description)
+                .zipStream(file.getInputStream())
+                .zipSize(file.getSize())
+                .build());
         return toResponse(result);
     }
 

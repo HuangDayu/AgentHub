@@ -31,4 +31,6 @@ public interface SkillRepository {
 
     void updateSyncTime(String skillId);
 
+    void updateById(Skill skill);
+
 }

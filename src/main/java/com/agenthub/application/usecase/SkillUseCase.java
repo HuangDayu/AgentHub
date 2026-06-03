@@ -1,5 +1,10 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.agenthub.application.command.CreateSkillCommand;
 import com.agenthub.application.dto.SkillOutput;
 import com.agenthub.application.port.out.DocumentFileStoragePort;
 import com.agenthub.application.port.out.repositories.SkillConfigRepository;
@@ -10,7 +15,9 @@ import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.skill.Skill;
 import com.agenthub.domain.model.skill.SkillConfig;
 import com.agenthub.domain.model.skill.SkillFile;
+import com.agenthub.domain.model.skill.SkillFileStats;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -48,25 +56,10 @@ public class SkillUseCase {
      * 创建同步技能。
      */
     @Transactional
-    public SkillOutput createSynced(String tenantId, String workspaceId,
-                                    String skillCode, String name,
-                                    String description, String skillPath) {
-        if (skillCode == null || skillCode.isBlank()) {
-            skillCode = extractSkillCode(skillPath);
-        }
-        if (name == null || name.isBlank()) {
-            name = skillCode;
-        }
-        if (description == null) {
-            description = "";
-        }
-        Skill skill = Skill.createSynced(tenantId, workspaceId,
-                skillCode, name, description, skillPath);
-        skill.setSkillType("SYNCED");
-        skill.setSource("LOCAL");
-        skill.setSourcePath(skillPath);
+    public SkillOutput createSynced(CreateSkillCommand createSkillCommand) {
+        Skill skill = scanSkill(createSkillCommand, Path.of(createSkillCommand.getSkillPath()));
         Skill saved = skillRepository.saveOrUpdate(skill);
-        syncFilesToLocal(saved);
+        syncFilesToLocal(saved, Path.of(createSkillCommand.getSkillPath()));
         return toOutput(saved);
     }
 
@@ -91,26 +84,15 @@ public class SkillUseCase {
     /**
      * 从 URL 创建上传技能。
      */
+    @SneakyThrows
     @Transactional
-    public SkillOutput createFromUrl(String tenantId, String workspaceId,
-                                     String skillCode, String name,
-                                     String description, String zipUrl) {
-        if (skillCode == null || skillCode.isBlank()) {
-            skillCode = extractSkillCodeFromUrl(zipUrl);
-        }
-        if (name == null || name.isBlank()) {
-            name = skillCode;
-        }
-        if (description == null) {
-            description = "";
-        }
-        Skill skill = Skill.createFromUrl(tenantId, workspaceId,
-                skillCode, name, description, zipUrl);
-        skill.setSkillType("UPLOADED");
-        skill.setSource("URL");
-        skill.setSourcePath(zipUrl);
-        Skill saved = skillRepository.saveOrUpdate(skill);
-        processZipFromUrl(saved, zipUrl);
+    public SkillOutput createFromUrl(CreateSkillCommand createSkillCommand) {
+        Path tempDir = Files.createTempDirectory("skill-zip-");
+        Path zipPath = tempDir.resolve("skill.zip");
+        downloadZip(createSkillCommand.getZipUrl(), zipPath);
+        Skill saved = extractAndProcess(createSkillCommand, zipPath);
+        saveZipToMinio(saved.getSkillCode(), zipPath);
+        deleteDirectory(tempDir);
         return toOutput(saved);
     }
 
@@ -136,26 +118,15 @@ public class SkillUseCase {
     /**
      * 从上传创建技能。
      */
+    @SneakyThrows
     @Transactional
-    public SkillOutput createFromUpload(String tenantId, String workspaceId,
-                                        String skillCode, String name,
-                                        String description,
-                                        InputStream zipStream, long zipSize) {
-        if (skillCode == null || skillCode.isBlank()) {
-            skillCode = "skill-" + System.currentTimeMillis();
-        }
-        if (name == null || name.isBlank()) {
-            name = skillCode;
-        }
-        if (description == null) {
-            description = "";
-        }
-        Skill skill = Skill.createFromUpload(tenantId, workspaceId,
-                skillCode, name, description);
-        skill.setSkillType("UPLOADED");
-        skill.setSource("UPLOAD");
-        Skill saved = skillRepository.saveOrUpdate(skill);
-        processUploadedZip(saved, zipStream, zipSize);
+    public SkillOutput createFromUpload(CreateSkillCommand createSkillCommand) {
+        Path tempDir = Files.createTempDirectory("skill-zip-");
+        Path zipPath = tempDir.resolve("skill.zip");
+        Files.copy(createSkillCommand.getZipStream(), zipPath);
+        Skill saved = extractAndProcess(createSkillCommand, zipPath);
+        saveZipToMinio(saved.getSkillCode(), zipPath);
+        deleteDirectory(tempDir);
         return toOutput(saved);
     }
 
@@ -163,17 +134,14 @@ public class SkillUseCase {
      * 列出技能。
      */
     public List<SkillOutput> list() {
-        return skillRepository.findAll().stream()
-                .map(this::toOutput)
-                .toList();
+        return skillRepository.findAll().stream().map(this::toOutput).toList();
     }
 
     /**
      * 获取技能。
      */
     public SkillOutput get(String skillId) {
-        Skill skill = skillRepository.findById(skillId)
-                .orElseThrow(() -> new NotFoundException("Skill not found: " + skillId));
+        Skill skill = skillRepository.findById(skillId).orElseThrow(() -> new NotFoundException("Skill not found: " + skillId));
         return toOutput(skill);
     }
 
@@ -182,8 +150,7 @@ public class SkillUseCase {
      */
     @Transactional
     public SkillOutput update(String skillId, String name, String description, String skillPath) {
-        Skill skill = skillRepository.findById(skillId)
-                .orElseThrow(() -> new NotFoundException("Skill not found: " + skillId));
+        Skill skill = skillRepository.findById(skillId).orElseThrow(() -> new NotFoundException("Skill not found: " + skillId));
         skill.setName(name);
         skill.setDescription(description);
         skill.setSkillPath(skillPath);
@@ -196,8 +163,7 @@ public class SkillUseCase {
      */
     @Transactional
     public SkillOutput enable(String skillId) {
-        Skill skill = skillRepository.findById(skillId)
-                .orElseThrow(() -> new NotFoundException("Skill not found: " + skillId));
+        Skill skill = skillRepository.findById(skillId).orElseThrow(() -> new NotFoundException("Skill not found: " + skillId));
         skill.enable();
         Skill saved = skillRepository.saveOrUpdate(skill);
         return toOutput(saved);
@@ -208,8 +174,7 @@ public class SkillUseCase {
      */
     @Transactional
     public SkillOutput disable(String skillId) {
-        Skill skill = skillRepository.findById(skillId)
-                .orElseThrow(() -> new NotFoundException("Skill not found: " + skillId));
+        Skill skill = skillRepository.findById(skillId).orElseThrow(() -> new NotFoundException("Skill not found: " + skillId));
         skill.disable();
         Skill saved = skillRepository.saveOrUpdate(skill);
         return toOutput(saved);
@@ -226,15 +191,18 @@ public class SkillUseCase {
     /**
      * 同步所有技能。
      */
-    @Transactional
     public void syncAll() {
-        List<Skill> skills = skillToolScannerPort.scanSkills(skillSharePath);
+        sync(skillSharePath);
+    }
+
+    public void sync(String skillPath) {
+        List<Skill> skills = skillToolScannerPort.scanSkills(skillPath);
         parallelStreamWithTtl(8, skills, skill -> {
             skill.setSkillType("SYNCED");
             skill.setSource("LOCAL");
-            skill.setSourcePath(skillSharePath);
+            skill.setSourcePath(skillPath);
             Skill saved = skillRepository.saveOrUpdate(skill);
-            syncFilesToLocal(saved);
+            syncFilesToLocal(saved, Path.of(skill.getSkillPath()));
             return null;
         });
     }
@@ -244,8 +212,7 @@ public class SkillUseCase {
      */
     @Transactional
     public void syncWithConfig(String configId) {
-        SkillConfig config = skillConfigRepository.findById(configId)
-                .orElseThrow(() -> new NotFoundException("Skill config not found: " + configId));
+        SkillConfig config = skillConfigRepository.findById(configId).orElseThrow(() -> new NotFoundException("Skill config not found: " + configId));
         for (String path : config.getSkillPaths()) {
             List<Skill> skills = skillToolScannerPort.scanSkills(path);
             for (Skill skill : skills) {
@@ -254,7 +221,7 @@ public class SkillUseCase {
                 skill.setSourcePath(path);
                 skill.setConfigId(configId);
                 Skill saved = skillRepository.saveOrUpdate(skill);
-                syncFilesToLocal(saved);
+                syncFilesToLocal(saved, Path.of(skill.getSkillPath()));
             }
         }
     }
@@ -262,8 +229,8 @@ public class SkillUseCase {
     /**
      * 同步文件到本地和 MinIO。
      */
-    private void syncFilesToLocal(Skill skill) {
-        List<SkillFile> files = scanAndStoreSkillFiles(skill);
+    private void syncFilesToLocal(Skill skill, Path skillPath) {
+        List<SkillFile> files = scanAndStoreSkillFiles(skill, skillPath);
         skillFileRepository.deleteBySkillId(skill.getId());
         skillFileRepository.saveAll(files);
         updateSkillStats(skill);
@@ -272,17 +239,13 @@ public class SkillUseCase {
     /**
      * 扫描并存储技能文件。
      */
-    private List<SkillFile> scanAndStoreSkillFiles(Skill skill) {
-        Path skillPath = Path.of(skill.getSkillPath());
-        List<SkillFile> files = new ArrayList<>();
+    private List<SkillFile> scanAndStoreSkillFiles(Skill skill, Path skillPath) {
         try (Stream<Path> paths = Files.walk(skillPath)) {
-            paths.parallel().filter(Files::isRegularFile).forEach(path -> {
-                files.add(processFile(skill, skillPath, path));
-            });
+            return paths.parallel().filter(Files::isRegularFile).map(path -> processFile(skill, skillPath, path)).toList();
         } catch (Exception e) {
             log.error("Failed to scan skill files: {}", skill.getSkillPath(), e);
         }
-        return files;
+        return new ArrayList<>();
     }
 
     /**
@@ -324,53 +287,17 @@ public class SkillUseCase {
      * 创建 SkillFile 对象。
      */
     private SkillFile createSkillFile(Skill skill, String relativePath, long size, String storagePath) {
-        return SkillFile.create(skill.getId(), skill.getTenantId(),
-                skill.getWorkspaceId(), relativePath, size, "UTF-8",
-                skill.getSkillCode(), storagePath);
+        return SkillFile.create(skill.getId(), skill.getTenantId(), skill.getWorkspaceId(), relativePath, size, "UTF-8", skill.getSkillCode(), storagePath);
     }
 
     /**
      * 更新 skill 文件统计。
      */
     private void updateSkillStats(Skill skill) {
-        SkillFileRepository.FileStats stats = skillFileRepository.getStats(skill.getId());
-        skill.updateFileStats(stats.fileCount(), stats.totalSize());
+        SkillFileStats stats = skillFileRepository.getStats(skill.getId());
+        skill.updateFileStats(stats.getFileCount(), stats.getTotalSize());
         skill.markSynced();
-        skillRepository.saveOrUpdate(skill);
-    }
-
-    /**
-     * 处理 URL ZIP。
-     */
-    private void processZipFromUrl(Skill skill, String zipUrl) {
-        try {
-            Path tempDir = Files.createTempDirectory("skill-zip-");
-            Path zipPath = tempDir.resolve("skill.zip");
-            downloadZip(zipUrl, zipPath);
-            saveZipToMinio(skill.getSkillCode(), zipPath);
-            extractAndProcess(skill, zipPath);
-            deleteDirectory(tempDir);
-        } catch (Exception e) {
-            log.error("Failed to process ZIP from URL: {}", zipUrl, e);
-            throw new RuntimeException("Failed to process ZIP", e);
-        }
-    }
-
-    /**
-     * 处理上传的 ZIP。
-     */
-    private void processUploadedZip(Skill skill, InputStream zipStream, long zipSize) {
-        try {
-            Path tempDir = Files.createTempDirectory("skill-zip-");
-            Path zipPath = tempDir.resolve("skill.zip");
-            Files.copy(zipStream, zipPath);
-            saveZipToMinio(skill.getSkillCode(), zipPath);
-            extractAndProcess(skill, zipPath);
-            deleteDirectory(tempDir);
-        } catch (Exception e) {
-            log.error("Failed to process uploaded ZIP", e);
-            throw new RuntimeException("Failed to process ZIP", e);
-        }
+        skillRepository.updateById(skill);
     }
 
     /**
@@ -401,15 +328,32 @@ public class SkillUseCase {
     }
 
     /**
-     * 解压并处理 ZIP。
+     * 解压，扫描，保存，删除缓存。
      */
-    private void extractAndProcess(Skill skill, Path zipPath) throws Exception {
+    private Skill extractAndProcess(CreateSkillCommand createSkillCommand, Path zipPath) throws Exception {
         Path extractDir = Files.createTempDirectory("skill-extract-");
         unzip(zipPath, extractDir);
-        List<SkillFile> files = scanExtractedFiles(skill, extractDir);
-        skillFileRepository.saveAll(files);
-        updateSkillStats(skill);
+        Skill skill = scanSkill(createSkillCommand, extractDir);
+        Skill saved = skillRepository.saveOrUpdate(skill);
+        syncFilesToLocal(saved, extractDir);
         deleteDirectory(extractDir);
+        return saved;
+    }
+
+
+    private Skill scanSkill(CreateSkillCommand createSkillCommand, Path skillPath) {
+        Optional<Skill> optional = skillToolScannerPort.loadSkillFromPath(skillPath);
+        if (optional.isEmpty()) throw new NotFoundException("Skill not found: " + skillPath);
+        Skill skill = optional.get();
+        BeanUtil.copyProperties(createSkillCommand, skill,
+                CopyOptions.create().ignoreNullValue().setPropertiesFilter((field, o) -> {
+                    Object fieldValue = ReflectUtil.getFieldValue(createSkillCommand, field);
+                    if (fieldValue instanceof String v) {
+                        return StrUtil.isNotBlank(v);
+                    }
+                    return fieldValue != null;
+                }));
+        return skill;
     }
 
     /**
@@ -439,48 +383,17 @@ public class SkillUseCase {
     }
 
     /**
-     * 扫描解压后的文件。
-     */
-    private List<SkillFile> scanExtractedFiles(Skill skill, Path extractDir) {
-        List<SkillFile> files = new ArrayList<>();
-        try (Stream<Path> paths = Files.walk(extractDir)) {
-            paths.filter(Files::isRegularFile).forEach(path -> {
-                processExtractedFile(skill, extractDir, path, files);
-            });
-        } catch (Exception e) {
-            log.error("Failed to scan extracted files", e);
-        }
-        return files;
-    }
-
-    /**
-     * 处理解压后的单个文件。
-     */
-    private void processExtractedFile(Skill skill, Path extractDir, Path path, List<SkillFile> files) {
-        try {
-            String relativePath = extractDir.relativize(path).toString();
-            long size = Files.size(path);
-            String storagePath = uploadFileToMinio(skill.getSkillCode(), relativePath, path, size);
-            SkillFile file = createSkillFile(skill, relativePath, size, storagePath);
-            files.add(file);
-        } catch (Exception e) {
-            log.error("Failed to process extracted file: {}", path, e);
-        }
-    }
-
-    /**
      * 删除临时目录。
      */
     private void deleteDirectory(Path dir) {
         try (Stream<Path> paths = Files.walk(dir)) {
-            paths.sorted(java.util.Comparator.reverseOrder())
-                    .forEach(p -> {
-                        try {
-                            Files.delete(p);
-                        } catch (Exception e) {
-                            log.warn("Failed to delete: {}", p);
-                        }
-                    });
+            paths.sorted(java.util.Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.delete(p);
+                } catch (Exception e) {
+                    log.warn("Failed to delete: {}", p);
+                }
+            });
         } catch (Exception e) {
             log.warn("Failed to delete directory: {}", dir);
         }

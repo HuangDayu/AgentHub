@@ -1,7 +1,8 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.dto.SkillFileOutput;
-import com.agenthub.application.port.out.repositories.SkillFileRepository;
+import com.agenthub.application.dto.SkillFileStatsOutput;
 import com.agenthub.application.usecase.SkillFileUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -82,9 +83,9 @@ public class SkillFileController {
      * 获取文件统计。
      */
     @GetMapping("/stats")
-    public ResponseEntity<SkillFileRepository.FileStats> getStats(
+    public ResponseEntity<SkillFileStatsOutput> getStats(
             @PathVariable String workspaceId,
             @PathVariable String skillId) {
-        return ResponseEntity.ok(skillFileUseCase.getStats(skillId));
+        return ResponseEntity.ok(BeanUtil.copyProperties(skillFileUseCase.getStats(skillId), SkillFileStatsOutput.class));
     }
 }
