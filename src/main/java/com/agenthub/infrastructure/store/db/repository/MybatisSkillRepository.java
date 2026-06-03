@@ -104,6 +104,17 @@ public class MybatisSkillRepository implements SkillRepository {
         mapper.updateById(toEntity(skill));
     }
 
+    @Override
+    public List<Skill> search(String keyword, String tenantId, String workspaceId) {
+        LambdaQueryWrapper<SkillEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SkillEntity::getTenantId, tenantId)
+                .eq(SkillEntity::getWorkspaceId, workspaceId)
+                .and(w -> w.like(SkillEntity::getName, keyword)
+                        .or().like(SkillEntity::getSkillCode, keyword)
+                        .or().like(SkillEntity::getDescription, keyword));
+        return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
+    }
+
     private SkillEntity toEntity(Skill skill) {
         return BeanUtil.copyProperties(skill, SkillEntity.class);
     }

@@ -33,4 +33,6 @@ public interface SkillRepository {
 
     void updateById(Skill skill);
 
+    List<Skill> search(String keyword, String tenantId, String workspaceId);
+
 }

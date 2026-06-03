@@ -5,6 +5,24 @@
         <h2>技能</h2>
         <p class="muted">管理Agent可调用的技能定义</p>
       </div>
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35" stroke-linecap="round"/>
+        </svg>
+        <input
+          v-model="searchKeyword"
+          type="text"
+          placeholder="搜索技能名称、编码..."
+          class="search-input"
+          @input="onSearchInput"
+        />
+        <button v-if="searchKeyword" class="search-clear" @click="clearSearch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="skill-list float-effect">
@@ -284,6 +302,7 @@ import { showConfirm } from '@/utils/confirm'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import {
   listSkills,
+  searchSkills,
   createSkill,
   createSkillFromUrl,
   createSkillFromUpload,
@@ -302,6 +321,8 @@ const store = useWorkspaceStore()
 const skills = ref<Skill[]>([])
 const syncing = ref(false)
 const selectionReady = computed(() => !!store.tenantId && !!store.workspaceId)
+const searchKeyword = ref('')
+let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 const showCreateDialog = ref(false)
 const showEditDialog = ref(false)
@@ -373,10 +394,27 @@ onUnmounted(() => {
 async function loadSkills() {
   if (!selectionReady.value) return
   try {
-    skills.value = await listSkills(selection())
+    const keyword = searchKeyword.value.trim()
+    if (keyword) {
+      skills.value = await searchSkills(selection(), keyword)
+    } else {
+      skills.value = await listSkills(selection())
+    }
   } catch (e) {
     console.error('Failed to load skills', e)
   }
+}
+
+function onSearchInput() {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    loadSkills()
+  }, 300)
+}
+
+function clearSearch() {
+  searchKeyword.value = ''
+  loadSkills()
 }
 
 async function syncAllSkillsHandler() {
@@ -560,7 +598,65 @@ function closeDetailDialog() {
 }
 
 .page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 2rem;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 240px;
+  padding: 0.5rem 2rem 0.5rem 2rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.15);
+}
+
+.search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.search-clear {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.15s;
+}
+
+.search-clear:hover {
+  background: var(--bg-hover);
+  color: var(--color-text);
 }
 
 .status-enabled {

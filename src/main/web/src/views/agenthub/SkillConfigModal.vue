@@ -47,6 +47,11 @@
                 <span class="meta-label">自动同步</span>
                 <span class="meta-value">{{ config.autoSync ? '是' : '否' }}</span>
               </div>
+              <div class="meta-item">
+                <span class="meta-icon">✅</span>
+                <span class="meta-label">同步启用</span>
+                <span class="meta-value">{{ config.syncEnabled ? '是' : '否' }}</span>
+              </div>
             </div>
 
             <div v-if="config.skillPaths.length > 0" class="config-paths">
@@ -129,6 +134,17 @@
               <span class="form-hint">最小 60 秒，默认 3600 秒（1小时）</span>
             </div>
             <div class="form-group">
+              <label>启用同步</label>
+              <div class="toggle-wrapper">
+                <label class="toggle">
+                  <input v-model="configForm.syncEnabled" type="checkbox" />
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">{{ configForm.syncEnabled ? '已开启' : '已关闭' }}</span>
+              </div>
+              <span class="form-hint">关闭后将不同步此配置下的技能文件</span>
+            </div>
+            <div class="form-group">
               <label>自动同步</label>
               <div class="toggle-wrapper">
                 <label class="toggle">
@@ -202,6 +218,7 @@ const editingConfig = ref<SkillConfig | null>(null)
 const configForm = ref({
   name: '',
   description: '',
+  syncEnabled: true,
   syncInterval: 3600,
   autoSync: false,
   skillPaths: [''] as string[]
@@ -234,6 +251,7 @@ function editConfig(config: SkillConfig) {
   configForm.value = {
     name: config.name,
     description: config.description || '',
+    syncEnabled: config.syncEnabled,
     syncInterval: config.syncInterval,
     autoSync: config.autoSync,
     skillPaths: [...config.skillPaths]
@@ -249,6 +267,7 @@ async function saveConfig() {
     const payload = {
       name: configForm.value.name,
       description: configForm.value.description,
+      syncEnabled: configForm.value.syncEnabled,
       syncInterval: configForm.value.syncInterval,
       autoSync: configForm.value.autoSync,
       skillPaths: validPaths
@@ -292,6 +311,7 @@ function closeCreateConfig() {
   configForm.value = {
     name: '',
     description: '',
+    syncEnabled: true,
     syncInterval: 3600,
     autoSync: false,
     skillPaths: ['']

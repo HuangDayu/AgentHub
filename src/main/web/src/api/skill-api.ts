@@ -22,6 +22,15 @@ export async function listSkills(selection: Selection): Promise<Skill[]> {
   })
 }
 
+export async function searchSkills(selection: Selection, keyword: string): Promise<Skill[]> {
+  return requestJson<Skill[]>(`/api/v1/workspaces/${selection.workspaceId}/skills/search`, {
+    baseUrl: runtimeConfig.agentApiBase,
+    method: 'GET',
+    headers: buildHeaders(selection),
+    query: { keyword },
+  })
+}
+
 export async function createSkill(
   selection: Selection,
   skillCode: string,
@@ -60,17 +69,25 @@ export async function createSkillFromUpload(
   file: File
 ): Promise<Skill> {
   const formData = new FormData()
-  formData.append('tenantId', selection.tenantId)
   formData.append('skillCode', skillCode)
   formData.append('name', name)
   formData.append('description', description)
   formData.append('file', file)
-  return requestJson<Skill>(`/api/v1/workspaces/${selection.workspaceId}/skills/from-upload`, {
-    baseUrl: runtimeConfig.agentApiBase,
-    method: 'POST',
-    headers: buildHeaders(selection),
-    bodyJson: formData,
-  })
+  const token = localStorage.getItem('agenthub_access_token')
+  const headers: Record<string, string> = {
+    'X-Tenant-Id': selection.tenantId,
+    'X-Workspace-Id': selection.workspaceId,
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  const url = `${runtimeConfig.agentApiBase}/api/v1/workspaces/${selection.workspaceId}/skills/from-upload`
+  const response = await fetch(url, { method: 'POST', headers, body: formData })
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(text || `上传失败：${response.status}`)
+  }
+  return response.json()
 }
 
 export async function getSkill(selection: Selection, skillId: string): Promise<Skill> {

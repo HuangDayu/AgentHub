@@ -19,7 +19,6 @@ import com.agenthub.domain.model.skill.SkillFileStats;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,9 +47,6 @@ public class SkillUseCase {
     private final SkillToolScannerPort skillToolScannerPort;
     private final DocumentFileStoragePort documentFileStoragePort;
     private final SkillConfigRepository skillConfigRepository;
-
-    @Value("${agenthub.skills.share-path:${user.home}/.agents/skills}")
-    private String skillSharePath;
 
     /**
      * 创建同步技能。
@@ -138,6 +134,14 @@ public class SkillUseCase {
     }
 
     /**
+     * 搜索技能。
+     */
+    public List<SkillOutput> search(String keyword, String tenantId, String workspaceId) {
+        return skillRepository.search(keyword, tenantId, workspaceId)
+                .stream().map(this::toOutput).toList();
+    }
+
+    /**
      * 获取技能。
      */
     public SkillOutput get(String skillId) {
@@ -192,7 +196,23 @@ public class SkillUseCase {
      * 同步所有技能。
      */
     public void syncAll() {
-        sync(skillSharePath);
+        skillConfigRepository.findAll().forEach(config -> {
+            if (config.isSyncEnabled()) {
+                config.getSkillPaths().forEach(this::sync);
+            }
+        });
+    }
+
+    /**
+     * 按配置同步技能。
+     */
+    @Transactional
+    public void syncWithConfig(String configId) {
+        SkillConfig config = skillConfigRepository.findById(configId).orElseThrow(() -> new NotFoundException("Skill config not found: " + configId));
+        if (!config.isSyncEnabled()) {
+            throw new IllegalStateException("Skill config is not enabled: " + configId);
+        }
+        config.getSkillPaths().forEach(this::sync);
     }
 
     public void sync(String skillPath) {
@@ -205,25 +225,6 @@ public class SkillUseCase {
             syncFilesToLocal(saved, Path.of(skill.getSkillPath()));
             return null;
         });
-    }
-
-    /**
-     * 按配置同步技能。
-     */
-    @Transactional
-    public void syncWithConfig(String configId) {
-        SkillConfig config = skillConfigRepository.findById(configId).orElseThrow(() -> new NotFoundException("Skill config not found: " + configId));
-        for (String path : config.getSkillPaths()) {
-            List<Skill> skills = skillToolScannerPort.scanSkills(path);
-            for (Skill skill : skills) {
-                skill.setSkillType("SYNCED");
-                skill.setSource("LOCAL");
-                skill.setSourcePath(path);
-                skill.setConfigId(configId);
-                Skill saved = skillRepository.saveOrUpdate(skill);
-                syncFilesToLocal(saved, Path.of(skill.getSkillPath()));
-            }
-        }
     }
 
     /**

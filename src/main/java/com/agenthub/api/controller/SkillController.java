@@ -96,6 +96,17 @@ public class SkillController {
     }
 
     /**
+     * 搜索技能。
+     */
+    @GetMapping("/search")
+    public List<SkillResponse> search(@RequestParam String keyword,
+                                      @RequestHeader("X-Tenant-Id") String tenantId,
+                                      @RequestHeader("X-Workspace-Id") String workspaceId) {
+        return useCase.search(keyword, tenantId, workspaceId)
+                .stream().map(this::toResponse).toList();
+    }
+
+    /**
      * 获取技能。
      */
     @GetMapping("/{skillId}")
