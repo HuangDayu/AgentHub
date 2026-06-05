@@ -27,7 +27,7 @@ public class MybatisSkillRepository implements SkillRepository {
         SkillEntity entity = toEntity(skill);
         LambdaQueryWrapper<SkillEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SkillEntity::getSkillCode, skill.getSkillCode());
-        SkillEntity existing = mapper.selectOne(queryWrapper);
+        SkillEntity existing = mapper.selectOne(queryWrapper, false);
         if (existing != null) {
             entity.setId(existing.getId());
         }
@@ -108,8 +108,8 @@ public class MybatisSkillRepository implements SkillRepository {
     public List<Skill> search(String keyword) {
         LambdaQueryWrapper<SkillEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.and(w -> w.like(SkillEntity::getName, keyword)
-                        .or().like(SkillEntity::getSkillCode, keyword)
-                        .or().like(SkillEntity::getDescription, keyword));
+                .or().like(SkillEntity::getSkillCode, keyword)
+                .or().like(SkillEntity::getDescription, keyword));
         return mapper.selectList(wrapper).stream().map(this::toDomain).toList();
     }
 
@@ -117,7 +117,7 @@ public class MybatisSkillRepository implements SkillRepository {
     public Optional<Skill> findBySkillCode(String skillCode) {
         LambdaQueryWrapper<SkillEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SkillEntity::getSkillCode, skillCode)
-                        .or().eq(SkillEntity::getName, skillCode);
+                .or().eq(SkillEntity::getName, skillCode);
         SkillEntity skillEntity = mapper.selectOne(queryWrapper);
         return Optional.ofNullable(toDomain(skillEntity));
     }

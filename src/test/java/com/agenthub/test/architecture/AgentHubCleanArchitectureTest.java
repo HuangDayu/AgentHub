@@ -8,16 +8,11 @@ import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 /**
@@ -197,8 +192,8 @@ public class AgentHubCleanArchitectureTest {
                 .that().haveSimpleNameEndingWith("Request")
                 .or().haveSimpleNameEndingWith("Response")
                 .or().haveSimpleNameEndingWith("DTO")
-                .should().resideInAnyPackage("..api.dto..","..infrastructure..dto..")
-                .because("DTO类应该在api.dto包中")
+                .should().resideInAnyPackage("..api.dto..", "..infrastructure..dto..")
+                .because("DTO类应该在api.dto包或者infrastructure..dto包中")
                 .check(classes);
     }
 
@@ -252,23 +247,10 @@ public class AgentHubCleanArchitectureTest {
         methods()
                 .that().areDeclaredInClassesThat().areNotInterfaces()
                 .and().areDeclaredInClassesThat().resideInAPackage("com.agenthub..")
-                .should(new ArchCondition<JavaMethod>("不超过" + MethodComplexityRules.MAX_METHOD_LINES + "行代码") {
+                .should(new ArchCondition<>("不超过" + MethodComplexityRules.MAX_METHOD_LINES + "行代码") {
                     @Override
                     public void check(JavaMethod method, ConditionEvents events) {
-                        if (MethodComplexityRules.shouldSkip(method) || isExempted(method)) {
-                            return;
-                        }
-                        int lineCount = MethodLineAnalyzer.countLines(method);
-                        if (lineCount > MethodComplexityRules.MAX_METHOD_LINES) {
-                            String message = String.format(
-                                    "%s.%s() 有 %d 行代码，超过了最大允许的 %d 行 [%s]",
-                                    method.getOwner().getSimpleName(),
-                                    method.getName(),
-                                    lineCount,
-                                    MethodComplexityRules.MAX_METHOD_LINES,
-                                    method.getSourceCodeLocation());
-                            events.add(SimpleConditionEvent.violated(method, message));
-                        }
+                        checkMethodLines(method, events);
                     }
                 })
                 .because("业务方法应该保持简洁，不超过" + MethodComplexityRules.MAX_METHOD_LINES + "行")
@@ -287,23 +269,10 @@ public class AgentHubCleanArchitectureTest {
         methods()
                 .that().areDeclaredInClassesThat().areNotInterfaces()
                 .and().areDeclaredInClassesThat().resideInAPackage("com.agenthub..")
-                .should(new ArchCondition<JavaMethod>("参数不超过" + MethodComplexityRules.MAX_METHOD_PARAMS + "个") {
+                .should(new ArchCondition<>("参数不超过" + MethodComplexityRules.MAX_METHOD_PARAMS + "个") {
                     @Override
                     public void check(JavaMethod method, ConditionEvents events) {
-                        if (MethodComplexityRules.shouldSkip(method) || isExempted(method)) {
-                            return;
-                        }
-                        int paramCount = method.getParameters().size();
-                        if (paramCount > MethodComplexityRules.MAX_METHOD_PARAMS) {
-                            String message = String.format(
-                                    "%s.%s() 有 %d 个参数，超过了最大允许的 %d 个 [%s]",
-                                    method.getOwner().getSimpleName(),
-                                    method.getName(),
-                                    paramCount,
-                                    MethodComplexityRules.MAX_METHOD_PARAMS,
-                                    method.getSourceCodeLocation());
-                            events.add(SimpleConditionEvent.violated(method, message));
-                        }
+                        checkMethodParameters(method, events);
                     }
                 })
                 .because("业务方法参数不应超过" + MethodComplexityRules.MAX_METHOD_PARAMS + "个，应使用Command/DTO对象封装")
@@ -311,6 +280,53 @@ public class AgentHubCleanArchitectureTest {
     }
 
     // ==================== 辅助方法 ====================
+
+
+    /**
+     * 检查方法行数
+     *
+     * @param method
+     * @param events
+     */
+    private void checkMethodLines(JavaMethod method, ConditionEvents events) {
+        if (MethodComplexityRules.shouldSkip(method) || isExempted(method)) {
+            return;
+        }
+        int lineCount = MethodLineAnalyzer.countLines(method);
+        if (lineCount > MethodComplexityRules.MAX_METHOD_LINES) {
+            String message = String.format(
+                    "%s.%s() 有 %d 行代码，超过了最大允许的 %d 行 [%s]",
+                    method.getOwner().getSimpleName(),
+                    method.getName(),
+                    lineCount,
+                    MethodComplexityRules.MAX_METHOD_LINES,
+                    method.getSourceCodeLocation());
+            events.add(SimpleConditionEvent.violated(method, message));
+        }
+    }
+
+    /**
+     * 检查方法参数个数
+     *
+     * @param method
+     * @param events
+     */
+    private void checkMethodParameters(JavaMethod method, ConditionEvents events) {
+        if (MethodComplexityRules.shouldSkip(method) || isExempted(method)) {
+            return;
+        }
+        int paramCount = method.getParameters().size();
+        if (paramCount > MethodComplexityRules.MAX_METHOD_PARAMS) {
+            String message = String.format(
+                    "%s.%s() 有 %d 个参数，超过了最大允许的 %d 个 [%s]",
+                    method.getOwner().getSimpleName(),
+                    method.getName(),
+                    paramCount,
+                    MethodComplexityRules.MAX_METHOD_PARAMS,
+                    method.getSourceCodeLocation());
+            events.add(SimpleConditionEvent.violated(method, message));
+        }
+    }
 
     /**
      * 判断方法是否在豁免配置中（人工审查通过但暂不重构）

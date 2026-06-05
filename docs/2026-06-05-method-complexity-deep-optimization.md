@@ -1011,6 +1011,83 @@ if (a instanceof X x && x.getY() instanceof Y y) {
 
 ---
 
+## 七点五、前端方法复杂度治理（补充）
+
+> 本次会话同步治理 `src/main/web` 下 Vue 3.5 + TypeScript 5.8 + Vite 6 前端工程中所有 >10 行方法。
+
+### 治理工具
+
+新增 `src/main/web/scripts/scan-long-methods.mjs` —— 一款 ESM AST 扫描器，覆盖：
+
+- function declaration / `const/let/var = ... => ...` arrow
+- class method / object method shorthand / getter / setter / constructor
+- 泛型签名 `name<T>(params): ReturnType { ... }`
+- 嵌套函数体不计入外层（按真实闭合花括号统计）
+
+```bash
+node scripts/scan-long-methods.mjs
+# === Frontend Methods > 10 lines (0 violations) ===
+```
+
+### 治理演进
+
+| 阶段 | HEAVY (>20) | MEDIUM (15-20) | LIGHT (11-14) | 合计 | build | tests |
+|------|------------|---------------|---------------|------|-------|-------|
+| 治理前 | 8 | 47 | 79 | **134** | ❌ | 53/53 |
+| 第一次 refactor（35 个） | 0 | 18 | 47 | **65** | ✅ | 53/53 |
+| **第二次 refactor（65+ 个）** | **0** | **0** | **0** | **0** | ✅ | 53/53 |
+
+### 重构模式（前端特有）
+
+1. **表驱动分发**：把 `if/else if` 链替换为 `XxxOPTIONS`/`XxxMAP` 常量 + `tryApplyXxx` helper
+2. **try/catch/finally 提取**：拆为 `tryPerformXxx`/`beginXxx`/`endXxx` 三个 helper
+3. **业务 payload 构建**：拆为 `buildXxxPayload` + `buildXxxIdentity`/`buildXxxOptions`
+4. **早 return 守卫**：单独 `canXxx` helper
+5. **流式处理**：onMessage/onDone/onError 拆为命名 handler
+6. **节点深克隆**：提取 `deepClone<T>(value: T)` 工具
+7. **重复选择对象**：提取 `getSelection()` helper 跨函数复用
+8. **表单重置**：提取 `EMPTY_X_FORM` 常量 + `Object.assign`
+9. **简单状态映射**：提取 `Xxx_TEXTS`/`Xxx_ICONS` 表替换 switch
+10. **嵌套 if 合并**：用三元表达式或 `&&` 短路
+11. **步骤边界拆分**：把 try 主体拆为 `performXxx` helper
+
+### 关键文件重构示例
+
+- `theme-config.ts:applyTheme`（22→6 行）—— `setThemeAttribute`/`setThemeCssVariables`/`applyThemeClass`/`dispatchThemeChanged`
+- `WorkflowTestPanel.vue:startExecution`（27→9 行）—— `runStartExecution`/`buildStartExecutionPayload`/`getSelection`
+- `DAGEditor.vue:onDrop`（20→9 行）—— `insertDroppedNode`/`dropPosition`/`buildDroppedNode`
+- `runtime-api.ts:sendMessage`（5 参数 → `SendMessageArgs` 接口）
+- `format.ts:relativeTime`（15→3 行）—— `resolveRelativeTime`
+- `WorkflowEditor.vue:autoLayout`（22→4 行）—— `applyDagreLayout`
+- `WorkflowEditor.vue:onDrop`/`onConnect`/`handleSave`/`onNodesChange`/`applyJsonChanges` 全部 ≤10 行
+- `GenericConfigPanel.vue:inferFieldConfig`（82→拆完）
+- `StrategyPanel` 系列（4 个 panel）createStrategy/updateStrategy 全部 ≤10 行
+- `RuntimeChatView.vue` 8 个方法（loadRuntimeData/loadAgents/loadSessions/createNewSession/watch/loadSubagents/getCurrentStreamingState/deleteSession）全部 ≤10 行
+- `SkillManagementView.vue` 7 个方法（loadSkills/syncAllSkills/toggleSkill/closeCreateDialog/viewMarketSkill/handleMarketSearch/handleInstallFromMarket）全部 ≤10 行
+- `VectorStoreConfigView.vue` 5 个方法（submitConfig/testConnection/startEdit/cancelEdit/refreshInstance）全部 ≤10 行
+- `ModelConfigView.vue` `getDefaultBaseUrl`（14→3 行）—— `SUPPLIER_BASE_URLS` 表
+
+### 重构过程中清理的 4 个重复声明
+
+重构 `getSelection()` helper 时不慎在 4 个文件引入重复声明，构建失败后立即修复：
+
+- `RuntimeChatView.vue` —— 重复 `isTempSession`
+- `AgentConfigView.vue` —— 重复 `getSelection`
+- `RetrievalStrategyPanel.vue` —— 重复 `getSelection`
+- `WorkflowTestPanel.vue` —— 重复 `getSelection`
+
+### 最终验证
+
+```bash
+npm run build  → ✓ built in 9.11s
+npm test       → Test Files 2 passed (2) | Tests 53 passed (53)
+gradle test --tests "*AgentHubCleanArchitectureTest*" → 17 tests, 0 failures, 0 errors
+```
+
+**全栈零方法违规**（除豁免 JSON 中记录的框架限制 + Spring AI `@Tool` 参数限制）。
+
+---
+
 ## 八、经验教训（新增）
 
 1. **重构可能引入新违规**：抽出 helper 时若 helper 本身有 4+ 参数，会"复制问题"而不是"解决问题"。务必在抽完 helper 后**立即跑 dumper** 而非等批量重构完才跑。
