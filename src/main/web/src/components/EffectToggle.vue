@@ -84,17 +84,14 @@ const animationEnabled = ref(true)
 // 从 localStorage 加载设置
 const loadSettings = () => {
   const saved = localStorage.getItem('effect-settings')
-  if (saved) {
-    try {
-      const settings = JSON.parse(saved)
-      glassEnabled.value = settings.glass ?? true
-      floatEnabled.value = settings.float ?? true
-      animationEnabled.value = settings.animation ?? true
-    } catch (e) {
-      console.error('Failed to load effect settings:', e)
-    }
-  }
+  if (saved) { try { applySavedSettings(JSON.parse(saved)) } catch (e) { console.error('Failed to load effect settings:', e) } }
   applyEffects()
+}
+
+function applySavedSettings(settings: { glass?: boolean; float?: boolean; animation?: boolean }) {
+  glassEnabled.value = settings.glass ?? true
+  floatEnabled.value = settings.float ?? true
+  animationEnabled.value = settings.animation ?? true
 }
 
 // 保存设置到 localStorage
@@ -109,43 +106,21 @@ const saveSettings = () => {
 // 应用效果到 DOM
 const applyEffects = () => {
   const root = document.documentElement
-  
-  // 毛玻璃效果
-  if (glassEnabled.value) {
-    root.classList.remove('glass-disabled')
-  } else {
-    root.classList.add('glass-disabled')
-  }
-  
-  // 悬浮效果
-  if (floatEnabled.value) {
-    root.classList.remove('float-disabled')
-  } else {
-    root.classList.add('float-disabled')
-  }
-  
-  // 动画效果
-  if (animationEnabled.value) {
-    root.classList.remove('animation-disabled')
-  } else {
-    root.classList.add('animation-disabled')
-  }
-  
-  // 综合效果开关
+  toggleEffectClass(root, 'glass-disabled', glassEnabled.value)
+  toggleEffectClass(root, 'float-disabled', floatEnabled.value)
+  toggleEffectClass(root, 'animation-disabled', animationEnabled.value)
   const allDisabled = !glassEnabled.value && !floatEnabled.value && !animationEnabled.value
-  if (allDisabled) {
-    root.classList.add('effects-disabled')
-  } else {
-    root.classList.remove('effects-disabled')
-  }
-  
-  // 强制刷新页面以应用效果
+  toggleEffectClass(root, 'effects-disabled', !allDisabled)
+  dispatchEffectsChanged()
+}
+
+function toggleEffectClass(root: HTMLElement, className: string, enabled: boolean): void {
+  root.classList.toggle(className, !enabled)
+}
+
+function dispatchEffectsChanged(): void {
   window.dispatchEvent(new CustomEvent('effects-changed', {
-    detail: {
-      glass: glassEnabled.value,
-      float: floatEnabled.value,
-      animation: animationEnabled.value
-    }
+    detail: { glass: glassEnabled.value, float: floatEnabled.value, animation: animationEnabled.value }
   }))
 }
 

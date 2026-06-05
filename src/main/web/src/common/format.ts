@@ -31,10 +31,11 @@ export function formatDateTime(value?: string | null) {
 
 export function relativeTime(iso: string): string {
   const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) {
-    return iso
-  }
-  const diffMs = Date.now() - date.getTime()
+  if (Number.isNaN(date.getTime())) return iso
+  return resolveRelativeTime(Date.now() - date.getTime(), iso)
+}
+
+function resolveRelativeTime(diffMs: number, iso: string): string {
   const diffMin = Math.floor(diffMs / 60000)
   if (diffMin < 1) return '刚刚'
   if (diffMin < 60) return `${diffMin} 分钟前`

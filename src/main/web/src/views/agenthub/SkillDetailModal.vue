@@ -235,22 +235,23 @@ const formattedJson = computed(() => {
 const flatTree = computed(() => {
   if (!treeRoot.value) return []
   const result: TreeNode[] = []
-  function walk(node: TreeNode, depth: number) {
-    if (!expandedDirs.value.has(node.path) && depth > 0) return
-    if (node.children) {
-      const sorted = [...node.children].sort((a, b) => {
-        if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
-        return a.name.localeCompare(b.name)
-      })
-      sorted.forEach(child => {
-        result.push({ ...child, _depth: depth, _key: `${depth}-${child.path}` })
-        if (child.isDirectory) walk(child, depth + 1)
-      })
-    }
-  }
-  walk(treeRoot.value, 0)
+  walk(treeRoot.value, 0, result)
   return result
 })
+
+function walk(node: TreeNode, depth: number, result: TreeNode[]) {
+  if (!expandedDirs.value.has(node.path) && depth > 0) return
+  if (!node.children) return
+  const sorted = sortChildren(node.children)
+  sorted.forEach(child => {
+    result.push({ ...child, _depth: depth, _key: `${depth}-${child.path}` })
+    if (child.isDirectory) walk(child, depth + 1, result)
+  })
+}
+
+function sortChildren(children: TreeNode[]): TreeNode[] {
+  return [...children].sort((a, b) => a.isDirectory !== b.isDirectory ? (a.isDirectory ? -1 : 1) : a.name.localeCompare(b.name))
+}
 
 watch(visible, async (isVisible) => {
   if (isVisible && props.skill) {
@@ -271,27 +272,49 @@ const selection = () => ({
 
 async function refreshFiles() {
   if (!props.skill) return
+  beginRefresh()
+  await tryPerformRefresh()
+}
+
+function beginRefresh(): void {
   loadingFiles.value = true
   selectedFilePath.value = ''
   fileContent.value = ''
   treeRoot.value = null
   expandedDirs.value = new Set()
   fileIdMap.value = new Map()
+}
+
+async function tryPerformRefresh(): Promise<void> {
   try {
-    const treeJson = props.skill.skillFilesTree
-    if (treeJson) {
-      treeRoot.value = JSON.parse(treeJson)
-    }
-    const skillFiles = await getSkillFiles(selection(), props.skill.id)
-    const idMap = new Map<string, string>()
-    skillFiles.forEach(f => idMap.set(f.filePath.replace(/\\/g, '/'), f.id))
-    fileIdMap.value = idMap
-    await selectDefaultFile()
+    await performRefresh()
   } catch (e) {
-    console.error('Failed to load files', e)
+    handleRefreshError(e)
   } finally {
     loadingFiles.value = false
   }
+}
+
+async function performRefresh(): Promise<void> {
+  loadTree()
+  await loadFileIdMap()
+  await selectDefaultFile()
+}
+
+function loadTree(): void {
+  const treeJson = props.skill!.skillFilesTree
+  if (treeJson) treeRoot.value = JSON.parse(treeJson)
+}
+
+async function loadFileIdMap(): Promise<void> {
+  const skillFiles = await getSkillFiles(selection(), props.skill!.id)
+  const idMap = new Map<string, string>()
+  skillFiles.forEach(f => idMap.set(f.filePath.replace(/\\/g, '/'), f.id))
+  fileIdMap.value = idMap
+}
+
+function handleRefreshError(e: unknown): void {
+  console.error('Failed to load files', e)
 }
 
 function toggleDir(path: string) {
@@ -305,17 +328,13 @@ function toggleDir(path: string) {
 }
 
 async function selectDefaultFile() {
-  const skillMd = flatTree.value.find(n =>
-    !n.isDirectory && (n.name === 'SKILL.md' || n.name === 'skill.md')
-  )
-  if (skillMd) {
-    await onNodeClick(skillMd)
-    return
-  }
-  const firstFile = flatTree.value.find(n => !n.isDirectory)
-  if (firstFile) {
-    await onNodeClick(firstFile)
-  }
+  const skillMd = findSkillMdFile(flatTree.value)
+  const target = skillMd || flatTree.value.find(n => !n.isDirectory)
+  if (target) await onNodeClick(target)
+}
+
+function findSkillMdFile(nodes: TreeNode[]): TreeNode | undefined {
+  return nodes.find(n => !n.isDirectory && (n.name === 'SKILL.md' || n.name === 'skill.md'))
 }
 
 function onNodeClick(node: TreeNode) {
@@ -331,14 +350,11 @@ async function loadFileContent(node: TreeNode) {
   if (!fileId || !props.skill) return
   selectedFilePath.value = node.path
   loadingContent.value = true
-  try {
-    fileContent.value = await getSkillFileContent(selection(), props.skill.id, fileId)
-  } catch (e) {
-    console.error('Failed to load file content', e)
-    fileContent.value = '加载失败'
-  } finally {
-    loadingContent.value = false
-  }
+  try { await performLoadFileContent(fileId) } catch (e) { console.error('Failed to load file content', e); fileContent.value = '加载失败' } finally { loadingContent.value = false }
+}
+
+async function performLoadFileContent(fileId: string): Promise<void> {
+  fileContent.value = await getSkillFileContent(selection(), props.skill!.id, fileId)
 }
 
 function getFileIcon(fileName: string): string {
@@ -354,13 +370,15 @@ function getFileIcon(fileName: string): string {
 function formatSize(bytes: number): string {
   if (!bytes) return '0 B'
   const units = ['B', 'KB', 'MB', 'GB']
+  const { size, unit } = reduceByteSize(bytes, units)
+  return `${size.toFixed(1)} ${unit}`
+}
+
+function reduceByteSize(bytes: number, units: string[]): { size: number; unit: string } {
   let size = bytes
   let unitIndex = 0
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024
-    unitIndex++
-  }
-  return `${size.toFixed(1)} ${units[unitIndex]}`
+  while (size >= 1024 && unitIndex < units.length - 1) { size /= 1024; unitIndex++ }
+  return { size, unit: units[unitIndex] }
 }
 
 function formatDate(date: string): string {

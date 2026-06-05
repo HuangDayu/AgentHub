@@ -126,17 +126,12 @@ const sending = ref(false)
 const streamingContent = ref('')
 const messagesContainer = ref<HTMLElement | null>(null)
 
-onMounted(async () => {
-  try {
-    agents.value = await listAgents(getSelection())
-    if (agents.value.length) {
-      selectedAgentId.value = agents.value[0].id
-      await loadSubagents()
-    }
-  } catch (e: any) {
-    error.value = e.message || '加载失败'
-  }
-})
+onMounted(async () => { try { await performMountLoad() } catch (e: any) { error.value = e.message || '加载失败' } })
+
+async function performMountLoad(): Promise<void> {
+  agents.value = await listAgents(getSelection())
+  if (agents.value.length) { selectedAgentId.value = agents.value[0].id; await loadSubagents() }
+}
 
 function getSelection() {
   return { tenantId: store.tenantId!, workspaceId: store.workspaceId! }
@@ -162,18 +157,18 @@ async function loadSubsessions() {
 
 async function createNewSubsession() {
   if (!selectedSubagentId.value) return
-  try {
-    const parentSessionId = selectedSubagentId.value
-    const ss = await createSubsession(getSelection(), selectedAgentId.value, parentSessionId, {
-      subagentId: selectedSubagentId.value,
-      name: `会话-${new Date().toLocaleTimeString('zh-CN')}`,
-    })
-    subsessions.value.unshift(ss)
-    selectedSubsessionId.value = ss.id
-    messages.value = []
-  } catch (e: any) {
-    error.value = e.message || '创建子会话失败'
-  }
+  try { await performCreateNewSubsession() } catch (e: any) { error.value = e.message || '创建子会话失败' }
+}
+
+async function performCreateNewSubsession(): Promise<void> {
+  const ss = await createSubsession(getSelection(), selectedAgentId.value, selectedSubagentId.value, buildCreateSubsessionPayload())
+  subsessions.value.unshift(ss)
+  selectedSubsessionId.value = ss.id
+  messages.value = []
+}
+
+function buildCreateSubsessionPayload() {
+  return { subagentId: selectedSubagentId.value!, name: `会话-${new Date().toLocaleTimeString('zh-CN')}` }
 }
 
 function selectSubsession(id: string) {
@@ -189,43 +184,57 @@ const canSend = computed(() =>
 async function handleSend() {
   if (!canSend.value) return
   const content = inputContent.value.trim()
-  inputContent.value = ''
+  beginSend(content)
+  try {
+    await startSubagentCall(content)
+  } catch (e: any) {
+    handleSendError(e)
+  }
+}
 
+function beginSend(content: string): void {
+  inputContent.value = ''
   messages.value.push({ role: 'USER', content })
   sending.value = true
   streamingContent.value = ''
+}
 
-  try {
-    await startSubagentStream(
-      getSelection(),
-      selectedSubsessionId.value,
-      selectedSubagentId.value,
-      content,
-      {
-        onMessage: (event) => {
-          if (event.eventType === 'assistant' && event.content) {
-            streamingContent.value += event.content
-          }
-          nextTick(() => scrollToBottom())
-        },
-        onDone: () => {
-          if (streamingContent.value) {
-            messages.value.push({ role: 'ASSISTANT', content: streamingContent.value })
-          }
-          streamingContent.value = ''
-          sending.value = false
-          nextTick(() => scrollToBottom())
-        },
-        onError: (err) => {
-          error.value = err.message
-          sending.value = false
-        },
-      }
-    )
-  } catch (e: any) {
-    error.value = e.message || '发送失败'
-    sending.value = false
+function startSubagentCall(content: string) {
+  return startSubagentStream(getSelection(), selectedSubsessionId.value, selectedSubagentId.value, content, createStreamHandlers())
+}
+
+function createStreamHandlers() {
+  return {
+    onMessage: handleStreamMessage,
+    onDone: handleStreamDone,
+    onError: handleStreamError,
   }
+}
+
+function handleStreamMessage(event: any) {
+  if (event.eventType === 'assistant' && event.content) {
+    streamingContent.value += event.content
+  }
+  nextTick(() => scrollToBottom())
+}
+
+function handleStreamDone() {
+  if (streamingContent.value) {
+    messages.value.push({ role: 'ASSISTANT', content: streamingContent.value })
+  }
+  streamingContent.value = ''
+  sending.value = false
+  nextTick(() => scrollToBottom())
+}
+
+function handleStreamError(err: any) {
+  error.value = err.message
+  sending.value = false
+}
+
+function handleSendError(e: any): void {
+  error.value = e.message || '发送失败'
+  sending.value = false
 }
 
 function scrollToBottom() {

@@ -248,40 +248,49 @@ async function loadConfigs() {
 
 function editConfig(config: SkillConfig) {
   editingConfig.value = config
-  configForm.value = {
-    name: config.name,
-    description: config.description || '',
-    syncEnabled: config.syncEnabled,
-    syncInterval: config.syncInterval,
-    autoSync: config.autoSync,
-    skillPaths: [...config.skillPaths]
-  }
+  configForm.value = { name: config.name, description: config.description || '', syncEnabled: config.syncEnabled, syncInterval: config.syncInterval, autoSync: config.autoSync, skillPaths: [...config.skillPaths] }
   showCreateConfig.value = true
 }
 
 async function saveConfig() {
-  const validPaths = configForm.value.skillPaths.filter(p => p.trim())
-  if (!configForm.value.name || validPaths.length === 0) return
+  if (!canSaveConfig()) return
+  await performSaveConfig()
+}
 
+function canSaveConfig(): boolean {
+  return Boolean(configForm.value.name && validSkillPaths().length > 0)
+}
+
+function validSkillPaths(): string[] {
+  return configForm.value.skillPaths.filter(p => p.trim())
+}
+
+async function performSaveConfig(): Promise<void> {
   try {
-    const payload = {
-      name: configForm.value.name,
-      description: configForm.value.description,
-      syncEnabled: configForm.value.syncEnabled,
-      syncInterval: configForm.value.syncInterval,
-      autoSync: configForm.value.autoSync,
-      skillPaths: validPaths
-    }
-
-    if (editingConfig.value) {
-      await updateSkillConfig(selection(), editingConfig.value.id, payload)
-    } else {
-      await createSkillConfig(selection(), payload)
-    }
+    await saveConfigPayload(buildSaveConfigPayload())
     await loadConfigs()
     closeCreateConfig()
   } catch (e) {
     console.error('Failed to save config', e)
+  }
+}
+
+function buildSaveConfigPayload() {
+  return {
+    name: configForm.value.name,
+    description: configForm.value.description,
+    syncEnabled: configForm.value.syncEnabled,
+    syncInterval: configForm.value.syncInterval,
+    autoSync: configForm.value.autoSync,
+    skillPaths: validSkillPaths(),
+  }
+}
+
+async function saveConfigPayload(payload: any): Promise<void> {
+  if (editingConfig.value) {
+    await updateSkillConfig(selection(), editingConfig.value.id, payload)
+  } else {
+    await createSkillConfig(selection(), payload)
   }
 }
 
@@ -305,17 +314,11 @@ async function syncWithConfig(configId: string) {
   }
 }
 
+const EMPTY_CONFIG_FORM: SkillConfigForm = { name: '', description: '', syncEnabled: true, syncInterval: 3600, autoSync: false, skillPaths: [''] }
+
 function closeCreateConfig() {
-  showCreateConfig.value = false
-  editingConfig.value = null
-  configForm.value = {
-    name: '',
-    description: '',
-    syncEnabled: true,
-    syncInterval: 3600,
-    autoSync: false,
-    skillPaths: ['']
-  }
+  showCreateConfig.value = false; editingConfig.value = null
+  configForm.value = { ...EMPTY_CONFIG_FORM }
 }
 
 function formatInterval(seconds: number): string {

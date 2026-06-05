@@ -30,106 +30,92 @@ export interface ModalFormConfig {
  * 使用效果配置
  */
 export function useEffects() {
-  const config = ref<EffectConfig>({
-    glass: true,
-    float: true,
-    animation: true
-  })
-
-  // 从 localStorage 加载配置
-  const loadConfig = () => {
-    const saved = localStorage.getItem('effect-settings')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        config.value = { ...config.value, ...parsed }
-      } catch (e) {
-        console.error('Failed to load effect settings:', e)
-      }
-    }
-    applyEffects()
-  }
-
-  // 应用效果到 DOM
-  const applyEffects = () => {
-    const root = document.documentElement
-    
-    // 毛玻璃效果
-    root.classList.toggle('glass-disabled', !config.value.glass)
-    
-    // 悬浮效果
-    root.classList.toggle('float-disabled', !config.value.float)
-    
-    // 动画效果
-    root.classList.toggle('animation-disabled', !config.value.animation)
-    
-    // 综合效果开关
-    const allDisabled = !config.value.glass && !config.value.float && !config.value.animation
-    root.classList.toggle('effects-disabled', allDisabled)
-  }
-
-  // 保存配置
-  const saveConfig = () => {
-    localStorage.setItem('effect-settings', JSON.stringify(config.value))
-    applyEffects()
-  }
-
-  // 切换效果
-  const toggleEffect = (effect: keyof EffectConfig) => {
-    config.value[effect] = !config.value[effect]
-    saveConfig()
-  }
-
-  // 重置为默认值
-  const resetToDefault = () => {
-    config.value = { glass: true, float: true, animation: true }
-    saveConfig()
-  }
-
+  const config = createEffectConfig()
   return {
     config,
-    loadConfig,
-    toggleEffect,
-    resetToDefault
+    loadConfig: () => loadEffectConfig(config),
+    toggleEffect: (effect: keyof EffectConfig) => toggleOneEffect(config, effect),
+    resetToDefault: () => resetEffectConfig(config),
   }
+}
+
+function createEffectConfig(): Ref<EffectConfig> {
+  return ref<EffectConfig>({ glass: true, float: true, animation: true })
+}
+
+function loadEffectConfig(config: Ref<EffectConfig>): void {
+  const saved = localStorage.getItem('effect-settings')
+  if (!saved) { applyEffects(config); return }
+  try {
+    config.value = { ...config.value, ...JSON.parse(saved) }
+  } catch (e) {
+    console.error('Failed to load effect settings:', e)
+  }
+  applyEffects(config)
+}
+
+function applyEffects(config: Ref<EffectConfig>): void {
+  const root = document.documentElement
+  toggleCssClass(root, 'glass-disabled', !config.value.glass)
+  toggleCssClass(root, 'float-disabled', !config.value.float)
+  toggleCssClass(root, 'animation-disabled', !config.value.animation)
+  const allDisabled = !config.value.glass && !config.value.float && !config.value.animation
+  toggleCssClass(root, 'effects-disabled', allDisabled)
+}
+
+function toggleCssClass(root: HTMLElement, name: string, on: boolean): void {
+  root.classList.toggle(name, on)
+}
+
+function saveEffectConfig(config: Ref<EffectConfig>): void {
+  localStorage.setItem('effect-settings', JSON.stringify(config.value))
+  applyEffects(config)
+}
+
+function toggleOneEffect(config: Ref<EffectConfig>, effect: keyof EffectConfig): void {
+  config.value[effect] = !config.value[effect]
+  saveEffectConfig(config)
+}
+
+function resetEffectConfig(config: Ref<EffectConfig>): void {
+  config.value = { glass: true, float: true, animation: true }
+  saveEffectConfig(config)
 }
 
 /**
  * 使用表单弹窗
  */
 export function useModalForm(config: ModalFormConfig) {
-  const open = () => {
-    config.visible.value = true
-  }
-
-  const close = () => {
-    config.visible.value = false
-    if (config.onCancel) {
-      config.onCancel()
-    }
-  }
-
-  const confirm = async () => {
-    if (config.loading) {
-      config.loading.value = true
-    }
-    try {
-      await config.onConfirm()
-      close()
-    } catch (error) {
-      console.error('Form submission failed:', error)
-    } finally {
-      if (config.loading) {
-        config.loading.value = false
-      }
-    }
-  }
-
   return {
-    open,
-    close,
-    confirm
+    open: () => { config.visible.value = true },
+    close: () => closeModal(config),
+    confirm: () => confirmModal(config),
   }
+}
+
+function closeModal(config: ModalFormConfig): void {
+  config.visible.value = false
+  config.onCancel?.()
+}
+
+async function confirmModal(config: ModalFormConfig): Promise<void> {
+  setLoading(config, true)
+  await tryConfirm(config)
+}
+
+async function tryConfirm(config: ModalFormConfig): Promise<void> {
+  try {
+    await config.onConfirm()
+    closeModal(config)
+  } catch (error) {
+    console.error('Form submission failed:', error)
+  } finally {
+    setLoading(config, false)
+  }
+}
+
+function setLoading(config: ModalFormConfig, value: boolean): void {
+  if (config.loading) config.loading.value = value
 }
 
 /**
@@ -171,15 +157,8 @@ export function removeAllEffects(element: HTMLElement) {
  */
 export function isEffectEnabled(effect: keyof EffectConfig): boolean {
   const saved = localStorage.getItem('effect-settings')
-  if (saved) {
-    try {
-      const config = JSON.parse(saved)
-      return config[effect] ?? true
-    } catch (e) {
-      return true
-    }
-  }
-  return true
+  if (!saved) return true
+  try { const config = JSON.parse(saved); return config[effect] ?? true } catch { return true }
 }
 
 /**
@@ -187,16 +166,11 @@ export function isEffectEnabled(effect: keyof EffectConfig): boolean {
  */
 export function enhancePageContainer(container: HTMLElement | null) {
   if (!container) return
-  
-  // 检查效果是否启用
-  const glassEnabled = isEffectEnabled('glass')
-  const floatEnabled = isEffectEnabled('float')
-  
-  if (glassEnabled && floatEnabled) {
-    addGlassFloatEffect(container)
-  } else if (glassEnabled) {
-    addGlassEffect(container)
-  } else if (floatEnabled) {
-    addFloatEffect(container)
-  }
+  applyCombinedEffects(container)
+}
+
+function applyCombinedEffects(container: HTMLElement) {
+  const glass = isEffectEnabled('glass')
+  const float = isEffectEnabled('float')
+  if (glass && float) { addGlassFloatEffect(container) } else if (glass) { addGlassEffect(container) } else if (float) { addFloatEffect(container) }
 }

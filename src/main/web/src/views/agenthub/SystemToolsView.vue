@@ -124,40 +124,23 @@ const filteredTools = computed(() => {
 const loadTools = async () => {
   if (!selectionReady.value) return
   loading.value = true
-  try {
-    tools.value = await listSystemTools(getSelection())
-  } catch (error) {
-    console.error('Failed to load tools:', error)
-  } finally {
-    loading.value = false
-  }
+  try { tools.value = await listSystemTools(getSelection()) } catch (error) { console.error('Failed to load tools:', error) } finally { loading.value = false }
 }
 
 const syncTools = async () => {
   if (!selectionReady.value) return
   syncing.value = true
-  try {
-    await syncSystemTools(getSelection())
-    await loadTools()
-  } catch (error) {
-    console.error('Failed to sync tools:', error)
-  } finally {
-    syncing.value = false
-  }
+  try { await syncSystemTools(getSelection()); await loadTools() } catch (error) { console.error('Failed to sync tools:', error) } finally { syncing.value = false }
 }
 
 const toggleEnabled = async (tool: FunctionTool) => {
   if (!selectionReady.value) return
-  try {
-    if (tool.enabled) {
-      await disableSystemTool(getSelection(), tool.id)
-    } else {
-      await enableSystemTool(getSelection(), tool.id)
-    }
-    tool.enabled = !tool.enabled
-  } catch (error) {
-    console.error('Failed to toggle:', error)
-  }
+  try { await performToggleEnabled(tool) } catch (error) { console.error('Failed to toggle:', error) }
+}
+
+async function performToggleEnabled(tool: FunctionTool) {
+  if (tool.enabled) { await disableSystemTool(getSelection(), tool.id) } else { await enableSystemTool(getSelection(), tool.id) }
+  tool.enabled = !tool.enabled
 }
 
 const handleDelete = async (tool: FunctionTool) => {

@@ -154,16 +154,12 @@ async function updateWorkflowHandler() {
 }
 
 async function togglePublish(workflow: Workflow) {
-  try {
-    if (workflow.status === 'PUBLISHED') {
-      await unpublishWorkflow(selection(), workflow.id)
-    } else {
-      await publishWorkflow(selection(), workflow.id)
-    }
-    await loadWorkflows()
-  } catch (e) {
-    console.error('Failed to toggle publish', e)
-  }
+  try { await performTogglePublish(workflow) } catch (e) { console.error('Failed to toggle publish', e) }
+}
+
+async function performTogglePublish(workflow: Workflow) {
+  if (workflow.status === 'PUBLISHED') { await unpublishWorkflow(selection(), workflow.id) } else { await publishWorkflow(selection(), workflow.id) }
+  await loadWorkflows()
 }
 
 async function deleteWorkflowHandler(id: string) {

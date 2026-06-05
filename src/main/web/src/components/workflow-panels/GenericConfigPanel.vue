@@ -81,93 +81,139 @@ interface FieldConfig {
   step?: number
 }
 
+interface FieldRange {
+  min: number
+  max: number
+  step?: number
+  desc?: string
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  url: '请求URL',
+  method: '请求方法',
+  body: '请求体',
+  timeoutMs: '超时时间(ms)',
+  timeout: '超时时间(秒)',
+  agentId: 'Agent ID',
+  prompt: '提示词模板',
+  streaming: '流式响应',
+  script: '脚本代码',
+  knowledgeBaseId: '知识库ID',
+  query: '检索查询',
+  topK: '检索数量(Top-K)',
+  scoreThreshold: '分数阈值',
+  retrievalType: '检索类型',
+  processMode: '处理模式',
+  includeMetadata: '包含元数据',
+  includeScores: '包含分数',
+  separator: '分隔符',
+  outputVariable: '输出变量名',
+  branches: '分支配置',
+  items: '循环项表达式',
+  maxIterations: '最大迭代次数',
+  assignments: '变量赋值列表',
+  toolName: '工具名称',
+  parameters: '工具参数',
+  subWorkflowId: '子工作流ID',
+  inputMapping: '输入映射(JSON)',
+  outputMapping: '输出映射(JSON)',
+  concurrency: '并发数',
+  nodes: '并行子节点',
+}
+
+const SELECT_OPTIONS: Record<string, { label: string; value: string }[]> = {
+  method: [
+    { label: 'GET', value: 'GET' },
+    { label: 'POST', value: 'POST' },
+    { label: 'PUT', value: 'PUT' },
+    { label: 'DELETE', value: 'DELETE' },
+  ],
+  retrievalType: [
+    { label: '向量相似度', value: 'similarity' },
+    { label: '混合检索', value: 'hybrid' },
+  ],
+  processMode: [
+    { label: '列表', value: 'list' },
+    { label: '拼接', value: 'concat' },
+    { label: '结构化', value: 'structured' },
+  ],
+}
+
+const SELECT_DESCRIPTIONS: Record<string, string> = {
+  method: '支持 GET/POST/PUT/DELETE',
+  retrievalType: 'hybrid 模式同时使用向量检索和全文检索',
+  processMode: '列表模式返回文档数组，拼接模式合并为文本，结构化模式含完整元数据',
+}
+
+const BOOLEAN_KEYS = new Set(['streaming', 'includeMetadata', 'includeScores'])
+
+const NUMBER_RANGES: Record<string, FieldRange> = {
+  timeoutMs: { min: 1000, max: 300000, desc: '毫秒，默认30000' },
+  timeout: { min: 1, max: 3600, desc: '秒，默认300' },
+  topK: { min: 1, max: 50 },
+  scoreThreshold: { min: 0, max: 1, step: 0.05 },
+  maxIterations: { min: 1, max: 10000, desc: '最大10000次' },
+  concurrency: { min: 1, max: 100, desc: '默认4' },
+}
+
 function inferFieldConfig(key: string, defaultValue: unknown): FieldConfig {
   const type = typeof defaultValue
-  const labelMap: Record<string, string> = {
-    url: '请求URL',
-    method: '请求方法',
-    body: '请求体',
-    timeoutMs: '超时时间(ms)',
-    timeout: '超时时间(秒)',
-    agentId: 'Agent ID',
-    prompt: '提示词模板',
-    streaming: '流式响应',
-    script: '脚本代码',
-    knowledgeBaseId: '知识库ID',
-    query: '检索查询',
-    topK: '检索数量(Top-K)',
-    scoreThreshold: '分数阈值',
-    retrievalType: '检索类型',
-    processMode: '处理模式',
-    includeMetadata: '包含元数据',
-    includeScores: '包含分数',
-    separator: '分隔符',
-    outputVariable: '输出变量名',
-    branches: '分支配置',
-    items: '循环项表达式',
-    maxIterations: '最大迭代次数',
-    assignments: '变量赋值列表',
-    toolName: '工具名称',
-    parameters: '工具参数',
-    subWorkflowId: '子工作流ID',
-    inputMapping: '输入映射(JSON)',
-    outputMapping: '输出映射(JSON)',
-    concurrency: '并发数',
-    nodes: '并行子节点',
+  const config = baseFieldConfig(key, type)
+  if (!tryApplySelect(config, key) && !tryApplyBoolean(config, key)) {
+    if (!tryApplyNumber(config, key, type)) {
+      applyObjectFallback(config, type, defaultValue)
+    }
   }
-
-  const config: FieldConfig = {
-    label: labelMap[key] || key,
-    type: type,
-    placeholder: `输入${labelMap[key] || key}`,
-  }
-
-  // 特殊处理已知字段
-  if (key === 'method') {
-    config.type = 'select'
-    config.options = [
-      { label: 'GET', value: 'GET' },
-      { label: 'POST', value: 'POST' },
-      { label: 'PUT', value: 'PUT' },
-      { label: 'DELETE', value: 'DELETE' },
-    ]
-    config.desc = '支持 GET/POST/PUT/DELETE'
-  } else if (key === 'retrievalType') {
-    config.type = 'select'
-    config.options = [
-      { label: '向量相似度', value: 'similarity' },
-      { label: '混合检索', value: 'hybrid' },
-    ]
-    config.desc = 'hybrid 模式同时使用向量检索和全文检索'
-  } else if (key === 'processMode') {
-    config.type = 'select'
-    config.options = [
-      { label: '列表', value: 'list' },
-      { label: '拼接', value: 'concat' },
-      { label: '结构化', value: 'structured' },
-    ]
-    config.desc = '列表模式返回文档数组，拼接模式合并为文本，结构化模式含完整元数据'
-  } else if (key === 'streaming' || key === 'includeMetadata' || key === 'includeScores') {
-    config.type = 'boolean'
-  } else if (type === 'number' || type === 'bigint') {
-    config.type = 'number'
-    if (key === 'timeoutMs') { config.min = 1000; config.max = 300000; config.desc = '毫秒，默认30000' }
-    if (key === 'timeout') { config.min = 1; config.max = 3600; config.desc = '秒，默认300' }
-    if (key === 'topK') { config.min = 1; config.max = 50 }
-    if (key === 'scoreThreshold') { config.min = 0; config.max = 1; config.step = 0.05 }
-    if (key === 'maxIterations') { config.min = 1; config.max = 10000; config.desc = '最大10000次' }
-    if (key === 'concurrency') { config.min = 1; config.max = 100; config.desc = '默认4' }
-  } else if (type === 'object' || type === 'undefined' || Array.isArray(defaultValue)) {
-    config.type = 'object'
-    config.placeholder = JSON.stringify(defaultValue || {}, null, 2)
-  }
-
-  // 支持嵌套属性：如果defaultValue是对象且不为null且有属性，添加展开/折叠提示
-  if (typeof defaultValue === 'object' && defaultValue !== null && !Array.isArray(defaultValue) && Object.keys(defaultValue).length > 0) {
-    config.type = 'object'
-  }
-
   return config
+}
+
+function baseFieldConfig(key: string, type: string): FieldConfig {
+  const label = FIELD_LABELS[key] || key
+  return { label, type, placeholder: `输入${label}` }
+}
+
+function tryApplySelect(config: FieldConfig, key: string): boolean {
+  const options = SELECT_OPTIONS[key]
+  if (!options) return false
+  config.type = 'select'
+  config.options = options
+  config.desc = SELECT_DESCRIPTIONS[key]
+  return true
+}
+
+function tryApplyBoolean(config: FieldConfig, key: string): boolean {
+  if (!BOOLEAN_KEYS.has(key)) return false
+  config.type = 'boolean'
+  return true
+}
+
+function tryApplyNumber(config: FieldConfig, key: string, type: string): boolean {
+  if (type !== 'number' && type !== 'bigint') return false
+  config.type = 'number'
+  applyNumberRange(config, NUMBER_RANGES[key])
+  return true
+}
+
+function applyNumberRange(config: FieldConfig, range: FieldRange | undefined): void {
+  if (!range) return
+  config.min = range.min
+  config.max = range.max
+  config.step = range.step
+  config.desc = range.desc
+}
+
+function applyObjectFallback(config: FieldConfig, type: string, value: unknown): void {
+  if (isObjectLikeType(type, value)) {
+    config.type = 'object'
+    config.placeholder = JSON.stringify(value || {}, null, 2)
+  }
+  if (isExpandableObject(value)) {
+    config.type = 'object'
+  }
+}
+
+function isObjectLikeType(type: string, value: unknown): boolean {
+  return type === 'object' || type === 'undefined' || Array.isArray(value)
 }
 
 // 检查字段是否为可展开的嵌套对象
@@ -212,16 +258,13 @@ function onJsonInput(key: string, raw: string) {
 
 watch(() => props.node, (val) => {
   const np = val.data?.node_param || {}
-  for (const key of Object.keys(defaultNodeParam)) {
-    if (key in np) {
-      ;(localConfig as any)[key] = np[key]
-      // 同时更新JSON字符串
-      if (typeof np[key] === 'object' || Array.isArray(np[key])) {
-        jsonStrings[key] = JSON.stringify(np[key], null, 2)
-      }
-    }
-  }
+  for (const key of Object.keys(defaultNodeParam)) { if (key in np) syncConfigKey(key, np[key]) }
 }, { deep: true })
+
+function syncConfigKey(key: string, value: any) {
+  ;(localConfig as any)[key] = value
+  if (typeof value === 'object' || Array.isArray(value)) jsonStrings[key] = JSON.stringify(value, null, 2)
+}
 
 function emitUpdate() {
   emit('update', { node_param: { ...localConfig } })

@@ -62,7 +62,7 @@ export interface RetrievalResponse {
  * 检索知识库（tenant console）。
  * 后端端点：POST /api/v1/workspaces/${selection.workspaceId}/knowledge-bases/{kbId}/search
  */
-export async function retrieve(payload: {
+export interface RetrievePayload {
   selection: { tenantId: string; workspaceId: string }
   kbId: string
   query: string
@@ -75,36 +75,61 @@ export async function retrieve(payload: {
   rerankModel?: string
   vectorWeight?: number
   keywordWeight?: number
-}): Promise<RetrievalResponse> {
-  const resp = await requestJson<BackendSearchResponse>(
-    `/api/v1/workspaces/${payload.selection.workspaceId}/knowledge-bases/${payload.kbId}/search`,
-    {
-      baseUrl: runtimeConfig.retrievalApiBase,
-      method: 'POST',
-      headers: scopedHeaders(payload.selection),
-      bodyJson: {
-        query: payload.query,
-        topK: payload.topK ?? 5,
-        scoreThreshold: payload.scoreThreshold ?? 0.0,
-        enableQueryRewrite: payload.enableQueryRewrite ?? false,
-        enableRerank: payload.enableRerank ?? false,
-        enableTextSearch: payload.enableTextSearch ?? false,
-        enableVectorSearch: payload.enableVectorSearch ?? true,
-        rerankModel: payload.rerankModel,
-        vectorWeight: payload.vectorWeight ?? 0.7,
-        keywordWeight: payload.keywordWeight ?? 0.3,
-      },
-    },
-  )
+}
+
+export async function retrieve(payload: RetrievePayload): Promise<RetrievalResponse> {
+  const resp = await postSearchRequest(payload)
+  return toRetrievalResponse(resp)
+}
+
+function searchUrl(payload: RetrievePayload): string {
+  return `/api/v1/workspaces/${payload.selection.workspaceId}/knowledge-bases/${payload.kbId}/search`
+}
+
+function postSearchRequest(payload: RetrievePayload): Promise<BackendSearchResponse> {
+  return requestJson<BackendSearchResponse>(searchUrl(payload), {
+    baseUrl: runtimeConfig.retrievalApiBase,
+    method: 'POST',
+    headers: scopedHeaders(payload.selection),
+    bodyJson: buildRequestBody(payload),
+  })
+}
+
+function buildRequestBody(payload: RetrievePayload): RetrievalRequest {
+  const body: RetrievalRequest = { query: payload.query, rerankModel: payload.rerankModel }
+  applyNumericDefaults(body, payload)
+  applyFeatureFlags(body, payload)
+  return body
+}
+
+function applyNumericDefaults(body: RetrievalRequest, payload: RetrievePayload): void {
+  body.topK = payload.topK ?? 5
+  body.scoreThreshold = payload.scoreThreshold ?? 0.0
+  body.vectorWeight = payload.vectorWeight ?? 0.7
+  body.keywordWeight = payload.keywordWeight ?? 0.3
+}
+
+function applyFeatureFlags(body: RetrievalRequest, payload: RetrievePayload): void {
+  body.enableQueryRewrite = payload.enableQueryRewrite ?? false
+  body.enableRerank = payload.enableRerank ?? false
+  body.enableTextSearch = payload.enableTextSearch ?? false
+  body.enableVectorSearch = payload.enableVectorSearch ?? true
+}
+
+function toRetrievalResponse(resp: BackendSearchResponse): RetrievalResponse {
   const results = resp.results || []
   return {
     rewrittenQuery: resp.rewrittenQuery || '',
-    chunks: results.map((r) => ({
-      docId: r.documentId,
-      chunkIndex: r.chunkId,
-      content: r.content,
-      score: r.score,
-    })),
+    chunks: results.map(toRetrievalChunk),
     citations: resp.citations || [],
+  }
+}
+
+function toRetrievalChunk(r: RetrievalResultItem): RetrievalChunk {
+  return {
+    docId: r.documentId,
+    chunkIndex: r.chunkId,
+    content: r.content,
+    score: r.score,
   }
 }

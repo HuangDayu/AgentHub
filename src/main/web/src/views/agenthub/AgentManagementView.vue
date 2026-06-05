@@ -116,19 +116,22 @@ async function loadAgents() {
 }
 
 async function submitAgent() {
-  if (!selectionReady.value || !agentName.value.trim()) return
-  try {
-    const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
-    if (editingAgent.value) {
-      await updateAgent(selection, editingAgent.value.id, agentName.value.trim(), agentDescription.value.trim())
-    } else {
-      await createAgent(selection, agentName.value.trim(), agentDescription.value.trim())
-    }
-    cancelForm()
-    await loadAgents()
-  } catch (e: any) {
-    error.value = e.message
-  }
+  if (!canSubmitAgent()) return
+  try { await performSubmitAgent() } catch (e: any) { error.value = e.message }
+}
+
+function canSubmitAgent(): boolean {
+  return Boolean(selectionReady.value && agentName.value.trim())
+}
+
+async function performSubmitAgent(): Promise<void> {
+  const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
+  const name = agentName.value.trim()
+  const description = agentDescription.value.trim()
+  if (editingAgent.value) { await updateAgent(selection, editingAgent.value.id, name, description) }
+  else { await createAgent(selection, name, description) }
+  cancelForm()
+  await loadAgents()
 }
 
 function cancelForm() {
@@ -168,15 +171,12 @@ async function handleUnpublish(agent: Agent) {
 }
 
 async function handleDelete(agent: Agent) {
-  if (!selectionReady.value) return
-  if (!await showConfirm(`确定删除 Agent "${agent.name}" 吗？`)) return
-  try {
-    const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
-    await deleteAgent(selection, agent.id)
-    await loadAgents()
-  } catch (e: any) {
-    error.value = e.message
-  }
+  if (!selectionReady.value || !await showConfirm(`确定删除 Agent "${agent.name}" 吗？`)) return
+  try { await deleteAgent(getSelection(), agent.id); await loadAgents() } catch (e: any) { error.value = e.message }
+}
+
+function getSelection() {
+  return { tenantId: store.tenantId, workspaceId: store.workspaceId }
 }
 
 function openConfigPanel(agent: Agent) {

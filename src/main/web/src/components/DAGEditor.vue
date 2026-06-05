@@ -268,25 +268,35 @@ function onDragStart(event: DragEvent, template: NodeTemplate) {
 function onDrop(event: DragEvent) {
   const templateData = event.dataTransfer?.getData('nodeTemplate')
   if (!templateData) return
+  insertDroppedNode(event, JSON.parse(templateData))
+}
 
-  const template: NodeTemplate = JSON.parse(templateData)
+function insertDroppedNode(event: DragEvent, template: NodeTemplate) {
+  const position = dropPosition(event)
+  graph.value.nodes.push(buildDroppedNode(template, position))
+  selectDroppedNode()
+  updateGraph()
+}
+
+function dropPosition(event: DragEvent): DAGNode['position'] {
   const rect = (event.target as HTMLElement).getBoundingClientRect()
-  const x = event.clientX - rect.left
-  const y = event.clientY - rect.top
+  return { x: event.clientX - rect.left, y: event.clientY - rect.top }
+}
 
-  const newNode: DAGNode = {
+function buildDroppedNode(template: NodeTemplate, position: DAGNode['position']): DAGNode {
+  return {
     id: generateId(),
     type: template.type,
     name: template.name,
     description: template.description,
     config: template.defaultConfig ? { ...template.defaultConfig } : undefined,
-    position: { x, y }
+    position
   }
+}
 
-  graph.value.nodes.push(newNode)
-  selectedNode.value = newNode
+function selectDroppedNode(): void {
+  selectedNode.value = graph.value.nodes[graph.value.nodes.length - 1]
   selectedEdge.value = null
-  updateGraph()
 }
 
 // 选择节点
@@ -336,62 +346,64 @@ function onNodeMouseUp() {
 }
 
 // 连接节点
+type ConnectionStart = { node: DAGNode; type: 'input' | 'output' }
+
 function startConnection(node: DAGNode, type: 'input' | 'output') {
-  if (!isConnecting.value) {
-    isConnecting.value = true
-    connectionStart.value = { node, type }
-  } else if (connectionStart.value) {
-    // 完成连接
-    const startNode = connectionStart.value.node
-    const startType = connectionStart.value.type
+  if (!isConnecting.value) beginConnection(node, type)
+  else if (connectionStart.value) completeConnection(node, type)
+}
 
-    // 确保连接方向正确（output -> input）
-    let source: string, target: string
-    if (startType === 'output' && type === 'input') {
-      source = startNode.id
-      target = node.id
-    } else if (startType === 'input' && type === 'output') {
-      source = node.id
-      target = startNode.id
-    } else {
-      // 无效连接
-      isConnecting.value = false
-      connectionStart.value = null
-      return
-    }
+function beginConnection(node: DAGNode, type: 'input' | 'output'): void {
+  isConnecting.value = true
+  connectionStart.value = { node, type }
+}
 
-    // 检查是否已存在相同的边
-    const exists = graph.value.edges.some(e => e.source === source && e.target === target)
-    if (!exists && source !== target) {
-      const newEdge: DAGEdge = {
-        id: generateEdgeId(),
-        source,
-        target
-      }
-      graph.value.edges.push(newEdge)
-      updateGraph()
-    }
+function completeConnection(target: DAGNode, targetType: 'input' | 'output'): void {
+  const start = connectionStart.value!
+  const endpoints = resolveEndpoints(start, target, targetType)
+  if (!endpoints) { resetConnection(); return }
+  if (canAddEdge(endpoints.source, endpoints.target)) addNewEdge(endpoints.source, endpoints.target)
+  resetConnection()
+}
 
-    isConnecting.value = false
-    connectionStart.value = null
-  }
+function resolveEndpoints(start: ConnectionStart, target: DAGNode, targetType: 'input' | 'output'): { source: string; target: string } | null {
+  if (start.type === 'output' && targetType === 'input') return { source: start.node.id, target: target.id }
+  if (start.type === 'input' && targetType === 'output') return { source: target.id, target: start.node.id }
+  return null
+}
+
+function canAddEdge(source: string, target: string): boolean {
+  if (source === target) return false
+  return !graph.value.edges.some(e => e.source === source && e.target === target)
+}
+
+function addNewEdge(source: string, target: string): void {
+  graph.value.edges.push({ id: generateEdgeId(), source, target })
+  updateGraph()
+}
+
+function resetConnection(): void {
+  isConnecting.value = false
+  connectionStart.value = null
 }
 
 // 获取边的路径
 function getEdgePath(edge: DAGEdge): string {
-  const sourceNode = graph.value.nodes.find(n => n.id === edge.source)
-  const targetNode = graph.value.nodes.find(n => n.id === edge.target)
+  const endpoints = resolveEndpointsForPath(edge)
+  if (!endpoints) return ''
+  return buildBezierPath(endpoints.source, endpoints.target)
+}
 
-  if (!sourceNode || !targetNode) return ''
+function resolveEndpointsForPath(edge: DAGEdge): { source: { x: number; y: number }; target: { x: number; y: number } } | null {
+  const source = graph.value.nodes.find(n => n.id === edge.source)
+  const target = graph.value.nodes.find(n => n.id === edge.target)
+  if (!source || !target) return null
+  return { source: { x: source.position.x + 120, y: source.position.y + 40 }, target: { x: target.position.x + 120, y: target.position.y + 40 } }
+}
 
-  const x1 = sourceNode.position.x + 120 // 节点宽度的一半
-  const y1 = sourceNode.position.y + 40 // 节点高度的一半
-  const x2 = targetNode.position.x + 120
-  const y2 = targetNode.position.y + 40
-
-  // 使用贝塞尔曲线
-  const cx = (x1 + x2) / 2
-  return `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`
+function buildBezierPath(source: { x: number; y: number }, target: { x: number; y: number }): string {
+  const cx = (source.x + target.x) / 2
+  return `M ${source.x} ${source.y} C ${cx} ${source.y}, ${cx} ${target.y}, ${target.x} ${target.y}`
 }
 
 // 获取边标签位置

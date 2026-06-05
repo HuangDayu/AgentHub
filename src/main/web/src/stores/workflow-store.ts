@@ -208,15 +208,10 @@ export const useWorkflowStore = defineStore('workflow', () => {
   function updateNode(nodeId: string, updates: Partial<WorkflowNode>) {
     saveToHistory()
     const index = nodes.value.findIndex(n => n.id === nodeId)
-    if (index !== -1) {
-      nodes.value[index] = { ...nodes.value[index], ...updates }
-      isDirty.value = true
-      
-      // 如果更新的是当前选中的节点，同步更新selectedNode
-      if (selectedNode.value?.id === nodeId) {
-        selectedNode.value = nodes.value[index]
-      }
-    }
+    if (index === -1) return
+    nodes.value[index] = { ...nodes.value[index], ...updates }
+    isDirty.value = true
+    if (selectedNode.value?.id === nodeId) selectedNode.value = nodes.value[index]
   }
   
   /**
@@ -224,20 +219,9 @@ export const useWorkflowStore = defineStore('workflow', () => {
    */
   function deleteNode(nodeId: string) {
     saveToHistory()
-    
-    // 删除节点
     nodes.value = nodes.value.filter(n => n.id !== nodeId)
-    
-    // 删除相关的边
-    edges.value = edges.value.filter(
-      e => e.source !== nodeId && e.target !== nodeId
-    )
-    
-    // 如果删除的是选中的节点，清空选中
-    if (selectedNode.value?.id === nodeId) {
-      selectedNode.value = null
-    }
-    
+    edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
+    if (selectedNode.value?.id === nodeId) selectedNode.value = null
     isDirty.value = true
   }
   
@@ -317,17 +301,9 @@ export const useWorkflowStore = defineStore('workflow', () => {
    */
   function undo() {
     if (!canUndo.value) return
-    
-    // 保存当前状态到重做栈
-    futureStack.value.push({
-      nodes: JSON.parse(JSON.stringify(nodes.value)),
-      edges: JSON.parse(JSON.stringify(edges.value))
-    })
-    
-    // 恢复上一个状态
+    futureStack.value.push(snapshotCurrentGraph())
     const prevState = historyStack.value.pop()!
-    nodes.value = prevState.nodes
-    edges.value = prevState.edges
+    nodes.value = prevState.nodes; edges.value = prevState.edges
     isDirty.value = true
   }
   
@@ -336,18 +312,14 @@ export const useWorkflowStore = defineStore('workflow', () => {
    */
   function redo() {
     if (!canRedo.value) return
-    
-    // 保存当前状态到撤销栈
-    historyStack.value.push({
-      nodes: JSON.parse(JSON.stringify(nodes.value)),
-      edges: JSON.parse(JSON.stringify(edges.value))
-    })
-    
-    // 恢复下一个状态
+    historyStack.value.push(snapshotCurrentGraph())
     const nextState = futureStack.value.pop()!
-    nodes.value = nextState.nodes
-    edges.value = nextState.edges
+    nodes.value = nextState.nodes; edges.value = nextState.edges
     isDirty.value = true
+  }
+
+  function snapshotCurrentGraph() {
+    return { nodes: JSON.parse(JSON.stringify(nodes.value)), edges: JSON.parse(JSON.stringify(edges.value)) }
   }
   
   /**
@@ -433,20 +405,32 @@ export const useWorkflowStore = defineStore('workflow', () => {
    * 重置Store
    */
   function reset() {
+    resetWorkflowMetadata()
+    resetGraphState()
+    resetUiState()
+  }
+
+  function resetWorkflowMetadata(): void {
     workflowId.value = ''
     workflowName.value = ''
     workflowDesc.value = ''
+    execution.value = null
+    isDirty.value = false
+    isSaving.value = false
+  }
+
+  function resetGraphState(): void {
     nodes.value = []
     edges.value = []
     selectedNode.value = null
     selectedEdge.value = null
-    showTestPanel.value = false
-    showConfigPanel.value = false
-    execution.value = null
     historyStack.value = []
     futureStack.value = []
-    isDirty.value = false
-    isSaving.value = false
+  }
+
+  function resetUiState(): void {
+    showTestPanel.value = false
+    showConfigPanel.value = false
     variableTree.value = []
     checkList.value = []
     showCheckList.value = false

@@ -145,6 +145,7 @@ const isExecuting = ref(false)
 const executionResult = ref<any>(null)
 const expandedNodes = ref(new Set<string>())
 const taskId = ref('')
+let pollHandle: number | null = null
 
 // 计算属性
 const inputParams = computed(() => {
@@ -175,76 +176,63 @@ function getInputType(type: string): string {
 
 async function startExecution() {
   if (isExecuting.value) return
-  
+  await runStartExecution()
+}
+
+async function runStartExecution(): Promise<void> {
   isExecuting.value = true
-  
   try {
-    const selection = {
-      tenantId: workspaceStore.tenantId!,
-      workspaceId: workspaceStore.workspaceId!
-    }
-    
-    const result = await apiStartExecution(selection, {
-      workflowId: props.workflowId,
-      input: inputValues.value,
-      debug: true
-    })
-    
-    taskId.value = result.task_id
-    executionResult.value = result
-    
-    // 轮询执行状态
-    pollExecutionStatus()
+    await performStartExecution()
   } catch (error) {
     console.error('执行失败:', error)
     isExecuting.value = false
   }
 }
 
+async function performStartExecution(): Promise<void> {
+  const result = await apiStartExecution(getSelection(), buildStartExecutionPayload())
+  taskId.value = result.task_id
+  executionResult.value = result
+  pollExecutionStatus()
+}
+
+function buildStartExecutionPayload() {
+  return { workflowId: props.workflowId, input: inputValues.value, debug: true }
+}
+
+function getSelection() {
+  return { tenantId: workspaceStore.tenantId!, workspaceId: workspaceStore.workspaceId! }
+}
+
 async function pollExecutionStatus() {
   if (!taskId.value) return
-  
-  const pollInterval = setInterval(async () => {
-    try {
-      const selection = {
-        tenantId: workspaceStore.tenantId!,
-        workspaceId: workspaceStore.workspaceId!
-      }
-      
-      const status = await getExecutionStatus(
-        selection,
-        props.workflowId,
-        taskId.value
-      )
-      
-      executionResult.value = status
-      
-      if (status.status !== 'running') {
-        clearInterval(pollInterval)
-        isExecuting.value = false
-      }
-    } catch (error) {
-      console.error('获取状态失败:', error)
-      clearInterval(pollInterval)
-      isExecuting.value = false
-    }
-  }, 1000)
+  pollHandle = setInterval(pollOnce, 1000)
+}
+
+async function pollOnce(): Promise<void> {
+  try {
+    const status = await getExecutionStatus(getSelection(), props.workflowId, taskId.value!)
+    executionResult.value = status
+    if (status.status !== 'running') stopPolling()
+  } catch (error) {
+    console.error('获取状态失败:', error)
+    stopPolling()
+  }
+}
+
+function stopPolling(): void {
+  if (pollHandle !== null) { clearInterval(pollHandle); pollHandle = null }
+  isExecuting.value = false
 }
 
 async function stopExecution() {
   if (!taskId.value) return
-  
-  try {
-    const selection = {
-      tenantId: workspaceStore.tenantId!,
-      workspaceId: workspaceStore.workspaceId!
-    }
-    
-    await apiStopExecution(selection, props.workflowId, taskId.value)
-    isExecuting.value = false
-  } catch (error) {
-    console.error('停止失败:', error)
-  }
+  try { await performStopExecution() } catch (error) { console.error('停止失败:', error) }
+}
+
+async function performStopExecution(): Promise<void> {
+  await apiStopExecution(getSelection(), props.workflowId, taskId.value!)
+  isExecuting.value = false
 }
 
 function clearResult() {
@@ -258,29 +246,11 @@ function getNodeName(nodeId: string): string {
   return node?.data?.label || nodeId
 }
 
-function getStatusText(status: TaskStatus): string {
-  const texts: Record<TaskStatus, string> = {
-    pending: '待执行',
-    running: '执行中',
-    success: '执行成功',
-    failed: '执行失败',
-    timeout: '执行超时',
-    skipped: '已跳过'
-  }
-  return texts[status] || status
-}
+const STATUS_TEXTS: Record<TaskStatus, string> = { pending: '待执行', running: '执行中', success: '执行成功', failed: '执行失败', timeout: '执行超时', skipped: '已跳过' }
+const STATUS_ICONS: Record<TaskStatus, string> = { pending: '○', running: '⏳', success: '✓', failed: '✗', timeout: '⏱', skipped: '→' }
 
-function getStatusIcon(status: TaskStatus): string {
-  const icons: Record<TaskStatus, string> = {
-    pending: '○',
-    running: '⏳',
-    success: '✓',
-    failed: '✗',
-    timeout: '⏱',
-    skipped: '→'
-  }
-  return icons[status] || '○'
-}
+function getStatusText(status: TaskStatus): string { return STATUS_TEXTS[status] || status }
+function getStatusIcon(status: TaskStatus): string { return STATUS_ICONS[status] || '○' }
 
 function toggleNodeExpand(nodeId: string) {
   if (expandedNodes.value.has(nodeId)) {

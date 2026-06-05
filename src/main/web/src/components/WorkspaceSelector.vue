@@ -28,16 +28,11 @@ const selectedWorkspaceId = ref(store.workspaceId)
 // 加载工作区列表
 async function loadWorkspaces() {
   if (!store.tenantId) return
-  try {
-    workspaces.value = await listWorkspaces(store.tenantId)
-    // 如果没有选择工作区，自动选择第一个
-    if (workspaces.value.length && !store.workspaceId) {
-      store.selectWorkspace(workspaces.value[0].id)
-      selectedWorkspaceId.value = workspaces.value[0].id
-    }
-  } catch (error) {
-    console.error('加载工作区列表失败:', error)
-  }
+  try { workspaces.value = await listWorkspaces(store.tenantId); autoSelectFirstWorkspace() } catch (error) { console.error('加载工作区列表失败:', error) }
+}
+
+function autoSelectFirstWorkspace() {
+  if (workspaces.value.length && !store.workspaceId) { store.selectWorkspace(workspaces.value[0].id); selectedWorkspaceId.value = workspaces.value[0].id }
 }
 
 // 处理工作区切换

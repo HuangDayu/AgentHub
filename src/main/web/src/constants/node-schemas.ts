@@ -437,17 +437,14 @@ export const NODE_SCHEMA_MAP: Record<string, NodeSchema> = {
  */
 export function getNodeSchemasByCategory(): Record<string, NodeSchema[]> {
   const result: Record<string, NodeSchema[]> = {}
-
-  for (const schema of Object.values(NODE_SCHEMA_MAP)) {
-    if (schema.hideInMenu) continue
-    const group = schema.groupLabel || '其他'
-    if (!result[group]) {
-      result[group] = []
-    }
-    result[group].push(schema)
-  }
-
+  for (const schema of Object.values(NODE_SCHEMA_MAP)) { if (schema.hideInMenu) continue; addSchemaToCategory(result, schema) }
   return result
+}
+
+function addSchemaToCategory(result: Record<string, NodeSchema[]>, schema: NodeSchema) {
+  const group = schema.groupLabel || '其他'
+  if (!result[group]) result[group] = []
+  result[group].push(schema)
 }
 
 /**

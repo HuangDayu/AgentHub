@@ -389,30 +389,18 @@ function cancelAdd() {
   resetForm()
 }
 
+const EMPTY_CONFIG_FORM: AgentConfigForm = { category: '', type: '', configId: '', name: '', description: '', priority: 1, enabled: true }
+
 function resetForm() {
-  form.value = {
-    category: '',
-    type: '',
-    configId: '',
-    name: '',
-    description: '',
-    priority: 1,
-    enabled: true,
-  }
+  form.value = { ...EMPTY_CONFIG_FORM }
 }
 
 async function loadAgents() {
-  try {
-    const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
-    agents.value = await listAgents(selection)
-    // 默认选择第一个Agent（如果URL没有指定agentId）
-    if (agents.value.length > 0 && !selectedAgentId.value) {
-      selectedAgentId.value = agents.value[0].id
-      loadConfigs()
-    }
-  } catch (e: any) {
-    error.value = e.message
-  }
+  try { agents.value = await listAgents(getSelection()); autoSelectFirstAgent() } catch (e: any) { error.value = e.message }
+}
+
+function autoSelectFirstAgent() {
+  if (agents.value.length > 0 && !selectedAgentId.value) { selectedAgentId.value = agents.value[0].id; loadConfigs() }
 }
 
 async function loadConfigTypes() {
@@ -445,32 +433,44 @@ async function loadAvailableConfigs(category: string, type: string) {
 }
 
 async function handleAdd() {
-  if (!selectedAgentId.value || !isFormValid.value) return
+  if (!canAdd()) return
+  await runAdd()
+}
+
+function canAdd(): boolean {
+  return Boolean(selectedAgentId.value && isFormValid.value)
+}
+
+async function runAdd(): Promise<void> {
   loading.value = true
   error.value = ''
-  try {
-    const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
-    // 获取配置名称
-    const configName = getConfigNameFromSelection()
-    const name = form.value.name || configName
-    const description = form.value.description || configName
+  await tryPerformAdd()
+}
 
-    await setAgentConfig(selection, selectedAgentId.value, {
-      category: form.value.category,
-      type: form.value.type,
-      configId: form.value.configId,
-      name: name,
-      description: description,
-      priority: form.value.priority,
-      enabled: form.value.enabled,
-    })
-    await loadConfigs()
-    cancelAdd()
+async function tryPerformAdd(): Promise<void> {
+  try {
+    await performAdd()
   } catch (e: any) {
     error.value = e.message
   } finally {
     loading.value = false
   }
+}
+
+async function performAdd(): Promise<void> {
+  await setAgentConfig(getSelection(), selectedAgentId.value!, buildAddPayload())
+  await loadConfigs()
+  cancelAdd()
+}
+
+function getSelection() {
+  return { tenantId: store.tenantId, workspaceId: store.workspaceId }
+}
+
+function buildAddPayload() {
+  const { category, type, configId, name, description, priority, enabled } = form.value
+  const configName = getConfigNameFromSelection()
+  return { category, type, configId, priority, enabled, name: name || configName, description: description || configName }
 }
 
 function getConfigNameFromSelection(): string {
@@ -483,49 +483,23 @@ async function toggleEnabled(config: AgentConfig) {
   if (!selectedAgentId.value) return
   loading.value = true
   error.value = ''
-  try {
-    const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
-    await updateAgentConfig(selection, selectedAgentId.value, config.id, {
-      ...config,
-      enabled: !config.enabled,
-    })
-    await loadConfigs()
-  } catch (e: any) {
-    error.value = e.message
-  } finally {
-    loading.value = false
-  }
+  try { await performToggleEnabled(config) } catch (e: any) { error.value = e.message } finally { loading.value = false }
 }
 
-async function handleDelete(configId: string) {
-  if (!selectedAgentId.value) return
-  if (!await showConfirm('确定要删除这个配置吗？')) return
-  loading.value = true
-  error.value = ''
-  try {
-    const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
-    await deleteAgentConfig(selection, selectedAgentId.value, configId)
-    await loadConfigs()
-  } catch (e: any) {
-    error.value = e.message
-  } finally {
-    loading.value = false
-  }
+async function performToggleEnabled(config: AgentConfig): Promise<void> {
+  await updateAgentConfig(getSelection(), selectedAgentId.value!, config.id, { ...config, enabled: !config.enabled })
+  await loadConfigs()
 }
 
 async function handleSync() {
   if (!selectedAgentId.value) return
-  loading.value = true
-  error.value = ''
-  try {
-    const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
-    await syncAgentConfigs(selection, selectedAgentId.value)
-    await loadConfigs()
-  } catch (e: any) {
-    error.value = e.message
-  } finally {
-    loading.value = false
-  }
+  loading.value = true; error.value = ''
+  try { await performHandleSync() } catch (e: any) { error.value = e.message } finally { loading.value = false }
+}
+
+async function performHandleSync(): Promise<void> {
+  await syncAgentConfigs(getSelection(), selectedAgentId.value!)
+  await loadConfigs()
 }
 </script>
 

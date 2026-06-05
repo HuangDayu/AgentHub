@@ -749,14 +749,11 @@ const sessionStreamingStates = new Map<string, {
 function getCurrentStreamingState() {
   const sessionId = selectedSessionId.value
   if (!sessionId) return null
+  return ensureStreamingState(sessionId)
+}
 
-  if (!sessionStreamingStates.has(sessionId)) {
-    sessionStreamingStates.set(sessionId, {
-      content: '',
-      isStreaming: false,
-      pendingMessages: []
-    })
-  }
+function ensureStreamingState(sessionId: string) {
+  if (!sessionStreamingStates.has(sessionId)) sessionStreamingStates.set(sessionId, { content: '', isStreaming: false, pendingMessages: [] })
   return sessionStreamingStates.get(sessionId)!
 }
 
@@ -768,26 +765,35 @@ function isSessionStreaming(sessionId: string): boolean {
 
 // 监听selectedSessionId变化，恢复流消息状态和消息列表
 watch(selectedSessionId, (newSessionId) => {
-  if (newSessionId) {
-    // 恢复消息列表（所有消息都在sessionMessages中）
-    const msgs = sessionMessages.value.get(newSessionId) || []
-    messages.value = [...msgs]
+  if (!newSessionId) {
+    clearSessionState()
+    return
+  }
+  restoreSessionMessages(newSessionId)
+  restoreStreamingState(newSessionId)
+})
 
-    // 恢复流消息状态
-    const state = sessionStreamingStates.get(newSessionId)
-    if (state) {
-      streamingContent.value = state.content
-      sending.value = state.isStreaming
-    } else {
-      streamingContent.value = ''
-      sending.value = false
-    }
+function clearSessionState() {
+  messages.value = []
+  streamingContent.value = ''
+  sending.value = false
+}
+
+function restoreSessionMessages(sessionId: string) {
+  const msgs = sessionMessages.value.get(sessionId) || []
+  messages.value = [...msgs]
+}
+
+function restoreStreamingState(sessionId: string) {
+  const state = sessionStreamingStates.get(sessionId)
+  if (state) {
+    streamingContent.value = state.content
+    sending.value = state.isStreaming
   } else {
-    messages.value = []
     streamingContent.value = ''
     sending.value = false
   }
-})
+}
 
 // Selection state
 const selectionReady = computed(() => store.tenantId && store.workspaceId)
@@ -818,21 +824,15 @@ function getSelection() {
 }
 
 async function loadRuntimeData() {
-  if (!runtimeCanLoad.value) {
-    resetRuntimeData()
-    return
-  }
-  runtimeError.value = ''
-  runtimeLoading.value = true
-  try {
-    runtimeData.value = await loadRuntimeDataView(getSelection(), selectedAgentId.value, selectedSessionId.value)
-    expandRootSpans()
-    selectedSpan.value = traceTreeRows.value[0] || null
-  } catch (e: any) {
-    runtimeError.value = e.message || '加载运行时数据失败'
-  } finally {
-    runtimeLoading.value = false
-  }
+  if (!runtimeCanLoad.value) { resetRuntimeData(); return }
+  runtimeError.value = ''; runtimeLoading.value = true
+  try { await performLoadRuntimeData() } catch (e: any) { runtimeError.value = e.message || '加载运行时数据失败' } finally { runtimeLoading.value = false }
+}
+
+async function performLoadRuntimeData(): Promise<void> {
+  runtimeData.value = await loadRuntimeDataView(getSelection(), selectedAgentId.value, selectedSessionId.value)
+  expandRootSpans()
+  selectedSpan.value = traceTreeRows.value[0] || null
 }
 
 function scheduleRuntimeRefresh(runId: string) {
@@ -914,32 +914,26 @@ async function selectSubsession(ss: import('@/types/subagent').Subsession) {
 // Load subagents for runtime view
 async function loadSubagents() {
   if (!selectedAgentId.value) return
-  try {
-    subagents.value = await listSubagents(getSelection(), selectedAgentId.value)
-    subsessions.value = selectedSessionId.value
-      ? await listSubsessions(getSelection(), selectedAgentId.value, selectedSessionId.value)
-      : []
-  } catch (e: any) {
-    console.error('加载子Agent失败:', e)
-  }
+  try { subagents.value = await listSubagents(getSelection(), selectedAgentId.value); subsessions.value = await fetchSubsessionsForSelected() } catch (e: any) { console.error('加载子Agent失败:', e) }
+}
+
+async function fetchSubsessionsForSelected() {
+  return selectedSessionId.value ? listSubsessions(getSelection(), selectedAgentId.value, selectedSessionId.value) : []
 }
 
 // Load agents
 async function loadAgents() {
   if (!selectionReady.value) return
-  error.value = ''
-  loadingAgents.value = true
-  try {
-    agents.value = await listAgents(getSelection())
-    console.log('Loaded agents:', agents.value)
-    if (agents.value.length && !selectedAgentId.value) {
-      selectedAgentId.value = agents.value[0].id
-      await loadSessions()
-    }
-  } catch (e: any) {
-    error.value = e.message || '加载 Agent 失败'
-  } finally {
-    loadingAgents.value = false
+  error.value = ''; loadingAgents.value = true
+  try { await performLoadAgents() } catch (e: any) { error.value = e.message || '加载 Agent 失败' } finally { loadingAgents.value = false }
+}
+
+async function performLoadAgents(): Promise<void> {
+  agents.value = await listAgents(getSelection())
+  console.log('Loaded agents:', agents.value)
+  if (agents.value.length && !selectedAgentId.value) {
+    selectedAgentId.value = agents.value[0].id
+    await loadSessions()
   }
 }
 
@@ -949,16 +943,19 @@ async function loadSessions() {
   error.value = ''
   try {
     sessions.value = await listSessions(getSelection(), selectedAgentId.value)
-    ensureSelectedSession()
-    // 默认选中第一个会话
-    if (sessions.value.length > 0 && !selectedSessionId.value) {
-      selectedSessionId.value = sessions.value[0].sessionId
-      await loadMessages()
-    }
-    await loadSubsessionsForSelected()
+    await applySessionsAndLoad()
   } catch (e: any) {
     error.value = e.message || '加载会话失败'
   }
+}
+
+async function applySessionsAndLoad(): Promise<void> {
+  ensureSelectedSession()
+  if (sessions.value.length > 0 && !selectedSessionId.value) {
+    selectedSessionId.value = sessions.value[0].sessionId
+    await loadMessages()
+  }
+  await loadSubsessionsForSelected()
 }
 
 // 只加载当前选中Session的Subsession
@@ -977,49 +974,66 @@ function createNewSession() {
   if (!selectedAgentId.value) return
   error.value = ''
   uploadedAttachments.value = []
-
-  // 创建临时会话（不发送请求）
-  const tempSessionId = 'temp-' + Date.now()
-  const tempSession: ChatSession = {
-    sessionId: tempSessionId,
-    agentId: selectedAgentId.value,
-    name: '新会话',
-    createdAt: new Date().toISOString()
-  }
-
-  sessions.value.unshift(tempSession)
-  selectedSessionId.value = tempSessionId
+  sessions.value.unshift(buildTempSession())
+  selectedSessionId.value = sessions.value[0].sessionId
   resetRuntimeData()
   pendingSessionName.value = '新会话'
   messages.value = []
 }
 
+function buildTempSession(): ChatSession {
+  return { sessionId: 'temp-' + Date.now(), agentId: selectedAgentId.value!, name: '新会话', createdAt: new Date().toISOString() }
+}
+
 // Delete session
 async function handleDeleteSession(sessionId: string) {
-  if (!selectedAgentId.value) return
+  if (!canDeleteSession()) return
   if (!await showConfirm('确定要删除这个会话吗？')) return
+  await performDeleteSession(sessionId)
+}
 
+function canDeleteSession(): boolean {
+  return Boolean(selectedAgentId.value)
+}
+
+async function performDeleteSession(sessionId: string): Promise<void> {
   error.value = ''
   try {
-    // 如果是临时会话，直接从列表中移除
-    if (sessionId.startsWith('temp-')) {
-      sessions.value = sessions.value.filter(s => s.sessionId !== sessionId)
-      if (selectedSessionId.value === sessionId) {
-        selectedSessionId.value = ''
-        pendingSessionName.value = ''
-        messages.value = []
-      }
-    } else {
-      await deleteSession(getSelection(), selectedAgentId.value, sessionId)
-      sessions.value = sessions.value.filter(s => s.sessionId !== sessionId)
-      if (selectedSessionId.value === sessionId) {
-        selectedSessionId.value = ''
-        messages.value = []
-      }
-    }
+    if (isTempSession(sessionId)) removeTempSession(sessionId)
+    else await deleteServerSession(sessionId)
   } catch (e: any) {
     error.value = e.message || '删除会话失败'
   }
+}
+
+function isTempSession(sessionId: string): boolean {
+  return sessionId.startsWith('temp-')
+}
+
+function removeTempSession(sessionId: string): void {
+  sessions.value = sessions.value.filter(s => s.sessionId !== sessionId)
+  if (isSelectedSession(sessionId)) clearSelectedTempSession()
+}
+
+async function deleteServerSession(sessionId: string): Promise<void> {
+  await deleteSession(getSelection(), selectedAgentId.value!, sessionId)
+  sessions.value = sessions.value.filter(s => s.sessionId !== sessionId)
+  if (isSelectedSession(sessionId)) clearSelectedSession()
+}
+
+function isSelectedSession(sessionId: string): boolean {
+  return selectedSessionId.value === sessionId
+}
+
+function clearSelectedSession(): void {
+  selectedSessionId.value = ''
+  messages.value = []
+}
+
+function clearSelectedTempSession(): void {
+  selectedSessionId.value = ''
+  pendingSessionName.value = ''
+  messages.value = []
 }
 
 // Select session
@@ -1031,37 +1045,40 @@ function selectSession(sessionId: string) {
 
 // Load messages
 async function loadMessages() {
-  if (!selectedSessionId.value || !selectedAgentId.value) return
+  if (!canLoadMessages()) return
   error.value = ''
   try {
-    const rawMessages = await listMessages(getSelection(), selectedAgentId.value, selectedSessionId.value)
-    const parsedMessages = parseChatMessages(rawMessages)
-
-    // 保存到该会话的消息列表
-    // 注意：不要覆盖，而是合并暂存的消息
-    const existingMsgs = sessionMessages.value.get(selectedSessionId.value) || []
-    const existingIds = new Set(existingMsgs.map(m => m.messageId))
-
-    // 只添加后端返回的新消息（不在现有消息中的）
-    const newMsgs = parsedMessages.filter(m => !existingIds.has(m.messageId))
-
-    // 合并消息：后端消息 + 暂存消息
-    const allMsgs = [...parsedMessages]
-
-    // 添加暂存的消息（不在后端返回的消息中的）
-    const state = sessionStreamingStates.get(selectedSessionId.value)
-    if (state && state.pendingMessages.length > 0) {
-      const backendIds = new Set(parsedMessages.map(m => m.messageId))
-      const pendingMsgs = state.pendingMessages.filter(m => !backendIds.has(m.messageId))
-      allMsgs.push(...pendingMsgs)
-    }
-
-    sessionMessages.value.set(selectedSessionId.value, allMsgs)
-    messages.value = [...allMsgs]
-    scrollToBottom()
+    await fetchAndApplyMessages()
   } catch (e: any) {
     error.value = e.message || '加载消息失败'
   }
+}
+
+function canLoadMessages(): boolean {
+  return Boolean(selectedSessionId.value && selectedAgentId.value)
+}
+
+async function fetchAndApplyMessages(): Promise<void> {
+  const rawMessages = await listMessages(getSelection(), selectedAgentId.value!, selectedSessionId.value!)
+  const parsed = parseChatMessages(rawMessages)
+  applyMessagesToSession(parsed)
+}
+
+function applyMessagesToSession(parsed: ChatMessage[]): void {
+  const allMsgs = [...parsed]
+  appendPendingMessages(allMsgs, parsed)
+  const sessionId = selectedSessionId.value!
+  sessionMessages.value.set(sessionId, allMsgs)
+  messages.value = [...allMsgs]
+  scrollToBottom()
+}
+
+function appendPendingMessages(allMsgs: ChatMessage[], parsed: ChatMessage[]): void {
+  const state = sessionStreamingStates.get(selectedSessionId.value)
+  if (!state || state.pendingMessages.length === 0) return
+  const backendIds = new Set(parsed.map(m => m.messageId))
+  const pending = state.pendingMessages.filter(m => !backendIds.has(m.messageId))
+  allMsgs.push(...pending)
 }
 
 function parseChatMessages(rawMessages: ChatMessage[]) {
@@ -1675,10 +1692,6 @@ function resetRuntimeData() {
   runtimeData.value = emptyRuntimeDataView()
   selectedSpan.value = null
   spanDetailVisible.value = false
-}
-
-function isTempSession(sessionId?: string) {
-  return Boolean(sessionId?.startsWith('temp-'))
 }
 
 // Initialize

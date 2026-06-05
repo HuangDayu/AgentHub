@@ -66,22 +66,13 @@ const error = ref('')
 const loading = ref(false)
 
 async function submitLogin() {
-  if (!username.value || !password.value) {
-    error.value = '请输入用户名和密码'
-    return
-  }
-  
-  loading.value = true
-  error.value = ''
-  
-  try {
-    await auth.login(username.value, password.value)
-    router.push('/')
-  } catch (e: any) {
-    error.value = e.message || '登录失败，请重试'
-  } finally {
-    loading.value = false
-  }
+  if (!hasLoginCredentials()) { error.value = '请输入用户名和密码'; return }
+  loading.value = true; error.value = ''
+  try { await auth.login(username.value, password.value); router.push('/') } catch (e: any) { error.value = e.message || '登录失败，请重试' } finally { loading.value = false }
+}
+
+function hasLoginCredentials(): boolean {
+  return Boolean(username.value && password.value)
 }
 </script>
 

@@ -5,30 +5,7 @@ import {requestJson} from './http'
 
 // ── Knowledge Bases ──────────────────────────────────────
 
-export async function listKnowledgeBases(selection: SelectionState) {
-    const response = await requestJson<{
-        items: KnowledgeBase[]
-    }>(`/api/v1/workspaces/${selection.workspaceId}/knowledge-bases`, {
-        baseUrl: runtimeConfig.retrievalApiBase,
-        method: 'GET',
-        headers: scopedHeaders(selection),
-    })
-    // Map backend 'id' to frontend 'kbId'
-    return response.items.map(item => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        indexVersions: item.indexVersions,
-        activeIndexVersion: item.activeIndexVersion,
-        vectorStoreConfigId: item.vectorStoreConfigId,
-        embeddingModelConfigId: item.embeddingModelConfigId,
-        chatModelConfigId: item.chatModelConfigId,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-    }))
-}
-
-export function createKnowledgeBase(payload: {
+export interface CreateKnowledgeBasePayload {
     selection: SelectionState
     kbCode: string
     name: string
@@ -38,25 +15,9 @@ export function createKnowledgeBase(payload: {
     vectorStoreConfigId?: string
     embeddingModelConfigId?: string
     chatModelConfigId?: string
-}) {
-    return requestJson<KnowledgeBase>(`/api/v1/workspaces/${payload.selection.workspaceId}/knowledge-bases`, {
-        baseUrl: runtimeConfig.retrievalApiBase,
-        method: 'POST',
-        headers: scopedHeaders(payload.selection),
-        bodyJson: {
-            kbCode: payload.kbCode,
-            name: payload.name,
-            description: payload.description,
-            indexVersions: payload.indexVersions,
-            activeIndexVersion: payload.activeIndexVersion,
-            vectorStoreConfigId: payload.vectorStoreConfigId,
-            embeddingModelConfigId: payload.embeddingModelConfigId,
-            chatModelConfigId: payload.chatModelConfigId,
-        },
-    })
 }
 
-export function updateKnowledgeBase(payload: {
+export interface UpdateKnowledgeBasePayload {
     selection: SelectionState
     kbId: string
     name?: string
@@ -66,29 +27,92 @@ export function updateKnowledgeBase(payload: {
     vectorStoreConfigId?: string
     embeddingModelConfigId?: string
     chatModelConfigId?: string
-}) {
-    return requestJson<KnowledgeBase>(`/api/v1/workspaces/${payload.selection.workspaceId}/knowledge-bases/${payload.kbId}`, {
+}
+
+export async function listKnowledgeBases(selection: SelectionState): Promise<KnowledgeBase[]> {
+    const response = await requestJson<{ items: KnowledgeBase[] }>(knowledgeBaseUrl(selection), {
+        baseUrl: runtimeConfig.retrievalApiBase,
+        method: 'GET',
+        headers: scopedHeaders(selection),
+    })
+    return response.items
+}
+
+export function createKnowledgeBase(payload: CreateKnowledgeBasePayload) {
+    return requestJson<KnowledgeBase>(knowledgeBaseUrl(payload.selection), {
+        baseUrl: runtimeConfig.retrievalApiBase,
+        method: 'POST',
+        headers: scopedHeaders(payload.selection),
+        bodyJson: buildCreateBody(payload),
+    })
+}
+
+export function updateKnowledgeBase(payload: UpdateKnowledgeBasePayload) {
+    return requestJson<KnowledgeBase>(knowledgeBaseItemUrl(payload.selection, payload.kbId), {
         baseUrl: runtimeConfig.retrievalApiBase,
         method: 'PATCH',
         headers: scopedHeaders(payload.selection),
-        bodyJson: {
-            name: payload.name,
-            description: payload.description,
-            indexVersions: payload.indexVersions,
-            activeIndexVersion: payload.activeIndexVersion,
-            vectorStoreConfigId: payload.vectorStoreConfigId,
-            embeddingModelConfigId: payload.embeddingModelConfigId,
-            chatModelConfigId: payload.chatModelConfigId,
-        },
+        bodyJson: buildUpdateBody(payload),
     })
 }
 
 export function deleteKnowledgeBase(selection: SelectionState, kbId: string) {
-    return requestJson<void>(`/api/v1/workspaces/${selection.workspaceId}/knowledge-bases/${kbId}`, {
+    return requestJson<void>(knowledgeBaseItemUrl(selection, kbId), {
         baseUrl: runtimeConfig.retrievalApiBase,
         method: 'DELETE',
         headers: scopedHeaders(selection),
     })
+}
+
+function knowledgeBaseUrl(selection: SelectionState): string {
+    return `/api/v1/workspaces/${selection.workspaceId}/knowledge-bases`
+}
+
+function knowledgeBaseItemUrl(selection: SelectionState, kbId: string): string {
+    return `${knowledgeBaseUrl(selection)}/${kbId}`
+}
+
+function buildCreateBody(payload: CreateKnowledgeBasePayload) {
+    return { ...buildCreateIdentity(payload), ...buildCreateOptions(payload) }
+}
+
+function buildCreateIdentity(payload: CreateKnowledgeBasePayload) {
+    return {
+        kbCode: payload.kbCode,
+        name: payload.name,
+        description: payload.description,
+        indexVersions: payload.indexVersions,
+        activeIndexVersion: payload.activeIndexVersion,
+    }
+}
+
+function buildCreateOptions(payload: CreateKnowledgeBasePayload) {
+    return {
+        vectorStoreConfigId: payload.vectorStoreConfigId,
+        embeddingModelConfigId: payload.embeddingModelConfigId,
+        chatModelConfigId: payload.chatModelConfigId,
+    }
+}
+
+function buildUpdateBody(payload: UpdateKnowledgeBasePayload) {
+    return { ...buildUpdateIdentity(payload), ...buildUpdateOptions(payload) }
+}
+
+function buildUpdateIdentity(payload: UpdateKnowledgeBasePayload) {
+    return {
+        name: payload.name,
+        description: payload.description,
+        indexVersions: payload.indexVersions,
+        activeIndexVersion: payload.activeIndexVersion,
+    }
+}
+
+function buildUpdateOptions(payload: UpdateKnowledgeBasePayload) {
+    return {
+        vectorStoreConfigId: payload.vectorStoreConfigId,
+        embeddingModelConfigId: payload.embeddingModelConfigId,
+        chatModelConfigId: payload.chatModelConfigId,
+    }
 }
 
 // ── Documents ────────────────────────────────────────────

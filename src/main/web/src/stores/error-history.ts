@@ -48,21 +48,17 @@ export const useErrorHistoryStore = defineStore('errorHistory', () => {
   }, { deep: true })
 
   function addError(status: number, url: string, message: string) {
-    const record: ApiErrorRecord = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      timestamp: Date.now(),
-      url,
-      status,
-      message,
-      read: false,
-    }
-    records.value.unshift(record)
-    // 超出上限则删除最旧的
-    if (records.value.length > MAX_RECORDS) {
-      records.value = records.value.slice(0, MAX_RECORDS)
-    }
-    // 设置 toast 消息
+    records.value.unshift(buildErrorRecord(status, url, message))
+    trimRecords()
     toastMessage.value = message
+  }
+
+  function buildErrorRecord(status: number, url: string, message: string): ApiErrorRecord {
+    return { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, timestamp: Date.now(), url, status, message, read: false }
+  }
+
+  function trimRecords() {
+    if (records.value.length > MAX_RECORDS) records.value = records.value.slice(0, MAX_RECORDS)
   }
 
   function markAllRead() {

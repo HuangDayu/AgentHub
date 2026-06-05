@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { listKnowledgeBases } from '@/api/knowledge-api'
-import { retrieve } from '@/api/retrieval-api'
+import { retrieve, type RetrievePayload, type RetrievalResponse } from '@/api/retrieval-api'
 import type { KnowledgeBase, RetrievalChunk } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import ModalDialog from '@/components/ModalDialog.vue'
@@ -133,48 +133,86 @@ onMounted(loadKnowledgeBases)
 watch(() => [store.tenantId, store.workspaceId], loadKnowledgeBases)
 
 async function loadKnowledgeBases() {
-  if (!selectionReady.value) {
-    knowledgeBases.value = []
-    return
-  }
-  try {
-    knowledgeBases.value = await listKnowledgeBases({
-      tenantId: store.tenantId,
-      workspaceId: store.workspaceId,
-    })
-  } catch (reason) {
-    error.value = reason instanceof Error ? reason.message : '加载知识库失败'
-  }
+  if (!selectionReady.value) { knowledgeBases.value = []; return }
+  try { knowledgeBases.value = await listKnowledgeBases(getSelection()) } catch (reason) { error.value = reason instanceof Error ? reason.message : '加载知识库失败' }
+}
+
+function getSelection() {
+  return { tenantId: store.tenantId, workspaceId: store.workspaceId }
 }
 
 async function handleRetrieve() {
-  if (!selectedKbId.value || !query.value.trim()) return
+  if (!canRetrieve()) return
+  await runRetrieve()
+}
 
+function canRetrieve(): boolean {
+  return Boolean(selectedKbId.value && query.value.trim())
+}
+
+async function runRetrieve(): Promise<void> {
+  beginSearch()
+  await tryPerformSearch()
+}
+
+function beginSearch(): void {
   searching.value = true
   searched.value = true
   error.value = ''
+}
+
+async function tryPerformSearch(): Promise<void> {
   try {
-    const response = await retrieve({
-      selection: { tenantId: store.tenantId, workspaceId: store.workspaceId },
-      kbId: selectedKbId.value,
-      query: query.value.trim(),
-      topK: topK.value,
-      scoreThreshold: scoreThreshold.value,
-      enableQueryRewrite: enableQueryRewrite.value,
-      enableRerank: enableRerank.value,
-      enableTextSearch: enableTextSearch.value,
-      enableVectorSearch: enableVectorSearch.value,
-      vectorWeight: vectorWeight.value,
-      keywordWeight: keywordWeight.value,
-    })
-    rewrittenQuery.value = response.rewrittenQuery
-    chunks.value = response.chunks
+    await performSearch()
   } catch (reason) {
-    error.value = reason instanceof Error ? reason.message : '检索失败'
-    chunks.value = []
+    handleSearchError(reason)
   } finally {
     searching.value = false
   }
+}
+
+async function performSearch(): Promise<void> {
+  const response = await retrieve(buildRetrievePayload())
+  applyRetrieveResponse(response)
+}
+
+function buildRetrievePayload(): RetrievePayload {
+  const payload = createRetrieveContext()
+  applyRetrieveWeights(payload)
+  applyRetrieveFeatures(payload)
+  return payload
+}
+
+function createRetrieveContext(): RetrievePayload {
+  return {
+    selection: { tenantId: store.tenantId, workspaceId: store.workspaceId },
+    kbId: selectedKbId.value,
+    query: query.value.trim(),
+  }
+}
+
+function applyRetrieveWeights(payload: RetrievePayload): void {
+  payload.topK = topK.value
+  payload.scoreThreshold = scoreThreshold.value
+  payload.vectorWeight = vectorWeight.value
+  payload.keywordWeight = keywordWeight.value
+}
+
+function applyRetrieveFeatures(payload: RetrievePayload): void {
+  payload.enableQueryRewrite = enableQueryRewrite.value
+  payload.enableRerank = enableRerank.value
+  payload.enableTextSearch = enableTextSearch.value
+  payload.enableVectorSearch = enableVectorSearch.value
+}
+
+function applyRetrieveResponse(response: RetrievalResponse): void {
+  rewrittenQuery.value = response.rewrittenQuery
+  chunks.value = response.chunks
+}
+
+function handleSearchError(reason: unknown): void {
+  error.value = reason instanceof Error ? reason.message : '检索失败'
+  chunks.value = []
 }
 </script>
 

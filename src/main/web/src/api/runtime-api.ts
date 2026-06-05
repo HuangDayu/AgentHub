@@ -18,17 +18,20 @@ export interface ChatAttachment {
  * Backend returns { id, agentId, name, createdAt } → we map id → sessionId for frontend type.
  */
 export function createSession(selection: SelectionState, agentId: string, name?: string) {
-  return requestJson<ChatSession>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions`, {
+  return requestJson<ChatSession>(createSessionUrl(selection, agentId), {
     baseUrl: runtimeConfig.runtimeApiBase,
     method: 'POST',
     headers: scopedHeaders(selection),
     bodyJson: { name: name || null },
-  }).then((raw) => ({
-    sessionId: (raw as any).id ?? raw.sessionId,
-    agentId: raw.agentId ?? agentId,
-    name: (raw as any).name,
-    createdAt: raw.createdAt,
-  }))
+  }).then((raw) => toCreatedSession(raw, agentId))
+}
+
+function createSessionUrl(selection: SelectionState, agentId: string) {
+  return `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions`
+}
+
+function toCreatedSession(raw: any, agentId: string): ChatSession {
+  return { sessionId: (raw as any).id ?? raw.sessionId, agentId: raw.agentId ?? agentId, name: (raw as any).name, createdAt: raw.createdAt }
 }
 
 /**
@@ -36,18 +39,19 @@ export function createSession(selection: SelectionState, agentId: string, name?:
  * Backend endpoint: GET /api/v1/workspaces/${selection.workspaceId}/agents/{agentId}/sessions
  */
 export function listSessions(selection: SelectionState, agentId: string) {
-  return requestJson<ChatSession[]>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions`, {
+  return requestJson<ChatSession[]>(listSessionsUrl(selection, agentId), {
     baseUrl: runtimeConfig.runtimeApiBase,
     method: 'GET',
     headers: scopedHeaders(selection),
-  }).then((items) =>
-    items.map((raw: any) => ({
-      sessionId: raw.id ?? raw.sessionId,
-      agentId: raw.agentId ?? agentId,
-      name: raw.name,
-      createdAt: raw.createdAt,
-    })),
-  )
+  }).then((items) => items.map((raw: any) => toChatSession(raw, agentId)))
+}
+
+function listSessionsUrl(selection: SelectionState, agentId: string) {
+  return `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions`
+}
+
+function toChatSession(raw: any, agentId: string): ChatSession {
+  return { sessionId: raw.id ?? raw.sessionId, agentId: raw.agentId ?? agentId, name: raw.name, createdAt: raw.createdAt }
 }
 
 // ── Messages ─────────────────────────────────────────────
@@ -57,19 +61,19 @@ export function listSessions(selection: SelectionState, agentId: string) {
  * Backend endpoint: GET /api/v1/workspaces/${selection.workspaceId}/agents/{agentId}/sessions/{sessionId}/messages
  */
 export function listMessages(selection: SelectionState, agentId: string, sessionId: string) {
-  return requestJson<ChatMessage[]>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/messages`, {
+  return requestJson<ChatMessage[]>(listMessagesUrl(selection, agentId, sessionId), {
     baseUrl: runtimeConfig.runtimeApiBase,
     method: 'GET',
     headers: scopedHeaders(selection),
-  }).then((items) =>
-    items.map((raw: any) => ({
-      messageId: raw.id ?? raw.messageId,
-      sessionId: raw.sessionId,
-      role: normalizeRole(raw.role),
-      content: raw.content,
-      createdAt: raw.createdAt,
-    })),
-  )
+  }).then((items) => items.map((raw: any) => toChatMessageItem(raw)))
+}
+
+function listMessagesUrl(selection: SelectionState, agentId: string, sessionId: string) {
+  return `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/messages`
+}
+
+function toChatMessageItem(raw: any): ChatMessage {
+  return { messageId: raw.id ?? raw.messageId, sessionId: raw.sessionId, role: normalizeRole(raw.role), content: raw.content, createdAt: raw.createdAt }
 }
 
 function normalizeRole(role: string): MessageRole {
@@ -82,23 +86,36 @@ function normalizeRole(role: string): MessageRole {
  * Send a message to a session.
  * Backend endpoint: POST /api/v1/workspaces/${selection.workspaceId}/agents/{agentId}/sessions/{sessionId}/messages
  */
-export function sendMessage(selection: SelectionState, agentId: string, sessionId: string, content: string, filePaths: string[] = []) {
-  return requestJson<any>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/messages`, {
+export interface SendMessageArgs {
+  selection: SelectionState
+  agentId: string
+  sessionId: string
+  content: string
+  filePaths?: string[]
+}
+
+export function sendMessage(args: SendMessageArgs) {
+  const { selection, agentId, sessionId, content, filePaths = [] } = args
+  return requestJson<any>(sendMessageUrl(selection, agentId, sessionId), {
     baseUrl: runtimeConfig.runtimeApiBase,
     method: 'POST',
     headers: scopedHeaders(selection),
     bodyJson: { content, filePaths },
-  }).then((raw: any) => {
-    // 适配AssistantMessage对象
-    const message: ChatMessage = {
-      messageId: raw.id ?? `msg-${Date.now()}`,
-      sessionId: sessionId,
-      role: 'ASSISTANT',
-      content: raw.text || raw.content || '',
-      createdAt: new Date().toISOString(),
-    }
-    return message
-  })
+  }).then((raw: any) => toChatMessage(raw, sessionId))
+}
+
+function sendMessageUrl(selection: SelectionState, agentId: string, sessionId: string) {
+  return `/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}/sessions/${sessionId}/messages`
+}
+
+function toChatMessage(raw: any, sessionId: string): ChatMessage {
+  return {
+    messageId: raw.id ?? `msg-${Date.now()}`,
+    sessionId,
+    role: 'ASSISTANT',
+    content: raw.text || raw.content || '',
+    createdAt: new Date().toISOString(),
+  }
 }
 
 // ── SSE Streaming ────────────────────────────────────────

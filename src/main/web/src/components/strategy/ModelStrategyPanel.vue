@@ -178,21 +178,26 @@ async function loadStrategies() {
 
 async function createStrategy() {
   if (!store.tenantId || !store.workspaceId) return
-  await createModelStrategy(
-    { tenantId: store.tenantId, workspaceId: store.workspaceId },
-    {
-      name: newStrategy.name,
-      description: newStrategy.description,
-      temperature: newStrategy.temperature,
-      maxTokens: newStrategy.maxTokens,
-      topP: newStrategy.topP,
-      frequencyPenalty: newStrategy.frequencyPenalty,
-      presencePenalty: newStrategy.presencePenalty,
-    }
-  )
+  await createModelStrategy(getSelection(), buildNewStrategyPayload())
   showCreateForm.value = false
   resetNewStrategy()
   await loadStrategies()
+}
+
+function getSelection() {
+  return { tenantId: store.tenantId!, workspaceId: store.workspaceId! }
+}
+
+function buildNewStrategyPayload() {
+  return { ...buildNewStrategyIdentity(), ...buildNewStrategyOptions() }
+}
+
+function buildNewStrategyIdentity() {
+  return { name: newStrategy.name, description: newStrategy.description }
+}
+
+function buildNewStrategyOptions() {
+  return { temperature: newStrategy.temperature, maxTokens: newStrategy.maxTokens, topP: newStrategy.topP, frequencyPenalty: newStrategy.frequencyPenalty, presencePenalty: newStrategy.presencePenalty }
 }
 
 function resetNewStrategy() {
@@ -207,13 +212,7 @@ function resetNewStrategy() {
 
 function editStrategyHandler(strategy: ModelStrategy) {
   editingId.value = strategy.id
-  editStrategyData.name = strategy.name
-  editStrategyData.description = strategy.description || ''
-  editStrategyData.temperature = strategy.temperature
-  editStrategyData.maxTokens = strategy.maxTokens
-  editStrategyData.topP = strategy.topP
-  editStrategyData.frequencyPenalty = strategy.frequencyPenalty
-  editStrategyData.presencePenalty = strategy.presencePenalty
+  Object.assign(editStrategyData, { name: strategy.name, description: strategy.description || '', temperature: strategy.temperature, maxTokens: strategy.maxTokens, topP: strategy.topP, frequencyPenalty: strategy.frequencyPenalty, presencePenalty: strategy.presencePenalty })
   showEditForm.value = true
 }
 
@@ -223,22 +222,26 @@ function closeEditForm() {
 }
 
 async function updateStrategy() {
-  if (!store.tenantId || !store.workspaceId || !editingId.value) return
-  await updateModelStrategy(
-    { tenantId: store.tenantId, workspaceId: store.workspaceId },
-    editingId.value,
-    {
-      name: editStrategyData.name,
-      description: editStrategyData.description,
-      temperature: editStrategyData.temperature,
-      maxTokens: editStrategyData.maxTokens,
-      topP: editStrategyData.topP,
-      frequencyPenalty: editStrategyData.frequencyPenalty,
-      presencePenalty: editStrategyData.presencePenalty,
-    }
-  )
+  if (!canUpdateStrategy()) return
+  await updateModelStrategy(getSelection(), editingId.value!, buildEditStrategyPayload())
   closeEditForm()
   await loadStrategies()
+}
+
+function canUpdateStrategy(): boolean {
+  return Boolean(store.tenantId && store.workspaceId && editingId.value)
+}
+
+function buildEditStrategyPayload() {
+  return { ...buildEditStrategyIdentity(), ...buildEditStrategyOptions() }
+}
+
+function buildEditStrategyIdentity() {
+  return { name: editStrategyData.name, description: editStrategyData.description }
+}
+
+function buildEditStrategyOptions() {
+  return { temperature: editStrategyData.temperature, maxTokens: editStrategyData.maxTokens, topP: editStrategyData.topP, frequencyPenalty: editStrategyData.frequencyPenalty, presencePenalty: editStrategyData.presencePenalty }
 }
 
 async function deleteStrategyHandler(id: string) {

@@ -366,68 +366,59 @@ function onDragOver(event: DragEvent) {
 }
 
 function onDrop(event: DragEvent) {
+  const schema = parseDroppedSchema(event)
+  if (!schema) return
+  const position = dropPosition(event)
+  if (!position) return
+  addNewNodeAt(schema, position, false)
+}
+
+function parseDroppedSchema(event: DragEvent): NodeSchema | null {
   const schemaData = event.dataTransfer?.getData('application/node-schema')
-  if (!schemaData) return
+  return schemaData ? JSON.parse(schemaData) : null
+}
 
-  const schema: NodeSchema = JSON.parse(schemaData)
-
-  // 计算放置位置
+function dropPosition(event: DragEvent): { x: number; y: number } | null {
   const bounds = vueFlowContainer.value?.getBoundingClientRect()
-  if (!bounds) return
-
-  const position = screenToFlowCoordinate({
-    x: event.clientX - bounds.left,
-    y: event.clientY - bounds.top,
-  })
-
-  const newNode: WorkflowNode = {
-    id: generateNodeId(schema.type),
-    type: schema.type,
-    position,
-    data: {
-      label: schema.title,
-      desc: schema.desc,
-      input_params: JSON.parse(JSON.stringify(schema.defaultParams.input_params)),
-      output_params: JSON.parse(JSON.stringify(schema.defaultParams.output_params)),
-      node_param: JSON.parse(JSON.stringify(schema.defaultParams.node_param)),
-    },
-  }
-
-  flowNodes.value.push(newNode)
-  workflowStore.addNode(newNode)
-  markDirty()
+  if (!bounds) return null
+  return screenToFlowCoordinate({ x: event.clientX - bounds.left, y: event.clientY - bounds.top })
 }
 
 // ==================== Add Node ====================
 function addNodeBySchema(schema: NodeSchema) {
-  // 如果是开始或结束节点，检查是否已存在
-  if ((schema.type === NODE_TYPE.START || schema.type === NODE_TYPE.END) &&
-      flowNodes.value.some(n => n.type === schema.type)) {
-    return
-  }
+  if (isDuplicateTerminalNode(schema)) return
+  addNewNodeAt(schema, randomPosition(), true)
+}
 
-  const position = {
-    x: 200 + Math.random() * 200,
-    y: 200 + Math.random() * 200,
-  }
+function isDuplicateTerminalNode(schema: NodeSchema): boolean {
+  if (schema.type !== NODE_TYPE.START && schema.type !== NODE_TYPE.END) return false
+  return flowNodes.value.some(n => n.type === schema.type)
+}
 
-  const newNode: WorkflowNode = {
-    id: generateNodeId(schema.type),
-    type: schema.type,
-    position,
-    data: {
-      label: schema.title,
-      desc: schema.desc,
-      input_params: JSON.parse(JSON.stringify(schema.defaultParams.input_params)),
-      output_params: JSON.parse(JSON.stringify(schema.defaultParams.output_params)),
-      node_param: JSON.parse(JSON.stringify(schema.defaultParams.node_param)),
-    },
-  }
+function randomPosition(): { x: number; y: number } {
+  return { x: 200 + Math.random() * 200, y: 200 + Math.random() * 200 }
+}
 
+function addNewNodeAt(schema: NodeSchema, position: { x: number; y: number }, select: boolean): void {
+  const newNode = buildWorkflowNode(schema, position)
   flowNodes.value.push(newNode)
   workflowStore.addNode(newNode)
-  selectedNodeRef.value = newNode
+  if (select) selectedNodeRef.value = newNode
   markDirty()
+}
+
+function buildWorkflowNode(schema: NodeSchema, position: { x: number; y: number }): WorkflowNode {
+  return { id: generateNodeId(schema.type), type: schema.type, position, data: buildNodeData(schema) }
+}
+
+function buildNodeData(schema: NodeSchema) {
+  return {
+    label: schema.title,
+    desc: schema.desc,
+    input_params: JSON.parse(JSON.stringify(schema.defaultParams.input_params)),
+    output_params: JSON.parse(JSON.stringify(schema.defaultParams.output_params)),
+    node_param: JSON.parse(JSON.stringify(schema.defaultParams.node_param)),
+  }
 }
 
 // ==================== Click handlers ====================
@@ -457,41 +448,54 @@ function hasCycle(nodeId: string, targetId: string, visited: Set<string> = new S
 }
 
 function onConnect(connection: any) {
-  if (!connection.source || !connection.target) return
+  if (canConnect(connection)) addConnection(connection)
+}
 
-  // 自连接检测
-  if (connection.source === connection.target) return
-
-  // 环检测
+function canConnect(connection: any): boolean {
+  if (!connection.source || !connection.target) return false
+  if (isSelfConnection(connection)) return false
   if (hasCycle(connection.target, connection.source)) {
     alert('不能形成环路连接')
-    return
+    return false
   }
+  return true
+}
 
-  const newEdge: WorkflowEdge = {
+function isSelfConnection(connection: any): boolean {
+  return connection.source === connection.target
+}
+
+function addConnection(connection: any) {
+  const newEdge = buildWorkflowEdge(connection)
+  flowEdges.value.push(newEdge)
+  workflowStore.addEdge(newEdge)
+  markDirty()
+}
+
+function buildWorkflowEdge(connection: any): WorkflowEdge {
+  return {
     id: generateEdgeId(),
     source: connection.source,
     target: connection.target,
     sourceHandle: connection.sourceHandle,
     targetHandle: connection.targetHandle,
   }
-
-  flowEdges.value.push(newEdge)
-  workflowStore.addEdge(newEdge)
-  markDirty()
 }
 
 function onNodesChange(changes: any) {
-  for (const change of changes) {
-    if (change.type === 'position' && change.position) {
-      const node = flowNodes.value.find(n => n.id === change.id)
-      if (node) {
-        node.position = change.position
-        workflowStore.updateNode(change.id, { position: change.position })
-        markDirty()
-      }
-    }
-  }
+  for (const change of changes) { if (isPositionChange(change)) applyPositionChange(change) }
+}
+
+function isPositionChange(change: any): boolean {
+  return change.type === 'position' && Boolean(change.position)
+}
+
+function applyPositionChange(change: any) {
+  const node = flowNodes.value.find(n => n.id === change.id)
+  if (!node) return
+  node.position = change.position
+  workflowStore.updateNode(change.id, { position: change.position })
+  markDirty()
 }
 
 function onEdgesChange(changes: any) {
@@ -499,24 +503,25 @@ function onEdgesChange(changes: any) {
 }
 
 function onNodesDelete(nodes: any[]) {
-  const allowDelete = nodes.filter((n: any) => {
-    const schema = NODE_SCHEMA_MAP[n.type]
-    // 系统节点不允许删除
-    if (schema?.isSystem) return false
-    return true
-  })
+  const allowDelete = filterDeletableNodes(nodes)
+  notifyIfHasSystemNode(nodes, allowDelete)
+  deleteAllowListedNodes(allowDelete)
+  markDirty()
+}
 
-  if (allowDelete.length !== nodes.length) {
-    alert('系统节点不允许删除')
-  }
+function filterDeletableNodes(nodes: any[]): any[] {
+  return nodes.filter((n: any) => !NODE_SCHEMA_MAP[n.type]?.isSystem)
+}
 
+function notifyIfHasSystemNode(allNodes: any[], allowDelete: any[]) {
+  if (allowDelete.length !== allNodes.length) alert('系统节点不允许删除')
+}
+
+function deleteAllowListedNodes(allowDelete: any[]) {
   for (const node of allowDelete) {
     workflowStore.deleteNode(node.id)
-    if (selectedNodeRef.value?.id === node.id) {
-      selectedNodeRef.value = null
-    }
+    if (selectedNodeRef.value?.id === node.id) selectedNodeRef.value = null
   }
-  markDirty()
 }
 
 // ==================== Config Panel ====================
@@ -532,30 +537,29 @@ function closeConfigPanel() {
   selectedNodeRef.value = null
 }
 
+const PANEL_MAP: Record<string, any> = {
+  start: markRaw(StartPanel),
+  end: markRaw(EndPanel),
+  llm: markRaw(LLMPanel),
+  api: markRaw(APIPanel),
+  script: markRaw(ScriptPanel),
+  retrieval: markRaw(RetrievalPanel),
+  condition: markRaw(ConditionPanel),
+  code: markRaw(GenericConfigPanel),
+  tool: markRaw(GenericConfigPanel),
+  agent: markRaw(GenericConfigPanel),
+  variable: markRaw(GenericConfigPanel),
+  notification: markRaw(GenericConfigPanel),
+  input: markRaw(GenericConfigPanel),
+  output: markRaw(GenericConfigPanel),
+  'sub-workflow': markRaw(GenericConfigPanel),
+  loop: markRaw(GenericConfigPanel),
+  parallel: markRaw(GenericConfigPanel),
+  task: markRaw(GenericConfigPanel),
+}
+
 function getConfigPanelComponent(type: string): any {
-  const panelMap: Record<string, any> = {
-    // 专用面板
-    start: markRaw(StartPanel),
-    end: markRaw(EndPanel),
-    llm: markRaw(LLMPanel),
-    api: markRaw(APIPanel),
-    script: markRaw(ScriptPanel),
-    retrieval: markRaw(RetrievalPanel),
-    condition: markRaw(ConditionPanel),
-    // 通用面板（基于schema自动渲染）
-    code: markRaw(GenericConfigPanel),
-    tool: markRaw(GenericConfigPanel),
-    agent: markRaw(GenericConfigPanel),
-    variable: markRaw(GenericConfigPanel),
-    notification: markRaw(GenericConfigPanel),
-    input: markRaw(GenericConfigPanel),
-    output: markRaw(GenericConfigPanel),
-    'sub-workflow': markRaw(GenericConfigPanel),
-    loop: markRaw(GenericConfigPanel),
-    parallel: markRaw(GenericConfigPanel),
-    task: markRaw(GenericConfigPanel),
-  }
-  return panelMap[type] || markRaw(GenericConfigPanel)
+  return PANEL_MAP[type] || markRaw(GenericConfigPanel)
 }
 
 function handlePanelUpdate(updates: any) {
@@ -594,32 +598,47 @@ function updateNodeConfigFromPanel() {
 }
 
 function copySelectedNode() {
-  if (!selectedNodeRef.value) return
-  const sourceNode = selectedNodeRef.value
-  const schema = NODE_SCHEMA_MAP[sourceNode.type]
-  if (schema?.isSystem) {
+  const source = selectedNodeRef.value
+  if (!source) return
+  if (isSystemNode(source.type)) {
     alert('系统节点不允许复制')
     return
   }
+  addCopiedNode(source)
+}
 
-  const newNode: WorkflowNode = {
-    ...JSON.parse(JSON.stringify(sourceNode)),
-    id: generateNodeId(sourceNode.type),
-    position: {
-      x: sourceNode.position.x + 200,
-      y: sourceNode.position.y + 80,
-    },
-    selected: true,
-    data: {
-      ...JSON.parse(JSON.stringify(sourceNode.data)),
-      label: sourceNode.data.label + '_副本',
-    },
-  }
+function isSystemNode(type: string): boolean {
+  return Boolean(NODE_SCHEMA_MAP[type]?.isSystem)
+}
 
+function addCopiedNode(source: WorkflowNode): void {
+  const newNode = cloneNode(source)
   flowNodes.value.push(newNode)
   workflowStore.addNode(newNode)
   selectedNodeRef.value = newNode
   markDirty()
+}
+
+function cloneNode(source: WorkflowNode): WorkflowNode {
+  return {
+    ...deepClone(source),
+    id: generateNodeId(source.type),
+    position: offsetPosition(source.position),
+    selected: true,
+    data: copyNodeData(source.data),
+  }
+}
+
+function deepClone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value))
+}
+
+function offsetPosition(position: { x: number; y: number }): { x: number; y: number } {
+  return { x: position.x + 200, y: position.y + 80 }
+}
+
+function copyNodeData(data: any): any {
+  return { ...deepClone(data), label: data.label + '_副本' }
 }
 
 function deleteSelectedNode() {
@@ -641,15 +660,13 @@ function toggleJsonView() {
 }
 
 function applyJsonChanges() {
-  try {
-    const graph = JSON.parse(jsonContent.value)
-    flowNodes.value = graph.nodes || []
-    flowEdges.value = graph.edges || []
-    workflowStore.setGraph(graph)
-    markDirty()
-  } catch (err) {
-    console.error('JSON解析错误:', err)
-  }
+  try { applyParsedGraph(JSON.parse(jsonContent.value)) } catch (err) { console.error('JSON解析错误:', err) }
+}
+
+function applyParsedGraph(graph: { nodes?: any[]; edges?: any[] }) {
+  flowNodes.value = graph.nodes || []; flowEdges.value = graph.edges || []
+  workflowStore.setGraph(graph)
+  markDirty()
 }
 
 function toggleMiniMap() {
@@ -670,100 +687,123 @@ function redo() {
 }
 
 function validateWorkflow() {
+  const errors = collectWorkflowErrors()
+  showValidationResult(errors)
+}
+
+function collectWorkflowErrors(): string[] {
   const errors: string[] = []
+  checkStartNode(errors)
+  checkEndNode(errors)
+  checkDisconnectedNodes(errors)
+  return errors
+}
 
-  // 检查是否有开始节点
-  if (!flowNodes.value.some(n => n.type === NODE_TYPE.START)) {
-    errors.push('缺少开始节点')
-  }
+function checkStartNode(errors: string[]): void {
+  if (!flowNodes.value.some(n => n.type === NODE_TYPE.START)) errors.push('缺少开始节点')
+}
 
-  // 检查是否有结束节点
-  if (!flowNodes.value.some(n => n.type === NODE_TYPE.END)) {
-    errors.push('缺少结束节点')
-  }
+function checkEndNode(errors: string[]): void {
+  if (!flowNodes.value.some(n => n.type === NODE_TYPE.END)) errors.push('缺少结束节点')
+}
 
-  // 检查未连接的节点
-  const connectedNodeIds = new Set<string>()
-  flowEdges.value.forEach(e => {
-    connectedNodeIds.add(e.source)
-    connectedNodeIds.add(e.target)
-  })
+function checkDisconnectedNodes(errors: string[]): void {
+  const connectedIds = collectConnectedNodeIds()
+  const orphans = flowNodes.value.filter(n => !connectedIds.has(n.id) && n.type !== NODE_TYPE.START)
+  if (orphans.length > 0) errors.push(`${orphans.length} 个节点未连接`)
+}
 
-  const disconnectedNodes = flowNodes.value.filter(
-    n => !connectedNodeIds.has(n.id) && n.type !== NODE_TYPE.START
-  )
+function collectConnectedNodeIds(): Set<string> {
+  const ids = new Set<string>()
+  flowEdges.value.forEach(e => { ids.add(e.source); ids.add(e.target) })
+  return ids
+}
 
-  if (disconnectedNodes.length > 0) {
-    errors.push(`${disconnectedNodes.length} 个节点未连接`)
-  }
+function showValidationResult(errors: string[]): void {
+  if (errors.length === 0) { alert('✅ 工作流校验通过'); return }
+  alert('⚠️ 校验发现问题:\n' + errors.join('\n'))
+}
 
-  if (errors.length === 0) {
-    alert('✅ 工作流校验通过')
-  } else {
-    alert('⚠️ 校验发现问题:\n' + errors.join('\n'))
-  }
+interface LevelAssignment {
+  levels: Map<string, number>
+  visited: Set<string>
+  edges: WorkflowEdge[]
 }
 
 function autoLayout() {
-  // Simple grid-based auto layout
-  const startNode = flowNodes.value.find(n => n.type === NODE_TYPE.START)
-  const endNode = flowNodes.value.find(n => n.type === NODE_TYPE.END)
-  const otherNodes = flowNodes.value.filter(
-    n => n.type !== NODE_TYPE.START && n.type !== NODE_TYPE.END
-  )
+  const { startNode, endNode, otherNodes } = categorizeNodes(flowNodes.value)
+  const y = positionStartNode(startNode)
+  const levels = computeNodeLevels(startNode, otherNodes, flowEdges.value)
+  const groups = groupNodesByLevel(levels, startNode, endNode)
+  applyLevelPositions(groups, y)
+  applyEndPosition(endNode, levels)
+  persistLayout()
+}
 
-  let y = 150
-  if (startNode) {
-    startNode.position = { x: 200, y }
-    y += 120
+function categorizeNodes(nodes: WorkflowNode[]): { startNode: WorkflowNode | undefined; endNode: WorkflowNode | undefined; otherNodes: WorkflowNode[] } {
+  return {
+    startNode: nodes.find(n => n.type === NODE_TYPE.START),
+    endNode: nodes.find(n => n.type === NODE_TYPE.END),
+    otherNodes: nodes.filter(n => n.type !== NODE_TYPE.START && n.type !== NODE_TYPE.END),
   }
+}
 
-  // Topological sort by finding levels
-  const levels = new Map<string, number>()
-  const visited = new Set<string>()
+function positionStartNode(node: WorkflowNode | undefined): number {
+  if (!node) return 150
+  node.position = { x: 200, y: 150 }
+  return 270
+}
 
-  function assignLevel(nodeId: string, level: number) {
-    if (visited.has(nodeId)) return
-    visited.add(nodeId)
-    const currentLevel = levels.get(nodeId) ?? level
-    levels.set(nodeId, Math.max(currentLevel, level))
-
-    // 找出从该节点出发的所有边
-    const outgoing = flowEdges.value.filter(e => e.source === nodeId)
-    for (const edge of outgoing) {
-      assignLevel(edge.target, level + 1)
-    }
+function computeNodeLevels(start: WorkflowNode | undefined, others: WorkflowNode[], edges: WorkflowEdge[]): Map<string, number> {
+  const ctx: LevelAssignment = { levels: new Map(), visited: new Set(), edges }
+  if (!start) {
+    others.forEach((n, i) => ctx.levels.set(n.id, i))
+    return ctx.levels
   }
+  assignLevel(ctx, start.id, 0)
+  return ctx.levels
+}
 
-  // 从开始节点开始分配层级
-  if (startNode) {
-    assignLevel(startNode.id, 0)
-  } else {
-    otherNodes.forEach((n, i) => levels.set(n.id, i))
+function assignLevel(ctx: LevelAssignment, nodeId: string, level: number): void {
+  if (ctx.visited.has(nodeId)) return
+  ctx.visited.add(nodeId)
+  const current = ctx.levels.get(nodeId) ?? level
+  ctx.levels.set(nodeId, Math.max(current, level))
+  for (const edge of ctx.edges) {
+    if (edge.source === nodeId) assignLevel(ctx, edge.target, level + 1)
   }
+}
 
-  // 按层级排列
-  const levelGroups = new Map<number, WorkflowNode[]>()
+function groupNodesByLevel(levels: Map<string, number>, start: WorkflowNode | undefined, end: WorkflowNode | undefined): Map<number, WorkflowNode[]> {
+  const groups = new Map<number, WorkflowNode[]>()
   for (const [nodeId, level] of levels) {
     const node = flowNodes.value.find(n => n.id === nodeId)
-    if (node && node !== startNode && node !== endNode) {
-      if (!levelGroups.has(level)) levelGroups.set(level, [])
-      levelGroups.get(level)!.push(node)
-    }
+    if (!node || node === start || node === end) continue
+    addToBucket(groups, level, node)
   }
+  return groups
+}
 
-  for (const [level, nodes] of levelGroups) {
+function addToBucket(groups: Map<number, WorkflowNode[]>, level: number, node: WorkflowNode): void {
+  const bucket = groups.get(level) ?? []
+  bucket.push(node)
+  groups.set(level, bucket)
+}
+
+function applyLevelPositions(groups: Map<number, WorkflowNode[]>, startY: number): void {
+  for (const [level, nodes] of groups) {
     const xOffset = 200 + level * 280
-    nodes.forEach((node, i) => {
-      node.position = { x: xOffset, y: y + i * 120 }
-    })
+    nodes.forEach((node, i) => { node.position = { x: xOffset, y: startY + i * 120 } })
   }
+}
 
-  if (endNode) {
-    const maxLevel = Math.max(...levels.values(), 0)
-    endNode.position = { x: 200 + (maxLevel + 1) * 280, y: 150 }
-  }
+function applyEndPosition(end: WorkflowNode | undefined, levels: Map<string, number>): void {
+  if (!end) return
+  const maxLevel = Math.max(...levels.values(), 0)
+  end.position = { x: 200 + (maxLevel + 1) * 280, y: 150 }
+}
 
+function persistLayout(): void {
   workflowStore.setGraph({ nodes: flowNodes.value, edges: flowEdges.value })
   markDirty()
 }
@@ -772,19 +812,17 @@ function autoLayout() {
 async function handleSave() {
   if (isSaving.value) return
   isSaving.value = true
+  emit('save', buildWorkflowGraph())
+  setTimeout(resetSavingState, 500)
+}
 
-  const graph: WorkflowGraph = {
-    nodes: flowNodes.value,
-    edges: flowEdges.value,
-  }
+function buildWorkflowGraph(): WorkflowGraph {
+  return { nodes: flowNodes.value, edges: flowEdges.value }
+}
 
-  emit('save', graph)
-  
-  // 等待store同步
-  setTimeout(() => {
-    isSaving.value = false
-    isDirty.value = false
-  }, 500)
+function resetSavingState() {
+  isSaving.value = false
+  isDirty.value = false
 }
 
 function markDirty() {
@@ -792,24 +830,24 @@ function markDirty() {
 }
 
 // ==================== Keyboard ====================
+const KEYBOARD_ACTIONS: Record<string, () => void> = {
+  's': handleSave,
+  'z': undo,
+  'y': redo,
+}
+
 function handleKeyboard(event: KeyboardEvent) {
   if (props.readOnly) return
+  if (!isCtrlOrMeta(event)) return
+  const action = KEYBOARD_ACTIONS[event.key]
+  if (action) {
+    event.preventDefault()
+    action()
+  }
+}
 
-  if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-    event.preventDefault()
-    handleSave()
-  }
-  if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
-    event.preventDefault()
-    undo()
-  }
-  if ((event.ctrlKey || event.metaKey) && event.key === 'y') {
-    event.preventDefault()
-    redo()
-  }
-  if (event.key === 'Delete' || event.key === 'Backspace') {
-    // VueFlow handles deletion for selected elements
-  }
+function isCtrlOrMeta(event: KeyboardEvent): boolean {
+  return event.ctrlKey || event.metaKey
 }
 
 function goBack() {

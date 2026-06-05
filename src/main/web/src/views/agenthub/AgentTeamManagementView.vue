@@ -147,16 +147,12 @@ async function updateTeamHandler() {
 }
 
 async function toggleTeam(team: AgentTeam) {
-  try {
-    if (team.status === 'ACTIVE') {
-      await deactivateTeam(selection(), team.id)
-    } else {
-      await activateTeam(selection(), team.id)
-    }
-    await loadTeams()
-  } catch (e) {
-    console.error('Failed to toggle team', e)
-  }
+  try { await performToggleTeam(team) } catch (e) { console.error('Failed to toggle team', e) }
+}
+
+async function performToggleTeam(team: AgentTeam) {
+  if (team.status === 'ACTIVE') { await deactivateTeam(selection(), team.id) } else { await activateTeam(selection(), team.id) }
+  await loadTeams()
 }
 
 async function deleteTeamHandler(id: string) {
@@ -172,13 +168,7 @@ async function deleteTeamHandler(id: string) {
 
 function editTeam(team: AgentTeam) {
   editingTeamId.value = team.id
-  form.value = {
-    teamCode: team.teamCode,
-    name: team.name,
-    description: team.description,
-    coordinationMode: team.coordinationMode,
-    memberConfig: team.memberConfig
-  }
+  form.value = { teamCode: team.teamCode, name: team.name, description: team.description, coordinationMode: team.coordinationMode, memberConfig: team.memberConfig }
   showCreateDialog.value = true
 }
 

@@ -176,20 +176,26 @@ async function loadStrategies() {
 
 async function createStrategy() {
   if (!store.tenantId || !store.workspaceId) return
-  await createToolStrategy(
-    { tenantId: store.tenantId, workspaceId: store.workspaceId },
-    {
-      name: newStrategy.name,
-      description: newStrategy.description,
-      maxConcurrentCalls: newStrategy.maxConcurrentCalls,
-      timeoutSeconds: newStrategy.timeoutSeconds,
-      retryCount: newStrategy.retryCount,
-      fallbackEnabled: newStrategy.fallbackEnabled,
-    }
-  )
+  await createToolStrategy(getSelection(), buildNewStrategyPayload())
   showCreateForm.value = false
   resetNewStrategy()
   await loadStrategies()
+}
+
+function getSelection() {
+  return { tenantId: store.tenantId!, workspaceId: store.workspaceId! }
+}
+
+function buildNewStrategyPayload() {
+  return { ...buildNewStrategyIdentity(), ...buildNewStrategyOptions() }
+}
+
+function buildNewStrategyIdentity() {
+  return { name: newStrategy.name, description: newStrategy.description }
+}
+
+function buildNewStrategyOptions() {
+  return { maxConcurrentCalls: newStrategy.maxConcurrentCalls, timeoutSeconds: newStrategy.timeoutSeconds, retryCount: newStrategy.retryCount, fallbackEnabled: newStrategy.fallbackEnabled }
 }
 
 function resetNewStrategy() {
@@ -218,21 +224,26 @@ function closeEditForm() {
 }
 
 async function updateStrategy() {
-  if (!store.tenantId || !store.workspaceId || !editingId.value) return
-  await updateToolStrategy(
-    { tenantId: store.tenantId, workspaceId: store.workspaceId },
-    editingId.value,
-    {
-      name: editStrategyData.name,
-      description: editStrategyData.description,
-      maxConcurrentCalls: editStrategyData.maxConcurrentCalls,
-      timeoutSeconds: editStrategyData.timeoutSeconds,
-      retryCount: editStrategyData.retryCount,
-      fallbackEnabled: editStrategyData.fallbackEnabled,
-    }
-  )
+  if (!canUpdateStrategy()) return
+  await updateToolStrategy(getSelection(), editingId.value!, buildEditStrategyPayload())
   closeEditForm()
   await loadStrategies()
+}
+
+function canUpdateStrategy(): boolean {
+  return Boolean(store.tenantId && store.workspaceId && editingId.value)
+}
+
+function buildEditStrategyPayload() {
+  return { ...buildEditStrategyIdentity(), ...buildEditStrategyOptions() }
+}
+
+function buildEditStrategyIdentity() {
+  return { name: editStrategyData.name, description: editStrategyData.description }
+}
+
+function buildEditStrategyOptions() {
+  return { maxConcurrentCalls: editStrategyData.maxConcurrentCalls, timeoutSeconds: editStrategyData.timeoutSeconds, retryCount: editStrategyData.retryCount, fallbackEnabled: editStrategyData.fallbackEnabled }
 }
 
 async function deleteStrategyHandler(id: string) {

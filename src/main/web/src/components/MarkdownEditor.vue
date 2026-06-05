@@ -63,20 +63,25 @@ function togglePreview() {
 function insertTemplate(prefix: string, suffix: string) {
   const textarea = document.querySelector('.editor-textarea') as HTMLTextAreaElement
   if (!textarea) return
+  const cursor = applyTemplate(prefix, suffix, textarea)
+  restoreCursor(textarea, cursor, prefix.length)
+}
 
+interface CursorRange { start: number; end: number }
+
+function applyTemplate(prefix: string, suffix: string, textarea: HTMLTextAreaElement): CursorRange {
   const start = textarea.selectionStart
   const end = textarea.selectionEnd
-  const selectedText = localContent.value.substring(start, end)
-  const beforeText = localContent.value.substring(0, start)
-  const afterText = localContent.value.substring(end)
-
-  localContent.value = beforeText + prefix + selectedText + suffix + afterText
+  const selected = localContent.value.substring(start, end)
+  localContent.value = localContent.value.substring(0, start) + prefix + selected + suffix + localContent.value.substring(end)
   emit('update:modelValue', localContent.value)
+  return { start, end }
+}
 
-  // Reset cursor position
+function restoreCursor(textarea: HTMLTextAreaElement, cursor: CursorRange, offset: number) {
   setTimeout(() => {
     textarea.focus()
-    textarea.setSelectionRange(start + prefix.length, end + prefix.length)
+    textarea.setSelectionRange(cursor.start + offset, cursor.end + offset)
   }, 0)
 }
 </script>

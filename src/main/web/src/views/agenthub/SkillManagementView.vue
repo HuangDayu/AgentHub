@@ -486,16 +486,12 @@ onUnmounted(() => {
 
 async function loadSkills() {
   if (!selectionReady.value) return
-  try {
-    const keyword = searchKeyword.value.trim()
-    if (keyword) {
-      skills.value = await searchSkills(selection(), keyword)
-    } else {
-      skills.value = await listSkills(selection())
-    }
-  } catch (e) {
-    console.error('Failed to load skills', e)
-  }
+  try { skills.value = await fetchSkillsList() } catch (e) { console.error('Failed to load skills', e) }
+}
+
+async function fetchSkillsList() {
+  const keyword = searchKeyword.value.trim()
+  return keyword ? searchSkills(selection(), keyword) : listSkills(selection())
 }
 
 function onSearchInput() {
@@ -513,14 +509,7 @@ function clearSearch() {
 async function syncAllSkillsHandler() {
   if (!selectionReady.value) return
   syncing.value = true
-  try {
-    await syncAllSkills(selection())
-    await loadSkills()
-  } catch (e) {
-    console.error('Failed to sync skills', e)
-  } finally {
-    syncing.value = false
-  }
+  try { await syncAllSkills(selection()); await loadSkills() } catch (e) { console.error('Failed to sync skills', e) } finally { syncing.value = false }
 }
 
 async function handleCreateConfirm() {
@@ -575,16 +564,12 @@ async function updateSkillHandler() {
 }
 
 async function toggleSkill(skill: Skill) {
-  try {
-    if (skill.enabled) {
-      await disableSkill(selection(), skill.id)
-    } else {
-      await enableSkill(selection(), skill.id)
-    }
-    await loadSkills()
-  } catch (e) {
-    console.error('Failed to toggle skill', e)
-  }
+  try { await performToggleSkill(skill) } catch (e) { console.error('Failed to toggle skill', e) }
+}
+
+async function performToggleSkill(skill: Skill) {
+  if (skill.enabled) { await disableSkill(selection(), skill.id) } else { await enableSkill(selection(), skill.id) }
+  await loadSkills()
 }
 
 async function deleteSkillHandler(id: string) {
@@ -666,17 +651,14 @@ function getSourceLabel(source: string): string {
   }
 }
 
+const EMPTY_CREATE_FORM = { skillCode: '', name: '', skillPath: '' }
+const EMPTY_URL_FORM = { skillCode: '', name: '', zipUrl: '' }
+const EMPTY_UPLOAD_FORM = { skillCode: '', name: '', file: null }
+
 function closeCreateDialog() {
-  showCreateDialog.value = false
-  activeCreateTab.value = 'local'
-  createForm.value = { skillCode: '', name: '', skillPath: '' }
-  urlForm.value = { skillCode: '', name: '', zipUrl: '' }
-  uploadForm.value = { skillCode: '', name: '', file: null }
-  marketSearchKeyword.value = ''
-  marketResults.value = {}
-  selectedMarketSkill.value = null
-  showMarketDetail.value = false
-  marketDetail.value = null
+  showCreateDialog.value = false; activeCreateTab.value = 'local'
+  createForm.value = { ...EMPTY_CREATE_FORM }; urlForm.value = { ...EMPTY_URL_FORM }; uploadForm.value = { ...EMPTY_UPLOAD_FORM }
+  marketSearchKeyword.value = ''; marketResults.value = {}; selectedMarketSkill.value = null; showMarketDetail.value = false; marketDetail.value = null
 }
 
 function closeEditDialog() {
@@ -692,43 +674,28 @@ function closeDetailDialog() {
 async function handleMarketSearch() {
   if (!marketSearchKeyword.value.trim()) return
   marketSearching.value = true
-  try {
-    marketResults.value = await searchMarketSkills(selection(), { keyword: marketSearchKeyword.value })
-  } catch (e: any) {
-    console.error(e.message || '搜索失败')
-  } finally {
-    marketSearching.value = false
-  }
+  try { marketResults.value = await searchMarketSkills(selection(), { keyword: marketSearchKeyword.value }) } catch (e: any) { console.error(e.message || '搜索失败') } finally { marketSearching.value = false }
 }
 
 async function viewMarketSkill(skill: MarketSkillSummary) {
-  selectedMarketSkill.value = skill
-  showMarketDetail.value = true
+  selectedMarketSkill.value = skill; showMarketDetail.value = true
   loadingMarketDetail.value = true
-  try {
-    marketDetail.value = await getMarketSkillDetail(selection(), skill.marketId, skill.skillId)
-  } catch (e: any) {
-    console.error(e.message || '获取详情失败')
-  } finally {
-    loadingMarketDetail.value = false
-  }
+  try { marketDetail.value = await getMarketSkillDetail(selection(), skill.marketId, skill.skillId) } catch (e: any) { console.error(e.message || '获取详情失败') } finally { loadingMarketDetail.value = false }
 }
 
 async function handleInstallFromMarket() {
   if (!selectedMarketSkill.value) return
   installingFromMarket.value = true
-  try {
-    await installMarketSkill(selection(), { marketId: selectedMarketSkill.value.marketId, skillId: selectedMarketSkill.value.skillId })
-    console.info('安装成功')
-    showMarketDetail.value = false
-    selectedMarketSkill.value = null
-    marketDetail.value = null
-    await loadSkills()
-  } catch (e: any) {
-    console.error(e.message || '安装失败')
-  } finally {
-    installingFromMarket.value = false
-  }
+  try { await performInstallFromMarket() } catch (e: any) { console.error(e.message || '安装失败') } finally { installingFromMarket.value = false }
+}
+
+async function performInstallFromMarket(): Promise<void> {
+  await installMarketSkill(selection(), { marketId: selectedMarketSkill.value!.marketId, skillId: selectedMarketSkill.value!.skillId })
+  console.info('安装成功')
+  showMarketDetail.value = false
+  selectedMarketSkill.value = null
+  marketDetail.value = null
+  await loadSkills()
 }
 </script>
 

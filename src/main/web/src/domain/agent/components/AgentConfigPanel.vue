@@ -177,22 +177,27 @@ async function loadAvailableConfigs(category: string, type: string) {
 }
 
 async function handleAddConfig() {
-  if (!selectedCategory.value || !selectedType.value || !selectedConfigId.value) return
+  if (!canAddConfig()) return
   loading.value = true
   try {
-    await setAgentConfig(props.selection, props.agentId, {
-      category: selectedCategory.value,
-      type: selectedType.value,
-      configId: selectedConfigId.value,
-      description: description.value,
-      priority: priority.value,
-      enabled: enabled.value,
-    })
-    await loadExistingConfigs()
-    resetForm()
+    await performAddConfig()
   } finally {
     loading.value = false
   }
+}
+
+function canAddConfig(): boolean {
+  return Boolean(selectedCategory.value && selectedType.value && selectedConfigId.value)
+}
+
+async function performAddConfig(): Promise<void> {
+  await setAgentConfig(props.selection, props.agentId, buildAddConfigPayload())
+  await loadExistingConfigs()
+  resetForm()
+}
+
+function buildAddConfigPayload() {
+  return { category: selectedCategory.value!, type: selectedType.value!, configId: selectedConfigId.value!, description: description.value, priority: priority.value, enabled: enabled.value }
 }
 
 async function handleDeleteConfig(configId: string) {

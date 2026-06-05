@@ -268,58 +268,61 @@ async function loadStrategies() {
 
 async function createStrategy() {
   if (!store.tenantId || !store.workspaceId) return
-  await createRetrievalStrategy(
-    { tenantId: store.tenantId, workspaceId: store.workspaceId },
-    {
-      name: newStrategy.name,
-      description: newStrategy.description,
-      retrievalType: newStrategy.retrievalType,
-      topK: newStrategy.topK,
-      scoreThreshold: newStrategy.scoreThreshold,
-      enableQueryRewrite: newStrategy.enableQueryRewrite,
-      enableRerank: newStrategy.enableRerank,
-      enableTextSearch: newStrategy.enableTextSearch,
-      enableVectorSearch: newStrategy.enableVectorSearch,
-      rerankModel: newStrategy.rerankModel || undefined,
-      vectorWeight: newStrategy.vectorWeight,
-      keywordWeight: newStrategy.keywordWeight,
-    }
-  )
+  await createRetrievalStrategy(getSelection(), buildNewStrategyPayload())
   showCreateForm.value = false
   resetNewStrategy()
   await loadStrategies()
 }
 
+function getSelection() {
+  return { tenantId: store.tenantId!, workspaceId: store.workspaceId! }
+}
+
+function buildNewStrategyPayload() {
+  return { ...buildNewStrategyIdentity(), ...buildNewStrategyOptions() }
+}
+
+function buildNewStrategyIdentity() {
+  return {
+    name: newStrategy.name,
+    description: newStrategy.description,
+    retrievalType: newStrategy.retrievalType,
+  }
+}
+
+function buildNewStrategyOptions() {
+  return { ...buildNewStrategySearchParams(), ...buildNewStrategyFlags() }
+}
+
+function buildNewStrategySearchParams() {
+  return { topK: newStrategy.topK, scoreThreshold: newStrategy.scoreThreshold, vectorWeight: newStrategy.vectorWeight, keywordWeight: newStrategy.keywordWeight }
+}
+
+function buildNewStrategyFlags() {
+  return { enableQueryRewrite: newStrategy.enableQueryRewrite, enableRerank: newStrategy.enableRerank, enableTextSearch: newStrategy.enableTextSearch, enableVectorSearch: newStrategy.enableVectorSearch, rerankModel: newStrategy.rerankModel || undefined }
+}
+
+const NEW_STRATEGY_DEFAULTS: Partial<typeof newStrategy> = { name: '', description: '', retrievalType: 'HYBRID', topK: 10, scoreThreshold: 0.75, enableQueryRewrite: false, enableRerank: false, enableTextSearch: false, enableVectorSearch: true, rerankModel: '', vectorWeight: 0.7, keywordWeight: 0.3 }
+
 function resetNewStrategy() {
-  newStrategy.name = ''
-  newStrategy.description = ''
-  newStrategy.retrievalType = 'HYBRID'
-  newStrategy.topK = 10
-  newStrategy.scoreThreshold = 0.75
-  newStrategy.enableQueryRewrite = false
-  newStrategy.enableRerank = false
-  newStrategy.enableTextSearch = false
-  newStrategy.enableVectorSearch = true
-  newStrategy.rerankModel = ''
-  newStrategy.vectorWeight = 0.7
-  newStrategy.keywordWeight = 0.3
+  Object.assign(newStrategy, NEW_STRATEGY_DEFAULTS)
 }
 
 function editStrategyHandler(strategy: RetrievalStrategy) {
   editingId.value = strategy.id
-  editStrategyData.name = strategy.name
-  editStrategyData.description = strategy.description || ''
-  editStrategyData.retrievalType = strategy.retrievalType || 'HYBRID'
-  editStrategyData.topK = strategy.topK || 10
-  editStrategyData.scoreThreshold = strategy.scoreThreshold || 0.75
-  editStrategyData.vectorWeight = strategy.vectorWeight || 0.7
-  editStrategyData.keywordWeight = strategy.keywordWeight || 0.3
-  editStrategyData.enableQueryRewrite = strategy.enableQueryRewrite || false
-  editStrategyData.enableRerank = strategy.enableRerank || false
-  editStrategyData.enableTextSearch = strategy.enableTextSearch || false
-  editStrategyData.enableVectorSearch = strategy.enableVectorSearch || false
-  editStrategyData.rerankModel = strategy.rerankModel || ''
+  Object.assign(editStrategyData, buildEditStrategyData(strategy))
   showEditForm.value = true
+}
+
+function buildEditStrategyData(strategy: RetrievalStrategy) {
+  return {
+    name: strategy.name, description: strategy.description || '',
+    retrievalType: strategy.retrievalType || 'HYBRID', topK: strategy.topK || 10,
+    scoreThreshold: strategy.scoreThreshold || 0.75, vectorWeight: strategy.vectorWeight || 0.7, keywordWeight: strategy.keywordWeight || 0.3,
+    enableQueryRewrite: strategy.enableQueryRewrite || false, enableRerank: strategy.enableRerank || false,
+    enableTextSearch: strategy.enableTextSearch || false, enableVectorSearch: strategy.enableVectorSearch || false,
+    rerankModel: strategy.rerankModel || '',
+  }
 }
 
 function closeEditForm() {
@@ -328,17 +331,14 @@ function closeEditForm() {
 }
 
 async function updateStrategy() {
-  if (!store.tenantId || !store.workspaceId || !editingId.value) return
-  await updateRetrievalStrategy(
-    { tenantId: store.tenantId, workspaceId: store.workspaceId },
-    editingId.value,
-    {
-      name: editStrategyData.name,
-      description: editStrategyData.description,
-    }
-  )
+  if (!canUpdateStrategy()) return
+  await updateRetrievalStrategy(getSelection(), editingId.value!, { name: editStrategyData.name, description: editStrategyData.description })
   closeEditForm()
   await loadStrategies()
+}
+
+function canUpdateStrategy(): boolean {
+  return Boolean(store.tenantId && store.workspaceId && editingId.value)
 }
 
 async function deleteStrategyHandler(id: string) {

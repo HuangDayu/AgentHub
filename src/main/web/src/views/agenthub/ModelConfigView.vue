@@ -188,13 +188,7 @@ async function loadConfigs() {
 
 function startEdit(config: ModelConfig) {
   editingId.value = config.id
-  form.name = config.name
-  form.type = config.type
-  form.supplier = config.supplier
-  form.model = config.model
-  form.apiKey = config.apiKey || ''
-  form.baseUrl = config.baseUrl || ''
-  form.enabled = config.enabled
+  Object.assign(form, { name: config.name, type: config.type, supplier: config.supplier, model: config.model, apiKey: config.apiKey || '', baseUrl: config.baseUrl || '', enabled: config.enabled })
   showCreateForm.value = true
 }
 
@@ -217,74 +211,88 @@ function cancelForm() {
 async function submitConfig() {
   if (!selectionReady.value) return
   await execute(async () => {
-    if (editingId.value) {
-      // 更新配置
-      await updateModelConfig(
-        { tenantId: store.tenantId, workspaceId: store.workspaceId },
-        editingId.value,
-        {
-          name: form.name.trim(),
-          type: form.type,
-          supplier: form.supplier,
-          model: form.model.trim(),
-          apiKey: form.apiKey.trim() || undefined,
-          baseUrl: form.baseUrl.trim() || undefined,
-          enabled: form.enabled,
-        }
-      )
-      editingId.value = null
-    } else {
-      // 创建配置
-      await createModelConfig(
-        { tenantId: store.tenantId, workspaceId: store.workspaceId },
-        {
-          name: form.name.trim(),
-          type: form.type,
-          supplier: form.supplier,
-          model: form.model.trim(),
-          apiKey: form.apiKey.trim() || undefined,
-          baseUrl: form.baseUrl.trim() || undefined,
-          enabled: form.enabled,
-        }
-      )
-    }
-    // Reset form
+    if (editingId.value) await updateCurrentConfig()
+    else await createNewConfig()
     cancelForm()
     await loadConfigs()
   })
 }
 
+async function updateCurrentConfig(): Promise<void> {
+  await updateModelConfig(getSelection(), editingId.value!, buildModelPayload())
+  editingId.value = null
+}
+
+async function createNewConfig(): Promise<void> {
+  await createModelConfig(getSelection(), buildModelPayload())
+}
+
+function buildModelPayload() {
+  return { ...buildModelIdentity(), ...buildModelCredentials() }
+}
+
+function buildModelIdentity() {
+  return { name: form.name.trim(), type: form.type, supplier: form.supplier, model: form.model.trim() }
+}
+
+function buildModelCredentials() {
+  return { apiKey: trimOptional(form.apiKey), baseUrl: trimOptional(form.baseUrl), enabled: form.enabled }
+}
+
+function trimOptional(value: string): string | undefined {
+  return value.trim() || undefined
+}
+
+function getSelection() {
+  return { tenantId: store.tenantId, workspaceId: store.workspaceId }
+}
+
 async function testModel(config: ModelConfig) {
   if (!selectionReady.value) return
+  beginTest()
+  await runTestWithCleanup(config)
+}
+
+async function runTestWithCleanup(config: ModelConfig): Promise<void> {
+  try {
+    await runTestModel(config)
+  } catch (e) {
+    handleTestError(e)
+  } finally {
+    endTest()
+  }
+}
+
+function beginTest(): void {
   testResult.value = null
   showTestModal.value = true
   testing.value = true
   testAbortController.value = new AbortController()
+}
 
-  try {
-    const chunkResult = await testModelConfig(
-      { tenantId: store.tenantId, workspaceId: store.workspaceId },
-      config.id
-    )
-    testResult.value = chunkResult
-  } catch (e) {
-    if (e instanceof Error && e.name === 'AbortError') {
-      testResult.value = {
-        success: false,
-        message: '测试已中断',
-        details: '用户取消了测试操作',
-      }
-    } else {
-      testResult.value = {
-        success: false,
-        message: '测试失败',
-        details: e instanceof Error ? e.message : '未知错误',
-      }
-    }
-  } finally {
-    testing.value = false
-    testAbortController.value = null
-  }
+async function runTestModel(config: ModelConfig): Promise<void> {
+  testResult.value = await testModelConfig(getSelection(), config.id)
+}
+
+function handleTestError(e: unknown): void {
+  testResult.value = isAbortError(e) ? buildAbortResult() : buildErrorResult(e)
+}
+
+function isAbortError(e: unknown): boolean {
+  return e instanceof Error && e.name === 'AbortError'
+}
+
+function buildAbortResult() {
+  return { success: false, message: '测试已中断', details: '用户取消了测试操作' }
+}
+
+function buildErrorResult(e: unknown) {
+  return { success: false, message: '测试失败', details: e instanceof Error ? e.message : '未知错误' }
+}
+
+function endTest(): void {
+  testing.value = false
+  testAbortController.value = null
 }
 
 function cancelTest() {
@@ -300,19 +308,10 @@ function closeTestModal() {
   }
 }
 
+const SUPPLIER_BASE_URLS: Record<string, string> = { OPENAI: 'https://api.openai.com/v1', DEEPSEEK: 'https://api.deepseek.com/v1', OLLAMA: 'http://localhost:11434/v1', OPENROUTER: 'https://openrouter.ai/api/v1' }
+
 function getDefaultBaseUrl(supplier: string): string {
-  switch (supplier) {
-    case 'OPENAI':
-      return 'https://api.openai.com/v1'
-    case 'DEEPSEEK':
-      return 'https://api.deepseek.com/v1'
-    case 'OLLAMA':
-      return 'http://localhost:11434/v1'
-    case 'OPENROUTER':
-      return 'https://openrouter.ai/api/v1'
-    default:
-      return ''
-  }
+  return SUPPLIER_BASE_URLS[supplier] ?? ''
 }
 
 async function handleDelete(configId: string) {

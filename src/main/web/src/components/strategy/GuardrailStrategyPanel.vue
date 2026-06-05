@@ -230,49 +230,50 @@ async function loadStrategies() {
 
 async function createStrategy() {
   if (!store.tenantId || !store.workspaceId) return
-  await createGuardrailStrategy(
-    { tenantId: store.tenantId, workspaceId: store.workspaceId },
-    {
-      name: newStrategy.name,
-      description: newStrategy.description,
-      inputValidationEnabled: newStrategy.inputValidationEnabled,
-      outputValidationEnabled: newStrategy.outputValidationEnabled,
-      piiDetectionEnabled: newStrategy.piiDetectionEnabled,
-      piiMaskingEnabled: newStrategy.piiMaskingEnabled,
-      promptInjectionDetection: newStrategy.promptInjectionDetection,
-      maxInputLength: newStrategy.maxInputLength,
-      maxOutputLength: newStrategy.maxOutputLength,
-    }
-  )
+  await createGuardrailStrategy(getSelection(), buildNewStrategyPayload())
   showCreateForm.value = false
   resetNewStrategy()
   await loadStrategies()
 }
 
+function getSelection() {
+  return { tenantId: store.tenantId!, workspaceId: store.workspaceId! }
+}
+
+function buildNewStrategyPayload() {
+  return { ...buildNewStrategyIdentity(), ...buildNewStrategyOptions() }
+}
+
+function buildNewStrategyIdentity() {
+  return { name: newStrategy.name, description: newStrategy.description }
+}
+
+function buildNewStrategyOptions() {
+  return { ...buildNewStrategyFlags(), ...buildNewStrategyLimits() }
+}
+
+function buildNewStrategyFlags() {
+  return { inputValidationEnabled: newStrategy.inputValidationEnabled, outputValidationEnabled: newStrategy.outputValidationEnabled, piiDetectionEnabled: newStrategy.piiDetectionEnabled, piiMaskingEnabled: newStrategy.piiMaskingEnabled, promptInjectionDetection: newStrategy.promptInjectionDetection }
+}
+
+function buildNewStrategyLimits() {
+  return { maxInputLength: newStrategy.maxInputLength, maxOutputLength: newStrategy.maxOutputLength }
+}
+
+const EMPTY_GUARDRAIL_STRATEGY: Partial<typeof newStrategy> = { name: '', description: '', inputValidationEnabled: true, outputValidationEnabled: true, piiDetectionEnabled: false, piiMaskingEnabled: false, promptInjectionDetection: true, maxInputLength: 10000, maxOutputLength: 4096 }
+
 function resetNewStrategy() {
-  newStrategy.name = ''
-  newStrategy.description = ''
-  newStrategy.inputValidationEnabled = true
-  newStrategy.outputValidationEnabled = true
-  newStrategy.piiDetectionEnabled = false
-  newStrategy.piiMaskingEnabled = false
-  newStrategy.promptInjectionDetection = true
-  newStrategy.maxInputLength = 10000
-  newStrategy.maxOutputLength = 4096
+  Object.assign(newStrategy, EMPTY_GUARDRAIL_STRATEGY)
 }
 
 function editStrategyHandler(strategy: GuardrailStrategy) {
   editingId.value = strategy.id
-  editStrategyData.name = strategy.name
-  editStrategyData.description = strategy.description || ''
-  editStrategyData.inputValidationEnabled = strategy.inputValidationEnabled
-  editStrategyData.outputValidationEnabled = strategy.outputValidationEnabled
-  editStrategyData.piiDetectionEnabled = strategy.piiDetectionEnabled
-  editStrategyData.piiMaskingEnabled = strategy.piiMaskingEnabled
-  editStrategyData.promptInjectionDetection = strategy.promptInjectionDetection
-  editStrategyData.maxInputLength = strategy.maxInputLength
-  editStrategyData.maxOutputLength = strategy.maxOutputLength
+  Object.assign(editStrategyData, buildEditStrategyData(strategy))
   showEditForm.value = true
+}
+
+function buildEditStrategyData(strategy: GuardrailStrategy) {
+  return { name: strategy.name, description: strategy.description || '', inputValidationEnabled: strategy.inputValidationEnabled, outputValidationEnabled: strategy.outputValidationEnabled, piiDetectionEnabled: strategy.piiDetectionEnabled, piiMaskingEnabled: strategy.piiMaskingEnabled, promptInjectionDetection: strategy.promptInjectionDetection, maxInputLength: strategy.maxInputLength, maxOutputLength: strategy.maxOutputLength }
 }
 
 function closeEditForm() {
@@ -281,24 +282,26 @@ function closeEditForm() {
 }
 
 async function updateStrategy() {
-  if (!store.tenantId || !store.workspaceId || !editingId.value) return
-  await updateGuardrailStrategy(
-    { tenantId: store.tenantId, workspaceId: store.workspaceId },
-    editingId.value,
-    {
-      name: editStrategyData.name,
-      description: editStrategyData.description,
-      inputValidationEnabled: editStrategyData.inputValidationEnabled,
-      outputValidationEnabled: editStrategyData.outputValidationEnabled,
-      piiDetectionEnabled: editStrategyData.piiDetectionEnabled,
-      piiMaskingEnabled: editStrategyData.piiMaskingEnabled,
-      promptInjectionDetection: editStrategyData.promptInjectionDetection,
-      maxInputLength: editStrategyData.maxInputLength,
-      maxOutputLength: editStrategyData.maxOutputLength,
-    }
-  )
+  if (!canUpdateStrategy()) return
+  await updateGuardrailStrategy(getSelection(), editingId.value!, buildEditStrategyPayload())
   closeEditForm()
   await loadStrategies()
+}
+
+function canUpdateStrategy(): boolean {
+  return Boolean(store.tenantId && store.workspaceId && editingId.value)
+}
+
+function buildEditStrategyPayload() {
+  return { ...buildEditStrategyIdentity(), ...buildEditStrategyOptions() }
+}
+
+function buildEditStrategyIdentity() {
+  return { name: editStrategyData.name, description: editStrategyData.description }
+}
+
+function buildEditStrategyOptions() {
+  return { ...buildNewStrategyFlags(), ...buildNewStrategyLimits() }
 }
 
 async function deleteStrategyHandler(id: string) {

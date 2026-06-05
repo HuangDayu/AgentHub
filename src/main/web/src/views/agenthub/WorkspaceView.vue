@@ -162,23 +162,19 @@ const workspaceForm = reactive({
 })
 
 onMounted(async () => {
-  await execute(async () => {
-    // 设置租户ID（从store获取或从API获取）
-    if (!store.tenantId) {
-      const user = await getCurrentUser()
-      store.selectTenant(user.tenantId)
-    }
-    // 加载工作区列表
-    await loadWorkspaces()
-  })
+  await execute(performMountLoad)
   loading.value = false
-  
-  // 监听全局新增事件
-  window.addEventListener('global-add', () => {
-    editingWorkspace.value = null
-    showCreateForm.value = true
-  })
+  registerGlobalAddListener()
 })
+
+async function performMountLoad(): Promise<void> {
+  if (!store.tenantId) store.selectTenant((await getCurrentUser()).tenantId)
+  await loadWorkspaces()
+}
+
+function registerGlobalAddListener() {
+  window.addEventListener('global-add', () => { editingWorkspace.value = null; showCreateForm.value = true })
+}
 
 async function loadWorkspaces() {
   if (!store.tenantId) return
@@ -211,23 +207,21 @@ function cancelForm() {
 
 async function submitWorkspace() {
   if (!store.tenantId) return
-  await execute(async () => {
-    if (editingWorkspace.value) {
-      // 更新工作区
-      await updateWorkspace(editingWorkspace.value.id, {
-        name: workspaceForm.name,
-      })
-    } else {
-      // 创建工作区
-      await createWorkspace(store.tenantId!, {
-        workspaceCode: workspaceForm.workspaceCode,
-        name: workspaceForm.name,
-        region: workspaceForm.region || undefined,
-      })
-    }
-    cancelForm()
-    await loadWorkspaces()
-  })
+  await execute(performSubmitWorkspace)
+}
+
+async function performSubmitWorkspace(): Promise<void> {
+  if (editingWorkspace.value) {
+    await updateWorkspace(editingWorkspace.value.id, { name: workspaceForm.name })
+  } else {
+    await createWorkspace(store.tenantId!, buildCreateWorkspacePayload())
+  }
+  cancelForm()
+  await loadWorkspaces()
+}
+
+function buildCreateWorkspacePayload() {
+  return { workspaceCode: workspaceForm.workspaceCode, name: workspaceForm.name, region: workspaceForm.region || undefined }
 }
 
 async function handleDelete(workspaceId: string) {

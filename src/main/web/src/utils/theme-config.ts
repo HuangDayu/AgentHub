@@ -44,17 +44,27 @@ export const DARK_THEME: ThemeConfig = {
 
 // 应用主题
 export function applyTheme(theme: ThemeConfig) {
-  const root = document.documentElement
-  
+  logThemeStart(theme)
+  setThemeAttribute(theme)
+  setThemeCssVariables(theme)
+  applyThemeClass(theme)
+  logThemeEnd()
+  dispatchThemeChanged(theme)
+}
+
+function logThemeStart(theme: ThemeConfig): void {
   console.log('========================================')
   console.log(`🎨 Applying ${theme.mode.toUpperCase()} Theme`)
   console.log('========================================')
   console.log('Theme config:', JSON.stringify(theme, null, 2))
-  
-  // 设置主题模式
-  root.setAttribute('data-theme', theme.mode)
-  
-  // 设置CSS变量
+}
+
+function setThemeAttribute(theme: ThemeConfig): void {
+  document.documentElement.setAttribute('data-theme', theme.mode)
+}
+
+function setThemeCssVariables(theme: ThemeConfig): void {
+  const root = document.documentElement
   root.style.setProperty('--bg-color', theme.bgColor)
   root.style.setProperty('--text-color', theme.textColor)
   root.style.setProperty('--card-bg', theme.cardBg)
@@ -62,19 +72,21 @@ export function applyTheme(theme: ThemeConfig) {
   root.style.setProperty('--shadow-base', theme.shadow)
   root.style.setProperty('--glass-opacity', String(theme.glassOpacity))
   root.style.setProperty('--blur-amount', theme.blur)
-  
-  // 移除旧主题类
+}
+
+function applyThemeClass(theme: ThemeConfig): void {
+  const root = document.documentElement
   root.classList.remove('theme-light', 'theme-dark')
-  // 添加新主题类
   root.classList.add(`theme-${theme.mode}`)
-  
+}
+
+function logThemeEnd(): void {
   console.log('✅ Theme applied successfully')
   console.log('========================================')
-  
-  // 触发主题变更事件
-  window.dispatchEvent(new CustomEvent('theme-changed', {
-    detail: theme
-  }))
+}
+
+function dispatchThemeChanged(theme: ThemeConfig): void {
+  window.dispatchEvent(new CustomEvent('theme-changed', { detail: theme }))
 }
 
 // 获取保存的主题

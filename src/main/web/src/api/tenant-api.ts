@@ -27,17 +27,8 @@ export function listTenants() {
   return requestJson<Tenant[]>('/api/v1/tenants', { baseUrl: runtimeConfig.tenantApiBase, method: 'GET' })
 }
 
-export function createTenant(payload: {
-  tenantCode: string
-  name: string
-  planCode: string
-  region: string
-}) {
-  return requestJson<Tenant>('/api/v1/tenants', {
-    baseUrl: runtimeConfig.tenantApiBase,
-    method: 'POST',
-    bodyJson: payload,
-  })
+export function createTenant(payload: { tenantCode: string; name: string; planCode: string; region: string }) {
+  return requestJson<Tenant>('/api/v1/tenants', { baseUrl: runtimeConfig.tenantApiBase, method: 'POST', bodyJson: payload })
 }
 
 // ── Workspaces ───────────────────────────────────────────
@@ -88,15 +79,7 @@ export function listMembers(workspaceId: string) {
   })
 }
 
-export function createMember(workspaceId: string, payload: {
-  userId: string
-  roleCode: string
-  scopeType: string
-}) {
-  return requestJson<Member>(`/api/v1/workspaces/${workspaceId}/members`, {
-    baseUrl: runtimeConfig.tenantApiBase,
-    method: 'POST',
-    bodyJson: payload,
-  })
+export function createMember(workspaceId: string, payload: { userId: string; roleCode: string; scopeType: string }) {
+  return requestJson<Member>(`/api/v1/workspaces/${workspaceId}/members`, { baseUrl: runtimeConfig.tenantApiBase, method: 'POST', bodyJson: payload })
 }
 

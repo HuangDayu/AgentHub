@@ -92,7 +92,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { retrieve } from '@/api/retrieval-api'
+import { retrieve, type RetrievePayload, type RetrievalResponse } from '@/api/retrieval-api'
 import type { RetrievalChunk } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import ModalDialog from '@/components/ModalDialog.vue'
@@ -138,46 +138,96 @@ watch(() => props.visible, (newVal) => {
 })
 
 async function handleRetrieve() {
+  logRetrieveStart()
+  if (!canRetrieve()) return
+  await runRetrieve()
+}
+
+function logRetrieveStart(): void {
   console.log('handleRetrieve called', {
     kbId: props.kbId,
     query: query.value.trim(),
     tenantId: store.tenantId,
     workspaceId: store.workspaceId
   })
+}
 
-  if (!props.kbId || !query.value.trim()) {
-    console.log('Early return: missing kbId or query')
-    return
-  }
+function canRetrieve(): boolean {
+  if (props.kbId && query.value.trim()) return true
+  console.log('Early return: missing kbId or query')
+  return false
+}
 
+async function runRetrieve(): Promise<void> {
+  beginSearch()
+  await tryPerformSearch()
+}
+
+function beginSearch(): void {
   searching.value = true
   searched.value = true
   error.value = ''
+}
+
+function endSearch(): void {
+  searching.value = false
+}
+
+async function tryPerformSearch(): Promise<void> {
   try {
-    console.log('Calling retrieve API...')
-    const response = await retrieve({
-      selection: { tenantId: store.tenantId, workspaceId: store.workspaceId },
-      kbId: props.kbId,
-      query: query.value.trim(),
-      topK: topK.value,
-      scoreThreshold: scoreThreshold.value,
-      enableQueryRewrite: enableQueryRewrite.value,
-      enableRerank: enableRerank.value,
-      enableTextSearch: enableTextSearch.value,
-      enableVectorSearch: enableVectorSearch.value,
-      vectorWeight: vectorWeight.value,
-      keywordWeight: keywordWeight.value,
-    })
-    console.log('Retrieve response:', response)
-    rewrittenQuery.value = response.rewrittenQuery
-    chunks.value = response.chunks
+    await performSearch()
   } catch (reason) {
-    console.error('Retrieve error:', reason)
-    error.value = reason instanceof Error ? reason.message : '检索失败'
-    chunks.value = []
+    handleSearchError(reason)
   } finally {
-    searching.value = false
+    endSearch()
   }
+}
+
+async function performSearch(): Promise<void> {
+  console.log('Calling retrieve API...')
+  const response = await retrieve(buildSearchPayload())
+  applySearchResponse(response)
+}
+
+function buildSearchPayload(): RetrievePayload {
+  const payload = createSearchContext()
+  applySearchWeights(payload)
+  applySearchFeatures(payload)
+  return payload
+}
+
+function createSearchContext(): RetrievePayload {
+  return {
+    selection: { tenantId: store.tenantId, workspaceId: store.workspaceId },
+    kbId: props.kbId,
+    query: query.value.trim(),
+  }
+}
+
+function applySearchWeights(payload: RetrievePayload): void {
+  payload.topK = topK.value
+  payload.scoreThreshold = scoreThreshold.value
+  payload.vectorWeight = vectorWeight.value
+  payload.keywordWeight = keywordWeight.value
+}
+
+function applySearchFeatures(payload: RetrievePayload): void {
+  payload.enableQueryRewrite = enableQueryRewrite.value
+  payload.enableRerank = enableRerank.value
+  payload.enableTextSearch = enableTextSearch.value
+  payload.enableVectorSearch = enableVectorSearch.value
+}
+
+function applySearchResponse(response: RetrievalResponse): void {
+  console.log('Retrieve response:', response)
+  rewrittenQuery.value = response.rewrittenQuery
+  chunks.value = response.chunks
+}
+
+function handleSearchError(reason: unknown): void {
+  console.error('Retrieve error:', reason)
+  error.value = reason instanceof Error ? reason.message : '检索失败'
+  chunks.value = []
 }
 
 function handleClose() {

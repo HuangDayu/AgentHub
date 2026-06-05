@@ -70,17 +70,12 @@ const selectedAgentId = ref('')
 const subagents = ref<Subagent[]>([])
 const selectedSubagentId = ref('')
 
-onMounted(async () => {
-  try {
-    agents.value = await listAgents({ tenantId: store.tenantId!, workspaceId: store.workspaceId! })
-    if (agents.value.length) {
-      selectedAgentId.value = agents.value[0].id
-      await loadSubagents()
-    }
-  } catch (e: any) {
-    error.value = e.message || '加载失败'
-  }
-})
+onMounted(async () => { try { await performMountLoad() } catch (e: any) { error.value = e.message || '加载失败' } })
+
+async function performMountLoad(): Promise<void> {
+  agents.value = await listAgents(getSelection())
+  if (agents.value.length) { selectedAgentId.value = agents.value[0].id; await loadSubagents() }
+}
 
 function getSelection() {
   return { tenantId: store.tenantId!, workspaceId: store.workspaceId! }

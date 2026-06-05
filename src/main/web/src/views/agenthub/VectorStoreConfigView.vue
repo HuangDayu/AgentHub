@@ -193,28 +193,15 @@ async function loadConfigs() {
 
 function startEdit(config: VectorStoreConfig) {
   editingId.value = config.id
-  form.name = config.name
-  form.type = config.type
-  form.host = config.host
-  form.port = config.port
-  form.apiKey = config.apiKey || ''
-  form.collectionName = config.collectionName
-  form.extraParams = config.extraParams || ''
-  form.enabled = config.enabled
+  Object.assign(form, { name: config.name, type: config.type, host: config.host, port: config.port, apiKey: config.apiKey || '', collectionName: config.collectionName, extraParams: config.extraParams || '', enabled: config.enabled })
   showCreateForm.value = true
 }
 
+const EMPTY_VECTOR_FORM = { name: '', type: 'QDRANT', host: 'localhost', port: 6333, apiKey: '', collectionName: 'knowledge_vectors', extraParams: '', enabled: true }
+
 function cancelEdit() {
-  editingId.value = null
-      showCreateForm.value = false
-  form.name = ''
-  form.type = 'QDRANT'
-  form.host = 'localhost'
-  form.port = 6333
-  form.apiKey = ''
-  form.collectionName = 'knowledge_vectors'
-  form.extraParams = ''
-  form.enabled = true
+  editingId.value = null; showCreateForm.value = false
+  Object.assign(form, EMPTY_VECTOR_FORM)
 }
 
 function cancelForm() {
@@ -225,77 +212,89 @@ function cancelForm() {
 async function submitConfig() {
   if (!selectionReady.value) return
   await execute(async () => {
-    if (editingId.value) {
-      // 更新配置
-      await updateVectorStoreConfig(
-        { tenantId: store.tenantId, workspaceId: store.workspaceId },
-        editingId.value,
-        {
-          name: form.name.trim(),
-          host: form.host.trim(),
-          port: form.port,
-          apiKey: form.apiKey.trim() || undefined,
-          collectionName: form.collectionName.trim(),
-          extraParams: form.extraParams.trim() || undefined,
-          enabled: form.enabled,
-        }
-      )
-      showCreateForm.value = false
-      editingId.value = null
-      showCreateForm.value = false
-    } else {
-      // 创建配置
-      await createVectorStoreConfig(
-        { tenantId: store.tenantId, workspaceId: store.workspaceId },
-        {
-          name: form.name.trim(),
-          type: form.type,
-          host: form.host.trim(),
-          port: form.port,
-          apiKey: form.apiKey.trim() || undefined,
-          collectionName: form.collectionName.trim(),
-          extraParams: form.extraParams.trim() || undefined,
-        }
-      )
-      showCreateForm.value = false
-    }
-    // Reset form
+    if (editingId.value) await updateCurrentConfig()
+    else await createNewConfig()
     cancelForm()
     await loadConfigs()
   })
 }
 
+async function updateCurrentConfig(): Promise<void> {
+  await updateVectorStoreConfig(getSelection(), editingId.value!, buildUpdatePayload())
+  showCreateForm.value = false
+  editingId.value = null
+}
+
+async function createNewConfig(): Promise<void> {
+  await createVectorStoreConfig(getSelection(), buildCreatePayload())
+  showCreateForm.value = false
+}
+
+function buildUpdatePayload() {
+  return { ...trimFormFields(), enabled: form.enabled }
+}
+
+function buildCreatePayload() {
+  return { ...trimFormFields(), type: form.type }
+}
+
+function trimFormFields() {
+  return {
+    name: form.name.trim(),
+    host: form.host.trim(),
+    port: form.port,
+    apiKey: form.apiKey.trim() || undefined,
+    collectionName: form.collectionName.trim(),
+    extraParams: form.extraParams.trim() || undefined,
+  }
+}
+
+function getSelection() {
+  return { tenantId: store.tenantId, workspaceId: store.workspaceId }
+}
+
 async function testConnection(config: VectorStoreConfig) {
   if (!selectionReady.value) return
+  beginTest()
+  await runTestWithCleanup(config)
+}
+
+async function runTestWithCleanup(config: VectorStoreConfig): Promise<void> {
+  try {
+    testResult.value = await testVectorStoreConfig(getSelection(), config.id)
+  } catch (e) {
+    handleTestError(e)
+  } finally {
+    endTest()
+  }
+}
+
+function beginTest(): void {
   testResult.value = null
   showTestModal.value = true
   testing.value = true
   testAbortController.value = new AbortController()
+}
 
-  try {
-    const chunkResult = await testVectorStoreConfig(
-      { tenantId: store.tenantId, workspaceId: store.workspaceId },
-      config.id
-    )
-    testResult.value = chunkResult
-  } catch (e) {
-    if (e instanceof Error && e.name === 'AbortError') {
-      testResult.value = {
-        success: false,
-        message: '测试已中断',
-        details: '用户取消了测试操作',
-      }
-    } else {
-      testResult.value = {
-        success: false,
-        message: '测试失败',
-        details: e instanceof Error ? e.message : '未知错误',
-      }
-    }
-  } finally {
-    testing.value = false
-    testAbortController.value = null
-  }
+function endTest(): void {
+  testing.value = false
+  testAbortController.value = null
+}
+
+function handleTestError(e: unknown): void {
+  testResult.value = isAbortError(e) ? buildAbortResult() : buildErrorResult(e)
+}
+
+function isAbortError(e: unknown): boolean {
+  return e instanceof Error && e.name === 'AbortError'
+}
+
+function buildAbortResult() {
+  return { success: false, message: '测试已中断', details: '用户取消了测试操作' }
+}
+
+function buildErrorResult(e: unknown) {
+  return { success: false, message: '测试失败', details: e instanceof Error ? e.message : '未知错误' }
 }
 
 function cancelTest() {
@@ -313,14 +312,13 @@ function closeTestModal() {
 
 async function refreshInstance(config: VectorStoreConfig) {
   if (!selectionReady.value) return
-  await execute(async () => {
-    await refreshVectorStoreInstance(
-      { tenantId: store.tenantId, workspaceId: store.workspaceId },
-      config.id
-    )
-    error.value = '实例已刷新'
-    setTimeout(() => (error.value = ''), 3000)
-  })
+  await execute(performRefreshInstance.bind(null, config))
+}
+
+async function performRefreshInstance(config: VectorStoreConfig) {
+  await refreshVectorStoreInstance({ tenantId: store.tenantId, workspaceId: store.workspaceId }, config.id)
+  error.value = '实例已刷新'
+  setTimeout(() => (error.value = ''), 3000)
 }
 
 async function handleDelete(configId: string) {

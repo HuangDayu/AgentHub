@@ -132,59 +132,42 @@ watch(() => [store.tenantId, store.workspaceId], async () => {
 })
 
 async function loadAgents() {
-  if (!selectionReady.value) {
-    agents.value = []
-    return
-  }
-
-  try {
-    agents.value = await listAgents(selection())
-    // 默认选中第一个Agent
-    if (agents.value.length > 0 && !selectedAgentId.value) {
-      selectedAgentId.value = agents.value[0].id
-    }
-  } catch (e) {
-    console.error('Failed to load agents', e)
-  }
+  if (!selectionReady.value) { agents.value = []; return }
+  try { await performLoadAgents() } catch (e) { console.error('Failed to load agents', e) }
 }
 
+async function performLoadAgents(): Promise<void> {
+  agents.value = await listAgents(selection())
+  if (agents.value.length > 0 && !selectedAgentId.value) selectedAgentId.value = agents.value[0].id
+}
+
+const EMPTY_MEMORY_FORM: MemoryForm = { name: '', memoryType: 'EPISODIC', content: '', importance: 0.5 }
+
 function openCreateDialog() {
-  editingMemoryId.value = ''
-  showEditDialog.value = false
-  form.value = {
-    name: '',
-    memoryType: 'EPISODIC',
-    content: '',
-    importance: 0.5
-  }
+  editingMemoryId.value = ''; showEditDialog.value = false
+  form.value = { ...EMPTY_MEMORY_FORM }
   showCreateDialog.value = true
 }
 
 watch(selectedAgentId, async (newId) => {
-  if (newId) {
-    try {
-      memories.value = await listMemoriesByAgent(selection(), newId)
-    } catch (e) {
-      console.error('Failed to load memories', e)
-    }
-  } else {
-    memories.value = []
-  }
+  if (newId) { try { memories.value = await listMemoriesByAgent(selection(), newId) } catch (e) { console.error('Failed to load memories', e) } } else { memories.value = [] }
 })
 
 async function createMemoryHandler() {
-  if (!selectionReady.value) return
-  if (!selectedAgentId.value) {
-    alert('请先选择一个Agent')
-    return
-  }
-  try {
-    await createMemory(selection(), selectedAgentId.value, form.value.name, form.value.memoryType, form.value.content, '{}', form.value.importance)
-    memories.value = await listMemoriesByAgent(selection(), selectedAgentId.value)
-    closeDialog()
-  } catch (e) {
-    console.error('Failed to create memory', e)
-  }
+  if (!canCreateMemory()) return
+  try { await performCreateMemory() } catch (e) { console.error('Failed to create memory', e) }
+}
+
+function canCreateMemory(): boolean {
+  if (!selectionReady.value) return false
+  if (!selectedAgentId.value) { alert('请先选择一个Agent'); return false }
+  return true
+}
+
+async function performCreateMemory(): Promise<void> {
+  await createMemory(selection(), selectedAgentId.value!, form.value.name, form.value.memoryType, form.value.content, '{}', form.value.importance)
+  memories.value = await listMemoriesByAgent(selection(), selectedAgentId.value!)
+  closeDialog()
 }
 
 async function updateMemoryHandler() {
@@ -199,25 +182,38 @@ async function updateMemoryHandler() {
 }
 
 async function deleteMemoryHandler(id: string) {
-  if (!selectionReady.value) return
+  if (!canDeleteMemory()) return
   if (await showConfirm('确定删除此记忆？')) {
-    try {
-      await deleteMemory(selection(), id)
-      memories.value = await listMemoriesByAgent(selection(), selectedAgentId.value)
-    } catch (e) {
-      console.error('Failed to delete memory', e)
-    }
+    await performDeleteMemory(id)
   }
-}function editMemory(memory: Memory) {
+}
+
+function canDeleteMemory(): boolean {
+  return selectionReady.value
+}
+
+async function performDeleteMemory(id: string): Promise<void> {
+  try {
+    await deleteMemory(selection(), id)
+    await refreshMemories()
+  } catch (e) {
+    console.error('Failed to delete memory', e)
+  }
+}
+
+async function refreshMemories(): Promise<void> {
+  memories.value = await listMemoriesByAgent(selection(), selectedAgentId.value)
+}
+
+function editMemory(memory: Memory) {
   editingMemoryId.value = memory.id
-  form.value = {
-    name: memory.name || '',
-    memoryType: memory.memoryType,
-    content: memory.content,
-    importance: memory.importance
-  }
+  form.value = buildEditForm(memory)
   showCreateDialog.value = true
   showEditDialog.value = true
+}
+
+function buildEditForm(memory: Memory) {
+  return { name: memory.name || '', memoryType: memory.memoryType, content: memory.content, importance: memory.importance }
 }
 
 function closeDialog() {

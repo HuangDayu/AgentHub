@@ -90,31 +90,49 @@ function fillDemo(user: string) {
 }
 
 async function handleLogin() {
+  await runLogin()
+}
+
+async function runLogin(): Promise<void> {
+  beginLogin()
+  await tryPerformLogin()
+}
+
+function beginLogin(): void {
   error.value = ''
   loading.value = true
+}
+
+async function tryPerformLogin(): Promise<void> {
   try {
-    const loginResp = await fetch('/api/v1/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: username.value, password: password.value }),
-    })
-    if (!loginResp.ok) {
-      const text = await loginResp.text()
-      throw new Error(text || '用户名或密码错误')
-    }
-    const tokens = await loginResp.json()
-
-    const tokenKey = 'agenthub_access_token'
-    localStorage.setItem(tokenKey, tokens.accessToken)
-    localStorage.setItem('agenthub_refresh_token', tokens.refreshToken)
-    localStorage.setItem('agenthub_username', username.value)
-
-    router.push('/agenthub')
+    await performLogin()
   } catch (err: any) {
     error.value = err.message || '登录失败'
   } finally {
     loading.value = false
   }
+}
+
+async function performLogin(): Promise<void> {
+  const tokens = await callLoginApi()
+  saveLoginTokens(tokens)
+  router.push('/agenthub')
+}
+
+async function callLoginApi(): Promise<{ accessToken: string; refreshToken: string }> {
+  const resp = await fetch('/api/v1/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: username.value, password: password.value }),
+  })
+  if (!resp.ok) throw new Error(await resp.text() || '用户名或密码错误')
+  return await resp.json()
+}
+
+function saveLoginTokens(tokens: { accessToken: string; refreshToken: string }): void {
+  localStorage.setItem('agenthub_access_token', tokens.accessToken)
+  localStorage.setItem('agenthub_refresh_token', tokens.refreshToken)
+  localStorage.setItem('agenthub_username', username.value)
 }
 </script>
 

@@ -175,27 +175,12 @@ function getTaskTypeLabel(type: string) {
 async function loadTasks() {
   if (!selectionReady.value) return
   loading.value = true
-  try {
-    tasks.value = await listScheduledTasks(getSelection().workspaceId)
-  } catch (error) {
-    console.error('Failed to load tasks:', error)
-  } finally {
-    loading.value = false
-  }
+  try { tasks.value = await listScheduledTasks(getSelection().workspaceId) } catch (error) { console.error('Failed to load tasks:', error) } finally { loading.value = false }
 }
 
 async function createTaskHandler() {
   try {
-    await createScheduledTask(getSelection().workspaceId, {
-      ...getSelection(),
-      taskCode: form.value.taskCode,
-      name: form.value.name,
-      description: form.value.description,
-      taskType: form.value.taskType,
-      cronExpression: form.value.cronExpression,
-      executorConfig: form.value.executorConfig,
-      prompt: form.value.prompt
-    })
+    await performCreateTask()
     await loadTasks()
     closeDialog()
   } catch (error) {
@@ -203,48 +188,45 @@ async function createTaskHandler() {
   }
 }
 
+async function performCreateTask(): Promise<void> {
+  await createScheduledTask(getSelection().workspaceId, buildCreateTaskPayload())
+}
+
+function buildCreateTaskPayload() {
+  return { ...getSelection(), ...buildCreateTaskFields() }
+}
+
+function buildCreateTaskFields() {
+  return { taskCode: form.value.taskCode, name: form.value.name, description: form.value.description, taskType: form.value.taskType, cronExpression: form.value.cronExpression, executorConfig: form.value.executorConfig, prompt: form.value.prompt }
+}
+
 function editTask(task: ScheduledTask) {
   editingTaskId.value = task.id
-  form.value = {
-    taskCode: task.taskCode,
-    name: task.name,
-    description: task.description,
-    taskType: task.taskType,
-    cronExpression: task.cronExpression,
-    executorConfig: task.executorConfig,
-    prompt: task.prompt
-  }
-  showCreateDialog.value = true
-  showEditDialog.value = true
+  form.value = { taskCode: task.taskCode, name: task.name, description: task.description, taskType: task.taskType, cronExpression: task.cronExpression, executorConfig: task.executorConfig, prompt: task.prompt }
+  showCreateDialog.value = true; showEditDialog.value = true
 }
 
 async function updateTaskHandler() {
-  try {
-    await updateScheduledTask(getSelection().workspaceId, editingTaskId.value, {
-      name: form.value.name,
-      description: form.value.description,
-      cronExpression: form.value.cronExpression,
-      executorConfig: form.value.executorConfig,
-      prompt: form.value.prompt
-    })
-    await loadTasks()
-    closeDialog()
-  } catch (error) {
-    console.error('Failed to update task:', error)
-  }
+  try { await performUpdateTask() } catch (error) { console.error('Failed to update task:', error) }
+}
+
+async function performUpdateTask(): Promise<void> {
+  await updateScheduledTask(getSelection().workspaceId, editingTaskId.value, buildUpdateTaskPayload())
+  await loadTasks()
+  closeDialog()
+}
+
+function buildUpdateTaskPayload() {
+  return { name: form.value.name, description: form.value.description, cronExpression: form.value.cronExpression, executorConfig: form.value.executorConfig, prompt: form.value.prompt }
 }
 
 async function toggleEnabled(task: ScheduledTask) {
-  try {
-    if (task.enabled) {
-      await disableScheduledTask(getSelection().workspaceId, task.id)
-    } else {
-      await enableScheduledTask(getSelection().workspaceId, task.id)
-    }
-    await loadTasks()
-  } catch (error) {
-    console.error('Failed to toggle enabled:', error)
-  }
+  try { await performToggleEnabled(task) } catch (error) { console.error('Failed to toggle enabled:', error) }
+}
+
+async function performToggleEnabled(task: ScheduledTask) {
+  if (task.enabled) { await disableScheduledTask(getSelection().workspaceId, task.id) } else { await enableScheduledTask(getSelection().workspaceId, task.id) }
+  await loadTasks()
 }
 
 async function executeTask(task: ScheduledTask) {
@@ -266,19 +248,12 @@ async function deleteTaskHandler(taskId: string) {
   }
 }
 
+const EMPTY_TASK_FORM: ScheduledTaskForm = { taskCode: '', name: '', description: '', taskType: 'AGENT_CALL', cronExpression: '', executorConfig: '{}', prompt: '' }
+
 function closeDialog() {
-  showCreateDialog.value = false
-  showEditDialog.value = false
+  showCreateDialog.value = false; showEditDialog.value = false
   editingTaskId.value = ''
-  form.value = {
-    taskCode: '',
-    name: '',
-    description: '',
-    taskType: 'AGENT_CALL',
-    cronExpression: '',
-    executorConfig: '{}',
-    prompt: ''
-  }
+  form.value = { ...EMPTY_TASK_FORM }
 }
 
 function formatDateTime(date: string) {

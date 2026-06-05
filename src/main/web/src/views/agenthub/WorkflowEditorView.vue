@@ -78,72 +78,89 @@ async function initNewWorkflow() {
 
 async function loadWorkflow() {
   try {
-    const wf = await getWorkflow(selection.value, workflowId.value)
-    workflow.value = wf
-    readOnly.value = wf.status === 'PUBLISHED'
-
-    // 解析graph定义
-    let graph: WorkflowGraph = { nodes: [], edges: [] }
-    if (wf.graphDefinition) {
-      try {
-        const parsed = JSON.parse(wf.graphDefinition)
-        graph = {
-          nodes: parsed.nodes || [],
-          edges: parsed.edges || []
-        }
-      } catch {
-        graph = { nodes: [], edges: [] }
-      }
-    }
-
-    initialGraph.value = graph
-
-    // 设置store
-    workflowStore.reset()
-    workflowStore.setWorkflowInfo(wf.id, wf.name, wf.description)
-    workflowStore.setGraph(graph)
+    await fetchAndStoreWorkflow()
   } catch (err) {
-    console.error('加载工作流失败:', err)
-    workflow.value = null
+    handleLoadError(err)
   }
 }
 
-async function handleSave(graphData: WorkflowGraph) {
-  if (creating.value) {
-    // 新建工作流
-    try {
-      const newWf = await createWorkflow(
-        selection.value,
-        `wf_${Date.now()}`,
-        workflowStore.workflowName || '未命名工作流',
-        workflowStore.workflowDesc,
-        JSON.stringify(graphData)
-      )
-      workflow.value = newWf
-      creating.value = false
-      workflowStore.setWorkflowInfo(newWf.id, newWf.name, newWf.description)
-      
-      // 更新URL
-      router.replace(`/agenthub/dag-workflows/${newWf.id}`)
-    } catch (err) {
-      console.error('创建工作流失败:', err)
-    }
-  } else if (workflow.value) {
-    // 更新已有工作流
-    try {
-      const updated = await updateWorkflow(
-        selection.value,
-        workflow.value.id,
-        workflowStore.workflowName || workflow.value.name,
-        workflowStore.workflowDesc || workflow.value.description,
-        JSON.stringify(graphData)
-      )
-      workflow.value = updated
-      workflowStore.markAsSaved()
-    } catch (err) {
-      console.error('保存工作流失败:', err)
-    }
+async function fetchAndStoreWorkflow(): Promise<void> {
+  const wf = await getWorkflow(selection.value, workflowId.value)
+  workflow.value = wf
+  readOnly.value = wf.status === 'PUBLISHED'
+  initialGraph.value = parseGraphDefinition(wf.graphDefinition)
+  applyWorkflowToStore(wf)
+}
+
+function parseGraphDefinition(definition: string | undefined): WorkflowGraph {
+  if (!definition) return { nodes: [], edges: [] }
+  try {
+    const parsed = JSON.parse(definition)
+    return { nodes: parsed.nodes || [], edges: parsed.edges || [] }
+  } catch {
+    return { nodes: [], edges: [] }
   }
+}
+
+function applyWorkflowToStore(wf: any): void {
+  workflowStore.reset()
+  workflowStore.setWorkflowInfo(wf.id, wf.name, wf.description)
+  workflowStore.setGraph(initialGraph.value)
+}
+
+function handleLoadError(err: unknown): void {
+  console.error('加载工作流失败:', err)
+  workflow.value = null
+}
+
+async function handleSave(graphData: WorkflowGraph) {
+  if (creating.value) await createNewWorkflow(graphData)
+  else if (workflow.value) await updateExistingWorkflow(workflow.value, graphData)
+}
+
+async function createNewWorkflow(graphData: WorkflowGraph): Promise<void> {
+  try {
+    const newWf = await callCreateWorkflow(graphData)
+    applyCreatedWorkflow(newWf)
+  } catch (err) {
+    console.error('创建工作流失败:', err)
+  }
+}
+
+async function callCreateWorkflow(graphData: WorkflowGraph) {
+  return createWorkflow(selection.value, `wf_${Date.now()}`, resolveNewName(), workflowStore.workflowDesc, JSON.stringify(graphData))
+}
+
+function resolveNewName(): string {
+  return workflowStore.workflowName || '未命名工作流'
+}
+
+function applyCreatedWorkflow(newWf: any): void {
+  workflow.value = newWf
+  creating.value = false
+  workflowStore.setWorkflowInfo(newWf.id, newWf.name, newWf.description)
+  router.replace(`/agenthub/dag-workflows/${newWf.id}`)
+}
+
+async function updateExistingWorkflow(workflow: any, graphData: WorkflowGraph): Promise<void> {
+  try {
+    workflow.value = await callUpdateWorkflow(workflow, graphData)
+    workflowStore.markAsSaved()
+  } catch (err) {
+    console.error('保存工作流失败:', err)
+  }
+}
+
+async function callUpdateWorkflow(workflow: any, graphData: WorkflowGraph) {
+  return updateWorkflow(selection.value, workflow.id, resolveUpdateName(workflow), resolveUpdateDesc(workflow), JSON.stringify(graphData))
+}
+
+function resolveUpdateName(workflow: any): string {
+  return workflowStore.workflowName || workflow.name
+}
+
+function resolveUpdateDesc(workflow: any): string {
+  return workflowStore.workflowDesc || workflow.description
 }
 
 function goBack() {
