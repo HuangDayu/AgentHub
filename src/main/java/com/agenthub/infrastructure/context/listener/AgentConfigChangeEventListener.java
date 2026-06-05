@@ -32,15 +32,17 @@ public class AgentConfigChangeEventListener {
         log.info("【Agent配置改变】实体: {}, 操作: {}, IDs: {}", event.getEntityType(), event.getChangeType(), event.getPrimaryKeys());
         List<String> pks = event.getPrimaryKeys();
         if (pks == null || pks.isEmpty()) return;
-
         ConfigChangeListenerEntity entity = event.getEntityAnnotation();
         List<AgentConfig> configs = agentConfigRepository.findAgentConfigs(entity.category(), entity.type(), pks);
         if (configs == null || configs.isEmpty()) return;
+        publishConfigChange(configs, entity, event);
+    }
 
-        var ids = configs.stream().map(AgentConfig::getId).toList();
+    private void publishConfigChange(List<AgentConfig> configs, ConfigChangeListenerEntity entity,
+                                     AgentConfigChangedEvent event) {
         if (event.getChangeType() == AgentConfigChangedEvent.ChangeType.DELETE) {
             eventPublisher.publishEvent(new AgentConfigDeletedEvent(configs, entity.category(), entity.type()));
-            agentConfigRepository.deleteByIds(ids);
+            agentConfigRepository.deleteByIds(configs.stream().map(AgentConfig::getId).toList());
         } else {
             eventPublisher.publishEvent(new AgentConfigUpdatedEvent(configs, entity.category(), entity.type()));
         }

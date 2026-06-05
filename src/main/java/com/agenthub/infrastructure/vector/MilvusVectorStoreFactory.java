@@ -68,17 +68,21 @@ public class MilvusVectorStoreFactory implements VectorStoreFactory {
     public VectorStoreTestResult testConnection(VectorStoreConfig config) {
         MilvusServiceClient client = null;
         try {
-            log.info("Testing Milvus connection: {}:{}", config.getHost(), config.getPort());
             client = createClient(config);
-            int collectionCount = getCollectionCount(client);
-            log.info("Milvus connection test successful, found {} collections", collectionCount);
-            return buildSuccessResult(config, collectionCount);
+            return runConnectionTest(client, config);
         } catch (Exception e) {
             log.error("Milvus connection test failed: {}", e.getMessage(), e);
             return buildFailureResult(e);
         } finally {
             closeClient(client);
         }
+    }
+
+    private VectorStoreTestResult runConnectionTest(MilvusServiceClient client, VectorStoreConfig config) {
+        log.info("Testing Milvus connection: {}:{}", config.getHost(), config.getPort());
+        int collectionCount = getCollectionCount(client);
+        log.info("Milvus connection test successful, found {} collections", collectionCount);
+        return buildSuccessResult(config, collectionCount);
     }
 
     /**

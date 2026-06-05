@@ -65,9 +65,10 @@ public class SkillConfigUseCase {
     public SkillConfigOutput update(String configId, CreateSkillConfigCommand command) {
         SkillConfig existing = repository.findById(configId)
                 .orElseThrow(() -> new NotFoundException("Skill config not found: " + configId));
-        existing.update(command.getName(), command.getDescription(),
+        existing.update(new SkillConfig.UpdateSpec(
+                command.getName(), command.getDescription(),
                 command.getSkillPaths(), command.isSyncEnabled(),
-                command.getSyncInterval(), command.isAutoSync());
+                command.getSyncInterval(), command.isAutoSync()));
         SkillConfig saved = repository.saveOrUpdate(existing);
         skillSyncScheduler.reschedule(saved);
         return toOutput(saved);

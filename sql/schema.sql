@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS agent_plan_step
     tool_name     varchar(255),
     tool_input    varchar(255),
     status        varchar(255),
-    output        varchar(255),
+    step_output   varchar(255),
     subagent_id   varchar(255),
     subsession_id varchar(255),
     depends_on    varchar(255),

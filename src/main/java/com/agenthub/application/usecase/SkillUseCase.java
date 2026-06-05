@@ -99,16 +99,18 @@ public class SkillUseCase {
         if (zipUrl == null || zipUrl.isBlank()) {
             return "skill-" + System.currentTimeMillis();
         }
-        String normalized = zipUrl.split("\\?")[0];
-        if (normalized.endsWith("/")) {
-            normalized = normalized.substring(0, normalized.length() - 1);
-        }
-        int lastSlash = normalized.lastIndexOf('/');
-        String fileName = lastSlash >= 0 ? normalized.substring(lastSlash + 1) : normalized;
-        if (fileName.endsWith(".zip")) {
-            fileName = fileName.substring(0, fileName.length() - 4);
-        }
-        return fileName;
+        String fileName = lastSegmentOf(zipUrl.split("\\?")[0]);
+        return stripZipExtension(fileName);
+    }
+
+    private String lastSegmentOf(String path) {
+        String trimmed = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+        int lastSlash = trimmed.lastIndexOf('/');
+        return lastSlash >= 0 ? trimmed.substring(lastSlash + 1) : trimmed;
+    }
+
+    private String stripZipExtension(String fileName) {
+        return fileName.endsWith(".zip") ? fileName.substring(0, fileName.length() - 4) : fileName;
     }
 
     /**
@@ -288,7 +290,10 @@ public class SkillUseCase {
      * 创建 SkillFile 对象。
      */
     private SkillFile createSkillFile(Skill skill, String relativePath, long size, String storagePath) {
-        return SkillFile.create(skill.getId(), skill.getTenantId(), skill.getWorkspaceId(), relativePath, size, "UTF-8", skill.getSkillCode(), storagePath);
+        SkillFile.CreationSpec request = new SkillFile.CreationSpec(
+                skill.getId(), skill.getTenantId(), skill.getWorkspaceId(),
+                relativePath, size, "UTF-8", skill.getSkillCode(), storagePath);
+        return SkillFile.create(request);
     }
 
     /**

@@ -50,20 +50,28 @@ public class TenantContextAspect {
 
     @Around("@annotation(tool)")
     public Object openToolsTenantContext(ProceedingJoinPoint joinPoint, Tool tool) throws Throwable {
-        if (TenantContextHolder.current().isEmpty()) {
-            Object[] paramValues = joinPoint.getArgs();
-            for (Object paramValue : paramValues) {
-                if (paramValue instanceof ToolContext toolContext) {
-                    Object o = toolContext.getContext().get(THREAD_CONTEXT_KEY);
-                    if (o instanceof TenantThreadContext tenantThreadContext) {
-                        try (TenantContextHolder.TenantContextScope scope = TenantContextHolder.open(tenantThreadContext)) {
-                            return joinPoint.proceed();
-                        }
-                    }
-                }
+        if (TenantContextHolder.current().isPresent()) {
+            return joinPoint.proceed();
+        }
+        return proceedWithInjectedTenant(joinPoint);
+    }
+
+    private Object proceedWithInjectedTenant(ProceedingJoinPoint joinPoint) throws Throwable {
+        TenantThreadContext context = findTenantContext(joinPoint);
+        if (context == null) return joinPoint.proceed();
+        try (TenantContextHolder.TenantContextScope scope = TenantContextHolder.open(context)) {
+            return joinPoint.proceed();
+        }
+    }
+
+    private TenantThreadContext findTenantContext(ProceedingJoinPoint joinPoint) {
+        for (Object paramValue : joinPoint.getArgs()) {
+            if (paramValue instanceof ToolContext toolContext
+                    && toolContext.getContext().get(THREAD_CONTEXT_KEY) instanceof TenantThreadContext ctx) {
+                return ctx;
             }
         }
-        return joinPoint.proceed();
+        return null;
     }
 
 }

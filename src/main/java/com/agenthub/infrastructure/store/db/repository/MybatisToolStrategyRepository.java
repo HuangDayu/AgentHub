@@ -59,17 +59,8 @@ public class MybatisToolStrategyRepository implements ToolStrategyRepository {
     }
 
     private ToolStrategy toDomain(ToolStrategyEntity entity) {
-        return ToolStrategy.rebuild(
-            entity.getId(),
-            entity.getWorkspaceId(),
-            entity.getName(),
-            entity.getDescription(),
-            entity.getMaxConcurrentCalls(),
-            entity.getTimeoutSeconds(),
-            entity.getRetryCount(),
-            Boolean.TRUE.equals(entity.getFallbackEnabled()),
-            entity.getCreatedAt(),
-            entity.getUpdatedAt()
-        );
+        ToolStrategy.State state = new ToolStrategy.State();
+        cn.hutool.core.bean.BeanUtil.copyProperties(entity, state);
+        return ToolStrategy.rebuild(state);
     }
 }

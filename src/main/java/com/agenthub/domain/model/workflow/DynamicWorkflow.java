@@ -39,18 +39,46 @@ public class DynamicWorkflow {
      */
     public static DynamicWorkflow create(String agentId, String sessionId, String task) {
         DynamicWorkflow workflow = new DynamicWorkflow();
+        Instant now = Instant.now();
+        applyIdentity(workflow, new WorkflowIdentity(agentId, sessionId, task));
+        applyDefaults(workflow, now);
+        return workflow;
+    }
+
+    private static void applyIdentity(DynamicWorkflow workflow, WorkflowIdentity identity) {
         workflow.id = randomId();
-        workflow.agentId = agentId;
-        workflow.sessionId = sessionId;
-        workflow.task = task;
+        workflow.agentId = identity.agentId();
+        workflow.sessionId = identity.sessionId();
+        workflow.task = identity.task();
+    }
+
+    private static void applyDefaults(DynamicWorkflow workflow, Instant now) {
         workflow.pattern = WorkflowPattern.FAN_OUT.name();
         workflow.status = DynamicWorkflowStatus.PLANNING.name();
         workflow.stages = new ArrayList<>();
         workflow.maxConcurrentAgents = 4;
         workflow.totalTokensUsed = 0;
-        workflow.createdAt = Instant.now();
-        workflow.updatedAt = Instant.now();
-        return workflow;
+        workflow.createdAt = now;
+        workflow.updatedAt = now;
+    }
+
+    /**
+     * 动态工作流身份信息（private static final 不可变载体）。
+     */
+    private static final class WorkflowIdentity {
+        private final String agentId;
+        private final String sessionId;
+        private final String task;
+
+        private WorkflowIdentity(String agentId, String sessionId, String task) {
+            this.agentId = agentId;
+            this.sessionId = sessionId;
+            this.task = task;
+        }
+
+        public String agentId() { return agentId; }
+        public String sessionId() { return sessionId; }
+        public String task() { return task; }
     }
 
     /**

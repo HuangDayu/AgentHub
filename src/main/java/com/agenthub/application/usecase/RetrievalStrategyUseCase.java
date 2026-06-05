@@ -23,18 +23,34 @@ public class RetrievalStrategyUseCase {
 
     public RetrievalStrategy update(String id, UpdateRetrievalStrategyCommand command) {
         RetrievalStrategy retrievalStrategy = get(id);
-        if (command.getName() != null) retrievalStrategy.setName(command.getName());
-        if (command.getDescription() != null) retrievalStrategy.setDescription(command.getDescription());
-        if (command.getTopK() != null) retrievalStrategy.setTopK(command.getTopK());
-        if (command.getScoreThreshold() != null) retrievalStrategy.setScoreThreshold(command.getScoreThreshold());
-        if (command.getEnableRerank() != null) retrievalStrategy.setEnableRerank(command.getEnableRerank());
-        if (command.getEnableQueryRewrite() != null) retrievalStrategy.setEnableQueryRewrite(command.getEnableQueryRewrite());
-        if (command.getEnableTextSearch() != null) retrievalStrategy.setEnableTextSearch(command.getEnableTextSearch());
-        if (command.getEnableVectorSearch() != null) retrievalStrategy.setEnableVectorSearch(command.getEnableVectorSearch());
-        if (command.getRerankModel() != null) retrievalStrategy.setRerankModel(command.getRerankModel());
-        if (command.getVectorWeight() != null) retrievalStrategy.setVectorWeight(command.getVectorWeight());
-        if (command.getKeywordWeight() != null) retrievalStrategy.setKeywordWeight(command.getKeywordWeight());
+        applyCommandFields(retrievalStrategy, command);
         return repository.save(retrievalStrategy);
+    }
+
+    private void applyCommandFields(RetrievalStrategy target, UpdateRetrievalStrategyCommand command) {
+        applyStringFields(target, command);
+        applyNumericFields(target, command);
+        applyToggleFields(target, command);
+    }
+
+    private void applyStringFields(RetrievalStrategy target, UpdateRetrievalStrategyCommand c) {
+        if (c.getName() != null) target.setName(c.getName());
+        if (c.getDescription() != null) target.setDescription(c.getDescription());
+        if (c.getRerankModel() != null) target.setRerankModel(c.getRerankModel());
+    }
+
+    private void applyNumericFields(RetrievalStrategy target, UpdateRetrievalStrategyCommand c) {
+        if (c.getTopK() != null) target.setTopK(c.getTopK());
+        if (c.getScoreThreshold() != null) target.setScoreThreshold(c.getScoreThreshold());
+        if (c.getVectorWeight() != null) target.setVectorWeight(c.getVectorWeight());
+        if (c.getKeywordWeight() != null) target.setKeywordWeight(c.getKeywordWeight());
+    }
+
+    private void applyToggleFields(RetrievalStrategy target, UpdateRetrievalStrategyCommand c) {
+        if (c.getEnableRerank() != null) target.setEnableRerank(c.getEnableRerank());
+        if (c.getEnableQueryRewrite() != null) target.setEnableQueryRewrite(c.getEnableQueryRewrite());
+        if (c.getEnableTextSearch() != null) target.setEnableTextSearch(c.getEnableTextSearch());
+        if (c.getEnableVectorSearch() != null) target.setEnableVectorSearch(c.getEnableVectorSearch());
     }
 
 

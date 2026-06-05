@@ -83,12 +83,13 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             delete(key);
             return null;
         }
+        return readStringValue(key);
+    }
+
+    private String readStringValue(String key) {
         try {
             Path filePath = getFilePath(key, "string");
-            if (Files.exists(filePath)) {
-                return new String(Files.readAllBytes(filePath));
-            }
-            return null;
+            return Files.exists(filePath) ? new String(Files.readAllBytes(filePath)) : null;
         } catch (IOException e) {
             return null;
         }
@@ -184,15 +185,17 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             return null;
         }
         try {
-            Path filePath = getFilePath(key, "hash");
-            if (Files.exists(filePath)) {
-                Map<String, String> hash = objectMapper.readValue(filePath.toFile(), Map.class);
-                return hash.get(field);
-            }
-            return null;
+            return readHashField(key, field);
         } catch (IOException e) {
             return null;
         }
+    }
+
+    private String readHashField(String key, String field) throws IOException {
+        Path filePath = getFilePath(key, "hash");
+        if (!Files.exists(filePath)) return null;
+        Map<String, String> hash = objectMapper.readValue(filePath.toFile(), Map.class);
+        return hash.get(field);
     }
 
     @Override
@@ -209,12 +212,15 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             delete(key);
             return new HashMap<>();
         }
+        return readHashAll(key);
+    }
+
+    private Map<String, String> readHashAll(String key) {
         try {
             Path filePath = getFilePath(key, "hash");
-            if (Files.exists(filePath)) {
-                return objectMapper.readValue(filePath.toFile(), Map.class);
-            }
-            return new HashMap<>();
+            return Files.exists(filePath)
+                    ? objectMapper.readValue(filePath.toFile(), Map.class)
+                    : new HashMap<>();
         } catch (IOException e) {
             return new HashMap<>();
         }
@@ -227,10 +233,7 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             Path filePath = getFilePath(key, "hash");
             if (!Files.exists(filePath)) return 0L;
             Map<String, String> hash = objectMapper.readValue(filePath.toFile(), Map.class);
-            long count = 0;
-            for (String field : fields) {
-                if (hash.remove(field) != null) count++;
-            }
+            long count = removeHashFields(hash, fields);
             objectMapper.writeValue(filePath.toFile(), hash);
             return count;
         } catch (IOException e) {
@@ -241,6 +244,14 @@ public class FilesKeyValueRepository implements KeyValueRepository {
     @Override
     public boolean hexists(String key, String field) {
         return hget(key, field) != null;
+    }
+
+    private long removeHashFields(Map<String, String> hash, String[] fields) {
+        long count = 0;
+        for (String field : fields) {
+            if (hash.remove(field) != null) count++;
+        }
+        return count;
     }
 
     @Override
@@ -267,18 +278,31 @@ public class FilesKeyValueRepository implements KeyValueRepository {
         try {
             Path filePath = getFilePath(key, "hash");
             Files.createDirectories(filePath.getParent());
-            Map<String, String> hash = Files.exists(filePath) 
-                ? objectMapper.readValue(filePath.toFile(), Map.class)
-                : new HashMap<>();
-            if (hash.containsKey(field)) {
-                return false;
-            }
-            hash.put(field, value);
-            objectMapper.writeValue(filePath.toFile(), hash);
-            return true;
+            return putIfAbsent(filePath, field, value);
         } catch (IOException e) {
             return false;
         }
+    }
+
+    private boolean putIfAbsent(Path filePath, String field, String value) throws IOException {
+        Map<String, String> hash = loadOrCreateHash(filePath);
+        if (hash.containsKey(field)) return false;
+        hash.put(field, value);
+        objectMapper.writeValue(filePath.toFile(), hash);
+        return true;
+    }
+
+    private Map<String, String> loadOrCreateHash(Path filePath) throws IOException {
+        return Files.exists(filePath)
+                ? objectMapper.readValue(filePath.toFile(), Map.class)
+                : new HashMap<>();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<String> loadOrCreateSet(Path filePath) throws IOException {
+        return Files.exists(filePath)
+                ? new HashSet<>(objectMapper.readValue(filePath.toFile(), List.class))
+                : new HashSet<>();
     }
 
     @Override
@@ -297,9 +321,7 @@ public class FilesKeyValueRepository implements KeyValueRepository {
         try {
             Path filePath = getFilePath(key, "list");
             Files.createDirectories(filePath.getParent());
-            List<String> list = Files.exists(filePath) 
-                ? objectMapper.readValue(filePath.toFile(), List.class)
-                : new ArrayList<>();
+            List<String> list = loadOrCreateList(filePath);
             for (int i = values.length - 1; i >= 0; i--) {
                 list.add(0, values[i]);
             }
@@ -308,6 +330,12 @@ public class FilesKeyValueRepository implements KeyValueRepository {
         } catch (IOException e) {
             throw new RuntimeException("Failed to lpush", e);
         }
+    }
+
+    private List<String> loadOrCreateList(Path filePath) throws IOException {
+        return Files.exists(filePath)
+                ? objectMapper.readValue(filePath.toFile(), List.class)
+                : new ArrayList<>();
     }
 
     @Override
@@ -426,18 +454,20 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             Path filePath = getFilePath(key, "list");
             if (!Files.exists(filePath)) return;
             List<String> list = objectMapper.readValue(filePath.toFile(), List.class);
-            int size = list.size();
-            int fromIndex = (int) (start < 0 ? Math.max(0, size + start) : start);
-            int toIndex = (int) (end < 0 ? size + end + 1 : Math.min(size, end + 1));
-            if (fromIndex < toIndex && fromIndex < size) {
-                list = new ArrayList<>(list.subList(fromIndex, toIndex));
-            } else {
-                list.clear();
-            }
-            objectMapper.writeValue(filePath.toFile(), list);
+            int[] bounds = computeListBounds(list.size(), start, end);
+            List<String> trimmed = (bounds[0] < bounds[1] && bounds[0] < list.size())
+                    ? new ArrayList<>(list.subList(bounds[0], bounds[1]))
+                    : new ArrayList<>();
+            objectMapper.writeValue(filePath.toFile(), trimmed);
         } catch (IOException e) {
             throw new RuntimeException("Failed to ltrim", e);
         }
+    }
+
+    private int[] computeListBounds(int size, long start, long end) {
+        int fromIndex = (int) (start < 0 ? Math.max(0, size + start) : start);
+        int toIndex = (int) (end < 0 ? size + end + 1 : Math.min(size, end + 1));
+        return new int[]{fromIndex, toIndex};
     }
 
     @Override
@@ -447,31 +477,60 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             Path filePath = getFilePath(key, "list");
             if (!Files.exists(filePath)) return 0L;
             List<String> list = objectMapper.readValue(filePath.toFile(), List.class);
-            long removed = 0;
-            if (count > 0) {
-                Iterator<String> it = list.iterator();
-                while (it.hasNext() && removed < count) {
-                    if (value.equals(it.next())) {
-                        it.remove();
-                        removed++;
-                    }
-                }
-            } else if (count < 0) {
-                for (int i = list.size() - 1; i >= 0 && removed < -count; i--) {
-                    if (value.equals(list.get(i))) {
-                        list.remove(i);
-                        removed++;
-                    }
-                }
-            } else {
-                removed = list.stream().filter(value::equals).count();
-                list.removeIf(value::equals);
-            }
+            long removed = removeMatchingEntries(list, count, value);
             objectMapper.writeValue(filePath.toFile(), list);
             return removed;
         } catch (IOException e) {
             return 0L;
         }
+    }
+
+    /**
+     * 从头开始删除最多 {@code count} 个匹配项。
+     */
+    private long removeFromHead(List<String> list, long count, String value) {
+        Iterator<String> it = list.iterator();
+        long removed = 0;
+        while (it.hasNext() && removed < count) {
+            if (value.equals(it.next())) {
+                it.remove();
+                removed++;
+            }
+        }
+        return removed;
+    }
+
+    /**
+     * 从尾开始删除最多 {@code |count|} 个匹配项。
+     */
+    private long removeFromTail(List<String> list, long count, String value) {
+        long removed = 0;
+        for (int i = list.size() - 1; i >= 0 && removed < -count; i--) {
+            if (value.equals(list.get(i))) {
+                list.remove(i);
+                removed++;
+            }
+        }
+        return removed;
+    }
+
+    /**
+     * 删除所有匹配项，返回删除数量。
+     */
+    private long removeAllMatches(List<String> list, String value) {
+        long removed = list.stream().filter(value::equals).count();
+        list.removeIf(value::equals);
+        return removed;
+    }
+
+    private long removeMatchingEntries(List<String> list, long count, String value) {
+        if (count > 0) {
+            return removeFromHead(list, count, value);
+        }
+        if (count < 0) {
+            return removeFromTail(list, count, value);
+        }
+        return removeAllMatches(list, value);
     }
 
     @Override
@@ -485,38 +544,40 @@ public class FilesKeyValueRepository implements KeyValueRepository {
 
     @Override
     public String blpop(long timeout, String... keys) {
-        long endTime = System.currentTimeMillis() + timeout * 1000;
-        while (System.currentTimeMillis() < endTime) {
-            for (String key : keys) {
-                String value = lpop(key);
-                if (value != null) return value;
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return null;
-            }
-        }
-        return null;
+        return pollWithTimeout(timeout, keys, this::lpop);
     }
 
     @Override
     public String brpop(long timeout, String... keys) {
+        return pollWithTimeout(timeout, keys, this::rpop);
+    }
+
+    private String pollWithTimeout(long timeout, String[] keys, java.util.function.Function<String, String> popFn) {
         long endTime = System.currentTimeMillis() + timeout * 1000;
         while (System.currentTimeMillis() < endTime) {
-            for (String key : keys) {
-                String value = rpop(key);
-                if (value != null) return value;
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return null;
-            }
+            String value = tryPollKeys(keys, popFn);
+            if (value != null) return value;
+            if (!sleepQuietly(100)) return null;
         }
         return null;
+    }
+
+    private String tryPollKeys(String[] keys, java.util.function.Function<String, String> popFn) {
+        for (String key : keys) {
+            String value = popFn.apply(key);
+            if (value != null) return value;
+        }
+        return null;
+    }
+
+    private boolean sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
     // ==================== 集合(Set)操作 ====================
@@ -527,18 +588,21 @@ public class FilesKeyValueRepository implements KeyValueRepository {
         try {
             Path filePath = getFilePath(key, "set");
             Files.createDirectories(filePath.getParent());
-            Set<String> set = Files.exists(filePath) 
-                ? new HashSet<>(objectMapper.readValue(filePath.toFile(), List.class))
-                : new HashSet<>();
-            long added = 0;
-            for (String member : members) {
-                if (set.add(member)) added++;
-            }
+            Set<String> set = loadOrCreateSet(filePath);
+            long added = countNewMembers(set, members);
             objectMapper.writeValue(filePath.toFile(), new ArrayList<>(set));
             return added;
         } catch (IOException e) {
             throw new RuntimeException("Failed to sadd", e);
         }
+    }
+
+    private long countNewMembers(Set<String> set, String[] members) {
+        long added = 0;
+        for (String member : members) {
+            if (set.add(member)) added++;
+        }
+        return added;
     }
 
     @Override
@@ -548,15 +612,20 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             Path filePath = getFilePath(key, "set");
             if (!Files.exists(filePath)) return 0L;
             Set<String> set = new HashSet<>(objectMapper.readValue(filePath.toFile(), List.class));
-            long removed = 0;
-            for (String member : members) {
-                if (set.remove(member)) removed++;
-            }
+            long removed = countRemovedMembers(set, members);
             objectMapper.writeValue(filePath.toFile(), new ArrayList<>(set));
             return removed;
         } catch (IOException e) {
             return 0L;
         }
+    }
+
+    private long countRemovedMembers(Set<String> set, String[] members) {
+        long removed = 0;
+        for (String member : members) {
+            if (set.remove(member)) removed++;
+        }
+        return removed;
     }
 
     @Override
@@ -604,15 +673,19 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             Path filePath = getFilePath(key, "set");
             if (!Files.exists(filePath)) return null;
             Set<String> set = new HashSet<>(objectMapper.readValue(filePath.toFile(), List.class));
-            if (set.isEmpty()) return null;
-            Iterator<String> it = set.iterator();
-            String value = it.next();
-            it.remove();
-            objectMapper.writeValue(filePath.toFile(), new ArrayList<>(set));
-            return value;
+            return popAndPersist(set, filePath);
         } catch (IOException e) {
             return null;
         }
+    }
+
+    private String popAndPersist(Set<String> set, Path filePath) throws IOException {
+        if (set.isEmpty()) return null;
+        Iterator<String> it = set.iterator();
+        String value = it.next();
+        it.remove();
+        objectMapper.writeValue(filePath.toFile(), new ArrayList<>(set));
+        return value;
     }
 
     @Override
@@ -648,23 +721,32 @@ public class FilesKeyValueRepository implements KeyValueRepository {
     @SuppressWarnings("unchecked")
     public boolean smove(String source, String destination, String member) {
         try {
-            Path sourcePath = getFilePath(source, "set");
-            if (!Files.exists(sourcePath)) return false;
-            Set<String> srcSet = new HashSet<>(objectMapper.readValue(sourcePath.toFile(), List.class));
-            if (!srcSet.remove(member)) return false;
-            objectMapper.writeValue(sourcePath.toFile(), new ArrayList<>(srcSet));
-            
-            Path destPath = getFilePath(destination, "set");
-            Files.createDirectories(destPath.getParent());
-            Set<String> destSet = Files.exists(destPath) 
-                ? new HashSet<>(objectMapper.readValue(destPath.toFile(), List.class))
-                : new HashSet<>();
-            destSet.add(member);
-            objectMapper.writeValue(destPath.toFile(), new ArrayList<>(destSet));
+            if (!removeFromSourceSet(source, member)) return false;
+            addToDestinationSet(destination, member);
             return true;
         } catch (IOException e) {
             return false;
         }
+    }
+
+    private boolean removeFromSourceSet(String source, String member) throws IOException {
+        Path sourcePath = getFilePath(source, "set");
+        if (!Files.exists(sourcePath)) return false;
+        Set<String> srcSet = new HashSet<>(objectMapper.readValue(sourcePath.toFile(), List.class));
+        if (!srcSet.remove(member)) return false;
+        objectMapper.writeValue(sourcePath.toFile(), new ArrayList<>(srcSet));
+        return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addToDestinationSet(String destination, String member) throws IOException {
+        Path destPath = getFilePath(destination, "set");
+        Files.createDirectories(destPath.getParent());
+        Set<String> destSet = Files.exists(destPath)
+                ? new HashSet<>(objectMapper.readValue(destPath.toFile(), List.class))
+                : new HashSet<>();
+        destSet.add(member);
+        objectMapper.writeValue(destPath.toFile(), new ArrayList<>(destSet));
     }
 
     @Override
@@ -673,20 +755,27 @@ public class FilesKeyValueRepository implements KeyValueRepository {
         if (keys.length == 0) return new HashSet<>();
         Set<String> result = null;
         for (String key : keys) {
-            Path filePath = getFilePath(key, "set");
-            if (!Files.exists(filePath)) return new HashSet<>();
-            try {
-                Set<String> set = new HashSet<>(objectMapper.readValue(filePath.toFile(), List.class));
-                if (result == null) {
-                    result = new HashSet<>(set);
-                } else {
-                    result.retainAll(set);
-                }
-            } catch (IOException e) {
-                return new HashSet<>();
-            }
+            Set<String> set = readSetOrNull(key);
+            if (set == null) return new HashSet<>();
+            result = combineIntersection(result, set);
         }
         return result != null ? result : new HashSet<>();
+    }
+
+    private Set<String> readSetOrNull(String key) {
+        Path filePath = getFilePath(key, "set");
+        if (!Files.exists(filePath)) return null;
+        try {
+            return new HashSet<>(objectMapper.readValue(filePath.toFile(), List.class));
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private Set<String> combineIntersection(Set<String> current, Set<String> next) {
+        if (current == null) return new HashSet<>(next);
+        current.retainAll(next);
+        return current;
     }
 
     @Override
@@ -713,20 +802,27 @@ public class FilesKeyValueRepository implements KeyValueRepository {
         if (keys.length == 0) return new HashSet<>();
         Set<String> result = null;
         for (int i = 0; i < keys.length; i++) {
-            Path filePath = getFilePath(keys[i], "set");
-            if (!Files.exists(filePath)) continue;
-            try {
-                Set<String> set = new HashSet<>(objectMapper.readValue(filePath.toFile(), List.class));
-                if (result == null) {
-                    result = new HashSet<>(set);
-                } else {
-                    result.removeAll(set);
-                }
-            } catch (IOException e) {
-                // ignore
-            }
+            Set<String> set = readSetIfExists(keys[i]);
+            if (set == null) continue;
+            result = combineDifference(result, set);
         }
         return result != null ? result : new HashSet<>();
+    }
+
+    private Set<String> readSetIfExists(String key) {
+        Path filePath = getFilePath(key, "set");
+        if (!Files.exists(filePath)) return null;
+        try {
+            return new HashSet<>(objectMapper.readValue(filePath.toFile(), List.class));
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private Set<String> combineDifference(Set<String> current, Set<String> next) {
+        if (current == null) return new HashSet<>(next);
+        current.removeAll(next);
+        return current;
     }
 
     // ==================== 有序集合(Sorted Set)操作 ====================
@@ -762,15 +858,20 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             Path filePath = getFilePath(key, "zset");
             if (!Files.exists(filePath)) return 0L;
             Map<String, Double> zset = objectMapper.readValue(filePath.toFile(), Map.class);
-            long removed = 0;
-            for (String member : members) {
-                if (zset.remove(member) != null) removed++;
-            }
+            long removed = removeZsetMembers(zset, members);
             objectMapper.writeValue(filePath.toFile(), zset);
             return removed;
         } catch (IOException e) {
             return 0L;
         }
+    }
+
+    private long removeZsetMembers(Map<String, Double> zset, String[] members) {
+        long removed = 0;
+        for (String member : members) {
+            if (zset.remove(member) != null) removed++;
+        }
+        return removed;
     }
 
     @Override
@@ -790,16 +891,9 @@ public class FilesKeyValueRepository implements KeyValueRepository {
     @SuppressWarnings("unchecked")
     public Long zrank(String key, String member) {
         try {
-            Path filePath = getFilePath(key, "zset");
-            if (!Files.exists(filePath)) return null;
-            Map<String, Double> zset = objectMapper.readValue(filePath.toFile(), Map.class);
-            if (!zset.containsKey(member)) return null;
-            Double targetScore = zset.get(member);
-            long rank = 0;
-            for (Double score : zset.values()) {
-                if (score < targetScore) rank++;
-            }
-            return rank;
+            Map<String, Double> zset = readZsetIfExists(key);
+            if (zset == null || !zset.containsKey(member)) return null;
+            return countScoresLowerThan(zset, zset.get(member));
         } catch (IOException e) {
             return null;
         }
@@ -809,19 +903,27 @@ public class FilesKeyValueRepository implements KeyValueRepository {
     @SuppressWarnings("unchecked")
     public Long zrevrank(String key, String member) {
         try {
-            Path filePath = getFilePath(key, "zset");
-            if (!Files.exists(filePath)) return null;
-            Map<String, Double> zset = objectMapper.readValue(filePath.toFile(), Map.class);
-            if (!zset.containsKey(member)) return null;
-            Double targetScore = zset.get(member);
-            long rank = 0;
-            for (Double score : zset.values()) {
-                if (score > targetScore) rank++;
-            }
-            return rank;
+            Map<String, Double> zset = readZsetIfExists(key);
+            if (zset == null || !zset.containsKey(member)) return null;
+            return countScoresGreaterThan(zset, zset.get(member));
         } catch (IOException e) {
             return null;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Double> readZsetIfExists(String key) throws IOException {
+        Path filePath = getFilePath(key, "zset");
+        if (!Files.exists(filePath)) return null;
+        return objectMapper.readValue(filePath.toFile(), Map.class);
+    }
+
+    private long countScoresLowerThan(Map<String, Double> zset, double target) {
+        return zset.values().stream().filter(s -> s < target).count();
+    }
+
+    private long countScoresGreaterThan(Map<String, Double> zset, double target) {
+        return zset.values().stream().filter(s -> s > target).count();
     }
 
     @Override
@@ -859,18 +961,28 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             Path filePath = getFilePath(key, "zset");
             if (!Files.exists(filePath)) return new LinkedHashSet<>();
             Map<String, Double> zset = objectMapper.readValue(filePath.toFile(), Map.class);
-            List<String> sorted = zset.entrySet().stream()
-                    .sorted(Map.Entry.comparingByValue())
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
-            int size = sorted.size();
-            int fromIndex = (int) (start < 0 ? Math.max(0, size + start) : start);
-            int toIndex = (int) (end < 0 ? size + end + 1 : Math.min(size, end + 1));
-            if (fromIndex >= toIndex || fromIndex >= size) return new LinkedHashSet<>();
-            return new LinkedHashSet<>(sorted.subList(fromIndex, toIndex));
+            return sortedZrangeByValue(zset, start, end);
         } catch (IOException e) {
             return new LinkedHashSet<>();
         }
+    }
+
+    private Set<String> sortedZrangeByValue(Map<String, Double> zset, long start, long end) {
+        List<String> sorted = sortZsetKeysByValue(zset);
+        return sliceSortedKeysAsSet(sorted, start, end);
+    }
+
+    private List<String> sortZsetKeysByValue(Map<String, Double> zset) {
+        return zset.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+
+    private Set<String> sliceSortedKeysAsSet(List<String> sorted, long start, long end) {
+        int[] bounds = computeListBounds(sorted.size(), start, end);
+        if (bounds[0] >= bounds[1] || bounds[0] >= sorted.size()) return new LinkedHashSet<>();
+        return new LinkedHashSet<>(sorted.subList(bounds[0], bounds[1]));
     }
 
     @Override
@@ -880,20 +992,26 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             Path filePath = getFilePath(key, "zset");
             if (!Files.exists(filePath)) return new LinkedHashMap<>();
             Map<String, Double> zset = objectMapper.readValue(filePath.toFile(), Map.class);
-            List<Map.Entry<String, Double>> sorted = zset.entrySet().stream()
-                    .sorted(Map.Entry.comparingByValue())
-                    .collect(Collectors.toList());
-            int size = sorted.size();
-            int fromIndex = (int) (start < 0 ? Math.max(0, size + start) : start);
-            int toIndex = (int) (end < 0 ? size + end + 1 : Math.min(size, end + 1));
-            Map<String, Double> result = new LinkedHashMap<>();
-            if (fromIndex < toIndex && fromIndex < size) {
-                sorted.subList(fromIndex, toIndex).forEach(e -> result.put(e.getKey(), e.getValue()));
-            }
-            return result;
+            return sortedZrangeWithScores(zset, start, end);
         } catch (IOException e) {
             return new LinkedHashMap<>();
         }
+    }
+
+    private Map<String, Double> sortedZrangeWithScores(Map<String, Double> zset, long start, long end) {
+        List<Map.Entry<String, Double>> sorted = zset.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .collect(Collectors.toList());
+        return sliceSortedEntriesAsMap(sorted, start, end);
+    }
+
+    private Map<String, Double> sliceSortedEntriesAsMap(List<Map.Entry<String, Double>> sorted, long start, long end) {
+        int[] bounds = computeListBounds(sorted.size(), start, end);
+        Map<String, Double> result = new LinkedHashMap<>();
+        if (bounds[0] < bounds[1] && bounds[0] < sorted.size()) {
+            sorted.subList(bounds[0], bounds[1]).forEach(e -> result.put(e.getKey(), e.getValue()));
+        }
+        return result;
     }
 
     @Override
@@ -903,18 +1021,22 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             Path filePath = getFilePath(key, "zset");
             if (!Files.exists(filePath)) return new LinkedHashSet<>();
             Map<String, Double> zset = objectMapper.readValue(filePath.toFile(), Map.class);
-            List<String> sorted = zset.entrySet().stream()
-                    .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
-            int size = sorted.size();
-            int fromIndex = (int) (start < 0 ? Math.max(0, size + start) : start);
-            int toIndex = (int) (end < 0 ? size + end + 1 : Math.min(size, end + 1));
-            if (fromIndex >= toIndex || fromIndex >= size) return new LinkedHashSet<>();
-            return new LinkedHashSet<>(sorted.subList(fromIndex, toIndex));
+            return sortedZrevrangeByValue(zset, start, end);
         } catch (IOException e) {
             return new LinkedHashSet<>();
         }
+    }
+
+    private Set<String> sortedZrevrangeByValue(Map<String, Double> zset, long start, long end) {
+        List<String> sorted = sortZsetKeysByValueReversed(zset);
+        return sliceSortedKeysAsSet(sorted, start, end);
+    }
+
+    private List<String> sortZsetKeysByValueReversed(Map<String, Double> zset) {
+        return zset.entrySet().stream()
+                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -924,20 +1046,17 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             Path filePath = getFilePath(key, "zset");
             if (!Files.exists(filePath)) return new LinkedHashMap<>();
             Map<String, Double> zset = objectMapper.readValue(filePath.toFile(), Map.class);
-            List<Map.Entry<String, Double>> sorted = zset.entrySet().stream()
-                    .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
-                    .collect(Collectors.toList());
-            int size = sorted.size();
-            int fromIndex = (int) (start < 0 ? Math.max(0, size + start) : start);
-            int toIndex = (int) (end < 0 ? size + end + 1 : Math.min(size, end + 1));
-            Map<String, Double> result = new LinkedHashMap<>();
-            if (fromIndex < toIndex && fromIndex < size) {
-                sorted.subList(fromIndex, toIndex).forEach(e -> result.put(e.getKey(), e.getValue()));
-            }
-            return result;
+            return sortedZrevrangeWithScores(zset, start, end);
         } catch (IOException e) {
             return new LinkedHashMap<>();
         }
+    }
+
+    private Map<String, Double> sortedZrevrangeWithScores(Map<String, Double> zset, long start, long end) {
+        List<Map.Entry<String, Double>> sorted = zset.entrySet().stream()
+                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                .collect(Collectors.toList());
+        return sliceSortedEntriesAsMap(sorted, start, end);
     }
 
     @Override
@@ -979,9 +1098,7 @@ public class FilesKeyValueRepository implements KeyValueRepository {
         try {
             Path filePath = getFilePath(key, "zset");
             Files.createDirectories(filePath.getParent());
-            Map<String, Double> zset = Files.exists(filePath) 
-                ? objectMapper.readValue(filePath.toFile(), Map.class)
-                : new LinkedHashMap<>();
+            Map<String, Double> zset = loadOrCreateZset(filePath);
             double newScore = zset.getOrDefault(member, 0.0) + increment;
             zset.put(member, newScore);
             objectMapper.writeValue(filePath.toFile(), zset);
@@ -989,6 +1106,13 @@ public class FilesKeyValueRepository implements KeyValueRepository {
         } catch (IOException e) {
             throw new RuntimeException("Failed to zincrby", e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Double> loadOrCreateZset(Path filePath) throws IOException {
+        return Files.exists(filePath)
+                ? objectMapper.readValue(filePath.toFile(), Map.class)
+                : new LinkedHashMap<>();
     }
 
     @Override
@@ -1067,43 +1191,54 @@ public class FilesKeyValueRepository implements KeyValueRepository {
     public String type(String key) {
         if (!exists(key)) return "none";
         try {
+            String prefix = encodeKey(key) + ".";
             Optional<Path> path = Files.walk(baseDir)
-                    .filter(p -> p.getFileName().toString().startsWith(encodeKey(key) + "."))
+                    .filter(p -> p.getFileName().toString().startsWith(prefix))
                     .findFirst();
-            if (path.isPresent()) {
-                String filename = path.get().getFileName().toString();
-                if (filename.endsWith(".string")) return "string";
-                if (filename.endsWith(".hash")) return "hash";
-                if (filename.endsWith(".list")) return "list";
-                if (filename.endsWith(".set")) return "set";
-                if (filename.endsWith(".zset")) return "zset";
-            }
+            return path.map(this::mapFileNameToType).orElse("string");
         } catch (IOException e) {
-            // ignore
+            return "string";
         }
+    }
+
+    private String mapFileNameToType(Path path) {
+        String filename = path.getFileName().toString();
+        if (filename.endsWith(".string")) return "string";
+        if (filename.endsWith(".hash")) return "hash";
+        if (filename.endsWith(".list")) return "list";
+        if (filename.endsWith(".set")) return "set";
+        if (filename.endsWith(".zset")) return "zset";
         return "string";
     }
 
     @Override
     public void rename(String oldKey, String newKey) {
         try {
+            String oldPrefix = encodeKey(oldKey);
+            String newPrefix = encodeKey(newKey);
             Files.walk(baseDir)
-                    .filter(path -> path.getFileName().toString().startsWith(encodeKey(oldKey) + "."))
-                    .forEach(oldPath -> {
-                        try {
-                            String filename = oldPath.getFileName().toString();
-                            String newFilename = filename.replace(encodeKey(oldKey), encodeKey(newKey));
-                            Path newPath = oldPath.getParent().resolve(newFilename);
-                            Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
-                        } catch (IOException e) {
-                            throw new RuntimeException("Failed to rename", e);
-                        }
-                    });
-            Long expire = expireMap.remove(oldKey);
-            if (expire != null) expireMap.put(newKey, expire);
+                    .filter(path -> path.getFileName().toString().startsWith(oldPrefix + "."))
+                    .forEach(oldPath -> renameMatchingFile(oldPath, oldPrefix, newPrefix));
+            migrateExpireEntry(oldKey, newKey);
         } catch (IOException e) {
             throw new RuntimeException("Failed to rename", e);
         }
+    }
+
+    private void renameMatchingFile(Path oldPath, String oldPrefix, String newPrefix) {
+        try {
+            String filename = oldPath.getFileName().toString();
+            String newFilename = filename.replace(oldPrefix, newPrefix);
+            Path newPath = oldPath.getParent().resolve(newFilename);
+            Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to rename", e);
+        }
+    }
+
+    private void migrateExpireEntry(String oldKey, String newKey) {
+        Long expire = expireMap.remove(oldKey);
+        if (expire != null) expireMap.put(newKey, expire);
     }
 
     @Override
@@ -1119,11 +1254,7 @@ public class FilesKeyValueRepository implements KeyValueRepository {
             String regex = pattern.replace("*", ".*").replace("?", ".");
             return Files.walk(baseDir)
                     .filter(Files::isRegularFile)
-                    .map(path -> {
-                        String filename = path.getFileName().toString();
-                        int dotIndex = filename.lastIndexOf('.');
-                        return dotIndex > 0 ? decodeKey(filename.substring(0, dotIndex)) : null;
-                    })
+                    .map(this::extractKeyFromFilename)
                     .filter(Objects::nonNull)
                     .filter(key -> key.matches(regex))
                     .filter(key -> !isExpired(key))
@@ -1131,6 +1262,12 @@ public class FilesKeyValueRepository implements KeyValueRepository {
         } catch (IOException e) {
             return new HashSet<>();
         }
+    }
+
+    private String extractKeyFromFilename(Path path) {
+        String filename = path.getFileName().toString();
+        int dotIndex = filename.lastIndexOf('.');
+        return dotIndex > 0 ? decodeKey(filename.substring(0, dotIndex)) : null;
     }
 
     @Override
@@ -1254,19 +1391,24 @@ public class FilesKeyValueRepository implements KeyValueRepository {
     @Override
     public void flushdb() {
         try {
-            Files.walk(baseDir)
-                    .sorted(Comparator.reverseOrder())
-                    .forEach(path -> {
-                        try {
-                            Files.delete(path);
-                        } catch (IOException e) {
-                            // ignore
-                        }
-                    });
+            deleteAllFiles();
             Files.createDirectories(baseDir);
             expireMap.clear();
         } catch (IOException e) {
             throw new RuntimeException("Failed to flushdb", e);
+        }
+    }
+
+    private void deleteAllFiles() throws IOException {
+        Files.walk(baseDir)
+                .sorted(Comparator.reverseOrder())
+                .forEach(this::deleteQuietly);
+    }
+
+    private void deleteQuietly(Path path) {
+        try {
+            Files.delete(path);
+        } catch (IOException ignored) {
         }
     }
 

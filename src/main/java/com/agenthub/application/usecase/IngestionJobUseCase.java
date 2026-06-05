@@ -1,6 +1,8 @@
 package com.agenthub.application.usecase;
 
 import com.agenthub.application.command.CreateIngestionJobCommand;
+import com.agenthub.application.command.SaveDocumentCommand;
+import com.agenthub.application.command.UploadDocumentCommand;
 import com.agenthub.application.dto.IngestionJobOutput;
 import com.agenthub.application.port.out.DocumentFileStoragePort;
 import com.agenthub.application.port.out.repositories.IngestionDocumentRepository;
@@ -59,13 +61,13 @@ public class IngestionJobUseCase {
      * 上传文档并创建入库任务，触发异步处理流水线。
      */
     @Transactional
-    public IngestionJob uploadDocument(
-            String kbId, String fileName, String contentType, long size, String storagePath) {
-        validateUploadParams(kbId, fileName, storagePath);
-        IngestionJob savedJob = createAndSaveJob(kbId);
-        IngestionDocument document = createDocument(kbId, savedJob.getJobId(), fileName, contentType, size, storagePath);
+    public IngestionJob uploadDocument(UploadDocumentCommand command) {
+        validateUploadParams(command.getKbId(), command.getFileName(), command.getStoragePath());
+        IngestionJob savedJob = createAndSaveJob(command.getKbId());
+        IngestionDocument document = createDocument(command.getKbId(), savedJob.getJobId(),
+                command.getFileName(), command.getContentType(), command.getSize(), command.getStoragePath());
         log.info("Document uploaded: jobId={}, documentId={}, storagePath={}",
-                savedJob.getJobId(), document.getId(), storagePath);
+                savedJob.getJobId(), document.getId(), command.getStoragePath());
         pipelineService.execute(savedJob.getJobId());
         return savedJob;
     }
@@ -92,8 +94,9 @@ public class IngestionJobUseCase {
      */
     private IngestionDocument createDocument(String kbId, String jobId, String fileName,
                                              String contentType, long size, String storagePath) {
-        IngestionDocument document = IngestionDocument.createWithStoragePath(
+        IngestionDocument.CreationSpec request = new IngestionDocument.CreationSpec(
                 kbId, jobId, fileName, contentType, size, storagePath);
+        IngestionDocument document = IngestionDocument.createWithStoragePath(request);
         return documentRepository.save(document);
     }
 
@@ -164,7 +167,7 @@ public class IngestionJobUseCase {
     private IngestionDocument storeSingleFile(String kbId, String jobId, MultipartFile file) {
         String documentId = generateDocumentId();
         String objectKey = storeToStorage(kbId, documentId, file);
-        return saveDocument(kbId, jobId, file, documentId, objectKey);
+        return saveDocument(new SaveDocumentCommand(kbId, jobId, file, documentId, objectKey));
     }
 
     private String generateDocumentId() {
@@ -194,17 +197,19 @@ public class IngestionJobUseCase {
         log.info("Stored file to MinIO: objectKey={}, size={}", objectKey, size);
     }
 
-    private IngestionDocument saveDocument(String kbId, String jobId, MultipartFile file, String documentId, String objectKey) {
-        IngestionDocument document = createDocument(kbId, jobId, file, objectKey);
+    private IngestionDocument saveDocument(SaveDocumentCommand command) {
+        IngestionDocument document = createDocument(command.getKbId(), command.getJobId(),
+                command.getFile(), command.getObjectKey());
         IngestionDocument save = documentRepository.save(document);
         logDocumentSave(save.getId());
         return save;
     }
 
     private IngestionDocument createDocument(String kbId, String jobId, MultipartFile file, String objectKey) {
-        return IngestionDocument.createWithStoragePath(
+        IngestionDocument.CreationSpec request = new IngestionDocument.CreationSpec(
                 kbId, jobId, file.getOriginalFilename(),
                 file.getContentType(), file.getSize(), objectKey);
+        return IngestionDocument.createWithStoragePath(request);
     }
 
     private void logDocumentSave(String documentId) {

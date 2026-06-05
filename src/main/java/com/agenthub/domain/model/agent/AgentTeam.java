@@ -23,27 +23,50 @@ public class AgentTeam {
     public AgentTeam() {
     }
 
-    private AgentTeam(String id, String tenantId, String workspaceId, String teamCode,
-                      String name, String description, String coordinationMode,
-                      String memberConfig, Instant createdAt) {
-        this.id = id;
-        this.tenantId = tenantId;
-        this.workspaceId = workspaceId;
-        this.teamCode = teamCode;
-        this.name = name;
-        this.description = description;
-        this.coordinationMode = coordinationMode;
-        this.memberConfig = memberConfig;
-        this.status = "DRAFT";
-        this.createdAt = createdAt;
-        this.updatedAt = createdAt;
+    /**
+     * 工厂方法所需字段快照。
+     */
+    public static final class CreationSpec {
+        private final String tenantId;
+        private final String workspaceId;
+        private final String teamCode;
+        private final String name;
+        private final String description;
+        private final String coordinationMode;
+        private final String memberConfig;
+
+        public CreationSpec(String tenantId, String workspaceId, String teamCode,
+                                String name, String description, String coordinationMode,
+                                String memberConfig) {
+            this.tenantId = tenantId;
+            this.workspaceId = workspaceId;
+            this.teamCode = teamCode;
+            this.name = name;
+            this.description = description;
+            this.coordinationMode = coordinationMode;
+            this.memberConfig = memberConfig;
+        }
     }
 
-    public static AgentTeam create(String tenantId, String workspaceId, String teamCode,
-                                   String name, String description, String coordinationMode,
-                                   String memberConfig) {
-        return new AgentTeam(randomId(), tenantId, workspaceId, teamCode,
-                name, description, coordinationMode, memberConfig, Instant.now());
+    public static AgentTeam create(CreationSpec spec) {
+        AgentTeam team = new AgentTeam();
+        Instant now = Instant.now();
+        applySpecToTeam(team, spec);
+        team.id = randomId();
+        team.status = "DRAFT";
+        team.createdAt = now;
+        team.updatedAt = now;
+        return team;
+    }
+
+    private static void applySpecToTeam(AgentTeam team, CreationSpec spec) {
+        team.tenantId = spec.tenantId;
+        team.workspaceId = spec.workspaceId;
+        team.teamCode = spec.teamCode;
+        team.name = spec.name;
+        team.description = spec.description;
+        team.coordinationMode = spec.coordinationMode;
+        team.memberConfig = spec.memberConfig;
     }
 
     public void update(String name, String description, String coordinationMode, String memberConfig) {

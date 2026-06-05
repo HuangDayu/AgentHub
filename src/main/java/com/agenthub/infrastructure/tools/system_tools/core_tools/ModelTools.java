@@ -119,18 +119,24 @@ public class ModelTools {
                                                String taskDescription, String complexity) {
         String taskDomain = inferCapabilityDomain(taskDescription);
         int complexityScore = parseComplexity(complexity);
+        ModelConfig best = pickBestModel(models, taskDomain, complexityScore);
+        return buildRecommendation(best, models.size(), taskDomain, complexityScore);
+    }
 
-        ModelConfig best = models.stream()
+    private ModelConfig pickBestModel(List<ModelConfig> models, String taskDomain, int complexityScore) {
+        return models.stream()
                 .sorted(Comparator.comparingInt(m -> calculateMatchScore(m, taskDomain, complexityScore)))
                 .findFirst()
                 .orElse(models.getFirst());
+    }
 
+    private ModelRecommendation buildRecommendation(ModelConfig best, int modelCount, String taskDomain, int complexityScore) {
         ModelRecommendation rec = new ModelRecommendation();
         rec.setModelConfigId(best.getId());
         rec.setModelName(best.getModel());
         rec.setSupplier(best.getSupplier() != null ? best.getSupplier().name() : "UNKNOWN");
         rec.setReason(buildRecommendationReason(best, taskDomain, complexityScore));
-        rec.setConfidence(calculateConfidence(models.size()));
+        rec.setConfidence(calculateConfidence(modelCount));
         return rec;
     }
 

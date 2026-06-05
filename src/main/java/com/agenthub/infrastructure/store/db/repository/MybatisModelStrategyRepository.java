@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.ModelStrategyRepository;
 import com.agenthub.domain.model.strategy.ModelStrategy;
@@ -60,18 +61,8 @@ public class MybatisModelStrategyRepository implements ModelStrategyRepository {
     }
 
     private ModelStrategy toDomain(ModelStrategyEntity entity) {
-        return ModelStrategy.rebuild(
-            entity.getId(),
-            entity.getWorkspaceId(),
-            entity.getName(),
-            entity.getDescription(),
-            entity.getTemperature(),
-            entity.getMaxTokens(),
-            entity.getTopP(),
-            entity.getFrequencyPenalty(),
-            entity.getPresencePenalty(),
-            entity.getCreatedAt(),
-            entity.getUpdatedAt()
-        );
+        ModelStrategy.State state = new ModelStrategy.State();
+        BeanUtil.copyProperties(entity, state);
+        return ModelStrategy.rebuild(state);
     }
 }

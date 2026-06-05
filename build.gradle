@@ -127,6 +127,20 @@ dependencies {
     testImplementation "com.tngtech.archunit:archunit-junit5:${archUnitVersion}"
 }
 
+tasks.register('generateViolations', JavaExec) {
+    group = 'verification'
+    description = '扫描所有方法违规并输出 TSV/JSON'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agenthub.test.architecture.MethodViolationDumper'
+}
+
+tasks.register('generateExemptions', JavaExec) {
+    group = 'verification'
+    description = '从 method-violations.json 生成 architecture-exemptions.json'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agenthub.test.architecture.ExemptionGenerator'
+}
+
 
 repositories {
     mavenCentral()

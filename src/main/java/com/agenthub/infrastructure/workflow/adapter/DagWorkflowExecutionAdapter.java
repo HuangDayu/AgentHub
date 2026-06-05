@@ -95,24 +95,36 @@ public class DagWorkflowExecutionAdapter implements DagWorkflowExecutionPort {
         if (node == null) {
             return null;
         }
-        if (node.isObject()) {
-            Map<String, Object> map = new HashMap<>();
-            node.fieldNames().forEachRemaining(key -> {
-                map.put(key, convertJsonNodeToValue(node.get(key)));
-            });
-            return map;
-        }
-        if (node.isArray()) {
-            List<Object> list = new ArrayList<>();
-            node.forEach(item -> list.add(convertJsonNodeToValue(item)));
-            return list;
-        }
-        if (node.isTextual()) {
-            return node.asText();
-        }
-        if (node.isBoolean()) {
-            return node.asBoolean();
-        }
+        if (node.isObject()) return convertObjectNode(node);
+        if (node.isArray()) return convertArrayNode(node);
+        if (node.isTextual()) return node.asText();
+        if (node.isBoolean()) return node.asBoolean();
+        return convertNumericNode(node);
+    }
+
+    /**
+     * 递归转换对象节点为 Map。
+     */
+    private Map<String, Object> convertObjectNode(JsonNode node) {
+        Map<String, Object> map = new HashMap<>();
+        node.fieldNames().forEachRemaining(key ->
+                map.put(key, convertJsonNodeToValue(node.get(key))));
+        return map;
+    }
+
+    /**
+     * 递归转换数组节点为 List。
+     */
+    private List<Object> convertArrayNode(JsonNode node) {
+        List<Object> list = new ArrayList<>();
+        node.forEach(item -> list.add(convertJsonNodeToValue(item)));
+        return list;
+    }
+
+    /**
+     * 转换数值节点（整数/浮点/BigDecimal）。
+     */
+    private Object convertNumericNode(JsonNode node) {
         if (node.isInt() || node.isLong()) {
             return node.asLong();
         }
@@ -134,64 +146,8 @@ public class DagWorkflowExecutionAdapter implements DagWorkflowExecutionPort {
     private DagWorkflowGraph parseGraphDefinition(String json) {
         try {
             JsonNode root = objectMapper.readTree(json);
-
-            List<DagWorkflowNode> nodes = new ArrayList<>();
-            JsonNode nodesArray = root.get("nodes");
-            if (nodesArray != null && nodesArray.isArray()) {
-                for (JsonNode nodeJson : nodesArray) {
-                    String id = nodeJson.get("id").asText();
-                    String typeStr = nodeJson.get("type").asText();
-                    DagNodeType type = DagNodeType.valueOf(typeStr.toUpperCase().replace("-", "_"));
-
-                    DagWorkflowNode node = new DagWorkflowNode(id, type);
-
-                    // 解析 data 字段
-                    JsonNode dataJson = nodeJson.get("data");
-                    if (dataJson != null) {
-                        // 设置节点名称
-                        JsonNode labelJson = dataJson.get("label");
-                        if (labelJson != null) {
-                            node.setName(labelJson.asText());
-                        }
-
-                        // 设置节点配置（从 node_param 提取）
-                        JsonNode nodeParamJson = dataJson.get("node_param");
-                        if (nodeParamJson != null && !nodeParamJson.isEmpty()) {
-                            Map<String, Object> params = new HashMap<>();
-                            nodeParamJson.fieldNames().forEachRemaining(key -> {
-                                JsonNode value = nodeParamJson.get(key);
-                                params.put(key, convertJsonNodeToValue(value));
-                            });
-                            node.setConfig(new NodeConfig(params, 30000, 0));
-                        } else {
-                            node.setConfig(NodeConfig.defaultConfig());
-                        }
-                    } else {
-                        node.setConfig(NodeConfig.defaultConfig());
-                    }
-
-                    JsonNode posJson = nodeJson.get("position");
-                    if (posJson != null && posJson.has("x") && posJson.has("y")) {
-                        node.setPosition(new NodePosition(
-                            posJson.get("x").asDouble(),
-                            posJson.get("y").asDouble()));
-                    }
-
-                    nodes.add(node);
-                }
-            }
-
-            List<DagWorkflowEdge> edges = new ArrayList<>();
-            JsonNode edgesArray = root.get("edges");
-            if (edgesArray != null && edgesArray.isArray()) {
-                for (JsonNode edgeJson : edgesArray) {
-                    String id = edgeJson.get("id").asText();
-                    String source = edgeJson.get("source").asText();
-                    String target = edgeJson.get("target").asText();
-                    edges.add(new DagWorkflowEdge(id, source, target));
-                }
-            }
-
+            List<DagWorkflowNode> nodes = parseNodes(root.get("nodes"));
+            List<DagWorkflowEdge> edges = parseEdges(root.get("edges"));
             DagWorkflowGraph graph = new DagWorkflowGraph(nodes, edges);
             log.debug("Parsed graph: {} nodes, {} edges", nodes.size(), edges.size());
             return graph;
@@ -199,6 +155,87 @@ public class DagWorkflowExecutionAdapter implements DagWorkflowExecutionPort {
             log.error("Failed to parse graph definition: {}", e.getMessage());
             return DagWorkflowGraph.empty();
         }
+    }
+
+    /**
+     * 解析 nodes 数组。
+     */
+    private List<DagWorkflowNode> parseNodes(JsonNode nodesArray) {
+        if (nodesArray == null || !nodesArray.isArray()) {
+            return new ArrayList<>();
+        }
+        List<DagWorkflowNode> nodes = new ArrayList<>();
+        for (JsonNode nodeJson : nodesArray) {
+            nodes.add(parseNode(nodeJson));
+        }
+        return nodes;
+    }
+
+    /**
+     * 解析单个节点。
+     */
+    private DagWorkflowNode parseNode(JsonNode nodeJson) {
+        String id = nodeJson.get("id").asText();
+        DagNodeType type = DagNodeType.valueOf(nodeJson.get("type").asText().toUpperCase().replace("-", "_"));
+        DagWorkflowNode node = new DagWorkflowNode(id, type);
+        applyNodeData(node, nodeJson.get("data"));
+        applyNodePosition(node, nodeJson.get("position"));
+        return node;
+    }
+
+    /**
+     * 应用节点 data 字段（label + node_param 配置）。
+     */
+    private void applyNodeData(DagWorkflowNode node, JsonNode dataJson) {
+        if (dataJson == null) {
+            node.setConfig(NodeConfig.defaultConfig());
+            return;
+        }
+        JsonNode labelJson = dataJson.get("label");
+        if (labelJson != null) {
+            node.setName(labelJson.asText());
+        }
+        node.setConfig(buildNodeConfig(dataJson.get("node_param")));
+    }
+
+    /**
+     * 根据 node_param 构造 NodeConfig，无参时回退到默认配置。
+     */
+    private NodeConfig buildNodeConfig(JsonNode nodeParamJson) {
+        if (nodeParamJson == null || nodeParamJson.isEmpty()) {
+            return NodeConfig.defaultConfig();
+        }
+        Map<String, Object> params = new HashMap<>();
+        nodeParamJson.fieldNames().forEachRemaining(key ->
+                params.put(key, convertJsonNodeToValue(nodeParamJson.get(key))));
+        return new NodeConfig(params, 30000, 0);
+    }
+
+    /**
+     * 应用节点 position 字段。
+     */
+    private void applyNodePosition(DagWorkflowNode node, JsonNode posJson) {
+        if (posJson == null || !posJson.has("x") || !posJson.has("y")) {
+            return;
+        }
+        node.setPosition(new NodePosition(posJson.get("x").asDouble(), posJson.get("y").asDouble()));
+    }
+
+    /**
+     * 解析 edges 数组。
+     */
+    private List<DagWorkflowEdge> parseEdges(JsonNode edgesArray) {
+        if (edgesArray == null || !edgesArray.isArray()) {
+            return new ArrayList<>();
+        }
+        List<DagWorkflowEdge> edges = new ArrayList<>();
+        for (JsonNode edgeJson : edgesArray) {
+            edges.add(new DagWorkflowEdge(
+                    edgeJson.get("id").asText(),
+                    edgeJson.get("source").asText(),
+                    edgeJson.get("target").asText()));
+        }
+        return edges;
     }
 
     /**

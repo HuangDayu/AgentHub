@@ -34,11 +34,12 @@ public class SubagentUseCase {
     public SubagentOutput create(SubagentCommand command) {
         agentRepository.findById(command.getParentAgentId())
                 .orElseThrow(() -> new NotFoundException("Agent not found: " + command.getParentAgentId()));
-        Subagent subagent = Subagent.create(
+        Subagent.CreationSpec request = new Subagent.CreationSpec(
                 command.getTenantId(), command.getWorkspaceId(),
                 command.getParentAgentId(), command.getName(),
                 command.getDescription(), command.getSystemPrompt(),
                 command.getModelConfigId());
+        Subagent subagent = Subagent.create(request);
         Subagent saved = subagentRepository.save(subagent);
         createSubsessionIfNeeded(command, saved);
         return toOutput(saved);

@@ -31,17 +31,42 @@ public class Agent {
         this.updatedAt = Instant.now();
     }
 
-    public static Agent create(String tenantId, String workspaceId, String agentCode,
+    /**
+     * 工厂方法所需字段快照。
+     */
+    public static final class CreationSpec {
+        private final String tenantId;
+        private final String workspaceId;
+        private final String agentCode;
+        private final String name;
+        private final String description;
+
+        public CreationSpec(String tenantId, String workspaceId, String agentCode,
                                String name, String description) {
+            this.tenantId = tenantId;
+            this.workspaceId = workspaceId;
+            this.agentCode = agentCode;
+            this.name = name;
+            this.description = description;
+        }
+    }
+
+    /**
+     * 创建新的智能体实例。
+     */
+    public static Agent create(CreationSpec spec) {
         Agent agent = new Agent();
-        agent.tenantId = tenantId;
-        agent.workspaceId = workspaceId;
-        agent.agentCode = agentCode;
-        agent.name = name;
-        agent.description = description;
+        agent.tenantId = spec.tenantId;
+        agent.workspaceId = spec.workspaceId;
+        agent.agentCode = spec.agentCode;
+        agent.name = spec.name;
+        agent.description = spec.description;
         return agent;
     }
 
+    /**
+     * 启用智能体。
+     */
     public Agent enabled() {
         this.status = "PUBLISHED";
         this.enabled = true;
@@ -49,6 +74,9 @@ public class Agent {
         return this;
     }
 
+    /**
+     * 禁用智能体。
+     */
     public Agent unenabled() {
         this.status = "DRAFT";
         this.enabled = false;
@@ -56,6 +84,9 @@ public class Agent {
         return this;
     }
 
+    /**
+     * 更新智能体基础信息。
+     */
     public Agent update(String name, String description) {
         this.name = name;
         this.description = description;

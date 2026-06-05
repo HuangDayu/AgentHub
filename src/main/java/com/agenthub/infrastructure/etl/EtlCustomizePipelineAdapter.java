@@ -50,8 +50,9 @@ public class EtlCustomizePipelineAdapter implements ExtractTransformLoadPort {
     private List<DocumentChunk> processDocument(EtlCommand etlCommand) {
         DocumentContent parsed = parseDocument(etlCommand);
         DocumentContent cleaned = contentCleaner.clean(parsed);
-        return documentChunker.chunk(etlCommand.getDocumentId(), etlCommand.getKbId(), cleaned.getCleanedContent(), DEFAULT_CHUNK_SIZE, DEFAULT_OVERLAP_SIZE
-        );
+        ChunkSpec request = new ChunkSpec(etlCommand.getDocumentId(), etlCommand.getKbId(),
+                cleaned.getCleanedContent(), DEFAULT_CHUNK_SIZE, DEFAULT_OVERLAP_SIZE);
+        return documentChunker.chunk(request);
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.skills.market;
 
 import com.agenthub.application.port.out.skills.SkillMarketPort;
-import com.agenthub.domain.model.skill.MarketSearchQuery;
+import com.agenthub.application.dto.MarketSearchQuery;
 import com.agenthub.domain.model.skill.MarketSkillDetail;
 import com.agenthub.domain.model.skill.MarketSkillSummary;
 import lombok.extern.slf4j.Slf4j;
@@ -136,29 +136,39 @@ public class SkillsMPAdapter implements SkillMarketPort {
      */
     private MarketSkillDetail searchAndCache(String skillId) {
         try {
-            String url = BASE_URL + "/api/v1/skills/search?q=" + encode(skillId) + "&limit=20";
-            Map resp = restTemplate.getForObject(url, Map.class);
-            if (resp == null) return null;
-            Map<String, Object> data = (Map<String, Object>) resp.get("data");
-            if (data == null) return null;
-            List<Map<String, Object>> skills = (List<Map<String, Object>>) data.get("skills");
+            List<Map<String, Object>> skills = fetchSkills(skillId);
             if (skills == null) return null;
-            for (Map<String, Object> item : skills) {
-                if (skillId.equals(str(item, "id"))) {
-                    searchCache.put(skillId, item);
-                    return toDetail(item, skillId);
-                }
-            }
-            if (!skills.isEmpty()) {
-                Map<String, Object> first = skills.get(0);
-                searchCache.put(skillId, first);
-                return toDetail(first, skillId);
-            }
+            Map<String, Object> match = findExactMatch(skills, skillId);
+            if (match != null) return cacheAndBuild(match, skillId);
+            if (!skills.isEmpty()) return cacheAndBuild(skills.get(0), skillId);
             return null;
         } catch (Exception e) {
             log.warn("SkillsMP search for detail failed: {}", e.getMessage());
             return null;
         }
+    }
+
+    private List<Map<String, Object>> fetchSkills(String skillId) {
+        String url = BASE_URL + "/api/v1/skills/search?q=" + encode(skillId) + "&limit=20";
+        Map resp = restTemplate.getForObject(url, Map.class);
+        if (resp == null) return null;
+        Map<String, Object> data = (Map<String, Object>) resp.get("data");
+        if (data == null) return null;
+        return (List<Map<String, Object>>) data.get("skills");
+    }
+
+    private Map<String, Object> findExactMatch(List<Map<String, Object>> skills, String skillId) {
+        for (Map<String, Object> item : skills) {
+            if (skillId.equals(str(item, "id"))) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    private MarketSkillDetail cacheAndBuild(Map<String, Object> item, String skillId) {
+        searchCache.put(skillId, item);
+        return toDetail(item, skillId);
     }
 
     /**
@@ -218,3 +228,4 @@ public class SkillsMPAdapter implements SkillMarketPort {
         return 0;
     }
 }
+

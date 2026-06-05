@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.etl;
 
+import com.agenthub.application.port.out.etl.ChunkSpec;
 import com.agenthub.application.port.out.etl.EtlDocumentChunkerPort;
 import com.agenthub.domain.model.etl.DocumentChunk;
 import org.slf4j.Logger;
@@ -18,117 +19,128 @@ public class EtlDocumentChunkerAdapter implements EtlDocumentChunkerPort {
     private static final Logger log = LoggerFactory.getLogger(EtlDocumentChunkerAdapter.class);
 
     /**
+     * 分块过程中的可变上下文，避免在内部方法间传递大量共享参数。
+     */
+    private static final class ChunkContext {
+        private final String documentId;
+        private final String kbId;
+        private final int chunkSize;
+        private final int overlap;
+        private final List<DocumentChunk> chunks = new ArrayList<>();
+        private final StringBuilder currentChunk = new StringBuilder();
+        private int index;
+
+        ChunkContext(String documentId, String kbId, int chunkSize, int overlap) {
+            this.documentId = documentId;
+            this.kbId = kbId;
+            this.chunkSize = chunkSize;
+            this.overlap = overlap;
+        }
+    }
+
+    /**
      * 对文档内容进行分块。
      */
     @Override
-    public List<DocumentChunk> chunk(String documentId, String kbId, String content, int chunkSize, int overlap) {
-        List<DocumentChunk> chunks = new ArrayList<>();
+    public List<DocumentChunk> chunk(ChunkSpec spec) {
+        String content = spec.getContent();
         if (content == null || content.isBlank()) {
-            return chunks;
+            return new ArrayList<>();
         }
-        List<String> paragraphs = splitByParagraphs(content);
-        return processParagraphs(documentId, kbId, paragraphs, chunkSize, overlap);
+        ChunkContext ctx = new ChunkContext(spec.getDocumentId(), spec.getKbId(),
+                spec.getChunkSize(), spec.getOverlap());
+        processParagraphs(ctx, splitByParagraphs(content));
+        return ctx.chunks;
     }
 
     /**
      * 处理段落列表生成分块。
      */
-    private List<DocumentChunk> processParagraphs(String documentId, String kbId, List<String> paragraphs, int chunkSize, int overlap) {
-        List<DocumentChunk> chunks = new ArrayList<>();
-        StringBuilder currentChunk = new StringBuilder();
-        int index = 0;
+    private void processParagraphs(ChunkContext ctx, List<String> paragraphs) {
         for (String paragraph : paragraphs) {
             String trimmed = paragraph.trim();
             if (trimmed.isEmpty()) {
                 continue;
             }
-            index = processParagraph(documentId, kbId, trimmed, chunkSize, overlap, chunks, currentChunk, index);
+            ctx.index = processParagraph(ctx, trimmed);
         }
-        addFinalChunk(documentId, kbId, chunks, currentChunk, index);
-        return chunks;
+        addFinalChunk(ctx);
     }
 
     /**
      * 处理单个段落。
      */
-    private int processParagraph(String documentId, String kbId, String trimmed, int chunkSize, int overlap,
-                                 List<DocumentChunk> chunks, StringBuilder currentChunk, int index) {
-        if (!currentChunk.isEmpty() && currentChunk.length() + trimmed.length() + 2 > chunkSize) {
-            index = saveCurrentChunk(documentId, kbId, chunks, currentChunk, index, overlap);
+    private int processParagraph(ChunkContext ctx, String trimmed) {
+        if (!ctx.currentChunk.isEmpty() && ctx.currentChunk.length() + trimmed.length() + 2 > ctx.chunkSize) {
+            ctx.index = saveCurrentChunk(ctx);
         }
-        if (trimmed.length() > chunkSize) {
-            return processLargeParagraph(documentId, kbId, trimmed, chunkSize, overlap, chunks, currentChunk, index);
+        if (trimmed.length() > ctx.chunkSize) {
+            return processLargeParagraph(ctx, trimmed);
         }
-        appendToCurrentChunk(currentChunk, trimmed);
-        return index;
+        appendToCurrentChunk(ctx.currentChunk, trimmed);
+        return ctx.index;
     }
 
     /**
      * 保存当前分块。
      */
-    private int saveCurrentChunk(String documentId, String kbId, List<DocumentChunk> chunks,
-                                 StringBuilder currentChunk, int index, int overlap) {
-        String chunkText = currentChunk.toString().trim();
+    private int saveCurrentChunk(ChunkContext ctx) {
+        String chunkText = ctx.currentChunk.toString().trim();
         if (!chunkText.isEmpty()) {
-            chunks.add(DocumentChunk.create(documentId, kbId, index++, chunkText));
+            ctx.chunks.add(DocumentChunk.create(ctx.documentId, ctx.kbId, ctx.index++, chunkText));
         }
-        String overlapText = getOverlapText(chunkText, overlap);
-        currentChunk.setLength(0);
-        currentChunk.append(overlapText);
-        return index;
+        String overlapText = getOverlapText(chunkText, ctx.overlap);
+        ctx.currentChunk.setLength(0);
+        ctx.currentChunk.append(overlapText);
+        return ctx.index;
     }
 
     /**
      * 处理大段落。
      */
-    private int processLargeParagraph(String documentId, String kbId, String trimmed, int chunkSize, int overlap,
-                                      List<DocumentChunk> chunks, StringBuilder currentChunk, int index) {
-        List<String> subChunks = splitLargeParagraph(trimmed, chunkSize, overlap);
-        for (String sub : subChunks) {
-            index = processSubChunk(documentId, kbId, sub, chunkSize, chunks, currentChunk, index);
+    private int processLargeParagraph(ChunkContext ctx, String trimmed) {
+        for (String sub : splitLargeParagraph(trimmed, ctx.chunkSize, ctx.overlap)) {
+            ctx.index = processSubChunk(ctx, sub);
         }
-        return index;
+        return ctx.index;
     }
 
     /**
      * 处理子分块。
      */
-    private int processSubChunk(String documentId, String kbId, String sub, int chunkSize,
-                                List<DocumentChunk> chunks, StringBuilder currentChunk, int index) {
-        if (!currentChunk.isEmpty()) {
-            index = saveCurrentChunkWithOverlap(documentId, kbId, chunks, currentChunk, index, chunkSize);
+    private int processSubChunk(ChunkContext ctx, String sub) {
+        if (!ctx.currentChunk.isEmpty()) {
+            ctx.index = saveCurrentChunkWithOverlap(ctx);
         }
-        if (currentChunk.length() + sub.length() > chunkSize) {
-            index = handleOversizedSub(documentId, kbId, sub, chunks, currentChunk, index);
+        if (ctx.currentChunk.length() + sub.length() > ctx.chunkSize) {
+            ctx.index = handleOversizedSub(ctx, sub);
         } else {
-            appendToCurrentChunk(currentChunk, sub);
+            appendToCurrentChunk(ctx.currentChunk, sub);
         }
-        return index;
+        return ctx.index;
     }
 
     /**
      * 保存当前分块并设置重叠。
      */
-    private int saveCurrentChunkWithOverlap(String documentId, String kbId, List<DocumentChunk> chunks,
-                                            StringBuilder currentChunk, int index, int chunkSize) {
-        chunks.add(DocumentChunk.create(documentId, kbId, index++, currentChunk.toString().trim()));
-        String overlapText = getOverlapText(currentChunk.toString().trim(), chunkSize / 10);
-        currentChunk.setLength(0);
-        currentChunk.append(overlapText);
-        return index;
+    private int saveCurrentChunkWithOverlap(ChunkContext ctx) {
+        ctx.chunks.add(DocumentChunk.create(ctx.documentId, ctx.kbId, ctx.index++, ctx.currentChunk.toString().trim()));
+        String overlapText = getOverlapText(ctx.currentChunk.toString().trim(), ctx.chunkSize / 10);
+        ctx.currentChunk.setLength(0);
+        ctx.currentChunk.append(overlapText);
+        return ctx.index;
     }
 
     /**
      * 处理超大子分块。
      */
-    private int handleOversizedSub(String documentId, String kbId, String sub,
-                                   List<DocumentChunk> chunks, StringBuilder currentChunk, int index) {
-        if (!currentChunk.isEmpty()) {
-            chunks.add(DocumentChunk.create(documentId, kbId, index++, currentChunk.toString().trim()));
+    private int handleOversizedSub(ChunkContext ctx, String sub) {
+        if (!ctx.currentChunk.isEmpty()) {
+            ctx.chunks.add(DocumentChunk.create(ctx.documentId, ctx.kbId, ctx.index++, ctx.currentChunk.toString().trim()));
         }
-        currentChunk.setLength(0);
-        currentChunk.append(sub);
-        return index;
+        ctx.currentChunk.setLength(0);
+        ctx.currentChunk.append(sub);
+        return ctx.index;
     }
 
     /**
@@ -144,13 +156,13 @@ public class EtlDocumentChunkerAdapter implements EtlDocumentChunkerPort {
     /**
      * 添加最后一个分块。
      */
-    private void addFinalChunk(String documentId, String kbId, List<DocumentChunk> chunks,
-                               StringBuilder currentChunk, int index) {
-        if (!currentChunk.isEmpty()) {
-            String chunkText = currentChunk.toString().trim();
-            if (!chunkText.isEmpty()) {
-                chunks.add(DocumentChunk.create(documentId, kbId, index, chunkText));
-            }
+    private void addFinalChunk(ChunkContext ctx) {
+        if (ctx.currentChunk.isEmpty()) {
+            return;
+        }
+        String chunkText = ctx.currentChunk.toString().trim();
+        if (!chunkText.isEmpty()) {
+            ctx.chunks.add(DocumentChunk.create(ctx.documentId, ctx.kbId, ctx.index, chunkText));
         }
     }
 

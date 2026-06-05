@@ -30,7 +30,7 @@ class SkillFileControllerIntegrationTest {
     private MockMvc mockMvc;
     private String createdSkillId;
     private final String workspaceId = "100000002";
-    private final String tenantId = "100000001";
+    private final String tenantId = "100000002";
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -119,7 +119,17 @@ class SkillFileControllerIntegrationTest {
 
             java.util.zip.ZipEntry entry1 = new java.util.zip.ZipEntry("SKILL.md");
             zos.putNextEntry(entry1);
-            zos.write("# Test Skill\n\nThis is a test skill.".getBytes());
+            zos.write("""
+                    ---
+                    name: 1password-test
+                    description: Set up and use 1Password CLI (op). Use when installing the CLI, enabling desktop app integration, signing in (single or multi-account), or reading/injecting/running secrets via op.
+                    homepage: https://developer.1password.com/docs/cli/get-started/
+                    metadata: {"clawdbot":{"emoji":"🔐","requires":{"bins":["op"]},"install":[{"id":"brew","kind":"brew","formula":"1password-cli","bins":["op"],"label":"Install 1Password CLI (brew)"}]}}
+                    ---
+                    
+                    # 1Password CLI
+                    """.getBytes());
+
             zos.closeEntry();
 
             java.util.zip.ZipEntry entry2 = new java.util.zip.ZipEntry("config.json");

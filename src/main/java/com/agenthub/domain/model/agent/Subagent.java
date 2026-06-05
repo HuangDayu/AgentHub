@@ -31,28 +31,42 @@ public class Subagent {
     }
 
     /**
-     * 创建新的子智能体实例。
-     *
-     * @param tenantId      租户ID
-     * @param workspaceId   工作空间ID
-     * @param parentAgentId 父Agent ID
-     * @param name          子Agent名称
-     * @param description   子Agent描述
-     * @param systemPrompt  系统提示词
-     * @param modelConfigId 模型配置ID
-     * @return 新创建的子Agent对象
+     * 工厂方法所需字段快照。
      */
-    public static Subagent create(String tenantId, String workspaceId, String parentAgentId,
-                                  String name, String description, String systemPrompt,
-                                  String modelConfigId) {
+    public static final class CreationSpec {
+        private final String tenantId;
+        private final String workspaceId;
+        private final String parentAgentId;
+        private final String name;
+        private final String description;
+        private final String systemPrompt;
+        private final String modelConfigId;
+
+        public CreationSpec(String tenantId, String workspaceId, String parentAgentId,
+                                String name, String description, String systemPrompt,
+                                String modelConfigId) {
+            this.tenantId = tenantId;
+            this.workspaceId = workspaceId;
+            this.parentAgentId = parentAgentId;
+            this.name = name;
+            this.description = description;
+            this.systemPrompt = systemPrompt;
+            this.modelConfigId = modelConfigId;
+        }
+    }
+
+    /**
+     * 创建新的子智能体实例。
+     */
+    public static Subagent create(CreationSpec spec) {
         Subagent subagent = new Subagent();
-        subagent.tenantId = tenantId;
-        subagent.workspaceId = workspaceId;
-        subagent.parentAgentId = parentAgentId;
-        subagent.name = name;
-        subagent.description = description;
-        subagent.systemPrompt = systemPrompt;
-        subagent.modelConfigId = modelConfigId;
+        subagent.tenantId = spec.tenantId;
+        subagent.workspaceId = spec.workspaceId;
+        subagent.parentAgentId = spec.parentAgentId;
+        subagent.name = spec.name;
+        subagent.description = spec.description;
+        subagent.systemPrompt = spec.systemPrompt;
+        subagent.modelConfigId = spec.modelConfigId;
         return subagent;
     }
 

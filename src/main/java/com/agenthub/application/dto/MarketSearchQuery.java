@@ -1,4 +1,4 @@
-package com.agenthub.domain.model.skill;
+package com.agenthub.application.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

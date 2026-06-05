@@ -11,10 +11,8 @@ import com.agenthub.domain.model.plan.ExecutionPlan;
 import com.agenthub.domain.model.plan.PlanStep;
 import com.agenthub.domain.model.plan.PlanStatus;
 import com.agenthub.domain.model.plan.PlanStepStatus;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,12 +27,12 @@ import static org.mockito.Mockito.*;
  * ExecutionPlanUseCase 单元测试。
  */
 @ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ExecutionPlanUseCaseTest {
 
     @Mock
     private ExecutionPlanRepository executionPlanRepository;
 
-    @InjectMocks
     private ExecutionPlanUseCase executionPlanUseCase;
 
     private ExecutionPlan testPlan;
@@ -42,12 +40,15 @@ class ExecutionPlanUseCaseTest {
 
     @BeforeEach
     void setUp() {
+        executionPlanUseCase = new ExecutionPlanUseCase(executionPlanRepository);
         testPlan = ExecutionPlan.create("agent-1", "session-1", "测试目标");
-        testStep = PlanStep.create(testPlan.getId(), 1, "步骤1", "webSearch", null);
+        testStep = PlanStep.create(new PlanStep.CreationSpec(
+                testPlan.getId(), 1, "步骤1", "webSearch", null));
         testPlan.addStep(testStep);
     }
 
     @Test
+    @Order(1)
     void shouldCreatePlan() {
         CreatePlanCommand command = buildCreateCommand();
         when(executionPlanRepository.save(any())).thenReturn(testPlan);
@@ -61,6 +62,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(2)
     void shouldGetActivePlan() {
         when(executionPlanRepository.findActiveBySessionId("session-1"))
                 .thenReturn(Optional.of(testPlan));
@@ -72,6 +74,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(3)
     void shouldReturnEmptyWhenNoActivePlan() {
         when(executionPlanRepository.findActiveBySessionId("session-1"))
                 .thenReturn(Optional.empty());
@@ -82,6 +85,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(4)
     void shouldGetPlanById() {
         when(executionPlanRepository.findById(testPlan.getId()))
                 .thenReturn(Optional.of(testPlan));
@@ -93,6 +97,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(5)
     void shouldThrowWhenPlanNotFound() {
         when(executionPlanRepository.findById("nonexistent"))
                 .thenReturn(Optional.empty());
@@ -102,6 +107,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(6)
     void shouldStartExecution() {
         when(executionPlanRepository.findById(testPlan.getId()))
                 .thenReturn(Optional.of(testPlan));
@@ -114,6 +120,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(7)
     void shouldUpdateStepStatus() {
         when(executionPlanRepository.findById(testPlan.getId()))
                 .thenReturn(Optional.of(testPlan));
@@ -127,6 +134,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(8)
     void shouldCompleteStepWithOutput() {
         when(executionPlanRepository.findById(testPlan.getId()))
                 .thenReturn(Optional.of(testPlan));
@@ -140,6 +148,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(9)
     void shouldCompletePlan() {
         when(executionPlanRepository.findById(testPlan.getId()))
                 .thenReturn(Optional.of(testPlan));
@@ -154,6 +163,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(10)
     void shouldFailPlan() {
         when(executionPlanRepository.findById(testPlan.getId()))
                 .thenReturn(Optional.of(testPlan));
@@ -168,6 +178,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(11)
     void shouldCancelPlan() {
         when(executionPlanRepository.findById(testPlan.getId()))
                 .thenReturn(Optional.of(testPlan));
@@ -181,6 +192,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(12)
     void shouldGetNextSteps() {
         when(executionPlanRepository.findById(testPlan.getId()))
                 .thenReturn(Optional.of(testPlan));
@@ -193,6 +205,7 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(13)
     void shouldGetPlansByAgent() {
         when(executionPlanRepository.findByAgentId("agent-1"))
                 .thenReturn(List.of(testPlan));
@@ -204,8 +217,10 @@ class ExecutionPlanUseCaseTest {
     }
 
     @Test
+    @Order(14)
     void shouldTrackStepDependency() {
-        PlanStep step2 = PlanStep.create(testPlan.getId(), 2, "步骤2", "codeExecution", null);
+        PlanStep step2 = PlanStep.create(new PlanStep.CreationSpec(
+                testPlan.getId(), 2, "步骤2", "codeExecution", null));
         step2.setDependencyIds(List.of(testStep.getId()));
         testPlan.addStep(step2);
         testStep.complete("完成");

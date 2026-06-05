@@ -110,19 +110,21 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
     /**
      * 执行循环.
      */
-    private Map<String, Object> executeLoop(List<?> items, DagWorkflowNode loopBody, 
+    private Map<String, Object> executeLoop(List<?> items, DagWorkflowNode loopBody,
                                             DagWorkflowContext context, DagWorkflowNode node) {
-        List<Map<String, Object>> results = new ArrayList<>();
         int maxIterations = getMaxIterations(node.getConfig());
-        int iterationCount = 0;
+        return buildLoopOutput(items, loopBody, context, maxIterations);
+    }
 
+    private Map<String, Object> buildLoopOutput(List<?> items, DagWorkflowNode loopBody,
+                                                 DagWorkflowContext context, int maxIterations) {
+        List<Map<String, Object>> results = new ArrayList<>();
+        int iterationCount = 0;
         for (Object item : items) {
             if (iterationCount >= maxIterations) break;
-            Map<String, Object> result = executeIteration(item, loopBody, context, iterationCount);
-            results.add(result);
+            results.add(executeIteration(item, loopBody, context, iterationCount));
             iterationCount++;
         }
-
         Map<String, Object> output = new HashMap<>();
         output.put("results", results);
         output.put("iterations", iterationCount);

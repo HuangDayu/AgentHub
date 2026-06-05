@@ -43,7 +43,7 @@ class ScheduledTaskControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "100000001",
+                                    "tenantId": "100000002",
                                     "workspaceId": "100000002",
                                     "taskCode": "TEST_TASK_001",
                                     "name": "Test Task",

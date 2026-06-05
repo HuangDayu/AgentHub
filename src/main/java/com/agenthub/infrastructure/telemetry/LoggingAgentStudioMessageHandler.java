@@ -47,7 +47,7 @@ public class LoggingAgentStudioMessageHandler implements AgentStudioMessageHandl
 
     private void saveRunRegistration(RegisterRunRequest payload) {
         try {
-            RunRegistration registration = RunRegistration.create(
+            RunRegistration.CreationSpec request = new RunRegistration.CreationSpec(
                     payload.getId(),
                     payload.getProject(),
                     payload.getName(),
@@ -56,6 +56,7 @@ public class LoggingAgentStudioMessageHandler implements AgentStudioMessageHandl
                     payload.getStatus(),
                     payload.getRunDir()
             );
+            RunRegistration registration = RunRegistration.create(request);
             runRegistrationRepository.save(registration);
         } catch (Exception e) {
             log.error("Failed to save run registration", e);
@@ -64,32 +65,43 @@ public class LoggingAgentStudioMessageHandler implements AgentStudioMessageHandl
 
     private void saveMessagePush(PushMessageRequest payload) {
         try {
-            MessagePush messagePush = MessagePush.create(
-                    payload.getReplyId(),
-                    payload.getRunId(),
-                    payload.getRole(),
-                    toJson(payload.getMsg()),
-                    toJson(payload.getMsg().getMetadata()),
-                    LocalDateTimeUtil.parse(payload.getMsg().getTimestamp(), "yyyy-MM-dd HH:mm:ss.SSS").toInstant(java.time.ZoneOffset.ofHours(8))
-            );
+            MessagePush messagePush = MessagePush.create(buildMessagePushSpec(payload));
             messagePushRepository.save(messagePush);
         } catch (Exception e) {
             log.error("Failed to save message push", e);
         }
     }
 
+    private MessagePush.CreationSpec buildMessagePushSpec(PushMessageRequest payload) {
+        return new MessagePush.CreationSpec(
+                payload.getReplyId(),
+                payload.getRunId(),
+                payload.getRole(),
+                toJson(payload.getMsg()),
+                toJson(payload.getMsg().getMetadata()),
+                parseTimestamp(payload.getMsg().getTimestamp()));
+    }
+
+    private Instant parseTimestamp(String timestamp) {
+        return LocalDateTimeUtil.parse(timestamp, "yyyy-MM-dd HH:mm:ss.SSS")
+                .toInstant(java.time.ZoneOffset.ofHours(8));
+    }
+
     private void saveUserInputPrompt(RequestUserInputRequest payload) {
         try {
-            UserInputPrompt request = UserInputPrompt.create(
-                    payload.getRequestId(),
-                    payload.getRunId(),
-                    payload.getAgentId(),
-                    payload.getAgentName(),
-                    toJson(payload.getStructuredInput())
-            );
-            userInputRequestRepository.save(request);
+            UserInputPrompt prompt = UserInputPrompt.create(buildUserInputSpec(payload));
+            userInputRequestRepository.save(prompt);
         } catch (Exception e) {
             log.error("Failed to save user input request", e);
         }
+    }
+
+    private UserInputPrompt.CreationSpec buildUserInputSpec(RequestUserInputRequest payload) {
+        return new UserInputPrompt.CreationSpec(
+                payload.getRequestId(),
+                payload.getRunId(),
+                payload.getAgentId(),
+                payload.getAgentName(),
+                toJson(payload.getStructuredInput()));
     }
 }

@@ -174,17 +174,35 @@ class RuntimeDataViewControllerIntegrationTest {
     }
 
     private Void saveProblemSpans(String agentId, String runId) {
-        spanRepository.save(problemSpan(agentId, runId, "error-span", "error", 3000L, 2));
-        spanRepository.save(problemSpan(agentId, runId, "slow-span", "slow", 9000L, 0));
+        spanRepository.save(problemSpan(new ProblemSpec(agentId, runId, "error-span", "error", 3000L, 2)));
+        spanRepository.save(problemSpan(new ProblemSpec(agentId, runId, "slow-span", "slow", 9000L, 0)));
         return null;
     }
 
-    private Span problemSpan(String agentId, String runId, String spanId, String name, Long latency, Integer statusCode) {
-        Span span = timedSpan(agentId, runId, spanId, "300");
-        span.setName(name);
-        span.setLatencyNs(latency);
-        span.setStatusCode(statusCode);
+    private Span problemSpan(ProblemSpec spec) {
+        Span span = timedSpan(spec.agentId, spec.runId, spec.spanId, "300");
+        span.setName(spec.name);
+        span.setLatencyNs(spec.latency);
+        span.setStatusCode(spec.statusCode);
         return span;
+    }
+
+    private static final class ProblemSpec {
+        private final String agentId;
+        private final String runId;
+        private final String spanId;
+        private final String name;
+        private final Long latency;
+        private final Integer statusCode;
+
+        ProblemSpec(String agentId, String runId, String spanId, String name, Long latency, Integer statusCode) {
+            this.agentId = agentId;
+            this.runId = runId;
+            this.spanId = spanId;
+            this.name = name;
+            this.latency = latency;
+            this.statusCode = statusCode;
+        }
     }
 
     private Span timedSpan(String agentId, String runId, String spanId, String start) {

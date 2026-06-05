@@ -82,17 +82,18 @@ public class AgentContextUseCase implements AgentContextFactory {
     private ReActAgentWorkspace resolveReActAgentWorkspace(String workspaceId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("Workspace not found: " + workspaceId));
-        return ReActAgentWorkspace.builder()
-                .workspace(workspace)
-                .rootPath(resolvePath(workspace, ""))
-                .agentsPath(resolvePath(workspace, "agents"))
-                .cronPath(resolvePath(workspace, "cron"))
-                .logsPath(resolvePath(workspace, "logs"))
-                .configsPath(resolvePath(workspace, "configs"))
-                .sessionsPath(resolvePath(workspace, "sessions"))
-                .skillsPath(resolvePath(workspace, "skills"))
-                .shareSkillsPath(defaultShareSkillPath())
-                .build();
+        return buildWorkspace(workspace, defaultShareSkillPath());
+    }
+
+    private ReActAgentWorkspace buildWorkspace(Workspace workspace, Path shareSkillsPath) {
+        Path root = resolvePath(workspace, "");
+        Path skills = resolvePath(workspace, "skills");
+        return new ReActAgentWorkspace(workspace, root, skills, shareSkillsPath,
+                resolvePath(workspace, "agents"),
+                resolvePath(workspace, "cron"),
+                resolvePath(workspace, "logs"),
+                resolvePath(workspace, "configs"),
+                resolvePath(workspace, "sessions"));
     }
 
     private Path defaultShareSkillPath() {

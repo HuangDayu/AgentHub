@@ -18,24 +18,39 @@ public class MessagePush {
     private Instant createdAt;
 
     /**
+     * 工厂方法所需字段快照。
+     */
+    public static final class CreationSpec {
+        private final String messageId;
+        private final String runId;
+        private final String role;
+        private final String content;
+        private final String metadata;
+        private final Instant timestamp;
+
+        public CreationSpec(String messageId, String runId, String role,
+                               String content, String metadata, Instant timestamp) {
+            this.messageId = messageId;
+            this.runId = runId;
+            this.role = role;
+            this.content = content;
+            this.metadata = metadata;
+            this.timestamp = timestamp;
+        }
+    }
+
+    /**
      * 创建消息推送.
      */
-    public static MessagePush create(
-        String messageId,
-        String runId,
-        String role,
-        String content,
-        String metadata,
-        Instant timestamp
-    ) {
+    public static MessagePush create(CreationSpec spec) {
         MessagePush push = new MessagePush();
-        push.setMessageId(messageId);
-        push.setRunId(runId);
-        push.setRole(role);
-        push.setContent(content);
-        push.setMetadata(metadata);
-        push.setTimestamp(timestamp);
-        push.setCreatedAt(Instant.now());
+        push.messageId = spec.messageId;
+        push.runId = spec.runId;
+        push.role = spec.role;
+        push.content = spec.content;
+        push.metadata = spec.metadata;
+        push.timestamp = spec.timestamp;
+        push.createdAt = Instant.now();
         return push;
     }
 }

@@ -1,24 +1,18 @@
 package com.agenthub.infrastructure.context.config;
 
-import com.agenthub.common.utils.TtlUtils;
 import com.agenthub.infrastructure.context.TenantContextGetter;
 import com.agenthub.infrastructure.context.TenantContextSupplier;
 import com.agenthub.infrastructure.context.TenantThreadContextSupplier;
-import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import com.agenthub.infrastructure.context.handler.TenantContextLineHandler;
 import com.agenthub.infrastructure.context.handler.WorkspacesContextLineHandler;
 import com.agenthub.infrastructure.context.listener.AgentConfigChangeInterceptor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.time.Clock;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 /**
  * 多租户自动配置类。
@@ -64,7 +58,7 @@ public class TenantContextConfiguration {
      */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor(
-            TenantContextLineHandler tenantContextLineHandler, 
+            TenantContextLineHandler tenantContextLineHandler,
             WorkspacesContextLineHandler workspacesContextLineHandler,
             AgentConfigChangeInterceptor agentConfigChangeInterceptor) {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();

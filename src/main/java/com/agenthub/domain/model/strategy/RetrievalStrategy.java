@@ -1,6 +1,7 @@
 package com.agenthub.domain.model.strategy;
 
 import com.agenthub.domain.model.agent.ReActAgentContext;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -47,6 +48,36 @@ public class RetrievalStrategy {
         KEYWORD
     }
 
+    /**
+     * 持久化状态快照，用于在 rebuild 时一次性传入所有字段。
+     * <p>
+     * 字段名与 {@link com.agenthub.infrastructure.store.db.entity.RetrievalStrategyEntity} 保持一致，
+     * 仓储层可通过 {@code BeanUtil.copyProperties} 直接填充。
+     */
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Data
+    public static class State {
+        private String id;
+        private String workspaceId;
+        private String name;
+        private String description;
+        private RetrievalType retrievalType;
+        private Integer topK;
+        private Double scoreThreshold;
+        private Boolean enableTranslationQuery;
+        private Boolean enableCompressionQuery;
+        private Boolean enableRerank;
+        private Boolean enableQueryRewrite;
+        private Boolean enableTextSearch;
+        private Boolean enableVectorSearch;
+        private String rerankModel;
+        private Double vectorWeight;
+        private Double keywordWeight;
+        private Instant createdAt;
+        private Instant updatedAt;
+    }
+
     private RetrievalStrategy(String id, String workspaceId, Instant createdAt) {
         this.id = id;
         this.tenantId = null;
@@ -76,28 +107,44 @@ public class RetrievalStrategy {
     /**
      * 从持久化层重建对象。
      */
-    public static RetrievalStrategy rebuild(
-            String id, String workspaceId, String name, String description,
-            RetrievalType retrievalType, int topK, double scoreThreshold,
-            boolean enableQueryRewrite, boolean enableTextSearch, boolean enableVectorSearch,
-            boolean enableRerank, String rerankModel,
-            double vectorWeight, double keywordWeight,
-            Instant createdAt, Instant updatedAt) {
-        RetrievalStrategy strategy = new RetrievalStrategy(id, workspaceId, createdAt);
-        strategy.name = name;
-        strategy.description = description;
-        strategy.retrievalType = retrievalType;
-        strategy.topK = topK;
-        strategy.scoreThreshold = scoreThreshold;
-        strategy.enableQueryRewrite = enableQueryRewrite;
-        strategy.enableTextSearch = enableTextSearch;
-        strategy.enableVectorSearch = enableVectorSearch;
-        strategy.enableRerank = enableRerank;
-        strategy.rerankModel = rerankModel;
-        strategy.vectorWeight = vectorWeight;
-        strategy.keywordWeight = keywordWeight;
-        strategy.updatedAt = updatedAt;
+    public static RetrievalStrategy rebuild(State state) {
+        RetrievalStrategy strategy = new RetrievalStrategy(state.getId(), state.getWorkspaceId(), state.getCreatedAt());
+        copyBasicFields(strategy, state);
+        applyNumericDefaults(strategy, state);
+        applyToggleDefaults(strategy, state);
         return strategy;
+    }
+
+    private static void copyBasicFields(RetrievalStrategy strategy, State state) {
+        strategy.name = state.getName();
+        strategy.description = state.getDescription();
+        strategy.retrievalType = state.getRetrievalType();
+        strategy.rerankModel = state.getRerankModel();
+        strategy.updatedAt = state.getUpdatedAt();
+    }
+
+    private static void applyNumericDefaults(RetrievalStrategy strategy, State state) {
+        strategy.topK = nullSafe(state.getTopK(), 10);
+        strategy.scoreThreshold = nullSafe(state.getScoreThreshold(), 0.75);
+        strategy.vectorWeight = nullSafe(state.getVectorWeight(), 0.7);
+        strategy.keywordWeight = nullSafe(state.getKeywordWeight(), 0.3);
+    }
+
+    private static void applyToggleDefaults(RetrievalStrategy strategy, State state) {
+        strategy.enableTranslationQuery = Boolean.TRUE.equals(state.getEnableTranslationQuery());
+        strategy.enableCompressionQuery = Boolean.TRUE.equals(state.getEnableCompressionQuery());
+        strategy.enableRerank = Boolean.TRUE.equals(state.getEnableRerank());
+        strategy.enableQueryRewrite = Boolean.TRUE.equals(state.getEnableQueryRewrite());
+        strategy.enableTextSearch = Boolean.TRUE.equals(state.getEnableTextSearch());
+        strategy.enableVectorSearch = Boolean.TRUE.equals(state.getEnableVectorSearch());
+    }
+
+    private static int nullSafe(Integer value, int fallback) {
+        return value != null ? value : fallback;
+    }
+
+    private static double nullSafe(Double value, double fallback) {
+        return value != null ? value : fallback;
     }
 
     /**

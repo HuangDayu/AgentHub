@@ -60,9 +60,9 @@ public class MybatisDocumentChunkRepository implements IngestionDocumentChunkRep
     }
 
     private DocumentChunk toDomain(DocumentChunkEntity entity) {
-        return DocumentChunk.reconstruct(
+        DocumentChunk.Snapshot snapshot = new DocumentChunk.Snapshot(
                 entity.getChunkId(), entity.getDocumentId(), entity.getKbId(),
-                entity.getChunkIndex(), null, entity.getTokenCount(),null
-        );
+                entity.getChunkIndex(), null, entity.getTokenCount(), null);
+        return DocumentChunk.reconstruct(snapshot);
     }
 }

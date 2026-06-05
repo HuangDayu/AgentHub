@@ -15,22 +15,22 @@ import java.util.stream.Collectors;
 public class ToolFilterUseCase {
 
     public Set<ToolCallback> filterByStrategy(Set<ToolCallback> allCallbacks, ToolStrategy strategy) {
-        if (strategy == null || strategy.getToolBindings() == null) {
+        if (strategy == null || strategy.getToolBindings() == null || strategy.getToolBindings().isEmpty()) {
             return allCallbacks;
         }
-        if (strategy.getToolBindings().isEmpty()) return allCallbacks;
+        List<String> enabledTools = sortEnabledToolIds(strategy);
+        if (enabledTools.isEmpty()) return allCallbacks;
+        return allCallbacks.stream()
+                .filter(cb -> isEnabled(cb, enabledTools))
+                .collect(Collectors.toSet());
+    }
 
-        List<String> enabledTools = strategy.getToolBindings().stream()
+    private List<String> sortEnabledToolIds(ToolStrategy strategy) {
+        return strategy.getToolBindings().stream()
                 .filter(binding -> binding.isEnabled())
                 .sorted((a, b) -> Integer.compare(a.getPriority(), b.getPriority()))
                 .map(binding -> binding.getToolId())
                 .collect(Collectors.toList());
-
-        if (enabledTools.isEmpty()) return allCallbacks;
-
-        return allCallbacks.stream()
-                .filter(cb -> isEnabled(cb, enabledTools))
-                .collect(Collectors.toSet());
     }
 
     private boolean isEnabled(ToolCallback callback, List<String> enabledTools) {

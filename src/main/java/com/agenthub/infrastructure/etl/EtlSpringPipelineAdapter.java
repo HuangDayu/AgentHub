@@ -45,7 +45,7 @@ public class EtlSpringPipelineAdapter implements ExtractTransformLoadPort {
         documents = summaryDocuments(chatModel, documents);
         vectorStore.add(documents);
         return documents.stream()
-                .map(d -> DocumentChunk.reconstruct(d.getId(), etlCommand.getDocumentId(), etlCommand.getKbId(), d.hashCode(), "null", 0, null))
+                .map(d -> DocumentChunk.reconstruct(new DocumentChunk.Snapshot(d.getId(), etlCommand.getDocumentId(), etlCommand.getKbId(), d.hashCode(), "null", 0, null)))
                 .collect(Collectors.toList());
     }
 

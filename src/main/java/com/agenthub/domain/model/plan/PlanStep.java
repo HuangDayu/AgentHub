@@ -36,23 +36,35 @@ public class PlanStep {
     }
 
     /**
-     * 创建新的计划步骤。
-     *
-     * @param planId      所属计划ID
-     * @param order       执行顺序
-     * @param description 步骤描述
-     * @param toolName    使用的工具名称（可为null）
-     * @param toolInput   工具调用参数（JSON，可为null）
-     * @return 新创建的步骤对象
+     * 工厂方法所需字段快照。
      */
-    public static PlanStep create(String planId, int order, String description,
-                                  String toolName, String toolInput) {
+    public static final class CreationSpec {
+        private final String planId;
+        private final int order;
+        private final String description;
+        private final String toolName;
+        private final String toolInput;
+
+        public CreationSpec(String planId, int order, String description,
+                               String toolName, String toolInput) {
+            this.planId = planId;
+            this.order = order;
+            this.description = description;
+            this.toolName = toolName;
+            this.toolInput = toolInput;
+        }
+    }
+
+    /**
+     * 创建新的计划步骤。
+     */
+    public static PlanStep create(CreationSpec spec) {
         PlanStep step = new PlanStep();
-        step.planId = planId;
-        step.order = order;
-        step.description = description;
-        step.toolName = toolName;
-        step.toolInput = toolInput;
+        step.planId = spec.planId;
+        step.order = spec.order;
+        step.description = spec.description;
+        step.toolName = spec.toolName;
+        step.toolInput = spec.toolInput;
         return step;
     }
 

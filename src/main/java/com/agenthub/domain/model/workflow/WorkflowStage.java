@@ -44,18 +44,49 @@ public class WorkflowStage {
      */
     public static WorkflowStage create(String workflowId, int order, String name, String stageType) {
         WorkflowStage stage = new WorkflowStage();
+        Instant now = Instant.now();
+        applyIdentity(stage, new StageIdentity(workflowId, order, name, stageType));
+        applyDefaults(stage, now);
+        return stage;
+    }
+
+    private static void applyIdentity(WorkflowStage stage, StageIdentity identity) {
         stage.id = randomId();
-        stage.workflowId = workflowId;
-        stage.order = order;
-        stage.name = name;
-        stage.stageType = stageType;
+        stage.workflowId = identity.workflowId();
+        stage.order = identity.order();
+        stage.name = identity.name();
+        stage.stageType = identity.stageType();
+    }
+
+    private static void applyDefaults(WorkflowStage stage, Instant now) {
         stage.tasks = new ArrayList<>();
         stage.status = WorkflowStageStatus.PENDING.name();
         stage.completedTaskCount = 0;
         stage.totalTaskCount = 0;
-        stage.createdAt = Instant.now();
-        stage.updatedAt = Instant.now();
-        return stage;
+        stage.createdAt = now;
+        stage.updatedAt = now;
+    }
+
+    /**
+     * 工作流阶段身份信息（private static final 不可变载体）。
+     */
+    private static final class StageIdentity {
+        private final String workflowId;
+        private final int order;
+        private final String name;
+        private final String stageType;
+
+        private StageIdentity(String workflowId, int order, String name, String stageType) {
+            this.workflowId = workflowId;
+            this.order = order;
+            this.name = name;
+            this.stageType = stageType;
+        }
+
+        public String workflowId() { return workflowId; }
+        public int order() { return order; }
+        public String name() { return name; }
+        public String stageType() { return stageType; }
     }
 
     /**

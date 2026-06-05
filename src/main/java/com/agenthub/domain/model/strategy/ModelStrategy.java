@@ -63,22 +63,42 @@ public class ModelStrategy {
     }
 
     /**
+     * 持久化状态快照，用于在 rebuild 时一次性传入所有字段。
+     */
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Data
+    public static class State {
+        private String id;
+        private String workspaceId;
+        private String name;
+        private String description;
+        private Double temperature;
+        private Integer maxTokens;
+        private Integer maxMessages;
+        private Double topP;
+        private Integer topK;
+        private Double frequencyPenalty;
+        private Double presencePenalty;
+        private Instant createdAt;
+        private Instant updatedAt;
+    }
+
+    /**
      * 从持久化层重建对象。
      */
-    public static ModelStrategy rebuild(
-            String id, String workspaceId, String name, String description,
-            double temperature, int maxTokens, double topP,
-            double frequencyPenalty, double presencePenalty,
-            Instant createdAt, Instant updatedAt) {
-        ModelStrategy strategy = new ModelStrategy(id, workspaceId, createdAt);
-        strategy.name = name;
-        strategy.description = description;
-        strategy.temperature = temperature;
-        strategy.maxTokens = maxTokens;
-        strategy.topP = topP;
-        strategy.frequencyPenalty = frequencyPenalty;
-        strategy.presencePenalty = presencePenalty;
-        strategy.updatedAt = updatedAt;
+    public static ModelStrategy rebuild(State state) {
+        ModelStrategy strategy = new ModelStrategy(state.getId(), state.getWorkspaceId(), state.getCreatedAt());
+        strategy.name = state.getName();
+        strategy.description = state.getDescription();
+        strategy.temperature = state.getTemperature() != null ? state.getTemperature() : 0.7;
+        strategy.maxTokens = state.getMaxTokens() != null ? state.getMaxTokens() : 2048;
+        strategy.maxMessages = state.getMaxMessages() != null ? state.getMaxMessages() : 100;
+        strategy.topP = state.getTopP() != null ? state.getTopP() : 1.0;
+        strategy.topK = state.getTopK() != null ? state.getTopK() : 0;
+        strategy.frequencyPenalty = state.getFrequencyPenalty() != null ? state.getFrequencyPenalty() : 0.0;
+        strategy.presencePenalty = state.getPresencePenalty() != null ? state.getPresencePenalty() : 0.0;
+        strategy.updatedAt = state.getUpdatedAt();
         return strategy;
     }
 

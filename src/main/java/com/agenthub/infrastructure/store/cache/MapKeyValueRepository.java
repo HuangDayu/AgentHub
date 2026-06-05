@@ -288,18 +288,25 @@ public class MapKeyValueRepository implements KeyValueRepository {
     @SuppressWarnings("unchecked")
     public void ltrim(String key, long start, long end) {
         LinkedList<String> list = (LinkedList<String>) store.get(key);
-        if (list != null) {
-            int size = list.size();
-            int fromIndex = (int) (start < 0 ? Math.max(0, size + start) : start);
-            int toIndex = (int) (end < 0 ? size + end + 1 : Math.min(size, end + 1));
-            if (fromIndex < toIndex && fromIndex < size) {
-                List<String> subList = new ArrayList<>(list.subList(fromIndex, toIndex));
-                list.clear();
-                list.addAll(subList);
-            } else {
-                list.clear();
-            }
+        if (list == null) return;
+        applyTrim(list, start, end);
+    }
+
+    private void applyTrim(LinkedList<String> list, long start, long end) {
+        int size = list.size();
+        int fromIndex = (int) (start < 0 ? Math.max(0, size + start) : start);
+        int toIndex = (int) (end < 0 ? size + end + 1 : Math.min(size, end + 1));
+        if (fromIndex < toIndex && fromIndex < size) {
+            replaceWithSubList(list, fromIndex, toIndex);
+        } else {
+            list.clear();
         }
+    }
+
+    private void replaceWithSubList(LinkedList<String> list, int fromIndex, int toIndex) {
+        List<String> subList = new ArrayList<>(list.subList(fromIndex, toIndex));
+        list.clear();
+        list.addAll(subList);
     }
 
     @Override
@@ -307,27 +314,34 @@ public class MapKeyValueRepository implements KeyValueRepository {
     public Long lrem(String key, long count, String value) {
         LinkedList<String> list = (LinkedList<String>) store.get(key);
         if (list == null) return 0L;
+        if (count > 0) return removeFromHead(list, count, value);
+        if (count < 0) return removeFromTail(list, -count, value);
+        return removeAllMatches(list, value);
+    }
+
+    private long removeFromHead(LinkedList<String> list, long count, String value) {
         long removed = 0;
-        if (count > 0) {
-            Iterator<String> it = list.iterator();
-            while (it.hasNext() && removed < count) {
-                if (value.equals(it.next())) {
-                    it.remove();
-                    removed++;
-                }
-            }
-        } else if (count < 0) {
-            Iterator<String> it = list.descendingIterator();
-            while (it.hasNext() && removed < -count) {
-                if (value.equals(it.next())) {
-                    it.remove();
-                    removed++;
-                }
-            }
-        } else {
-            removed = list.stream().filter(value::equals).count();
-            list.removeIf(value::equals);
+        Iterator<String> it = list.iterator();
+        while (it.hasNext() && removed < count && value.equals(it.next())) {
+            it.remove();
+            removed++;
         }
+        return removed;
+    }
+
+    private long removeFromTail(LinkedList<String> list, long count, String value) {
+        long removed = 0;
+        Iterator<String> it = list.descendingIterator();
+        while (it.hasNext() && removed < count && value.equals(it.next())) {
+            it.remove();
+            removed++;
+        }
+        return removed;
+    }
+
+    private long removeAllMatches(LinkedList<String> list, String value) {
+        long removed = list.stream().filter(value::equals).count();
+        list.removeIf(value::equals);
         return removed;
     }
 
@@ -342,38 +356,41 @@ public class MapKeyValueRepository implements KeyValueRepository {
 
     @Override
     public String blpop(long timeout, String... keys) {
-        long endTime = System.currentTimeMillis() + timeout * 1000;
-        while (System.currentTimeMillis() < endTime) {
-            for (String key : keys) {
-                String value = lpop(key);
-                if (value != null) return value;
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return null;
-            }
-        }
-        return null;
+        return pollWithTimeout(timeout, keys, this::lpop);
     }
 
     @Override
     public String brpop(long timeout, String... keys) {
+        return pollWithTimeout(timeout, keys, this::rpop);
+    }
+
+    private String pollWithTimeout(long timeout, String[] keys,
+                                   java.util.function.Function<String, String> popFn) {
         long endTime = System.currentTimeMillis() + timeout * 1000;
         while (System.currentTimeMillis() < endTime) {
-            for (String key : keys) {
-                String value = rpop(key);
-                if (value != null) return value;
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return null;
-            }
+            String value = tryPollKeys(keys, popFn);
+            if (value != null) return value;
+            if (!sleepQuietly(100)) return null;
         }
         return null;
+    }
+
+    private String tryPollKeys(String[] keys, java.util.function.Function<String, String> popFn) {
+        for (String key : keys) {
+            String value = popFn.apply(key);
+            if (value != null) return value;
+        }
+        return null;
+    }
+
+    private boolean sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
     // ==================== 集合(Set)操作 ====================
@@ -469,14 +486,18 @@ public class MapKeyValueRepository implements KeyValueRepository {
         Set<String> first = (Set<String>) store.get(keys[0]);
         if (first != null) result.addAll(first);
         for (int i = 1; i < keys.length && !result.isEmpty(); i++) {
-            Set<String> set = (Set<String>) store.get(keys[i]);
-            if (set != null) {
-                result.retainAll(set);
-            } else {
-                result.clear();
-            }
+            retainOrClear(result, (Set<String>) store.get(keys[i]));
         }
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void retainOrClear(Set<String> result, Set<String> next) {
+        if (next != null) {
+            result.retainAll(next);
+        } else {
+            result.clear();
+        }
     }
 
     @Override
@@ -533,19 +554,26 @@ public class MapKeyValueRepository implements KeyValueRepository {
     public Long zrem(String key, String... members) {
         TreeMap<Double, Set<String>> sortedSet = (TreeMap<Double, Set<String>>) store.get(key);
         if (sortedSet == null) return 0L;
+        return removeFromSortedSet(sortedSet, new HashSet<>(Arrays.asList(members)));
+    }
+
+    private long removeFromSortedSet(TreeMap<Double, Set<String>> sortedSet, Set<String> memberSet) {
         long removed = 0;
-        Set<String> memberSet = new HashSet<>(Arrays.asList(members));
         Iterator<Map.Entry<Double, Set<String>>> it = sortedSet.entrySet().iterator();
         while (it.hasNext()) {
             Set<String> set = it.next().getValue();
-            Iterator<String> memberIt = set.iterator();
-            while (memberIt.hasNext()) {
-                if (memberSet.contains(memberIt.next())) {
-                    memberIt.remove();
-                    removed++;
-                }
-            }
+            removed += removeMembersFromBucket(set, memberSet);
             if (set.isEmpty()) it.remove();
+        }
+        return removed;
+    }
+
+    private long removeMembersFromBucket(Set<String> bucket, Set<String> memberSet) {
+        long removed = 0;
+        Iterator<String> memberIt = bucket.iterator();
+        while (memberIt.hasNext() && memberSet.contains(memberIt.next())) {
+            memberIt.remove();
+            removed++;
         }
         return removed;
     }
@@ -630,12 +658,21 @@ public class MapKeyValueRepository implements KeyValueRepository {
     public Map<String, Double> zrangeWithScores(String key, long start, long end) {
         TreeMap<Double, Set<String>> sortedSet = (TreeMap<Double, Set<String>>) store.get(key);
         if (sortedSet == null) return new LinkedHashMap<>();
+        return sliceMembersWithScores(sortedSet.entrySet().iterator(), start, end);
+    }
+
+    private Map<String, Double> sliceMembersWithScores(Iterator<Map.Entry<Double, Set<String>>> it, long start, long end) {
         List<Map.Entry<String, Double>> all = new ArrayList<>();
-        for (Map.Entry<Double, Set<String>> entry : sortedSet.entrySet()) {
+        while (it.hasNext()) {
+            Map.Entry<Double, Set<String>> entry = it.next();
             for (String member : entry.getValue()) {
                 all.add(new AbstractMap.SimpleEntry<>(member, entry.getKey()));
             }
         }
+        return collectMemberScoreSlice(all, start, end);
+    }
+
+    private Map<String, Double> collectMemberScoreSlice(List<Map.Entry<String, Double>> all, long start, long end) {
         int size = all.size();
         int fromIndex = (int) (start < 0 ? Math.max(0, size + start) : start);
         int toIndex = (int) (end < 0 ? size + end + 1 : Math.min(size, end + 1));
@@ -666,20 +703,7 @@ public class MapKeyValueRepository implements KeyValueRepository {
     public Map<String, Double> zrevrangeWithScores(String key, long start, long end) {
         TreeMap<Double, Set<String>> sortedSet = (TreeMap<Double, Set<String>>) store.get(key);
         if (sortedSet == null) return new LinkedHashMap<>();
-        List<Map.Entry<String, Double>> all = new ArrayList<>();
-        for (Map.Entry<Double, Set<String>> entry : sortedSet.descendingMap().entrySet()) {
-            for (String member : entry.getValue()) {
-                all.add(new AbstractMap.SimpleEntry<>(member, entry.getKey()));
-            }
-        }
-        int size = all.size();
-        int fromIndex = (int) (start < 0 ? Math.max(0, size + start) : start);
-        int toIndex = (int) (end < 0 ? size + end + 1 : Math.min(size, end + 1));
-        Map<String, Double> result = new LinkedHashMap<>();
-        if (fromIndex < toIndex && fromIndex < size) {
-            all.subList(fromIndex, toIndex).forEach(e -> result.put(e.getKey(), e.getValue()));
-        }
-        return result;
+        return sliceMembersWithScores(sortedSet.descendingMap().entrySet().iterator(), start, end);
     }
 
     @Override

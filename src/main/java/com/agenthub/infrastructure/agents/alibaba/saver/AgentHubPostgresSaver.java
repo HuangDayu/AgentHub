@@ -92,59 +92,64 @@ public class AgentHubPostgresSaver extends MemorySaver {
     }
 
     protected void initTable(boolean dropTablesFirst, boolean createTables) throws SQLException {
-        var sqlDropTables = """
-                DROP TABLE IF EXISTS GraphCheckpoint CASCADE;
-                DROP TABLE IF EXISTS GraphThread CASCADE;
-                """;
-
-        var sqlCreateTables = """
-                CREATE TABLE IF NOT EXISTS GraphThread (
-                     thread_id UUID PRIMARY KEY,
-                     thread_name VARCHAR(255),
-                     is_released BOOLEAN DEFAULT FALSE NOT NULL
-                 );
-                
-                 CREATE TABLE IF NOT EXISTS GraphCheckpoint (
-                     checkpoint_id UUID PRIMARY KEY,
-                     parent_checkpoint_id UUID,
-                     thread_id UUID NOT NULL,
-                     node_id VARCHAR(255),
-                     next_node_id VARCHAR(255),
-                     state_data JSONB NOT NULL,
-                     state_content_type VARCHAR(100) NOT NULL, -- New field for content type
-                     saved_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                
-                     CONSTRAINT fk_thread
-                         FOREIGN KEY(thread_id)
-                         REFERENCES GraphThread(thread_id)
-                         ON DELETE CASCADE
-                 );
-                
-                 CREATE INDEX idx_lg4jcheckpoint_thread_id ON GraphCheckpoint(thread_id);
-                 CREATE INDEX idx_lg4jcheckpoint_thread_id_saved_at_desc ON GraphCheckpoint(thread_id, saved_at DESC);
-                 CREATE UNIQUE INDEX idx_unique_lg4jthread_thread_name_unreleased  ON GraphThread(thread_name) WHERE is_released = FALSE;
-                """;
-
-
-        String sqlCommand = null;
         try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
             if (dropTablesFirst) {
-                log.trace("Executing drop tables:\n---\n{}---", sqlDropTables);
-                sqlCommand = sqlDropTables;
-                statement.executeUpdate(sqlCommand);
+                runSchemaCommand(statement, SQL_DROP_TABLES, "drop tables");
             }
             if (createTables) {
-                try {
-                    log.trace("Executing create tables:\n---\n{}---", sqlCreateTables);
-                    sqlCommand = sqlCreateTables;
-                    statement.executeUpdate(sqlCommand);
-                } catch (Exception e) {
-                    log.error("error executing create tables command : {}", e.getMessage());
-                }
+                runCreateTablesCommand(statement);
             }
+        }
+    }
+
+    private static final String SQL_DROP_TABLES = """
+            DROP TABLE IF EXISTS GraphCheckpoint CASCADE;
+            DROP TABLE IF EXISTS GraphThread CASCADE;
+            """;
+
+    private static final String SQL_CREATE_TABLES = """
+            CREATE TABLE IF NOT EXISTS GraphThread (
+                 thread_id UUID PRIMARY KEY,
+                 thread_name VARCHAR(255),
+                 is_released BOOLEAN DEFAULT FALSE NOT NULL
+             );
+
+             CREATE TABLE IF NOT EXISTS GraphCheckpoint (
+                 checkpoint_id UUID PRIMARY KEY,
+                 parent_checkpoint_id UUID,
+                 thread_id UUID NOT NULL,
+                 node_id VARCHAR(255),
+                 next_node_id VARCHAR(255),
+                 state_data JSONB NOT NULL,
+                 state_content_type VARCHAR(100) NOT NULL,
+                 saved_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                 CONSTRAINT fk_thread
+                     FOREIGN KEY(thread_id)
+                     REFERENCES GraphThread(thread_id)
+                     ON DELETE CASCADE
+             );
+
+             CREATE INDEX idx_lg4jcheckpoint_thread_id ON GraphCheckpoint(thread_id);
+             CREATE INDEX idx_lg4jcheckpoint_thread_id_saved_at_desc ON GraphCheckpoint(thread_id, saved_at DESC);
+             CREATE UNIQUE INDEX idx_unique_lg4jthread_thread_name_unreleased  ON GraphThread(thread_name) WHERE is_released = FALSE;
+            """;
+
+    private void runSchemaCommand(Statement statement, String sql, String label) throws SQLException {
+        try {
+            log.trace("Executing {}:\n---\n{}---", label, sql);
+            statement.executeUpdate(sql);
         } catch (SQLException ex) {
-            log.error("error executing command\n{}\n", sqlCommand, ex);
+            log.error("error executing command\n{}\n", sql, ex);
             throw ex;
+        }
+    }
+
+    private void runCreateTablesCommand(Statement statement) {
+        try {
+            runSchemaCommand(statement, SQL_CREATE_TABLES, "create tables");
+        } catch (SQLException e) {
+            log.error("error executing create tables command : {}", e.getMessage());
         }
     }
 
@@ -155,144 +160,147 @@ public class AgentHubPostgresSaver extends MemorySaver {
 
         var threadId = config.threadId().orElse(THREAD_ID_DEFAULT);
 
-        var sqlCheckThread = """
-                SELECT COUNT(*)
-                FROM GraphThread
-                WHERE thread_name = ? AND is_released = FALSE
-                """;
-        var sqlQueryCheckpoints = """
-                WITH matched_thread AS (
-                    SELECT thread_id
-                    FROM GraphThread
-                    WHERE thread_name = ? AND is_released = FALSE
-                )
-                SELECT  c.checkpoint_id,
-                        c.node_id,
-                        c.next_node_id,
-                        c.state_data->>'binaryPayload' AS base64_data,
-                        c.state_content_type,
-                        c.parent_checkpoint_id
-                FROM matched_thread t
-                JOIN GraphCheckpoint c ON c.thread_id = t.thread_id
-                ORDER BY c.saved_at DESC
-                """;
         try (Connection conn = getConnection()) {
-
-            try (PreparedStatement ps = conn.prepareStatement(sqlCheckThread)) {
-                ps.setString(1, threadId);
-                var resultSet = ps.executeQuery();
-                resultSet.next();
-                var count = resultSet.getInt(1);
-
-                if (count == 0) {
-                    return checkpoints;
-                }
-                if (count > 1) {
-                    throw new IllegalStateException(format("there are more than one Thread '%s' open (not released yet)", threadId));
-                }
-            }
-
-            log.trace("Executing select checkpoints:\n---\n{}---", sqlQueryCheckpoints);
-            try (PreparedStatement ps = conn.prepareStatement(sqlQueryCheckpoints)) {
-                ps.setString(1, threadId);
-                var rs = ps.executeQuery();
-                while (rs.next()) {
-                    var checkpoint = Checkpoint.builder()
-                            .id(rs.getString(1))
-                            .nodeId(rs.getString(2))
-                            .nextNodeId(rs.getString(3))
-                            .state(decodeState(rs.getBytes(4), rs.getString(5)))
-                            .build();
-                    checkpoints.add(checkpoint);
-                }
-            }
-
+            loadCheckpointsForActiveThread(conn, threadId, checkpoints);
         }
 
         return checkpoints;
     }
 
-    private void insertCheckpoint(Connection conn, RunnableConfig config, LinkedList<Checkpoint> checkpoints, Checkpoint checkpoint) throws Exception {
-        var threadId = config.threadId().orElse(THREAD_ID_DEFAULT);
+    private void loadCheckpointsForActiveThread(Connection conn, String threadId, LinkedList<Checkpoint> checkpoints) throws SQLException, IOException, ClassNotFoundException {
+        int count = countActiveThread(conn, threadId);
+        if (count == 0) return;
+        if (count > 1) {
+            throw new IllegalStateException(format("there are more than one Thread '%s' open (not released yet)", threadId));
+        }
+        loadCheckpointRows(conn, threadId, checkpoints);
+    }
 
-        var upsertThreadSql = """
-                WITH inserted AS (
-                    INSERT INTO GraphThread (thread_id, thread_name, is_released)
-                    VALUES (?, ?, FALSE)
-                    ON CONFLICT (thread_name)
-                    WHERE is_released = FALSE
-                    DO NOTHING
-                    RETURNING thread_id
-                )
-                SELECT thread_id FROM inserted
-                UNION ALL
-                SELECT thread_id FROM GraphThread
-                WHERE thread_name = ? AND is_released = FALSE
-                LIMIT 1;
-                """;
-
-        var insertCheckpointSql = """
-                INSERT INTO GraphCheckpoint(
-                checkpoint_id,
-                parent_checkpoint_id,
-                thread_id,
-                node_id,
-                next_node_id,
-                state_data,
-                state_content_type)
-                VALUES (?, ?, ?, ?, ?, ?::jsonb, ?)
-                """;
-        UUID threadUUID = null;
-
-        // 1. Upsert thread information
-        try (PreparedStatement ps = conn.prepareStatement(upsertThreadSql)) {
-            var field = 0;
-            ps.setObject(++field, UUID.randomUUID(), Types.OTHER);
-            ps.setString(++field, threadId);
-            ps.setString(++field, threadId);
-
-            log.trace("Executing upsert thread:\n---\n{}---", upsertThreadSql);
-
+    private int countActiveThread(Connection conn, String threadId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(SQL_COUNT_ACTIVE_THREAD)) {
+            ps.setString(1, threadId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    threadUUID = rs.getObject("thread_id", UUID.class);
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    private void loadCheckpointRows(Connection conn, String threadId, LinkedList<Checkpoint> checkpoints) throws SQLException, IOException, ClassNotFoundException {
+        log.trace("Executing select checkpoints:\n---\n{}---", SQL_QUERY_CHECKPOINTS);
+        try (PreparedStatement ps = conn.prepareStatement(SQL_QUERY_CHECKPOINTS)) {
+            ps.setString(1, threadId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    checkpoints.add(buildCheckpointFromRow(rs));
                 }
             }
         }
+    }
 
+    private Checkpoint buildCheckpointFromRow(ResultSet rs) throws SQLException, IOException, ClassNotFoundException {
+        return Checkpoint.builder()
+                .id(rs.getString(1))
+                .nodeId(rs.getString(2))
+                .nextNodeId(rs.getString(3))
+                .state(decodeState(rs.getBytes(4), rs.getString(5)))
+                .build();
+    }
 
-        // 2. Insert checkpoint data
-        try (PreparedStatement ps = conn.prepareStatement(insertCheckpointSql)) {
+    private static final String SQL_COUNT_ACTIVE_THREAD = """
+            SELECT COUNT(*)
+            FROM GraphThread
+            WHERE thread_name = ? AND is_released = FALSE
+            """;
+
+    private static final String SQL_QUERY_CHECKPOINTS = """
+            WITH matched_thread AS (
+                SELECT thread_id
+                FROM GraphThread
+                WHERE thread_name = ? AND is_released = FALSE
+            )
+            SELECT  c.checkpoint_id,
+                    c.node_id,
+                    c.next_node_id,
+                    c.state_data->>'binaryPayload' AS base64_data,
+                    c.state_content_type,
+                    c.parent_checkpoint_id
+            FROM matched_thread t
+            JOIN GraphCheckpoint c ON c.thread_id = t.thread_id
+            ORDER BY c.saved_at DESC
+            """;
+
+    private void insertCheckpoint(Connection conn, RunnableConfig config, LinkedList<Checkpoint> checkpoints, Checkpoint checkpoint) throws Exception {
+        var threadId = config.threadId().orElse(THREAD_ID_DEFAULT);
+        UUID threadUUID = upsertThread(conn, threadId);
+        insertCheckpointRow(conn, checkpoint, threadUUID);
+    }
+
+    /**
+     * 在 GraphThread 表上 upsert 一条 thread 记录并返回其 UUID。
+     */
+    private UUID upsertThread(Connection conn, String threadId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(SQL_UPSERT_THREAD)) {
+            setUpsertThreadParams(ps, threadId);
+            log.trace("Executing upsert thread:\n---\n{}---", SQL_UPSERT_THREAD);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getObject("thread_id", UUID.class) : null;
+            }
+        }
+    }
+
+    private void setUpsertThreadParams(PreparedStatement ps, String threadId) throws SQLException {
+        var field = 0;
+        ps.setObject(++field, UUID.randomUUID(), Types.OTHER);
+        ps.setString(++field, threadId);
+        ps.setString(++field, threadId);
+    }
+
+    /**
+     * 向 GraphCheckpoint 表插入一条 checkpoint 记录。
+     */
+    private void insertCheckpointRow(Connection conn, Checkpoint checkpoint, UUID threadUUID) throws SQLException, IOException {
+        try (PreparedStatement ps = conn.prepareStatement(SQL_INSERT_CHECKPOINT)) {
             var field = 0;
-            // checkpoint_id
-            ps.setObject(++field,
-                    UUID.fromString(checkpoint.getId()),
-                    Types.OTHER);
-            // parent_checkpoint_id
+            ps.setObject(++field, UUID.fromString(checkpoint.getId()), Types.OTHER);
             ps.setNull(++field, Types.OTHER);
-            // thread_id
-            ps.setObject(++field,
-                    requireNonNull(threadUUID, "threadUUID cannot be null"),
-                    Types.OTHER);
-            // node_id
+            ps.setObject(++field, requireNonNull(threadUUID, "threadUUID cannot be null"), Types.OTHER);
             ps.setString(++field, checkpoint.getNodeId());
-            // next_node_id
             ps.setString(++field, checkpoint.getNextNodeId());
-            // state_data
             ps.setString(++field, encodeState(checkpoint.getState()));
-            // state_content_type
             ps.setString(++field, stateSerializer.contentType());
-
-            // DB schema has DEFAULT CURRENT_TIMESTAMP for saved_at.
-            // If checkpoint provides a specific time, use it. Otherwise, use current time from Java.
-            // To use DB default, one would typically omit the column or pass NULL if the column definition allows it to trigger default.
-            // OffsetDateTime savedAt = checkpoint.getSavedAt().orElse(OffsetDateTime.now());
-            // psCheckpoint.setObject(8, savedAt);
-            log.trace("Executing insert checkpoint:\n---\n{}---", insertCheckpointSql);
+            log.trace("Executing insert checkpoint:\n---\n{}---", SQL_INSERT_CHECKPOINT);
             ps.executeUpdate();
         }
-
     }
+
+    private static final String SQL_UPSERT_THREAD = """
+            WITH inserted AS (
+                INSERT INTO GraphThread (thread_id, thread_name, is_released)
+                VALUES (?, ?, FALSE)
+                ON CONFLICT (thread_name)
+                WHERE is_released = FALSE
+                DO NOTHING
+                RETURNING thread_id
+            )
+            SELECT thread_id FROM inserted
+            UNION ALL
+            SELECT thread_id FROM GraphThread
+            WHERE thread_name = ? AND is_released = FALSE
+            LIMIT 1;
+            """;
+
+    private static final String SQL_INSERT_CHECKPOINT = """
+            INSERT INTO GraphCheckpoint(
+            checkpoint_id,
+            parent_checkpoint_id,
+            thread_id,
+            node_id,
+            next_node_id,
+            state_data,
+            state_content_type)
+            VALUES (?, ?, ?, ?, ?, ?::jsonb, ?)
+            """;
 
     @Override
     protected void insertedCheckpoint(RunnableConfig config, LinkedList<Checkpoint> checkpoints, Checkpoint checkpoint) throws Exception {
@@ -319,100 +327,148 @@ public class AgentHubPostgresSaver extends MemorySaver {
     protected void updatedCheckpoint(RunnableConfig config,
                                      LinkedList<Checkpoint> checkpoints,
                                      Checkpoint checkpoint) throws Exception {
-
         final var threadId = config.threadId().orElse(THREAD_ID_DEFAULT);
-
-        var deletePreviousCheckpointSql = """
-                DELETE FROM GraphCheckpoint
-                WHERE checkpoint_id = ?;
-                """;
-
         Connection conn = null;
-
+        CheckpointPersistSpec spec = new CheckpointPersistSpec(config, checkpoints, checkpoint, threadId);
         try (Connection ignored = conn = getConnection()) {
-            conn.setAutoCommit(false); // Start transaction
-
-            if (config.checkPointId().isPresent()) {
-
-                try (PreparedStatement ps = conn.prepareStatement(deletePreviousCheckpointSql)) {
-                    var field = 0;
-                    ps.setObject(++field,
-                            UUID.fromString(config.checkPointId().get()),
-                            Types.OTHER); // nullable
-                    log.trace("Executing deleting previous checkpoint with id {} in thread {}:\n---\n{}---",
-                            config.checkPointId().get(),
-                            threadId,
-                            deletePreviousCheckpointSql);
-                    ps.executeUpdate();
-                }
-            }
-
-            insertCheckpoint(conn, config, checkpoints, checkpoint);
-
-            conn.commit();
-
-            log.debug("Checkpoint with id {} for thread {} inserted successfully.",
-                    checkpoint.getId(),
-                    threadId);
-
-        } catch (SQLException | IOException e) { // IOException from convertStateToJson
-            log.error("Error inserting checkpoint with id {} in thread {}",
-                    checkpoint.getId(),
-                    threadId,
-                    e);
-            rollback(conn, checkpoint, threadId);
+            persistCheckpoint(conn, spec);
+        } catch (SQLException | IOException e) {
+            handleCheckpointFailure(e, conn, spec);
             throw e;
         }
     }
+
+    private void persistCheckpoint(Connection conn, CheckpointPersistSpec spec) throws Exception {
+        conn.setAutoCommit(false);
+        deletePreviousCheckpointIfPresent(conn, spec.config(), spec.threadId());
+        insertCheckpoint(conn, spec.config(), spec.checkpoints(), spec.checkpoint());
+        conn.commit();
+        logInsertSuccess(spec.checkpoint(), spec.threadId());
+    }
+
+    private void handleCheckpointFailure(Exception e, Connection conn, CheckpointPersistSpec spec) throws SQLException {
+        logInsertFailure(e, spec.checkpoint(), spec.threadId());
+        rollback(conn, spec.checkpoint(), spec.threadId());
+    }
+
+    private static final class CheckpointPersistSpec {
+        private final RunnableConfig config;
+        private final LinkedList<Checkpoint> checkpoints;
+        private final Checkpoint checkpoint;
+        private final String threadId;
+
+        CheckpointPersistSpec(RunnableConfig config, LinkedList<Checkpoint> checkpoints,
+                              Checkpoint checkpoint, String threadId) {
+            this.config = config;
+            this.checkpoints = checkpoints;
+            this.checkpoint = checkpoint;
+            this.threadId = threadId;
+        }
+
+        RunnableConfig config() { return config; }
+        LinkedList<Checkpoint> checkpoints() { return checkpoints; }
+        Checkpoint checkpoint() { return checkpoint; }
+        String threadId() { return threadId; }
+    }
+
+    private void logInsertFailure(Exception e, Checkpoint checkpoint, String threadId) {
+        log.error("Error inserting checkpoint with id {} in thread {}",
+                checkpoint.getId(),
+                threadId,
+                e);
+    }
+
+    private void logInsertSuccess(Checkpoint checkpoint, String threadId) {
+        log.debug("Checkpoint with id {} for thread {} inserted successfully.",
+                checkpoint.getId(),
+                threadId);
+    }
+
+    /**
+     * 当配置中带有 checkPointId 时，删除对应的旧 checkpoint 记录。
+     */
+    private void deletePreviousCheckpointIfPresent(Connection conn, RunnableConfig config, String threadId) throws SQLException {
+        if (config.checkPointId().isEmpty()) {
+            return;
+        }
+        String previousId = config.checkPointId().get();
+        try (PreparedStatement ps = conn.prepareStatement(SQL_DELETE_PREVIOUS_CHECKPOINT)) {
+            ps.setObject(1, UUID.fromString(previousId), Types.OTHER);
+            log.trace("Executing deleting previous checkpoint with id {} in thread {}:\n---\n{}---",
+                    previousId, threadId, SQL_DELETE_PREVIOUS_CHECKPOINT);
+            ps.executeUpdate();
+        }
+    }
+
+    private static final String SQL_DELETE_PREVIOUS_CHECKPOINT = """
+            DELETE FROM GraphCheckpoint
+            WHERE checkpoint_id = ?;
+            """;
 
     @Override
     protected void releasedCheckpoints(RunnableConfig config, LinkedList<Checkpoint> checkpoints, Tag releaseTag) throws Exception {
         var threadId = config.threadId().orElse(THREAD_ID_DEFAULT);
 
-        var selectThreadSql = """
-                SELECT thread_id FROM GraphThread
-                WHERE thread_name = ? AND is_released = FALSE
-                """;
-        var releaseThreadSql = """
-                UPDATE GraphThread
-                SET
-                    is_released = TRUE
-                WHERE thread_id = ?;
-                """;
         try (Connection conn = getConnection()) {
+            UUID threadUUID = findActiveThread(conn, threadId);
+            markThreadReleased(conn, threadUUID);
+        }
+    }
 
-            UUID threadUUID = null;
-            try (PreparedStatement ps = conn.prepareStatement(selectThreadSql)) {
-                var field = 0;
-                ps.setString(++field, threadId);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    var rows = 0;
-                    while (rs.next()) {
-                        threadUUID = rs.getObject("thread_id", UUID.class);
-                        ++rows;
-                    }
-                    if (rows == 0) {
-                        throw new IllegalStateException(format("active Thread '%s' not found", threadId));
-                    }
-                    if (rows > 1) {
-                        throw new IllegalStateException(format("duplicate active Thread '%s' found", threadId));
-                    }
-                }
-            }
-
-            log.trace("Executing release Thread:\n---\n{}---", releaseThreadSql);
-            try (PreparedStatement ps = conn.prepareStatement(releaseThreadSql)) {
-                var field = 0;
-                ps.setObject(++field,
-                        Objects.requireNonNull(threadUUID, "threadUUID cannot be null"),
-                        Types.OTHER); // nullable
-                ps.executeUpdate();
-
+    /**
+     * 查找 threadId 对应的活动 thread 记录，确保唯一性后返回其 UUID。
+     */
+    private UUID findActiveThread(Connection conn, String threadId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(SQL_SELECT_ACTIVE_THREAD)) {
+            ps.setString(1, threadId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return readActiveThreadUuid(rs, threadId);
             }
         }
-
     }
+
+    private UUID readActiveThreadUuid(ResultSet rs, String threadId) throws SQLException {
+        UUID threadUUID = null;
+        int rows = 0;
+        while (rs.next()) {
+            threadUUID = rs.getObject("thread_id", UUID.class);
+            ++rows;
+        }
+        validateThreadRowCount(rows, threadId);
+        return threadUUID;
+    }
+
+    private void validateThreadRowCount(int rows, String threadId) {
+        if (rows == 0) {
+            throw new IllegalStateException(format("active Thread '%s' not found", threadId));
+        }
+        if (rows > 1) {
+            throw new IllegalStateException(format("duplicate active Thread '%s' found", threadId));
+        }
+    }
+
+    /**
+     * 将 thread 标记为已释放。
+     */
+    private void markThreadReleased(Connection conn, UUID threadUUID) throws SQLException {
+        log.trace("Executing release Thread:\n---\n{}---", SQL_RELEASE_THREAD);
+        try (PreparedStatement ps = conn.prepareStatement(SQL_RELEASE_THREAD)) {
+            ps.setObject(1, Objects.requireNonNull(threadUUID, "threadUUID cannot be null"), Types.OTHER);
+            ps.executeUpdate();
+        }
+    }
+
+    private static final String SQL_SELECT_ACTIVE_THREAD = """
+            SELECT thread_id FROM GraphThread
+            WHERE thread_name = ? AND is_released = FALSE
+            """;
+
+    private static final String SQL_RELEASE_THREAD = """
+            UPDATE GraphThread
+            SET
+                is_released = TRUE
+            WHERE thread_id = ?;
+            """;
 
     /**
      * Datasource connection

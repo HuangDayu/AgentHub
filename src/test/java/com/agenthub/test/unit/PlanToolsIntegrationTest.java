@@ -2,6 +2,8 @@ package com.agenthub.test.unit;
 
 import com.agenthub.application.dto.ExecutionPlanOutput;
 import com.agenthub.application.usecase.ExecutionPlanUseCase;
+import com.agenthub.infrastructure.context.TenantContextHolder;
+import com.agenthub.infrastructure.context.TenantThreadContext;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.PlanTools;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.PlanStepToolInput;
 import com.agenthub.test.TestAgentHubApplication;
@@ -29,7 +31,17 @@ class PlanToolsIntegrationTest {
     @Autowired
     private ExecutionPlanUseCase executionPlanUseCase;
 
+    private static final String workspaceId = "100000002";
+    private static final String tenantId = "100000002";
+    private static final String agentId = "2054196010662010881";
+    private static final String sessionId = "2057834835146399745";
     private String createdPlanId;
+
+
+    @BeforeAll
+    static void init() {
+        TenantContextHolder.open(new TenantThreadContext(tenantId, workspaceId, agentId, sessionId, "1", false));
+    }
 
     @Test
     @Order(1)

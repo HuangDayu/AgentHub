@@ -29,7 +29,7 @@ class SkillConfigControllerIntegrationTest {
     private MockMvc mockMvc;
     private String createdConfigId;
     private final String workspaceId = "100000002";
-    private final String tenantId = "100000001";
+    private final String tenantId = "100000002";
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -47,7 +47,7 @@ class SkillConfigControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "100000001",
+                                    "tenantId": "100000002",
                                     "name": "Test Skill Config",
                                     "description": "A test skill config",
                                     "skillPaths": ["/path/to/skills", "/another/path"],
@@ -93,7 +93,7 @@ class SkillConfigControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "100000001",
+                                    "tenantId": "100000002",
                                     "name": "Updated Skill Config",
                                     "description": "Updated description",
                                     "skillPaths": ["/updated/path"],

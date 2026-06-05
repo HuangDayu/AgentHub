@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.skills.market;
 
 import com.agenthub.application.port.out.skills.SkillMarketPort;
-import com.agenthub.domain.model.skill.MarketSearchQuery;
+import com.agenthub.application.dto.MarketSearchQuery;
 import com.agenthub.domain.model.skill.MarketSkillDetail;
 import com.agenthub.domain.model.skill.MarketSkillSummary;
 import lombok.extern.slf4j.Slf4j;
@@ -170,3 +170,4 @@ public class GitHubAdapter implements SkillMarketPort {
         return 0;
     }
 }
+

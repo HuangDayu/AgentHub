@@ -65,19 +65,27 @@ public class ToolNodeProcessor extends AbstractNodeProcessor {
     private Map<String, Object> executeTool(String toolName, Map<String, Object> parameters) {
         try {
             Object result = toolExecutionPort.execute(toolName, parameters);
-            Map<String, Object> output = new HashMap<>();
-            output.put("result", result);
-            output.put("toolName", toolName);
-            output.put("success", true);
-            return output;
+            return successOutput(toolName, result);
         } catch (Exception e) {
             log.error("Tool execution failed: {}", e.getMessage(), e);
-            Map<String, Object> errorOutput = new HashMap<>();
-            errorOutput.put("error", e.getMessage());
-            errorOutput.put("toolName", toolName);
-            errorOutput.put("success", false);
-            return errorOutput;
+            return errorOutput(toolName, e.getMessage());
         }
+    }
+
+    private Map<String, Object> successOutput(String toolName, Object result) {
+        Map<String, Object> output = new HashMap<>();
+        output.put("result", result);
+        output.put("toolName", toolName);
+        output.put("success", true);
+        return output;
+    }
+
+    private Map<String, Object> errorOutput(String toolName, String message) {
+        Map<String, Object> errorOutput = new HashMap<>();
+        errorOutput.put("error", message);
+        errorOutput.put("toolName", toolName);
+        errorOutput.put("success", false);
+        return errorOutput;
     }
 
     /**

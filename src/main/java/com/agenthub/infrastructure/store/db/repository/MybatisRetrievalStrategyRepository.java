@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.RetrievalStrategyRepository;
 import com.agenthub.domain.model.strategy.RetrievalStrategy;
@@ -55,7 +56,6 @@ public class MybatisRetrievalStrategyRepository implements RetrievalStrategyRepo
         entity.setEnableQueryRewrite(strategy.isEnableQueryRewrite());
         entity.setEnableTextSearch(strategy.isEnableTextSearch());
         entity.setEnableVectorSearch(strategy.isEnableVectorSearch());
-        entity.setKeywordWeight(strategy.getKeywordWeight());
         entity.setEnableRerank(strategy.isEnableRerank());
         entity.setRerankModel(strategy.getRerankModel());
         entity.setVectorWeight(strategy.getVectorWeight());
@@ -66,23 +66,9 @@ public class MybatisRetrievalStrategyRepository implements RetrievalStrategyRepo
     }
 
     private RetrievalStrategy toDomain(RetrievalStrategyEntity entity) {
-        return RetrievalStrategy.rebuild(
-                entity.getId(),
-                entity.getWorkspaceId(),
-                entity.getName(),
-                entity.getDescription(),
-                RetrievalStrategy.RetrievalType.valueOf(entity.getRetrievalType()),
-                entity.getTopK(),
-                entity.getScoreThreshold(),
-                Boolean.TRUE.equals(entity.getEnableQueryRewrite()),
-                Boolean.TRUE.equals(entity.getEnableTextSearch()),
-                Boolean.TRUE.equals(entity.getEnableVectorSearch()),
-                Boolean.TRUE.equals(entity.getEnableRerank()),
-                entity.getRerankModel(),
-                entity.getVectorWeight(),
-                entity.getKeywordWeight(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
-        );
+        RetrievalStrategy.State state = new RetrievalStrategy.State();
+        BeanUtil.copyProperties(entity, state, "retrievalType");
+        state.setRetrievalType(RetrievalStrategy.RetrievalType.valueOf(entity.getRetrievalType()));
+        return RetrievalStrategy.rebuild(state);
     }
 }

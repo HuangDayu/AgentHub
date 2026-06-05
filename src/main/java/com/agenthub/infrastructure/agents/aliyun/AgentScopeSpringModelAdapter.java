@@ -55,14 +55,21 @@ public class AgentScopeSpringModelAdapter implements Model {
             org.springframework.ai.chat.model.ChatResponse springResponse) {
         var result = springResponse.getResult();
         if (result == null || result.getOutput() == null) {
-            return ChatResponse.builder()
-                    .id(null)
-                    .content(List.of(TextBlock.builder().text("").build()))
-                    .usage(new ChatUsage(0, 0, 0.0))
-                    .finishReason(null)
-                    .build();
+            return buildEmptyChatResponse();
         }
-        String text = result.getOutput().getText();
+        return buildChatResponse(result.getOutput().getText());
+    }
+
+    private static ChatResponse buildEmptyChatResponse() {
+        return ChatResponse.builder()
+                .id(null)
+                .content(List.of(TextBlock.builder().text("").build()))
+                .usage(new ChatUsage(0, 0, 0.0))
+                .finishReason(null)
+                .build();
+    }
+
+    private static ChatResponse buildChatResponse(String text) {
         List<ContentBlock> content = List.of(TextBlock.builder().text(text != null ? text : "").build());
         return ChatResponse.builder()
                 .id(null)

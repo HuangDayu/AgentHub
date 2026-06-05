@@ -26,30 +26,63 @@ public class Memory {
     public Memory() {
     }
 
-    private Memory(String id, String tenantId, String workspaceId, String agentId, String name,
-                   String memoryType, String content, String metadata,
-                   double importance, Instant expiresAt, Instant createdAt) {
-        this.id = id;
-        this.tenantId = tenantId;
-        this.workspaceId = workspaceId;
-        this.agentId = agentId;
-        this.name = name;
-        this.memoryType = MemoryType.valueOf(memoryType);
-        this.content = content;
-        this.metadata = metadata;
-        this.importance = importance;
-        this.expiresAt = expiresAt;
-        this.createdAt = createdAt;
-        this.updatedAt = createdAt;
+    /**
+     * 工厂方法所需字段快照。
+     */
+    public static final class CreationSpec {
+        private final String tenantId;
+        private final String workspaceId;
+        private final String agentId;
+        private final String name;
+        private final String memoryType;
+        private final String content;
+        private final String metadata;
+        private final double importance;
+        private final Instant expiresAt;
+
+        public CreationSpec(String tenantId, String workspaceId, String agentId, String name,
+                               String memoryType, String content, String metadata,
+                               double importance, Instant expiresAt) {
+            this.tenantId = tenantId;
+            this.workspaceId = workspaceId;
+            this.agentId = agentId;
+            this.name = name;
+            this.memoryType = memoryType;
+            this.content = content;
+            this.metadata = metadata;
+            this.importance = importance;
+            this.expiresAt = expiresAt;
+        }
     }
 
-    public static Memory create(String tenantId, String workspaceId, String agentId, String name,
-                                String memoryType, String content, String metadata,
-                                double importance, Instant expiresAt) {
-        return new Memory(randomId(), tenantId, workspaceId, agentId, name,
-                memoryType, content, metadata, importance, expiresAt, Instant.now());
+    /**
+     * 创建新的记忆实例。
+     */
+    public static Memory create(CreationSpec spec) {
+        Memory memory = new Memory();
+        Instant now = Instant.now();
+        copySpecFields(memory, spec);
+        memory.id = randomId();
+        memory.memoryType = MemoryType.valueOf(spec.memoryType);
+        memory.createdAt = now;
+        memory.updatedAt = now;
+        return memory;
     }
 
+    private static void copySpecFields(Memory memory, CreationSpec spec) {
+        memory.tenantId = spec.tenantId;
+        memory.workspaceId = spec.workspaceId;
+        memory.agentId = spec.agentId;
+        memory.name = spec.name;
+        memory.content = spec.content;
+        memory.metadata = spec.metadata;
+        memory.importance = spec.importance;
+        memory.expiresAt = spec.expiresAt;
+    }
+
+    /**
+     * 更新记忆内容。
+     */
     public void update(String content, String metadata, double importance, Instant expiresAt) {
         this.content = content;
         this.metadata = metadata;

@@ -105,25 +105,36 @@ public class ScheduledTaskScheduler {
 
     private void executeTask(ScheduledTask task) {
         log.info("开始执行定时任务: {} (ID={})", task.getName(), task.getId());
+        Agent agent = findAgentForTask(task);
+        if (agent == null) {
+            log.warn("定时任务关联的Agent不存在，跳过: {}", task.getName());
+            return;
+        }
+        runTask(task, agent);
+    }
+
+    private void runTask(ScheduledTask task, Agent agent) {
         try {
-            Agent agent = findAgentForTask(task);
-            if (agent == null) {
-                log.warn("定时任务关联的Agent不存在，跳过: {}", task.getName());
-                return;
-            }
-            String sessionId = "scheduled-" + task.getId() + "-" + System.currentTimeMillis();
-            com.agenthub.application.command.AgentChatCommand command =
-                    new com.agenthub.application.command.AgentChatCommand();
-            command.setAgentId(agent.getId());
-            command.setSessionId(sessionId);
-            command.setUserMessage(task.getPrompt());
-            agentChatPort.chatMessages(command);
+            agentChatPort.chatMessages(buildChatCommand(task, agent));
             updateTaskAfterExecution(task, true, "执行成功");
             log.info("定时任务执行完成: {}", task.getName());
         } catch (Exception e) {
-            log.error("定时任务执行失败: {}", task.getName(), e);
-            updateTaskAfterExecution(task, false, e.getMessage());
+            handleTaskFailure(task, e);
         }
+    }
+
+    private void handleTaskFailure(ScheduledTask task, Exception e) {
+        log.error("定时任务执行失败: {}", task.getName(), e);
+        updateTaskAfterExecution(task, false, e.getMessage());
+    }
+
+    private com.agenthub.application.command.AgentChatCommand buildChatCommand(ScheduledTask task, Agent agent) {
+        com.agenthub.application.command.AgentChatCommand command =
+                new com.agenthub.application.command.AgentChatCommand();
+        command.setAgentId(agent.getId());
+        command.setSessionId("scheduled-" + task.getId() + "-" + System.currentTimeMillis());
+        command.setUserMessage(task.getPrompt());
+        return command;
     }
 
     private Agent findAgentForTask(ScheduledTask task) {

@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.GuardrailStrategyRepository;
 import com.agenthub.domain.model.strategy.GuardrailStrategy;
@@ -62,44 +63,8 @@ public class MybatisGuardrailStrategyRepository implements GuardrailStrategyRepo
     }
 
     private GuardrailStrategy toDomain(GuardrailStrategyEntity entity) {
-        return GuardrailStrategy.rebuild(
-            entity.getId(),
-            entity.getWorkspaceId(),
-            entity.getName(),
-            entity.getDescription(),
-            Boolean.TRUE.equals(entity.getInputValidationEnabled()),
-            Boolean.TRUE.equals(entity.getOutputValidationEnabled()),
-            Boolean.TRUE.equals(entity.getPiiDetectionEnabled()),
-            Boolean.TRUE.equals(entity.getPiiMaskingEnabled()),
-            Boolean.TRUE.equals(entity.getPromptInjectionDetection()),
-            entity.getMaxInputLength() != null ? entity.getMaxInputLength() : 10000,
-            entity.getMaxOutputLength() != null ? entity.getMaxOutputLength() : 4000,
-            entity.getCreatedAt(),
-            entity.getUpdatedAt()
-        );
-    }
-
-    private void applyValidationSettings(GuardrailStrategy strategy, GuardrailStrategyEntity entity) {
-        if (Boolean.TRUE.equals(entity.getInputValidationEnabled())) {
-            strategy.enableInputValidation();
-        }
-        if (Boolean.TRUE.equals(entity.getOutputValidationEnabled())) {
-            strategy.enableOutputValidation();
-        }
-        if (Boolean.TRUE.equals(entity.getPromptInjectionDetection())) {
-            strategy.enablePromptInjectionDetection();
-        }
-    }
-
-    private void applyPiiSettings(GuardrailStrategy strategy, GuardrailStrategyEntity entity) {
-        if (Boolean.TRUE.equals(entity.getPiiDetectionEnabled())) {
-            strategy.enablePiiDetection(Boolean.TRUE.equals(entity.getPiiMaskingEnabled()));
-        }
-    }
-
-    private void applyLengthLimits(GuardrailStrategy strategy, GuardrailStrategyEntity entity) {
-        if (entity.getMaxInputLength() != null && entity.getMaxOutputLength() != null) {
-            strategy.setLengthLimits(entity.getMaxInputLength(), entity.getMaxOutputLength());
-        }
+        GuardrailStrategy.State state = new GuardrailStrategy.State();
+        BeanUtil.copyProperties(entity, state);
+        return GuardrailStrategy.rebuild(state);
     }
 }

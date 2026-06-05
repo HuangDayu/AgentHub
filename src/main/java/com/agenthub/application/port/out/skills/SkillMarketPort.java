@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.skills;
 
-import com.agenthub.domain.model.skill.MarketSearchQuery;
+import com.agenthub.application.dto.MarketSearchQuery;
 import com.agenthub.domain.model.skill.MarketSkillDetail;
 import com.agenthub.domain.model.skill.MarketSkillSummary;
 import java.util.List;
@@ -35,3 +35,4 @@ public interface SkillMarketPort {
      */
     MarketSkillDetail getDetail(String skillId);
 }
+

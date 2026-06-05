@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import com.agenthub.application.command.AddStepCommand;
 import com.agenthub.application.command.CreatePlanCommand;
 import com.agenthub.application.command.PlanStepInput;
 import com.agenthub.application.dto.ExecutionPlanOutput;
@@ -93,6 +94,9 @@ public class ExecutionPlanUseCase {
         ExecutionPlan plan = findPlan(planId);
         PlanStep step = findStep(plan, stepId);
         applyStepUpdate(step, status, output);
+        if (step.isFailed()) {
+            plan.fail(output);
+        }
         return toOutput(executionPlanRepository.save(plan));
     }
 
@@ -159,24 +163,50 @@ public class ExecutionPlanUseCase {
                 .orElseThrow(() -> new NotFoundException("Plan step not found: " + stepId));
     }
 
-    public ExecutionPlanOutput addStepToPlan(String planId, String description,
-                                              String toolName, String toolInput) {
-        ExecutionPlan plan = findPlan(planId);
+    public ExecutionPlanOutput addStepToPlan(AddStepCommand command) {
+        ExecutionPlan plan = findPlan(command.getPlanId());
         int order = plan.getSteps().size() + 1;
-        PlanStep step = PlanStep.create(plan.getId(), order, description, toolName, toolInput);
+        PlanStep.CreationSpec request = new PlanStep.CreationSpec(
+                plan.getId(), order, command.getDescription(), command.getToolName(), command.getToolInput());
+        PlanStep step = PlanStep.create(request);
         plan.addStep(step);
         return toOutput(executionPlanRepository.save(plan));
     }
 
     private void addStepsFromCommand(ExecutionPlan plan, List<PlanStepInput> stepInputs) {
         if (stepInputs == null) return;
+        appendAllSteps(plan, stepInputs);
+        resolveStepDependencies(plan, stepInputs);
+    }
+
+    private void appendAllSteps(ExecutionPlan plan, List<PlanStepInput> stepInputs) {
         int index = 0;
         for (PlanStepInput input : stepInputs) {
-            PlanStep step = PlanStep.create(plan.getId(), index++, input.getDescription(),
-                    input.getToolName(), input.getToolInput());
-            step.setDependencyIds(input.getDependsOn());
-            plan.addStep(step);
+            PlanStep.CreationSpec spec = new PlanStep.CreationSpec(plan.getId(), index++,
+                    input.getDescription(), input.getToolName(), input.getToolInput());
+            plan.addStep(PlanStep.create(spec));
         }
+    }
+
+    private void resolveStepDependencies(ExecutionPlan plan, List<PlanStepInput> stepInputs) {
+        for (int i = 0; i < stepInputs.size(); i++) {
+            applyStepDependency(plan, stepInputs.get(i), plan.getSteps().get(i));
+        }
+    }
+
+    private void applyStepDependency(ExecutionPlan plan, PlanStepInput input, PlanStep step) {
+        if (input.getDependsOn() == null || input.getDependsOn().isEmpty()) return;
+        List<String> resolved = input.getDependsOn().stream()
+                .map(ref -> resolveDependencyRef(plan, ref)).toList();
+        step.setDependencyIds(resolved);
+    }
+
+    private String resolveDependencyRef(ExecutionPlan plan, String ref) {
+        return plan.getSteps().stream()
+                .filter(s -> ref.equals(s.getId()) || ref.equals(s.getDescription()))
+                .map(PlanStep::getId)
+                .findFirst()
+                .orElse(ref);
     }
 
     private void applyStepUpdate(PlanStep step, String status, String output) {

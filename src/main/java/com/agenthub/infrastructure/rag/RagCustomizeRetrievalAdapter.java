@@ -42,12 +42,16 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
     public List<RetrievalChunk> retrieve(RagCommand query) {
         List<RetrievalChunk> allChunks = new ArrayList<>();
         for (String kbId : query.getKbIds()) {
-            List<RetrievalChunk> retrievalChunks = retrieveFromKnowledgeBase(kbId, query);
-            if (!retrievalChunks.isEmpty()) {
-                allChunks.addAll(retrievalChunks);
-            }
+            addChunksFromKnowledgeBase(allChunks, kbId, query);
         }
         return sortAndLimit(allChunks, query.getStrategy().getTopK());
+    }
+
+    private void addChunksFromKnowledgeBase(List<RetrievalChunk> sink, String kbId, RagCommand query) {
+        List<RetrievalChunk> retrievalChunks = retrieveFromKnowledgeBase(kbId, query);
+        if (!retrievalChunks.isEmpty()) {
+            sink.addAll(retrievalChunks);
+        }
     }
 
     /**
@@ -55,11 +59,7 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
      */
     private List<RetrievalChunk> retrieveFromKnowledgeBase(String kbId, RagCommand query) {
         try {
-            RetrievalStrategy strategy = query.getStrategy();
-            RetrievalCommand retrievalCommand = new RetrievalCommand(kbId, query.getPrompt(), strategy.getTopK(), strategy.getScoreThreshold(),
-                    strategy.isEnableQueryRewrite(), strategy.isEnableVectorSearch(), strategy.isEnableTextSearch(),
-                    strategy.isEnableRerank(), strategy.getRerankModel(), strategy.getVectorWeight(), strategy.getKeywordWeight());
-            RetrievalOutput result = retrieve(retrievalCommand);
+            RetrievalOutput result = retrieve(buildRetrievalCommand(kbId, query));
             return addChunksToResult(result, kbId);
         } catch (NotFoundException e) {
             log.warn("Knowledge base not found during retrieval: {}, skipping", kbId);
@@ -67,6 +67,13 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
             log.error("Retrieval failed for knowledge base {}: {}", kbId, e.getMessage(), e);
         }
         return new ArrayList<>();
+    }
+
+    private RetrievalCommand buildRetrievalCommand(String kbId, RagCommand query) {
+        RetrievalStrategy strategy = query.getStrategy();
+        return new RetrievalCommand(kbId, query.getPrompt(), strategy.getTopK(), strategy.getScoreThreshold(),
+                strategy.isEnableQueryRewrite(), strategy.isEnableVectorSearch(), strategy.isEnableTextSearch(),
+                strategy.isEnableRerank(), strategy.getRerankModel(), strategy.getVectorWeight(), strategy.getKeywordWeight());
     }
 
     /**
@@ -108,21 +115,37 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
     @Override
     public RetrievalOutput retrieve(RetrievalCommand retrievalCommand) {
         validateKnowledgeBase(retrievalCommand.getKbId());
-        String rewrittenQuery = retrievalCommand.isEnableQueryRewrite() ? ragQueryRewritePort.rewrite(retrievalCommand.getKbId(), retrievalCommand.getQuery()) : retrievalCommand.getQuery();
-        log.debug("Query rewritten [{}]: '{}' -> '{}'", retrievalCommand.isEnableQueryRewrite(), retrievalCommand.getQuery(), rewrittenQuery);
-        List<RetrievalResult> vectorResults = retrievalCommand.isEnableVectorSearch() ? ragVectorSearchPort.search(retrievalCommand.getKbId(), rewrittenQuery, retrievalCommand.getTopK()) : new ArrayList<>();
-        log.debug("Vector search [{}] returned {} results", retrievalCommand.isEnableVectorSearch(), vectorResults.size());
-        List<RetrievalResult> textResults = retrievalCommand.isEnableTextSearch() ? ragTextSearchPort.search(retrievalCommand.getKbId(), rewrittenQuery, retrievalCommand.getTopK()) : new ArrayList<>();
-        log.debug("Text search [{}] returned {} results", retrievalCommand.isEnableTextSearch(), textResults.size());
-        List<RetrievalResult> merged = mergeResults(vectorResults, textResults);
-        log.debug("After merge: {} results", merged.size());
-        List<RetrievalResult> reranked = retrievalCommand.isEnableRerank() ? ragRerankerPort.rerank(rewrittenQuery, merged) : new ArrayList<>();
-        log.debug("After rerank [{}]: {} results", retrievalCommand.isEnableRerank(), reranked.size());
+        String rewrittenQuery = rewriteQuery(retrievalCommand);
+        List<RetrievalResult> merged = searchAllSources(retrievalCommand, rewrittenQuery);
+        List<RetrievalResult> reranked = rerankResults(retrievalCommand, rewrittenQuery, merged);
         List<RetrievalResult> filtered = filterByScore(reranked, retrievalCommand.getScoreThreshold());
-        log.debug("After filter (threshold={}): {} results", retrievalCommand.getScoreThreshold(), filtered.size());
-        List<RetrievalResult> limited = limitResults(filtered, retrievalCommand.getTopK());
-        log.debug("After limited (topK={}): {} results", retrievalCommand.getTopK(), filtered.size());
-        return buildRetrievalOutput(rewrittenQuery, limited);
+        return buildRetrievalOutput(rewrittenQuery, limitResults(filtered, retrievalCommand.getTopK()));
+    }
+
+    private List<RetrievalResult> searchAllSources(RetrievalCommand cmd, String query) {
+        return mergeResults(vectorSearch(cmd, query), textSearch(cmd, query));
+    }
+
+    private String rewriteQuery(RetrievalCommand cmd) {
+        if (cmd.isEnableQueryRewrite()) {
+            return ragQueryRewritePort.rewrite(cmd.getKbId(), cmd.getQuery());
+        }
+        return cmd.getQuery();
+    }
+
+    private List<RetrievalResult> vectorSearch(RetrievalCommand cmd, String query) {
+        if (!cmd.isEnableVectorSearch()) return new ArrayList<>();
+        return ragVectorSearchPort.search(cmd.getKbId(), query, cmd.getTopK());
+    }
+
+    private List<RetrievalResult> textSearch(RetrievalCommand cmd, String query) {
+        if (!cmd.isEnableTextSearch()) return new ArrayList<>();
+        return ragTextSearchPort.search(cmd.getKbId(), query, cmd.getTopK());
+    }
+
+    private List<RetrievalResult> rerankResults(RetrievalCommand cmd, String query, List<RetrievalResult> merged) {
+        if (!cmd.isEnableRerank()) return new ArrayList<>();
+        return ragRerankerPort.rerank(query, merged);
     }
 
     /**

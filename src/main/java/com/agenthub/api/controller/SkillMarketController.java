@@ -7,6 +7,7 @@ import com.agenthub.api.dto.MarketSkillDetailResponse;
 import com.agenthub.api.dto.MarketSkillSummaryResponse;
 import com.agenthub.application.dto.SkillOutput;
 import com.agenthub.application.usecase.SkillMarketUseCase;
+import com.agenthub.application.dto.MarketSearchQuery;
 import com.agenthub.infrastructure.context.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -56,9 +57,10 @@ public class SkillMarketController {
     public ResponseEntity<Map<String, List<MarketSkillSummaryResponse>>> searchAll(
             @PathVariable String workspaceId,
             @RequestBody MarketSearchRequest request) {
-        Map<String, List<Map<String, Object>>> raw = skillMarketUseCase.searchAll(
+        MarketSearchQuery query = new MarketSearchQuery(
                 request.getKeyword(), request.getCategory(),
                 request.getSortBy(), request.getPage(), request.getPageSize());
+        Map<String, List<Map<String, Object>>> raw = skillMarketUseCase.searchAll(query);
         Map<String, List<MarketSkillSummaryResponse>> response = raw.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
@@ -141,3 +143,4 @@ public class SkillMarketController {
         }
     }
 }
+

@@ -107,7 +107,7 @@ public class SystemToolsFactory implements AbstractToolsFactory, SystemToolScann
     private SystemTool createTool(Object bean) {
         Class<?> userClass = ClassUtils.getUserClass(bean);
         AgentTools agentTools = userClass.getAnnotation(AgentTools.class);
-        return SystemTool.create(
+        SystemTool.CreationSpec request = new SystemTool.CreationSpec(
                 userClass.getName(),
                 userClass.getSimpleName(),
                 agentTools.description(),
@@ -115,6 +115,7 @@ public class SystemToolsFactory implements AbstractToolsFactory, SystemToolScann
                 countToolMethods(userClass),
                 agentTools.defaultEnable()
         );
+        return SystemTool.create(request);
     }
 
     private static final Map<String, String> CATEGORY_MAP = Map.ofEntries(

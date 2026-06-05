@@ -63,20 +63,28 @@ public class AuthJwtConfiguration {
             AppUserMybatisMapper appUserMybatisMapper,
             RefreshTokenRepository refreshTokenRepository,
             ObjectProvider<CredentialVerifierPort> credentialVerifierProvider) {
-        // 优先使用容器中的 CredentialVerifier Bean（测试时注入 StaticCredentialVerifier）
-        CredentialVerifierPort credentialVerifierPort = credentialVerifierProvider.getIfAvailable(
-                () -> new DatabaseCredentialVerifier(appUserMybatisMapper));
-        // 创建访问令牌服务
+        CredentialVerifierPort credentialVerifierPort = resolveCredentialVerifier(
+                credentialVerifierProvider, appUserMybatisMapper);
         SimpleAccessTokenAdapter tokenService =
                 new SimpleAccessTokenAdapter(jwtTokenProvider, appUserMybatisMapper);
-        // 组装认证应用服务及其依赖
+        return buildAuthApplicationUseCase(
+                credentialVerifierPort, tokenService, refreshTokenRepository);
+    }
+
+    private CredentialVerifierPort resolveCredentialVerifier(
+            ObjectProvider<CredentialVerifierPort> provider, AppUserMybatisMapper mapper) {
+        return provider.getIfAvailable(() -> new DatabaseCredentialVerifier(mapper));
+    }
+
+    private AuthApplicationUseCase buildAuthApplicationUseCase(
+            CredentialVerifierPort verifier, SimpleAccessTokenAdapter tokenService,
+            RefreshTokenRepository refreshTokenRepository) {
         return new AuthApplicationUseCase(
-                credentialVerifierPort,
+                verifier,
                 tokenService,
                 new UuidRefreshTokenGenerator(),
                 refreshTokenRepository,
                 Clock.systemUTC(),
-                Duration.ofDays(30)
-        );
+                Duration.ofDays(30));
     }
 }

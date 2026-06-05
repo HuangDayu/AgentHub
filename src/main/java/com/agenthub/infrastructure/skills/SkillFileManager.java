@@ -73,13 +73,72 @@ public class SkillFileManager implements SkillToolScannerPort {
 
     private Optional<Skill> parseSkillMd(Path skillPath, Path skillMdPath) throws IOException {
         List<String> lines = Files.readAllLines(skillMdPath);
-        if (lines.size() < 4) return Optional.empty();
-        String name = lines.get(1).replace("name:", "").replaceAll("\"", "").trim();
-        String skillCode = StrUtil.isNotBlank(name) ? name : skillPath.getFileName().toString().trim();
-        String description = lines.get(2).replace("description:", "");
+        if (lines.isEmpty()) return Optional.empty();
+        ParsedFrontMatter frontMatter = parseFrontMatter(lines);
+        if (frontMatter == null) return Optional.empty();
+        return Optional.of(buildSkillFromFrontMatter(skillPath, frontMatter));
+    }
+
+    private Skill buildSkillFromFrontMatter(Path skillPath, ParsedFrontMatter frontMatter) {
+        String name = StrUtil.isNotBlank(frontMatter.name())
+                ? frontMatter.name()
+                : skillPath.getFileName().toString().trim();
         String path = skillPath.toString();
         String skillFilesTree = buildFilesTreeJson(skillPath);
-        return Optional.of(createSkill(skillCode, name, description, path, skillFilesTree));
+        return createSkill(name, name, frontMatter.description(), path, skillFilesTree);
+    }
+
+    private ParsedFrontMatter parseFrontMatter(List<String> lines) {
+        if (lines.size() < 2) return null;
+        if ("---".equals(lines.get(0).trim())) return extractYamlFrontMatter(lines);
+        return extractLooseFrontMatter(lines);
+    }
+
+    private ParsedFrontMatter extractYamlFrontMatter(List<String> lines) {
+        YamlFrontMatterState state = new YamlFrontMatterState();
+        for (int i = 1; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if (state.shouldStopAtDelimiter(line)) break;
+            state.applyLine(line);
+        }
+        return state.toFrontMatter();
+    }
+
+    private static final class YamlFrontMatterState {
+        private String name;
+        private StringBuilder descriptionBuilder = new StringBuilder();
+        private boolean descriptionStarted;
+
+        boolean shouldStopAtDelimiter(String line) {
+            return !descriptionStarted && "---".equals(line.trim());
+        }
+
+        void applyLine(String line) {
+            if (line.startsWith("name:")) {
+                name = stripQuotes(line.substring(5));
+            } else if (line.startsWith("description:")) {
+                descriptionStarted = true;
+                descriptionBuilder.append(stripQuotes(line.substring(12)));
+            } else if (descriptionStarted && !line.trim().isEmpty()) {
+                descriptionBuilder.append(' ').append(stripQuotes(line.trim()));
+            }
+        }
+
+        ParsedFrontMatter toFrontMatter() {
+            String description = descriptionBuilder.toString().trim();
+            if (StrUtil.isBlank(name) && StrUtil.isBlank(description)) return null;
+            return new ParsedFrontMatter(name, description);
+        }
+
+        private String stripQuotes(String value) {
+            return value.replaceAll("^\"|\"$", "").trim();
+        }
+    }
+
+    private ParsedFrontMatter extractLooseFrontMatter(List<String> lines) {
+        String name = lines.get(0).replaceAll("^#\\s*", "").trim();
+        String description = lines.size() > 1 ? String.join(" ", lines.subList(1, lines.size())).trim() : "";
+        return new ParsedFrontMatter(name, description);
     }
 
     private Skill createSkill(String skillCode, String name, String description, String path, String skillFilesTree) {
@@ -204,5 +263,21 @@ public class SkillFileManager implements SkillToolScannerPort {
         log.info("Deleted skill: {}", skillCode);
     }
 
+    private static final class ParsedFrontMatter {
+        private final String name;
+        private final String description;
 
+        private ParsedFrontMatter(String name, String description) {
+            this.name = name;
+            this.description = description;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        public String description() {
+            return description;
+        }
+    }
 }

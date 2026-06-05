@@ -17,22 +17,36 @@ public class UserInputPrompt {
     private Instant createdAt;
 
     /**
+     * 工厂方法所需字段快照。
+     */
+    public static final class CreationSpec {
+        private final String requestId;
+        private final String runId;
+        private final String agentId;
+        private final String agentName;
+        private final String structuredInput;
+
+        public CreationSpec(String requestId, String runId, String agentId,
+                               String agentName, String structuredInput) {
+            this.requestId = requestId;
+            this.runId = runId;
+            this.agentId = agentId;
+            this.agentName = agentName;
+            this.structuredInput = structuredInput;
+        }
+    }
+
+    /**
      * 创建用户输入请求.
      */
-    public static UserInputPrompt create(
-        String requestId,
-        String runId,
-        String agentId,
-        String agentName,
-        String structuredInput
-    ) {
-        UserInputPrompt request = new UserInputPrompt();
-        request.setRequestId(requestId);
-        request.setRunId(runId);
-        request.setAgentId(agentId);
-        request.setAgentName(agentName);
-        request.setStructuredInput(structuredInput);
-        request.setCreatedAt(Instant.now());
-        return request;
+    public static UserInputPrompt create(CreationSpec spec) {
+        UserInputPrompt prompt = new UserInputPrompt();
+        prompt.requestId = spec.requestId;
+        prompt.runId = spec.runId;
+        prompt.agentId = spec.agentId;
+        prompt.agentName = spec.agentName;
+        prompt.structuredInput = spec.structuredInput;
+        prompt.createdAt = Instant.now();
+        return prompt;
     }
 }

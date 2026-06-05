@@ -28,30 +28,63 @@ public class SystemTool {
         this.updatedAt = Instant.now();
     }
 
-    public static SystemTool create(String toolClassName, String toolName,
-                                    String description, String category, int methodCount, boolean enabled) {
+    /**
+     * 工厂方法所需字段快照。
+     */
+    public static final class CreationSpec {
+        private final String toolClassName;
+        private final String toolName;
+        private final String description;
+        private final String category;
+        private final int methodCount;
+        private final boolean enabled;
+
+        public CreationSpec(String toolClassName, String toolName,
+                               String description, String category, int methodCount, boolean enabled) {
+            this.toolClassName = toolClassName;
+            this.toolName = toolName;
+            this.description = description;
+            this.category = category;
+            this.methodCount = methodCount;
+            this.enabled = enabled;
+        }
+    }
+
+    /**
+     * 创建系统工具。
+     */
+    public static SystemTool create(CreationSpec spec) {
         SystemTool tool = new SystemTool();
-        tool.toolClassName = toolClassName;
-        tool.toolName = toolName;
-        tool.description = description;
-        tool.category = category;
-        tool.methodCount = methodCount;
-        tool.enabled = enabled;
+        tool.toolClassName = spec.toolClassName;
+        tool.toolName = spec.toolName;
+        tool.description = spec.description;
+        tool.category = spec.category;
+        tool.methodCount = spec.methodCount;
+        tool.enabled = spec.enabled;
         return tool;
     }
 
+    /**
+     * 启用工具。
+     */
     public SystemTool enable() {
         this.enabled = true;
         this.updatedAt = Instant.now();
         return this;
     }
 
+    /**
+     * 禁用工具。
+     */
     public SystemTool disable() {
         this.enabled = false;
         this.updatedAt = Instant.now();
         return this;
     }
 
+    /**
+     * 更新工具基础信息。
+     */
     public SystemTool update(String toolName, String description, String category, int methodCount) {
         this.toolName = toolName;
         this.description = description;
@@ -61,7 +94,6 @@ public class SystemTool {
         return this;
     }
 
-    // Getters and Setters
     public String getId() {
         return id;
     }

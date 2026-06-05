@@ -5,6 +5,8 @@ import com.agenthub.application.port.out.repositories.*;
 import com.agenthub.domain.model.KnowledgeBase;
 import com.agenthub.domain.model.Workspace;
 import com.agenthub.domain.model.agent.ReActAgentContext;
+import com.agenthub.infrastructure.context.TenantContextHolder;
+import com.agenthub.infrastructure.context.TenantThreadContext;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +61,7 @@ public class KnowledgeTools {
     @Tool(description = "获取知识库摘要（包含文档数量、描述、更新时间），用于知识库选择决策")
     public List<KnowledgeBaseSummary> getKnowledgeBaseSummaries(ToolContext toolContext) {
         List<KnowledgeBase> kbs = knowledgeBaseRepository.findByTenantId(
-                getWorkspace(toolContext).getTenantId());
+                resolveTenantId(toolContext));
         Map<String, Integer> docCounts = batchCountDocuments(kbs);
         return kbs.stream()
                 .map(kb -> toSummary(kb, docCounts.getOrDefault(kb.getId(), 0)))
@@ -97,6 +99,15 @@ public class KnowledgeTools {
     private int countDocuments(String kbId) {
         try { return ingestionDocumentRepository.findByKbId(kbId).size(); }
         catch (Exception e) { return 0; }
+    }
+
+    private String resolveTenantId(ToolContext toolContext) {
+        if (toolContext != null) {
+            return getWorkspace(toolContext).getTenantId();
+        }
+        return TenantContextHolder.current()
+                .map(TenantThreadContext::getTenantId)
+                .orElseThrow(() -> new IllegalStateException("租户上下文未设置"));
     }
 
     private KnowledgeBaseSummary toSummary(KnowledgeBase kb, int docCount) {

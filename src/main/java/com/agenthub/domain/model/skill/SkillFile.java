@@ -34,28 +34,57 @@ public class SkillFile {
     }
 
     /**
+     * 创建文件元数据所需字段快照。
+     */
+    public static final class CreationSpec {
+        private final String skillId;
+        private final String tenantId;
+        private final String workspaceId;
+        private final String filePath;
+        private final long fileSize;
+        private final String encoding;
+        private final String skillCode;
+        private final String storagePath;
+
+        public CreationSpec(String skillId, String tenantId, String workspaceId,
+                                String filePath, long fileSize, String encoding,
+                                String skillCode, String storagePath) {
+            this.skillId = skillId;
+            this.tenantId = tenantId;
+            this.workspaceId = workspaceId;
+            this.filePath = filePath;
+            this.fileSize = fileSize;
+            this.encoding = encoding;
+            this.skillCode = skillCode;
+            this.storagePath = storagePath;
+        }
+    }
+
+    /**
      * 创建文件元数据。
      */
-    public static SkillFile create(String skillId, String tenantId,
-                                    String workspaceId, String filePath,
-                                    long fileSize, String encoding,
-                                    String skillCode,String storagePath) {
+    public static SkillFile create(CreationSpec spec) {
         SkillFile file = new SkillFile();
+        Instant now = Instant.now();
+        applySpecToFile(file, spec);
         file.id = randomId();
-        file.skillId = skillId;
-        file.tenantId = tenantId;
-        file.workspaceId = workspaceId;
-        file.filePath = filePath;
-        file.fileName = extractFileName(filePath);
-        file.fileExt = extractExtension(filePath);
-        file.fileSize = fileSize;
+        file.fileName = extractFileName(spec.filePath);
+        file.fileExt = extractExtension(spec.filePath);
         file.fileType = detectFileType(file.fileExt);
-        file.encoding = encoding;
-        file.storagePath = storagePath;
         file.version = 1;
-        file.createdAt = Instant.now();
-        file.updatedAt = Instant.now();
+        file.createdAt = now;
+        file.updatedAt = now;
         return file;
+    }
+
+    private static void applySpecToFile(SkillFile file, CreationSpec spec) {
+        file.skillId = spec.skillId;
+        file.tenantId = spec.tenantId;
+        file.workspaceId = spec.workspaceId;
+        file.filePath = spec.filePath;
+        file.fileSize = spec.fileSize;
+        file.encoding = spec.encoding;
+        file.storagePath = spec.storagePath;
     }
 
     /**

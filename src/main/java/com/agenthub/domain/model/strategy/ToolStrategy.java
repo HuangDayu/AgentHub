@@ -66,20 +66,36 @@ public class ToolStrategy {
     }
 
     /**
+     * 持久化状态快照，用于在 rebuild 时一次性传入所有字段。
+     */
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class State {
+        private String id;
+        private String workspaceId;
+        private String name;
+        private String description;
+        private Integer maxConcurrentCalls;
+        private Integer timeoutSeconds;
+        private Integer retryCount;
+        private Boolean fallbackEnabled;
+        private Instant createdAt;
+        private Instant updatedAt;
+    }
+
+    /**
      * 从持久化层重建对象。
      */
-    public static ToolStrategy rebuild(
-            String id, String workspaceId, String name, String description,
-            int maxConcurrentCalls, int timeoutSeconds, int retryCount,
-            boolean fallbackEnabled, Instant createdAt, Instant updatedAt) {
-        ToolStrategy strategy = new ToolStrategy(id, workspaceId, createdAt);
-        strategy.name = name;
-        strategy.description = description;
-        strategy.maxConcurrentCalls = maxConcurrentCalls;
-        strategy.timeoutSeconds = timeoutSeconds;
-        strategy.retryCount = retryCount;
-        strategy.fallbackEnabled = fallbackEnabled;
-        strategy.updatedAt = updatedAt;
+    public static ToolStrategy rebuild(State state) {
+        ToolStrategy strategy = new ToolStrategy(state.getId(), state.getWorkspaceId(), state.getCreatedAt());
+        strategy.name = state.getName();
+        strategy.description = state.getDescription();
+        strategy.maxConcurrentCalls = state.getMaxConcurrentCalls() != null ? state.getMaxConcurrentCalls() : 5;
+        strategy.timeoutSeconds = state.getTimeoutSeconds() != null ? state.getTimeoutSeconds() : 30;
+        strategy.retryCount = state.getRetryCount() != null ? state.getRetryCount() : 3;
+        strategy.fallbackEnabled = Boolean.TRUE.equals(state.getFallbackEnabled());
+        strategy.updatedAt = state.getUpdatedAt();
         return strategy;
     }
 

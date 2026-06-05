@@ -59,27 +59,35 @@ public final class DocumentChunk {
     }
 
     /**
-     * 从持久化数据重建分块实例。
-     *
-     * @param chunkId    分块ID
-     * @param documentId 文档ID
-     * @param kbId       知识库ID
-     * @param chunkIndex 分块索引
-     * @param content    分块内容
-     * @param tokenCount token数量
-     * @param embedding  向量嵌入
-     * @return 重建的DocumentChunk实例
+     * 持久化字段快照，用于在 reconstruct 时一次性传入所有字段。
      */
-    public static DocumentChunk reconstruct(
-            String chunkId,
-            String documentId,
-            String kbId,
-            int chunkIndex,
-            String content,
-            int tokenCount,
-            float[] embedding
-    ) {
-        return new DocumentChunk(chunkId, documentId, kbId, chunkIndex, content, tokenCount, embedding);
+    public static final class Snapshot {
+        private final String chunkId;
+        private final String documentId;
+        private final String kbId;
+        private final int chunkIndex;
+        private final String content;
+        private final int tokenCount;
+        private final float[] embedding;
+
+        public Snapshot(String chunkId, String documentId, String kbId, int chunkIndex,
+                        String content, int tokenCount, float[] embedding) {
+            this.chunkId = chunkId;
+            this.documentId = documentId;
+            this.kbId = kbId;
+            this.chunkIndex = chunkIndex;
+            this.content = content;
+            this.tokenCount = tokenCount;
+            this.embedding = embedding;
+        }
+    }
+
+    /**
+     * 从持久化数据重建分块实例。
+     */
+    public static DocumentChunk reconstruct(Snapshot snapshot) {
+        return new DocumentChunk(snapshot.chunkId, snapshot.documentId, snapshot.kbId,
+                snapshot.chunkIndex, snapshot.content, snapshot.tokenCount, snapshot.embedding);
     }
 
     private static int estimateTokenCount(String content) {

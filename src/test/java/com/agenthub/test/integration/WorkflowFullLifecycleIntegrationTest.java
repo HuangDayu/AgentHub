@@ -18,11 +18,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
+import java.util.UUID;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.agenthub.common.utils.RandomUtils.randomShortId;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.ai.util.json.JsonParser.toJson;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -377,7 +379,7 @@ public class WorkflowFullLifecycleIntegrationTest {
                                     "port": 6334,
                                     "collectionName": "test-workflow-collection"
                                 }
-                                """, RandomUtils.randomShortId())))
+                                """, randomShortId())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
@@ -448,7 +450,7 @@ public class WorkflowFullLifecycleIntegrationTest {
                                 {
                                     "tenantId": "%s",
                                     "workspaceId": "%s",
-                                    "kbCode": "test-workflow-kb",
+                                    "kbCode": "test-workflow-%s",
                                     "name": "Test Workflow Knowledge Base",
                                     "description": "Knowledge base for workflow integration test",
                                     "indexProvider": "QDRANT",
@@ -456,7 +458,7 @@ public class WorkflowFullLifecycleIntegrationTest {
                                     "embeddingModelConfigId": "%s",
                                     "chatModelConfigId": "%s"
                                 }
-                                """, TENANT_ID, WORKSPACE_ID, vectorStoreConfigId, embeddingModelConfigId, chatModelConfigId)))
+                                """, TENANT_ID, WORKSPACE_ID,randomShortId(), vectorStoreConfigId, embeddingModelConfigId, chatModelConfigId)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
@@ -542,10 +544,10 @@ public class WorkflowFullLifecycleIntegrationTest {
                                     "tenantId": "%s",
                                     "workspaceId": "%s",
                                     "agentCode": "test-workflow-agent",
-                                    "name": "test-workflow-lifecycle-agent",
+                                    "name": "test-workflow-lifecycle-agent-%s",
                                     "description": "Agent for workflow integration test"
                                 }
-                                """, TENANT_ID, WORKSPACE_ID)))
+                                """, TENANT_ID, WORKSPACE_ID, RandomUtils.randomShortId())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 

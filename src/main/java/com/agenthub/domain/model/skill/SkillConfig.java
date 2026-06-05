@@ -34,18 +34,23 @@ public class SkillConfig {
     public static SkillConfig create(String tenantId, String workspaceId,
                                       String name, List<String> skillPaths) {
         SkillConfig config = new SkillConfig();
+        Instant now = Instant.now();
         config.id = randomId();
         config.tenantId = tenantId;
         config.workspaceId = workspaceId;
         config.name = name;
         config.skillPaths = skillPaths != null ? new ArrayList<>(skillPaths) : new ArrayList<>();
+        applyDefaultFlags(config);
+        config.createdAt = now;
+        config.updatedAt = now;
+        return config;
+    }
+
+    private static void applyDefaultFlags(SkillConfig config) {
         config.syncEnabled = true;
         config.syncInterval = 3600;
         config.autoSync = false;
         config.enabled = true;
-        config.createdAt = Instant.now();
-        config.updatedAt = Instant.now();
-        return config;
     }
 
     /**
@@ -68,16 +73,37 @@ public class SkillConfig {
     }
 
     /**
+     * 更新配置所需字段快照。
+     */
+    public static final class UpdateSpec {
+        private final String name;
+        private final String description;
+        private final List<String> skillPaths;
+        private final boolean syncEnabled;
+        private final int syncInterval;
+        private final boolean autoSync;
+
+        public UpdateSpec(String name, String description, List<String> skillPaths,
+                             boolean syncEnabled, int syncInterval, boolean autoSync) {
+            this.name = name;
+            this.description = description;
+            this.skillPaths = skillPaths;
+            this.syncEnabled = syncEnabled;
+            this.syncInterval = syncInterval;
+            this.autoSync = autoSync;
+        }
+    }
+
+    /**
      * 更新配置。
      */
-    public void update(String name, String description, List<String> skillPaths,
-                       boolean syncEnabled, int syncInterval, boolean autoSync) {
-        this.name = name;
-        this.description = description;
-        this.skillPaths = skillPaths != null ? new ArrayList<>(skillPaths) : this.skillPaths;
-        this.syncEnabled = syncEnabled;
-        this.syncInterval = syncInterval;
-        this.autoSync = autoSync;
+    public void update(UpdateSpec spec) {
+        this.name = spec.name;
+        this.description = spec.description;
+        this.skillPaths = spec.skillPaths != null ? new ArrayList<>(spec.skillPaths) : this.skillPaths;
+        this.syncEnabled = spec.syncEnabled;
+        this.syncInterval = spec.syncInterval;
+        this.autoSync = spec.autoSync;
         this.updatedAt = Instant.now();
     }
 

@@ -44,75 +44,93 @@ public final class IngestionDocument {
      */
     private final DocumentStatus status;
 
-    private IngestionDocument(
-            String id,
-            String kbId,
-            String jobId,
-            String fileName,
-            String contentType,
-            long size,
-            String storagePath,
-            DocumentStatus status
-    ) {
-        this.id = Objects.requireNonNull(id, "documentId must not be null");
-        this.kbId = Objects.requireNonNull(kbId, "kbCode must not be null");
-        this.jobId = Objects.requireNonNull(jobId, "jobId must not be null");
-        this.fileName = Objects.requireNonNull(fileName, "fileName must not be null");
-        this.contentType = contentType == null ? "application/octet-stream" : contentType;
-        this.size = size;
-        this.storagePath = storagePath;
-        this.status = status == null ? DocumentStatus.UPLOADED : status;
+    /**
+     * 工厂方法所需字段快照。
+     */
+    public static final class CreationSpec {
+        private final String kbId;
+        private final String jobId;
+        private final String fileName;
+        private final String contentType;
+        private final long size;
+        private final String storagePath;
+
+        public CreationSpec(String kbId, String jobId, String fileName,
+                               String contentType, long size, String storagePath) {
+            this.kbId = kbId;
+            this.jobId = jobId;
+            this.fileName = fileName;
+            this.contentType = contentType;
+            this.size = size;
+            this.storagePath = storagePath;
+        }
+    }
+
+    /**
+     * 文档字段快照，用于在工厂方法中一次性传入所有字段。
+     */
+    public static final class Snapshot {
+        private final String id;
+        private final String kbId;
+        private final String jobId;
+        private final String fileName;
+        private final String contentType;
+        private final long size;
+        private final String storagePath;
+        private final DocumentStatus status;
+
+        public Snapshot(String id, String kbId, String jobId, String fileName,
+                        String contentType, long size, String storagePath, DocumentStatus status) {
+            this.id = id;
+            this.kbId = kbId;
+            this.jobId = jobId;
+            this.fileName = fileName;
+            this.contentType = contentType;
+            this.size = size;
+            this.storagePath = storagePath;
+            this.status = status;
+        }
+    }
+
+    private IngestionDocument(Snapshot s) {
+        this.id = Objects.requireNonNull(s.id, "documentId must not be null");
+        this.kbId = Objects.requireNonNull(s.kbId, "kbCode must not be null");
+        this.jobId = Objects.requireNonNull(s.jobId, "jobId must not be null");
+        this.fileName = Objects.requireNonNull(s.fileName, "fileName must not be null");
+        this.contentType = s.contentType == null ? "application/octet-stream" : s.contentType;
+        this.size = s.size;
+        this.storagePath = s.storagePath;
+        this.status = s.status == null ? DocumentStatus.UPLOADED : s.status;
     }
 
     /**
      * 创建文档实例，自动生成存储路径。
-     *
-     * @param kbId        知识库ID
-     * @param jobId       任务ID
-     * @param fileName    文件名
-     * @param contentType 内容类型
-     * @param size        文件大小
-     * @return 新的IngestionDocument实例
      */
-    public static IngestionDocument create(String kbId, String jobId, String fileName, String contentType, long size) {
+    public static IngestionDocument create(CreationSpec spec) {
         String documentId = randomId();
-        String storagePath = buildStoragePath(kbId, documentId, fileName);
-        return new IngestionDocument(documentId, kbId, jobId, fileName, contentType, size, storagePath, DocumentStatus.UPLOADED);
+        String storagePath = buildStoragePath(spec.kbId, documentId, spec.fileName);
+        return fromSnapshot(new Snapshot(documentId, spec.kbId, spec.jobId, spec.fileName,
+                spec.contentType, spec.size, storagePath, DocumentStatus.UPLOADED));
     }
 
     /**
      * 使用指定的存储路径创建文档（用于已上传到 MinIO 的文件）。
      */
-    public static IngestionDocument createWithStoragePath(
-            String kbId, String jobId, String fileName, String contentType, long size, String storagePath) {
+    public static IngestionDocument createWithStoragePath(CreationSpec spec) {
         String documentId = randomId();
-        return new IngestionDocument(documentId, kbId, jobId, fileName, contentType, size, storagePath, DocumentStatus.UPLOADED);
+        return fromSnapshot(new Snapshot(documentId, spec.kbId, spec.jobId, spec.fileName,
+                spec.contentType, spec.size, spec.storagePath, DocumentStatus.UPLOADED));
     }
 
     /**
      * 从持久化数据重建文档实例。
-     *
-     * @param documentId  文档ID
-     * @param kbId        知识库ID
-     * @param jobId       任务ID
-     * @param fileName    文件名
-     * @param contentType 内容类型
-     * @param size        文件大小
-     * @param storagePath 存储路径
-     * @param status      文档状态
-     * @return 重建的IngestionDocument实例
      */
-    public static IngestionDocument reconstruct(
-            String documentId,
-            String kbId,
-            String jobId,
-            String fileName,
-            String contentType,
-            long size,
-            String storagePath,
-            DocumentStatus status
-    ) {
-        return new IngestionDocument(documentId, kbId, jobId, fileName, contentType, size, storagePath, status);
+    public static IngestionDocument reconstruct(Snapshot s) {
+        return fromSnapshot(s);
+    }
+
+    private static IngestionDocument fromSnapshot(Snapshot s) {
+        return new IngestionDocument(s);
     }
 
     private static String buildStoragePath(String kbId, String documentId, String fileName) {
@@ -120,42 +138,42 @@ public final class IngestionDocument {
     }
 
     public IngestionDocument markStatus(DocumentStatus documentStatus) {
-        return new IngestionDocument(id, kbId, jobId, fileName, contentType, size, storagePath, documentStatus);
+        return fromSnapshot(new Snapshot(id, kbId, jobId, fileName, contentType, size, storagePath, documentStatus));
     }
 
     /**
      * 标记文档状态为已解析。
      */
     public IngestionDocument markParsed() {
-        return new IngestionDocument(id, kbId, jobId, fileName, contentType, size, storagePath, DocumentStatus.PARSED);
+        return markStatus(DocumentStatus.PARSED);
     }
 
     /**
      * 标记文档状态为已清洗。
      */
     public IngestionDocument markCleaned() {
-        return new IngestionDocument(id, kbId, jobId, fileName, contentType, size, storagePath, DocumentStatus.CLEANED);
+        return markStatus(DocumentStatus.CLEANED);
     }
 
     /**
      * 标记文档状态为已分块。
      */
     public IngestionDocument markChunked() {
-        return new IngestionDocument(id, kbId, jobId, fileName, contentType, size, storagePath, DocumentStatus.CHUNKED);
+        return markStatus(DocumentStatus.CHUNKED);
     }
 
     /**
      * 标记文档状态为已向量化。
      */
     public IngestionDocument markVectorized() {
-        return new IngestionDocument(id, kbId, jobId, fileName, contentType, size, storagePath, DocumentStatus.VECTORIZED);
+        return markStatus(DocumentStatus.VECTORIZED);
     }
 
     /**
      * 标记文档状态为失败。
      */
     public IngestionDocument markFailed() {
-        return new IngestionDocument(id, kbId, jobId, fileName, contentType, size, storagePath, DocumentStatus.FAILED);
+        return markStatus(DocumentStatus.FAILED);
     }
 
     public String getId() {

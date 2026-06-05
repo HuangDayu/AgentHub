@@ -73,23 +73,39 @@ public class SqlTools {
 
     private void appendTableSchema(StringBuilder sb, String tableName) {
         try {
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                    "SELECT * FROM " + tableName + " LIMIT 3");
-            List<Map<String, Object>> columns = jdbcTemplate.queryForList(
-                    "SELECT COLUMN_NAME, TYPE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?",
-                    tableName.toUpperCase());
-            sb.append("CREATE TABLE \"").append(tableName).append("\" (");
-            sb.append(columns.stream()
-                    .map(c -> "\"" + c.get("COLUMN_NAME") + "\" " + c.get("TYPE_NAME"))
-                    .collect(Collectors.joining(", ")));
-            sb.append(")\n\n");
-            if (!rows.isEmpty()) {
-                sb.append("Sample rows:\n");
-                rows.forEach(r -> sb.append(r.toString()).append("\n"));
-            }
-            sb.append("\n");
+            List<Map<String, Object>> rows = fetchSampleRows(tableName);
+            List<Map<String, Object>> columns = fetchColumns(tableName);
+            appendCreateTableDdl(sb, tableName, columns);
+            appendSampleRows(sb, rows);
         } catch (Exception e) {
             sb.append("Error for table ").append(tableName).append(": ").append(e.getMessage()).append("\n");
         }
+    }
+
+    private List<Map<String, Object>> fetchSampleRows(String tableName) {
+        return jdbcTemplate.queryForList("SELECT * FROM " + tableName + " LIMIT 3");
+    }
+
+    private List<Map<String, Object>> fetchColumns(String tableName) {
+        return jdbcTemplate.queryForList(
+                "SELECT COLUMN_NAME, TYPE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?",
+                tableName.toUpperCase());
+    }
+
+    private void appendCreateTableDdl(StringBuilder sb, String tableName, List<Map<String, Object>> columns) {
+        sb.append("CREATE TABLE \"").append(tableName).append("\" (");
+        sb.append(columns.stream()
+                .map(c -> "\"" + c.get("COLUMN_NAME") + "\" " + c.get("TYPE_NAME"))
+                .collect(Collectors.joining(", ")));
+        sb.append(")\n\n");
+    }
+
+    private void appendSampleRows(StringBuilder sb, List<Map<String, Object>> rows) {
+        if (rows.isEmpty()) {
+            sb.append("\n");
+            return;
+        }
+        sb.append("Sample rows:\n");
+        rows.forEach(r -> sb.append(r.toString()).append("\n"));
     }
 }

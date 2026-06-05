@@ -3,7 +3,7 @@ package com.agenthub.application.usecase;
 import com.agenthub.application.command.CreateSkillCommand;
 import com.agenthub.application.dto.SkillOutput;
 import com.agenthub.application.port.out.skills.SkillMarketPort;
-import com.agenthub.domain.model.skill.MarketSearchQuery;
+import com.agenthub.application.dto.MarketSearchQuery;
 import com.agenthub.domain.model.skill.MarketSkillDetail;
 import com.agenthub.domain.model.skill.MarketSkillSummary;
 import lombok.RequiredArgsConstructor;
@@ -33,30 +33,13 @@ public class SkillMarketUseCase {
      * 并行搜索所有可用市场，返回 Map 嵌套结构。
      * Key: 市场ID, Value: 技能摘要 Map 列表。
      */
-    public Map<String, List<Map<String, Object>>> searchAll(
-            String keyword, String category, String sortBy,
-            int page, int pageSize) {
-        MarketSearchQuery query = buildQuery(keyword, category, sortBy, page, pageSize);
+    public Map<String, List<Map<String, Object>>> searchAll(MarketSearchQuery query) {
         ExecutorService executor = Executors.newCachedThreadPool();
         try {
             return doSearchAll(query, executor);
         } finally {
             executor.shutdown();
         }
-    }
-
-    /**
-     * 构建搜索条件。
-     */
-    private MarketSearchQuery buildQuery(String keyword, String category,
-                                          String sortBy, int page, int pageSize) {
-        MarketSearchQuery query = new MarketSearchQuery();
-        query.setKeyword(keyword);
-        query.setCategory(category);
-        query.setSortBy(sortBy);
-        query.setPage(page);
-        query.setPageSize(pageSize);
-        return query;
     }
 
     /**
@@ -107,16 +90,21 @@ public class SkillMarketUseCase {
         Map<String, Object> m = new HashMap<>();
         m.put("marketId", s.getMarketId());
         m.put("skillId", s.getSkillId());
-        m.put("skillCode", s.getSkillCode() != null ? s.getSkillCode() : "");
-        m.put("name", s.getName() != null ? s.getName() : "");
-        m.put("description", s.getDescription() != null ? s.getDescription() : "");
-        m.put("author", s.getAuthor() != null ? s.getAuthor() : "");
-        m.put("version", s.getVersion() != null ? s.getVersion() : "");
         m.put("downloadCount", s.getDownloadCount());
         m.put("starCount", s.getStarCount());
-        m.put("thumbnailUrl", s.getThumbnailUrl() != null ? s.getThumbnailUrl() : "");
         m.put("updatedAt", s.getUpdatedAt() != null ? s.getUpdatedAt().toString() : "");
+        m.putAll(stringSummaryFields(s));
         return m;
+    }
+
+    private Map<String, String> stringSummaryFields(MarketSkillSummary s) {
+        return Map.ofEntries(
+                Map.entry("skillCode", nullToEmpty(s.getSkillCode())),
+                Map.entry("name", nullToEmpty(s.getName())),
+                Map.entry("description", nullToEmpty(s.getDescription())),
+                Map.entry("author", nullToEmpty(s.getAuthor())),
+                Map.entry("version", nullToEmpty(s.getVersion())),
+                Map.entry("thumbnailUrl", nullToEmpty(s.getThumbnailUrl())));
     }
 
     /**
@@ -154,21 +142,39 @@ public class SkillMarketUseCase {
     private Map<String, Object> detailToMap(MarketSkillDetail d, String marketId) {
         Map<String, Object> m = new HashMap<>();
         m.put("marketId", marketId);
-        m.put("skillId", d.getSkillId() != null ? d.getSkillId() : "");
-        m.put("skillCode", d.getSkillCode() != null ? d.getSkillCode() : "");
-        m.put("name", d.getName() != null ? d.getName() : "");
-        m.put("description", d.getDescription() != null ? d.getDescription() : "");
-        m.put("author", d.getAuthor() != null ? d.getAuthor() : "");
-        m.put("version", d.getVersion() != null ? d.getVersion() : "");
-        m.put("license", d.getLicense() != null ? d.getLicense() : "");
-        m.put("homepage", d.getHomepage() != null ? d.getHomepage() : "");
-        m.put("downloadUrl", d.getDownloadUrl() != null ? d.getDownloadUrl() : "");
         m.put("tags", d.getTags() != null ? d.getTags() : List.of());
+        putCountAndDate(m, d);
+        m.putAll(identityFields(d));
+        m.putAll(extraFields(d));
+        return m;
+    }
+
+    private void putCountAndDate(Map<String, Object> m, MarketSkillDetail d) {
         m.put("downloadCount", d.getDownloadCount());
         m.put("starCount", d.getStarCount());
         m.put("updatedAt", d.getUpdatedAt() != null ? d.getUpdatedAt().toString() : "");
-        m.put("readmeContent", d.getReadmeContent() != null ? d.getReadmeContent() : "");
-        return m;
+    }
+
+    private Map<String, String> identityFields(MarketSkillDetail d) {
+        return Map.ofEntries(
+                Map.entry("skillId", nullToEmpty(d.getSkillId())),
+                Map.entry("skillCode", nullToEmpty(d.getSkillCode())),
+                Map.entry("name", nullToEmpty(d.getName())),
+                Map.entry("author", nullToEmpty(d.getAuthor())),
+                Map.entry("version", nullToEmpty(d.getVersion())));
+    }
+
+    private Map<String, String> extraFields(MarketSkillDetail d) {
+        return Map.ofEntries(
+                Map.entry("description", nullToEmpty(d.getDescription())),
+                Map.entry("license", nullToEmpty(d.getLicense())),
+                Map.entry("homepage", nullToEmpty(d.getHomepage())),
+                Map.entry("downloadUrl", nullToEmpty(d.getDownloadUrl())),
+                Map.entry("readmeContent", nullToEmpty(d.getReadmeContent())));
+    }
+
+    private String nullToEmpty(String value) {
+        return value != null ? value : "";
     }
 
     /**
@@ -210,3 +216,4 @@ public class SkillMarketUseCase {
         return command;
     }
 }
+

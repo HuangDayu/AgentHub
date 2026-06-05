@@ -188,20 +188,54 @@ public class RagKeywordRerankerAdapter implements RagRerankerPort {
      * 迭代文本并提取中文字符。
      */
     private void iterateAndExtract(String text, BreakIterator iterator,
-                                   List<String> cjkChars, Set<String> keywords) {
+                                    List<String> cjkChars, Set<String> keywords) {
+        ExtractContext ctx = new ExtractContext(cjkChars, keywords);
         int start = iterator.first();
         int end = iterator.next();
         while (end != BreakIterator.DONE) {
-            String segment = text.substring(start, end);
-            if (CJK_PATTERN.matcher(segment).matches()) {
-                cjkChars.add(segment);
-            } else {
-                addCJKGrams(cjkChars, keywords);
-                cjkChars.clear();
-            }
+            processSegment(new TextSegment(text, start, end), ctx);
             start = end;
             end = iterator.next();
         }
+    }
+
+    private void processSegment(TextSegment segment, ExtractContext ctx) {
+        String text = segment.text().substring(segment.start(), segment.end());
+        if (CJK_PATTERN.matcher(text).matches()) {
+            ctx.cjkChars().add(text);
+        } else {
+            addCJKGrams(ctx.cjkChars(), ctx.keywords());
+            ctx.cjkChars().clear();
+        }
+    }
+
+    private static final class ExtractContext {
+        private final List<String> cjkChars;
+        private final Set<String> keywords;
+
+        ExtractContext(List<String> cjkChars, Set<String> keywords) {
+            this.cjkChars = cjkChars;
+            this.keywords = keywords;
+        }
+
+        List<String> cjkChars() { return cjkChars; }
+        Set<String> keywords() { return keywords; }
+    }
+
+    private static final class TextSegment {
+        private final String text;
+        private final int start;
+        private final int end;
+
+        TextSegment(String text, int start, int end) {
+            this.text = text;
+            this.start = start;
+            this.end = end;
+        }
+
+        String text() { return text; }
+        int start() { return start; }
+        int end() { return end; }
     }
 
     /**

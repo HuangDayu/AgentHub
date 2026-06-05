@@ -1,10 +1,22 @@
 package com.agenthub.test.architecture;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
@@ -21,6 +33,14 @@ public class AgentHubCleanArchitectureTest {
      */
     private static final JavaClasses classes = new ClassFileImporter()
             .importPackages("com.agenthub");
+
+    /**
+     * 豁免的方法集合：从 classpath 中 architecture-exemptions.json 加载，
+     * 命中此集合的方法将被两个方法复杂度测试跳过。
+     */
+    private static final Set<MethodKey> EXEMPTED_METHOD_KEYS = ArchitectureExemptions.load().toMethodKeys();
+
+    // ==================== 架构依赖规则 ====================
 
     /**
      * 领域层不应该依赖任何外层
@@ -216,5 +236,94 @@ public class AgentHubCleanArchitectureTest {
                 .should().beFreeOfCycles()
                 .because("领域层不应该有循环依赖")
                 .check(classes);
+    }
+
+    // ==================== 方法复杂度规则 ====================
+
+    /**
+     * 业务方法不应该超过10行
+     * <p>
+     * 排除：构造方法、转换方法（toXxx/fromXxx）、getter/setter、builder、toString/equals/hashCode
+     * <p>
+     * 豁免列表：从 {@code architecture-exemptions.json} 加载已通过审查但暂不重构的方法。
+     */
+    @Test
+    void methods_should_not_exceed_ten_lines() {
+        methods()
+                .that().areDeclaredInClassesThat().areNotInterfaces()
+                .and().areDeclaredInClassesThat().resideInAPackage("com.agenthub..")
+                .should(new ArchCondition<JavaMethod>("不超过" + MethodComplexityRules.MAX_METHOD_LINES + "行代码") {
+                    @Override
+                    public void check(JavaMethod method, ConditionEvents events) {
+                        if (MethodComplexityRules.shouldSkip(method) || isExempted(method)) {
+                            return;
+                        }
+                        int lineCount = MethodLineAnalyzer.countLines(method);
+                        if (lineCount > MethodComplexityRules.MAX_METHOD_LINES) {
+                            String message = String.format(
+                                    "%s.%s() 有 %d 行代码，超过了最大允许的 %d 行 [%s]",
+                                    method.getOwner().getSimpleName(),
+                                    method.getName(),
+                                    lineCount,
+                                    MethodComplexityRules.MAX_METHOD_LINES,
+                                    method.getSourceCodeLocation());
+                            events.add(SimpleConditionEvent.violated(method, message));
+                        }
+                    }
+                })
+                .because("业务方法应该保持简洁，不超过" + MethodComplexityRules.MAX_METHOD_LINES + "行")
+                .check(classes);
+    }
+
+    /**
+     * 业务方法参数不应该超过3个
+     * <p>
+     * 排除：构造方法、转换方法（toXxx/fromXxx）、getter/setter、builder、toString/equals/hashCode
+     * <p>
+     * 豁免列表：从 {@code architecture-exemptions.json} 加载已通过审查但暂不重构的方法。
+     */
+    @Test
+    void methods_should_not_have_more_than_three_parameters() {
+        methods()
+                .that().areDeclaredInClassesThat().areNotInterfaces()
+                .and().areDeclaredInClassesThat().resideInAPackage("com.agenthub..")
+                .should(new ArchCondition<JavaMethod>("参数不超过" + MethodComplexityRules.MAX_METHOD_PARAMS + "个") {
+                    @Override
+                    public void check(JavaMethod method, ConditionEvents events) {
+                        if (MethodComplexityRules.shouldSkip(method) || isExempted(method)) {
+                            return;
+                        }
+                        int paramCount = method.getParameters().size();
+                        if (paramCount > MethodComplexityRules.MAX_METHOD_PARAMS) {
+                            String message = String.format(
+                                    "%s.%s() 有 %d 个参数，超过了最大允许的 %d 个 [%s]",
+                                    method.getOwner().getSimpleName(),
+                                    method.getName(),
+                                    paramCount,
+                                    MethodComplexityRules.MAX_METHOD_PARAMS,
+                                    method.getSourceCodeLocation());
+                            events.add(SimpleConditionEvent.violated(method, message));
+                        }
+                    }
+                })
+                .because("业务方法参数不应超过" + MethodComplexityRules.MAX_METHOD_PARAMS + "个，应使用Command/DTO对象封装")
+                .check(classes);
+    }
+
+    // ==================== 辅助方法 ====================
+
+    /**
+     * 判断方法是否在豁免配置中（人工审查通过但暂不重构）
+     */
+    private static boolean isExempted(JavaMethod method) {
+        if (EXEMPTED_METHOD_KEYS.isEmpty()) {
+            return false;
+        }
+        String className = method.getOwner().getFullName();
+        String methodName = method.getName();
+        List<String> paramTypes = method.getRawParameterTypes().stream()
+                .map(com.tngtech.archunit.core.domain.JavaClass::getName)
+                .collect(Collectors.toList());
+        return EXEMPTED_METHOD_KEYS.contains(new MethodKey(className, methodName, paramTypes));
     }
 }

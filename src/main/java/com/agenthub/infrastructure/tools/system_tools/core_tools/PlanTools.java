@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.tools.system_tools.core_tools;
 
+import com.agenthub.application.command.AddStepCommand;
 import com.agenthub.application.command.CreatePlanCommand;
 import com.agenthub.application.command.PlanStepInput;
 import com.agenthub.application.dto.ExecutionPlanOutput;
@@ -62,7 +63,8 @@ public class PlanTools {
             @ToolParam(required = false, description = "使用的工具名称") String toolName,
             @ToolParam(required = false, description = "工具调用参数（JSON）") String toolInput,
             ToolContext toolContext) {
-        return executionPlanUseCase.addStepToPlan(planId, description, toolName, toolInput);
+        return executionPlanUseCase.addStepToPlan(
+                new AddStepCommand(planId, description, toolName, toolInput));
     }
 
     @Tool(description = "更新步骤状态：PENDING/RUNNING/COMPLETED/FAILED/SKIPPED")

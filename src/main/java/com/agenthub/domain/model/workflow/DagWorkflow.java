@@ -22,6 +22,28 @@ public class DagWorkflow {
     public DagWorkflow() {
     }
 
+    /**
+     * 工厂方法所需字段快照。
+     */
+    public static final class CreationSpec {
+        private final String tenantId;
+        private final String workspaceId;
+        private final String workflowCode;
+        private final String name;
+        private final String description;
+        private final String graphDefinition;
+
+        public CreationSpec(String tenantId, String workspaceId, String workflowCode,
+                               String name, String description, String graphDefinition) {
+            this.tenantId = tenantId;
+            this.workspaceId = workspaceId;
+            this.workflowCode = workflowCode;
+            this.name = name;
+            this.description = description;
+            this.graphDefinition = graphDefinition;
+        }
+    }
+
     private DagWorkflow(String id, String tenantId, String workspaceId, String workflowCode,
                      String name, String description, String graphDefinition, Instant createdAt) {
         this.id = id;
@@ -36,10 +58,13 @@ public class DagWorkflow {
         this.updatedAt = createdAt;
     }
 
-    public static DagWorkflow create(String tenantId, String workspaceId, String workflowCode,
-                                  String name, String description, String graphDefinition) {
-        return new DagWorkflow(randomId(), tenantId, workspaceId, workflowCode,
-                name, description, graphDefinition, Instant.now());
+    /**
+     * 创建工作流。
+     */
+    public static DagWorkflow create(CreationSpec spec) {
+        return new DagWorkflow(randomId(), spec.tenantId, spec.workspaceId,
+                spec.workflowCode, spec.name, spec.description,
+                spec.graphDefinition, Instant.now());
     }
 
     public void update(String name, String description, String graphDefinition) {

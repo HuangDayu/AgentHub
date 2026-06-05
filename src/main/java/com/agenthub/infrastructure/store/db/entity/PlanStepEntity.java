@@ -23,7 +23,8 @@ public class PlanStepEntity {
     @TableField(value = "tool_input")
     private String toolInput;
     private String status;
-    private String output;
+    @TableField(value = "step_output")
+    private String stepOutput;
     @TableField(value = "subagent_id")
     private String subagentId;
     @TableField(value = "subsession_id")

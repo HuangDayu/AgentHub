@@ -119,6 +119,7 @@ public class MybatisExecutionPlanRepository implements ExecutionPlanRepository {
         PlanStepEntity entity = new PlanStepEntity();
         BeanUtil.copyProperties(step, entity);
         entity.setStepOrder(step.getOrder());
+        entity.setStepOutput(step.getOutput());
         return entity;
     }
 
@@ -133,6 +134,7 @@ public class MybatisExecutionPlanRepository implements ExecutionPlanRepository {
         PlanStep step = new PlanStep();
         BeanUtil.copyProperties(entity, step);
         step.setOrder(entity.getStepOrder());
+        step.setOutput(entity.getStepOutput());
         return step;
     }
 }

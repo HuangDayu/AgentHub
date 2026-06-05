@@ -97,7 +97,7 @@ public class MybatisIngestionDocumentRepository implements IngestionDocumentRepo
      * @return 入库文档领域对象
      */
     private IngestionDocument toDomain(IngestionDocumentEntity entity) {
-        return IngestionDocument.reconstruct(
+        IngestionDocument.Snapshot snapshot = new IngestionDocument.Snapshot(
                 entity.getId(),
                 entity.getKbId(),
                 entity.getJobId(),
@@ -107,6 +107,7 @@ public class MybatisIngestionDocumentRepository implements IngestionDocumentRepo
                 entity.getStoragePath(),
                 IngestionDocument.DocumentStatus.valueOf(entity.getStatus())
         );
+        return IngestionDocument.reconstruct(snapshot);
     }
 }
 

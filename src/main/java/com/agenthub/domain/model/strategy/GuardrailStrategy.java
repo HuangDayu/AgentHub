@@ -37,6 +37,28 @@ public class GuardrailStrategy {
     private Instant createdAt;
     private Instant updatedAt;
 
+    /**
+     * 持久化状态快照，用于在 rebuild 时一次性传入所有字段。
+     */
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Data
+    public static class State {
+        private String id;
+        private String workspaceId;
+        private String name;
+        private String description;
+        private Boolean inputValidationEnabled;
+        private Boolean outputValidationEnabled;
+        private Boolean piiDetectionEnabled;
+        private Boolean piiMaskingEnabled;
+        private Boolean promptInjectionDetection;
+        private Integer maxInputLength;
+        private Integer maxOutputLength;
+        private Instant createdAt;
+        private Instant updatedAt;
+    }
+
     private GuardrailStrategy(String id, String workspaceId, Instant createdAt) {
         this.id = id;
         this.tenantId = null;
@@ -63,24 +85,18 @@ public class GuardrailStrategy {
     /**
      * 从持久化层重建对象。
      */
-    public static GuardrailStrategy rebuild(
-            String id, String workspaceId, String name, String description,
-            boolean inputValidationEnabled, boolean outputValidationEnabled,
-            boolean piiDetectionEnabled, boolean piiMaskingEnabled,
-            boolean promptInjectionDetection,
-            int maxInputLength, int maxOutputLength,
-            Instant createdAt, Instant updatedAt) {
-        GuardrailStrategy strategy = new GuardrailStrategy(id, workspaceId, createdAt);
-        strategy.name = name;
-        strategy.description = description;
-        strategy.inputValidationEnabled = inputValidationEnabled;
-        strategy.outputValidationEnabled = outputValidationEnabled;
-        strategy.piiDetectionEnabled = piiDetectionEnabled;
-        strategy.piiMaskingEnabled = piiMaskingEnabled;
-        strategy.promptInjectionDetection = promptInjectionDetection;
-        strategy.maxInputLength = maxInputLength;
-        strategy.maxOutputLength = maxOutputLength;
-        strategy.updatedAt = updatedAt;
+    public static GuardrailStrategy rebuild(State state) {
+        GuardrailStrategy strategy = new GuardrailStrategy(state.getId(), state.getWorkspaceId(), state.getCreatedAt());
+        strategy.name = state.getName();
+        strategy.description = state.getDescription();
+        strategy.inputValidationEnabled = Boolean.TRUE.equals(state.getInputValidationEnabled());
+        strategy.outputValidationEnabled = Boolean.TRUE.equals(state.getOutputValidationEnabled());
+        strategy.piiDetectionEnabled = Boolean.TRUE.equals(state.getPiiDetectionEnabled());
+        strategy.piiMaskingEnabled = Boolean.TRUE.equals(state.getPiiMaskingEnabled());
+        strategy.promptInjectionDetection = Boolean.TRUE.equals(state.getPromptInjectionDetection());
+        strategy.maxInputLength = state.getMaxInputLength() != null ? state.getMaxInputLength() : 10000;
+        strategy.maxOutputLength = state.getMaxOutputLength() != null ? state.getMaxOutputLength() : 4000;
+        strategy.updatedAt = state.getUpdatedAt();
         return strategy;
     }
 
