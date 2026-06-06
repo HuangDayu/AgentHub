@@ -75,9 +75,9 @@ AgentHub 采用严格的四层架构：
 | `api` → `application` | API 层调用应用层 UseCase |
 | `application` → `domain` | 应用层依赖领域模型 |
 | `infrastructure` → `application/port` + `domain` | 基础设施层实现端口接口 |
-| ❌ `domain` 禁止依赖任何框架 | 纯 POJO，禁止 Spring/JPA/Kafka 等 |
-| ❌ `application` 禁止依赖 `infrastructure` | 通过 Port 接口反转依赖 |
-| ❌ `api.controller` 禁止直接依赖 `domain` | 必须通过 application 层访问 |
+| `domain` 禁止依赖任何框架 | 纯 POJO，禁止 Spring/JPA/Kafka 等 |
+| `application` 禁止依赖 `infrastructure` | 通过 Port 接口反转依赖 |
+| `api.controller` 禁止直接依赖 `domain` | 必须通过 application 层访问 |
 
 ### 2.2 SOLID 原则：让设计自带免疫力
 

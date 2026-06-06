@@ -99,7 +99,9 @@ const showAddButton = computed(() => {
          path.includes('workflow') ||
          path.includes('teams') ||
          path.includes('security-policy') ||
-         path.includes('scheduled-task')
+         path.includes('scheduled-task') ||
+         path.includes('agent-data-sources') ||
+         path.includes('permission-strategies')
 })
 
 // 判断是否显示同步按钮

@@ -270,4 +270,37 @@ public class ApiExceptionHandler {
     public ResponseEntity<Void> handleInvalidRefreshToken() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+
+    /**
+     * 处理权限拒绝异常，返回403响应。
+     */
+    @ExceptionHandler(PermissionDeniedException.class)
+    public ResponseEntity<ErrorResponse> handlePermissionDenied(PermissionDeniedException exception) {
+        ErrorResponse body = handlerException(exception, HttpStatus.FORBIDDEN.value());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
+    }
+
+    /**
+     * 处理危险操作拦截异常，返回403响应。
+     */
+    @ExceptionHandler(DangerousOperationBlockedException.class)
+    public ResponseEntity<ErrorResponse> handleDangerousOperation(DangerousOperationBlockedException exception) {
+        ErrorResponse body = handlerException(exception, HttpStatus.FORBIDDEN.value());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
+    }
+
+    /**
+     * 处理速率限制异常，返回429响应。
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimit(RateLimitExceededException exception) {
+        ErrorResponse body = handlerException(exception, HttpStatus.TOO_MANY_REQUESTS.value());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
+    }
 }

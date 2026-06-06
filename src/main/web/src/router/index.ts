@@ -32,6 +32,8 @@ const agentHubRoutes = {
     { path: 'system-tools', component: () => import('@/views/agenthub/SystemToolsView.vue') },
     { path: 'scheduled-tasks', component: () => import('@/views/agenthub/ScheduledTaskView.vue') },
     { path: 'subagents', component: () => import('@/views/agenthub/SubagentManagementView.vue') },
+    { path: 'agent-data-sources', component: () => import('@/views/agenthub/AgentDataSourceView.vue') },
+    { path: 'audit-logs', component: () => import('@/views/agenthub/AuditLogView.vue') },
   ],
 }
 

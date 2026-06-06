@@ -279,6 +279,38 @@ public class AgentHubCleanArchitectureTest {
                 .check(classes);
     }
 
+    // ==================== Camel/MCP 范围规则（19/19 新增 2 条） ====================
+
+    /**
+     * 19. {@code infrastructure.camel..} 之外禁止引用 {@code org.apache.camel..}
+     */
+    @Test
+    void camel_imports_only_allowed_in_infrastructure_camel() {
+        noClasses()
+                .that().resideOutsideOfPackage("..infrastructure.camel..")
+                .and().resideInAPackage("com.agenthub..")
+                .should().dependOnClassesThat()
+                .resideInAPackage("org.apache.camel..")
+                .because("org.apache.camel.* 只能被 infrastructure.camel 包引用，避免污染其他层")
+                .check(classes);
+    }
+
+    /**
+     * {@code infrastructure.tools.data_source..} 之外禁止引用 {@code io.modelcontextprotocol..}
+     * <p>Camel 与 MCP 仅在 infrastructure.camel 包内互通，避免泄漏到其他基础设施包。</p>
+     */
+    @Test
+    void mcp_imports_only_allowed_in_infrastructure_camel() {
+        noClasses()
+                .that().resideOutsideOfPackages("..infrastructure.camel..", "..infrastructure.tools.mcp_tools..")
+                .and().resideInAPackage("com.agenthub..")
+                .should().dependOnClassesThat()
+                .resideInAPackage("io.modelcontextprotocol..")
+                .allowEmptyShould(true)
+                .because("io.modelcontextprotocol.* 只能被 infrastructure.camel 与 infrastructure.tools.mcp_tools 包引用")
+                .check(classes);
+    }
+
     // ==================== 辅助方法 ====================
 
 

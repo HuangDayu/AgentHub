@@ -20,6 +20,7 @@ ext {
     hutoolVersion = '5.8.31'
     springAiAlibabaVersion = '1.1.2.0'
     agentscopeVersion = '1.1.0-RC2'
+    apacheCamelVersion = '4.14.0'
 }
 
 java {
@@ -53,6 +54,7 @@ dependencies {
     implementation platform("cn.hutool:hutool-bom:${hutoolVersion}")
     implementation platform("com.alibaba.cloud.ai:spring-ai-alibaba-bom:${springAiAlibabaVersion}")
     implementation platform("com.alibaba.cloud.ai:spring-ai-alibaba-extensions-bom:${springAiAlibabaVersion}")
+    implementation(platform("org.apache.camel:apache-camel:${apacheCamelVersion}"))
 
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -78,6 +80,21 @@ dependencies {
     implementation 'co.elastic.clients:elasticsearch-java:8.17.2'
     implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.17.27'
 
+    implementation 'io.modelcontextprotocol.sdk:mcp:1.1.0'
+    implementation 'org.apache.camel:camel-core'
+    implementation 'org.apache.camel:camel-main'
+    implementation 'org.apache.camel:camel-direct'
+    implementation 'org.apache.camel:camel-timer'
+    implementation 'org.apache.camel:camel-bean'
+    implementation 'org.apache.camel:camel-jdbc'
+    implementation 'org.apache.camel:camel-http'
+    implementation 'org.apache.camel:camel-file'
+    implementation 'org.apache.camel:camel-mail'
+    implementation 'org.apache.camel:camel-mongodb'
+    implementation 'org.apache.camel:camel-redis'
+    implementation 'org.apache.camel:camel-sql'
+    implementation 'org.apache.camel:camel-rest'
+
     implementation 'org.springframework.ai:spring-ai-mcp'
     implementation 'org.springframework.ai:spring-ai-ollama'
     implementation 'org.springframework.ai:spring-ai-openai'
@@ -98,6 +115,7 @@ dependencies {
 
     implementation 'cn.hutool:hutool-core'
     implementation 'cn.hutool:hutool-cache'
+    implementation 'cn.hutool:hutool-json'
     implementation 'com.alibaba:transmittable-thread-local:2.14.4'
     implementation "jakarta.servlet:jakarta.servlet-api"
     implementation 'org.aspectj:aspectjweaver:1.9.22.1'
