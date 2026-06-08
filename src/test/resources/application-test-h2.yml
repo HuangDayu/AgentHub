@@ -1,0 +1,21 @@
+# H2 嵌入式测试 profile
+# 激活方式：gradle -Dspring.profiles.active=test-h2 test
+# 加载 sql/h2/ 下的方言专用 schema.sql + init.sql
+spring:
+  sql:
+    init:
+      schema-locations: file:${user.dir}\sql\h2\schema.sql
+      data-locations: file:${user.dir}\sql\h2\init.sql
+      platform: h2
+      mode: always
+  datasource:
+    url: jdbc:h2:mem:agenthub;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER;INIT=CREATE SCHEMA IF NOT EXISTS app
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    hikari:
+      schema: app
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect

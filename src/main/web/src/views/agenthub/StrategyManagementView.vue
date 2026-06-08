@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
       <h2>策略配置</h2>
-      <p class="muted">管理检索策略、工具策略、模型策略和护栏策略</p>
+      <p class="muted">管理检索策略、工具策略、模型策略、护栏策略和权限策略</p>
       </div>
     </div>
 
@@ -12,6 +12,7 @@
       <button :class="{ active: activeTab === 'tool' }" @click="activeTab = 'tool'">工具策略</button>
       <button :class="{ active: activeTab === 'model' }" @click="activeTab = 'model'">模型策略</button>
       <button :class="{ active: activeTab === 'guardrail' }" @click="activeTab = 'guardrail'">护栏策略</button>
+      <button :class="{ active: activeTab === 'permission' }" @click="activeTab = 'permission'">权限策略</button>
     </div>
 
     <div v-if="activeTab === 'retrieval'" class="tab-content">
@@ -26,6 +27,9 @@
     <div v-else-if="activeTab === 'guardrail'" class="tab-content">
       <GuardrailStrategyPanel :key="componentKey" />
     </div>
+    <div v-else-if="activeTab === 'permission'" class="tab-content">
+      <PermissionStrategyPanel :key="componentKey" />
+    </div>
   </section>
 </template>
 
@@ -36,12 +40,14 @@ import RetrievalStrategyPanel from '@/components/strategy/RetrievalStrategyPanel
 import ToolStrategyPanel from '@/components/strategy/ToolStrategyPanel.vue'
 import ModelStrategyPanel from '@/components/strategy/ModelStrategyPanel.vue'
 import GuardrailStrategyPanel from '@/components/strategy/GuardrailStrategyPanel.vue'
+import PermissionStrategyPanel from '@/components/strategy/PermissionStrategyPanel.vue'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
-const activeTab = ref<'retrieval' | 'tool' | 'model' | 'guardrail'>('retrieval')
+type StrategyTab = 'retrieval' | 'tool' | 'model' | 'guardrail' | 'permission'
+const activeTab = ref<StrategyTab>('retrieval')
 
 // 使用workspaceId作为key，当workspaceId变化时强制重新渲染子组件
 const componentKey = computed(() => store.workspaceId)

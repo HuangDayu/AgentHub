@@ -5,7 +5,6 @@ import com.agenthub.test.common.TestCommonTools;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -21,11 +20,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.sql.DataSource;
-import java.io.File;
-import java.nio.file.Files;
-import java.sql.Connection;
-import java.sql.Statement;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,7 +41,6 @@ class CamelDataSourcePgIntegrationTest {
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
     @Autowired private WebApplicationContext wac;
-    @Autowired private DataSource dataSource;
 
     @Value("${spring.datasource.url}") private String jdbcUrl;
     @Value("${spring.datasource.username}") private String username;
@@ -54,31 +48,7 @@ class CamelDataSourcePgIntegrationTest {
 
     private MockMvc mockMvc;
     private String createdId;
-
-    @BeforeAll
-    void applyMigrations() throws Exception {
-        File sqlDir = new File(System.getProperty("user.dir"), "sql");
-        try (Connection conn = dataSource.getConnection();
-             Statement stmt = conn.createStatement()) {
-            stmt.execute("DROP TABLE IF EXISTS app.audit_log CASCADE");
-            stmt.execute("DROP TABLE IF EXISTS app.permission_strategy CASCADE");
-            stmt.execute("DROP TABLE IF EXISTS app.table_relationship CASCADE");
-            stmt.execute("DROP TABLE IF EXISTS app.data_source_column CASCADE");
-            stmt.execute("DROP TABLE IF EXISTS app.data_source_table CASCADE");
-            stmt.execute("DROP TABLE IF EXISTS app.data_source_schema CASCADE");
-            stmt.execute("DROP TABLE IF EXISTS app.agent_data_source CASCADE");
-            String[] files = {"V100__add_agent_data_source_tables.sql",
-                              "V101__add_data_source_schema_tables.sql",
-                              "V102__add_permission_strategy_tables.sql",
-                              "V103__add_global_audit_log_table.sql"};
-            for (String name : files) {
-                File f = new File(sqlDir, name);
-                if (f.exists()) {
-                    stmt.execute(Files.readString(f.toPath()));
-                }
-            }
-        }
-    }
+    private final String uniqueName = "app-pg-ds-" + UUID.randomUUID().toString().substring(0, 8);
 
     @BeforeEach
     void setup() {
@@ -94,7 +64,7 @@ class CamelDataSourcePgIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
-                                    "name": "app-pg-ds",
+                                    "name": "%s",
                                     "description": "uses app primary PG",
                                     "protocol": "JDBC",
                                     "endpointUri": "%s",
@@ -102,7 +72,7 @@ class CamelDataSourcePgIntegrationTest {
                                     "permissionPolicyId": null,
                                     "schemaId": null
                                 }
-                                """, jdbcUrl, username, password)))
+                                """, uniqueName, jdbcUrl, username, password)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         createdId = objectMapper.readTree(body).get("id").asText();

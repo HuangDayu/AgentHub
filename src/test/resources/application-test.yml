@@ -8,23 +8,10 @@ spring:
   sql:
     init:
       mode: never
-      schema-locations: file:${user.dir}\sql\schema.sql
-      data-locations: file:${user.dir}\sql\init.sql
-      platform: postgresql
-  datasource:
-    url: jdbc:postgresql://localhost:5432/agenthub?schema=app
-    username: things
-    password: things123
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      schema: app
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
   servlet:
     multipart:
       max-file-size: 50MB
@@ -101,7 +88,6 @@ agenthub:
   etl:
     type: spring
 
-# JWT
 jwt.secret: monolith-dev-secret-key-please-change-in-production-2026
 
 management:

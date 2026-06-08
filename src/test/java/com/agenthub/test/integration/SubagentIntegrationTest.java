@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.common.utils.RandomUtils.randomShortId;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -36,6 +37,7 @@ class SubagentIntegrationTest {
     private String subsessionId;
     private String autoSubsessionId;
     private final String workspaceId = "100000002";
+    private final String uniqueSuffix = randomShortId();
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -61,16 +63,14 @@ class SubagentIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "tenant-001",
-                                    "workspaceId": "workspace-001",
-                                    "agentCode": "parent-agent",
-                                    "name": "Parent Agent",
+                                    "agentCode": "parent-agent-%s",
+                                    "name": "Parent Agent %s",
                                     "description": "Parent agent for subagent testing"
                                 }
-                                """))
+                                """.formatted(uniqueSuffix, uniqueSuffix)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("Parent Agent"))
+                .andExpect(jsonPath("$.name").value("Parent Agent " + uniqueSuffix))
                 .andReturn().getResponse().getContentAsString();
 
         parentAgentId = objectMapper.readTree(responseBody).get("id").asText();
@@ -85,8 +85,8 @@ class SubagentIntegrationTest {
                         workspaceId, parentAgentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                { "name": "Test Session" }
-                                """))
+                                { "name": "Test Session %s" }
+                                """.formatted(uniqueSuffix)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andReturn().getResponse().getContentAsString();
@@ -125,9 +125,9 @@ class SubagentIntegrationTest {
                         .content("""
                                 {
                                     "subagentId": "%s",
-                                    "name": "Test Subsession"
+                                    "name": "Test Subsession %s"
                                 }
-                                """.formatted(testSubagentId)))
+                                """.formatted(testSubagentId, uniqueSuffix)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.parentSessionId").value(sessionId))

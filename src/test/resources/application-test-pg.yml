@@ -1,0 +1,19 @@
+# PostgreSQL 测试 profile（默认）
+# 激活方式：gradle test（默认）或 -Dspring.profiles.active=test-pg
+spring:
+  sql:
+    init:
+      schema-locations: file:${user.dir}\sql\postgres\schema.sql
+      data-locations: file:${user.dir}\sql\postgres\init.sql
+      platform: postgresql
+  datasource:
+    url: jdbc:postgresql://localhost:5432/agenthub?schema=app
+    username: things
+    password: things123
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      schema: app
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect

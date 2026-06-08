@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.common.utils.RandomUtils.randomShortId;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -25,6 +26,7 @@ class AgentHubControllerIntegrationTest {
 
     private String createdAgentId = null;
     private final String workspaceId = "100000002";
+    private final String uniqueSuffix = randomShortId();
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -48,16 +50,13 @@ class AgentHubControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "tenant-001",
-                                    "workspaceId": "workspace-001",
-                                    "agentCode": "test-agent",
-                                    "name": "Test Agent",
+                                    "agentCode": "test-agent-%s",
+                                    "name": "Test Agent %s",
                                     "description": "Test agent description"
-                                }
-                                """))
+                                }""".formatted(uniqueSuffix, uniqueSuffix)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("Test Agent"))
+                .andExpect(jsonPath("$.name").value("Test Agent " + uniqueSuffix))
                 .andReturn().getResponse().getContentAsString();
 
         createdAgentId = objectMapper.readTree(responseBody).get("id").asText();
@@ -78,7 +77,7 @@ class AgentHubControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}", workspaceId, createdAgentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdAgentId))
-                .andExpect(jsonPath("$.name").value("Test Agent"));
+                .andExpect(jsonPath("$.name").value("Test Agent " + uniqueSuffix));
     }
 
     @Test

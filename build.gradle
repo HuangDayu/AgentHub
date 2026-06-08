@@ -31,6 +31,8 @@ java {
 
 test {
     useJUnitPlatform()
+    systemProperty 'spring.profiles.active',
+        System.getProperty('spring.profiles.active', 'test-pg')
 }
 
 configurations.all {
@@ -143,6 +145,7 @@ dependencies {
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
     testImplementation "com.tngtech.archunit:archunit-junit5:${archUnitVersion}"
+    testRuntimeOnly 'com.h2database:h2:2.2.224'
 }
 
 tasks.register('generateViolations', JavaExec) {
@@ -158,6 +161,16 @@ tasks.register('generateExemptions', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'com.agenthub.test.architecture.ExemptionGenerator'
 }
+
+tasks.register('generateSchemaDdl', JavaExec) {
+    group = 'verification'
+    description = '扫描 entity 包，按方言（postgres/h2/mysql）生成 sql/{dialect}/{schema.sql,init.sql}'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agenthub.test.schema.SchemaFileGeneratorCli'
+    args = ['sql']
+}
+
+tasks.named('test') { dependsOn 'generateSchemaDdl' }
 
 
 repositories {
