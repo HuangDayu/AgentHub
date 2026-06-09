@@ -5,6 +5,7 @@ import com.agenthub.infrastructure.context.TenantContextHeaders;
 import com.agenthub.infrastructure.context.TenantContextHolder;
 import com.agenthub.infrastructure.context.TenantMdcContext;
 import com.agenthub.infrastructure.context.TenantThreadContext;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -38,12 +39,15 @@ public class TenantContextInterceptor implements HandlerInterceptor {
     }
 
     private TenantThreadContext buildContext(HttpServletRequest request, Object handler) {
+        String tenantId = getTenantId(request, handler);
+        String userId = getSubject(request);
         return new TenantThreadContext(
-                getTenantId(request, handler),
+                tenantId,
                 getPathId(request, "/workspaces/"),
                 getPathId(request, "/agents/"),
                 getPathId(request, "/sessions/"),
                 request.getHeader(TenantContextHeaders.CONTEXT_REQUEST_ID),
+                userId,
                 isIgnoreTenantContext(handler)
         );
     }
@@ -84,11 +88,30 @@ public class TenantContextInterceptor implements HandlerInterceptor {
         if (isIgnoreTenantContext(handler)) {
             return null;
         }
+        Claims claims = getClaims(httpServletRequest);
+        if (claims != null) {
+            return claims.get("tenantId", String.class);
+        }
+        throw new JwtException("Unauthorized");
+    }
+
+    private Claims getClaims(HttpServletRequest httpServletRequest) {
         String token = httpServletRequest.getHeader("Authorization");
         if (token != null) {
             return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token.replaceAll("Bearer ", ""))
-                    .getPayload().get("tenantId", String.class);
+                    .getPayload();
         }
-        throw new JwtException("Unauthorized");
+        return null;
+    }
+
+    /**
+     * 从 JWT 中提取 subject（用户标识）。
+     */
+    private String getSubject(HttpServletRequest request) {
+        Claims claims = getClaims(request);
+        if (claims != null) {
+            return claims.getSubject();
+        }
+        return null;
     }
 }

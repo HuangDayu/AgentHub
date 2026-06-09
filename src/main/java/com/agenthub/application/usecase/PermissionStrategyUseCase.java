@@ -1,7 +1,6 @@
 package com.agenthub.application.usecase;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.agenthub.application.annotation.Audited;
 import com.agenthub.application.command.UpsertPermissionStrategyCommand;
 import com.agenthub.application.dto.PermissionStrategyOutput;
 import com.agenthub.application.port.out.repositories.PermissionStrategyRepository;
@@ -42,7 +41,6 @@ public class PermissionStrategyUseCase {
     /**
      * 创建或更新
      */
-    @Audited(resourceType = "PERMISSION_STRATEGY", action = "CREATE")
     public PermissionStrategyOutput upsert(UpsertPermissionStrategyCommand cmd) {
         validate(cmd);
         boolean isCreate = cmd.getId() == null || cmd.getId().isBlank();
@@ -80,7 +78,6 @@ public class PermissionStrategyUseCase {
     /**
      * 删除
      */
-    @Audited(resourceType = "PERMISSION_STRATEGY", action = "DELETE")
     public void delete(String id) {
         requirePolicy(id);
         repository.deleteById(id);

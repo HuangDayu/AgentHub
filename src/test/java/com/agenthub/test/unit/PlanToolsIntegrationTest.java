@@ -40,7 +40,7 @@ class PlanToolsIntegrationTest {
 
     @BeforeAll
     static void init() {
-        TenantContextHolder.open(new TenantThreadContext(tenantId, workspaceId, agentId, sessionId, "1", false));
+        TenantContextHolder.open(new TenantThreadContext(tenantId, workspaceId, agentId, sessionId, "1", "test-user", false));
     }
 
     @Test

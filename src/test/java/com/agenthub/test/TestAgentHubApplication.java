@@ -12,7 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
  */
 @EnableAsync
 @EnableScheduling
-@ActiveProfiles({"test", "test-h2"})
+@ActiveProfiles({"test", "test-pg"})
 @MapperScan("com.agenthub.infrastructure.store.db.mapper")
 @SpringBootApplication(scanBasePackages = "com.agenthub")
 public class TestAgentHubApplication {

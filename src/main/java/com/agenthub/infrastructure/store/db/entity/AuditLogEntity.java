@@ -18,7 +18,6 @@ public class AuditLogEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
     private String tenantId;
-    @TableField(exist = false)
     private String workspaceId;
     private String actorId;
     private String actorType;

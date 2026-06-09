@@ -29,6 +29,13 @@ public class CamelAgentDataSourceAdapter {
     private final Map<String, Boolean> registeredRoutes = new ConcurrentHashMap<>();
 
     /**
+     * 获取已注册的 JDBC DataSource（供 Schema 自动发现使用）
+     */
+    public DataSource getRegisteredDataSource(String dataSourceId) {
+        return registeredDataSources.get(dataSourceId);
+    }
+
+    /**
      * 注册数据源路由
      */
     public void bootstrap(AgentDataSource source) {

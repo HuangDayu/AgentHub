@@ -3,6 +3,8 @@ package com.agenthub.infrastructure.audit;
 import com.agenthub.application.port.out.AuditLogger;
 import com.agenthub.application.port.out.repositories.AuditLogRepository;
 import com.agenthub.domain.event.AuditEvent;
+import com.agenthub.infrastructure.context.TenantContextHolder;
+import com.agenthub.infrastructure.context.TenantThreadContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -97,10 +99,40 @@ public class AuditRecorder implements AuditLogger {
         List<AuditEvent> batch = new ArrayList<>();
         queue.drainTo(batch, BATCH_SIZE);
         if (batch.isEmpty()) return;
-        try {
-            repository.saveAll(batch);
-        } catch (Exception e) {
-            log.error("audit batch insert failed, size={}", batch.size(), e);
+        for (AuditEvent event : batch) {
+            insertWithTenantContext(event);
         }
+    }
+
+    /**
+     * 恢复租户上下文后插入单条审计日志。
+     */
+    private void insertWithTenantContext(AuditEvent event) {
+        if (event.getTenantId() == null) {
+            log.debug("skip audit event with null tenantId, eventId={}", event.getId());
+            return;
+        }
+        doInsert(event);
+    }
+
+    private void doInsert(AuditEvent event) {
+        try (TenantContextHolder.TenantContextScope ignored = TenantContextHolder.open(toContext(event))) {
+            repository.save(event);
+        } catch (Exception e) {
+            log.warn("audit insert failed, eventId={}: {}", event.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * 从审计事件构建租户上下文。
+     */
+    private TenantThreadContext toContext(AuditEvent event) {
+        return TenantThreadContext.builder()
+                .tenantId(event.getTenantId())
+                .workspaceId(event.getWorkspaceId())
+                .agentId(event.getAgentId())
+                .sessionId(event.getSessionId())
+                .userId(event.getActorId())
+                .build();
     }
 }

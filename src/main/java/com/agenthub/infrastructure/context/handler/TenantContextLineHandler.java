@@ -19,7 +19,8 @@ public class TenantContextLineHandler extends BaseContextLineHandler {
 
     @Override
     public Expression getTenantId() {
-        return new StringValue(tenantContextGetter.getTenantId());
+        String id = tenantContextGetter.getTenantId();
+        return id != null ? new StringValue(id) : null;
     }
 
     @Override

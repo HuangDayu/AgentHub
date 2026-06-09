@@ -15,6 +15,7 @@ public class TenantThreadContext {
     private String agentId;
     private String sessionId;
     private String requestId;
+    private String userId;
     private boolean ignoreTenantContext;
 
 

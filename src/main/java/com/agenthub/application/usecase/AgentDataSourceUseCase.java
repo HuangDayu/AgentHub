@@ -1,7 +1,6 @@
 package com.agenthub.application.usecase;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.agenthub.application.annotation.Audited;
 import com.agenthub.application.command.CreateAgentDataSourceCommand;
 import com.agenthub.application.command.InvokeAgentDataSourceCommand;
 import com.agenthub.application.command.UpdateAgentDataSourceCommand;
@@ -52,7 +51,6 @@ public class AgentDataSourceUseCase {
     /**
      * 创建（默认 disabled）
      */
-    @Audited(resourceType = "DATA_SOURCE", action = "CREATE")
     public AgentDataSourceOutput create(CreateAgentDataSourceCommand cmd) {
         validateCommand(cmd);
         checkNameUnique(cmd);
@@ -65,7 +63,6 @@ public class AgentDataSourceUseCase {
     /**
      * 更新（不切换 enabled）
      */
-    @Audited(resourceType = "DATA_SOURCE", action = "UPDATE")
     public AgentDataSourceOutput update(String id, UpdateAgentDataSourceCommand cmd) {
         AgentDataSource source = applyUpdate(requireSource(id), cmd);
         AgentDataSource saved = repository.save(source);
@@ -76,7 +73,6 @@ public class AgentDataSourceUseCase {
     /**
      * 启用
      */
-    @Audited(resourceType = "DATA_SOURCE", action = "ENABLE")
     public AgentDataSourceOutput enable(String id) {
         AgentDataSource source = markEnabled(requireSource(id));
         AgentDataSource saved = repository.save(source);
@@ -88,7 +84,6 @@ public class AgentDataSourceUseCase {
     /**
      * 禁用
      */
-    @Audited(resourceType = "DATA_SOURCE", action = "DISABLE")
     public AgentDataSourceOutput disable(String id) {
         AgentDataSource source = markDisabled(requireSource(id));
         AgentDataSource saved = repository.save(source);
@@ -100,7 +95,6 @@ public class AgentDataSourceUseCase {
     /**
      * 删除
      */
-    @Audited(resourceType = "DATA_SOURCE", action = "DELETE")
     public void delete(String id) {
         AgentDataSource source = requireSource(id);
         safeShutdown(id);
@@ -111,7 +105,6 @@ public class AgentDataSourceUseCase {
     /**
      * 测试连接
      */
-    @Audited(resourceType = "DATA_SOURCE", action = "TEST")
     public AgentDataSourcePort.AgentDataSourceTestResult test(String id) {
         return port.test(requireSource(id));
     }
@@ -119,7 +112,6 @@ public class AgentDataSourceUseCase {
     /**
      * 调用数据源
      */
-    @Audited(resourceType = "DATA_SOURCE", action = "INVOKE", includeResult = true)
     public AgentDataSourcePort.AgentDataSourceInvokeResult invoke(String id, InvokeAgentDataSourceCommand cmd) {
         AgentDataSource source = requireSource(id);
         ensureEnabled(source);

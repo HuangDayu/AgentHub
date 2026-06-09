@@ -237,7 +237,7 @@ class RuntimeDataViewControllerIntegrationTest {
     }
 
     private TenantThreadContext testContext() {
-        return new TenantThreadContext(WORKSPACE_ID, WORKSPACE_ID, "runtime-data-view-test", "1", "1", false);
+        return new TenantThreadContext(WORKSPACE_ID, WORKSPACE_ID, "runtime-data-view-test", "1", "1", "test-user", false);
     }
 
     @FunctionalInterface

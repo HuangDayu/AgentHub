@@ -20,7 +20,8 @@ public class WorkspacesContextLineHandler extends BaseContextLineHandler {
 
     @Override
     public Expression getTenantId() {
-        return new StringValue(tenantContextGetter.getWorkspaceId());
+        String id = tenantContextGetter.getWorkspaceId();
+        return id != null ? new StringValue(id) : null;
     }
 
 

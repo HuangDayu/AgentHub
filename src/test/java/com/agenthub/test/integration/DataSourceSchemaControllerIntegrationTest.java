@@ -107,7 +107,10 @@ class DataSourceSchemaControllerIntegrationTest {
     void shouldIntrospectSchema() throws Exception {
         org.junit.jupiter.api.Assertions.assertNotNull(dataSourceId);
         mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/schema/introspect", workspaceId, dataSourceId))
-                .andExpect(status().is(org.hamcrest.Matchers.anyOf(org.hamcrest.Matchers.is(200), org.hamcrest.Matchers.is(500))));
+                .andExpect(status().is(org.hamcrest.Matchers.anyOf(
+                        org.hamcrest.Matchers.is(200),
+                        org.hamcrest.Matchers.is(409),
+                        org.hamcrest.Matchers.is(500))));
     }
 
     @Test

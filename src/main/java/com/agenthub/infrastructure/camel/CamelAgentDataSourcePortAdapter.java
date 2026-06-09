@@ -3,12 +3,10 @@ package com.agenthub.infrastructure.camel;
 import com.agenthub.application.port.out.AgentDataSourcePort;
 import com.agenthub.domain.model.AgentDataSource;
 import com.agenthub.domain.model.AgentDataSourceDescriptor;
-import com.agenthub.domain.model.AgentDataSourceField;
 import com.agenthub.domain.model.DataSourceSchema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,7 +18,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CamelAgentDataSourcePortAdapter implements AgentDataSourcePort {
     private final CamelAgentDataSourceAdapter adapter;
-    private final CamelComponentIntrospector introspector;
+    private final CamelComponentIntrospector protocolIntrospector;
+    private final CamelSchemaIntrospector schemaIntrospector;
 
     @Override
     public void bootstrap(AgentDataSource source) {
@@ -74,16 +73,13 @@ public class CamelAgentDataSourcePortAdapter implements AgentDataSourcePort {
 
     @Override
     public List<AgentDataSourceDescriptor> listDescriptors() {
-        return introspector.listDescriptors();
+        return protocolIntrospector.listDescriptors();
     }
 
     /**
-     * JDBC 自动发现 Schema（通过 INFORMATION_SCHEMA）
+     * JDBC 自动发现 Schema（通过 DatabaseMetaData）
      */
     public DataSourceSchema introspect(AgentDataSource source) {
-        // 默认返回空 schema，JDBC 真实实现由具体 Camel JDBC Component 负责
-        DataSourceSchema schema = new DataSourceSchema();
-        schema.setTables(new ArrayList<>());
-        return schema;
+        return schemaIntrospector.introspect(source);
     }
 }

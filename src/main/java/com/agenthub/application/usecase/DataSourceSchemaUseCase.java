@@ -1,6 +1,5 @@
 package com.agenthub.application.usecase;
 
-import com.agenthub.application.annotation.Audited;
 import com.agenthub.application.dto.DataSourceSchemaOutput;
 import com.agenthub.application.port.out.AgentDataSourcePort;
 import com.agenthub.application.port.out.repositories.AgentDataSourceRepository;
@@ -42,7 +41,6 @@ public class DataSourceSchemaUseCase {
     /**
      * 整体替换 Schema（手动配置）
      */
-    @Audited(resourceType = "DATA_SOURCE_SCHEMA", action = "UPDATE")
     public DataSourceSchemaOutput replace(String dataSourceId, DataSourceSchema schema) {
         AgentDataSource source = requireSource(dataSourceId);
         DataSourceSchema existing = schemaRepository.findByDataSourceId(dataSourceId)
@@ -57,7 +55,6 @@ public class DataSourceSchemaUseCase {
     /**
      * 自动发现（通过 Camel JDBC 查 INFORMATION_SCHEMA）
      */
-    @Audited(resourceType = "DATA_SOURCE_SCHEMA", action = "INTROSPECT")
     public DataSourceSchemaOutput introspect(String dataSourceId) {
         AgentDataSource source = requireSource(dataSourceId);
         requireJdbc(source);
@@ -68,7 +65,6 @@ public class DataSourceSchemaUseCase {
     /**
      * 新增表
      */
-    @Audited(resourceType = "DATA_SOURCE_SCHEMA", action = "CREATE")
     public DataSourceSchemaOutput addTable(String dataSourceId, DataSourceTable table) {
         DataSourceSchema schema = schemaRepository.findByDataSourceId(dataSourceId)
             .orElseGet(() -> createNewSchema(dataSourceId, requireSource(dataSourceId)));
@@ -81,7 +77,6 @@ public class DataSourceSchemaUseCase {
     /**
      * 更新表
      */
-    @Audited(resourceType = "DATA_SOURCE_SCHEMA", action = "UPDATE")
     public DataSourceSchemaOutput updateTable(String dataSourceId, String tableId, DataSourceTable table) {
         DataSourceSchema schema = requireSchema(dataSourceId);
         int idx = findTableIndex(schema, tableId);
@@ -96,7 +91,6 @@ public class DataSourceSchemaUseCase {
     /**
      * 删除表
      */
-    @Audited(resourceType = "DATA_SOURCE_SCHEMA", action = "DELETE")
     public void deleteTable(String dataSourceId, String tableId) {
         DataSourceSchema schema = requireSchema(dataSourceId);
         schema.getTables().removeIf(t -> t.getId().equals(tableId));

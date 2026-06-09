@@ -167,6 +167,7 @@ CREATE TABLE IF NOT EXISTS app_user (
 CREATE TABLE IF NOT EXISTS audit_log (
   id varchar(64) NOT NULL,
   tenant_id VARCHAR(255),
+  workspace_id VARCHAR(255),
   actor_id VARCHAR(255),
   actor_type VARCHAR(255),
   agent_id VARCHAR(255),

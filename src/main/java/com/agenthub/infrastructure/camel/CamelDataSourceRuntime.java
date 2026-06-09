@@ -18,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class CamelDataSourceRuntime {
     private final Map<String, CamelContext> workspaceContexts = new ConcurrentHashMap<>();
-    private final CamelAgentDataSourceMapper mapper = new CamelAgentDataSourceMapper();
 
     /**
      * 获取或创建工作空间的 CamelContext

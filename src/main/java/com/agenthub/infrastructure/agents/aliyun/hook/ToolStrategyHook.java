@@ -38,6 +38,7 @@ public class ToolStrategyHook implements Hook {
     /** 处理工具调用前事件。 */
     private void handleBeforeToolCall(PreActingEvent event) {
         ToolStrategy strategy = context.getToolStrategy();
+        if (strategy == null) return;
         String toolName = extractToolName(event);
         strategy.beforeToolCall(context, toolName, "");
     }
@@ -45,6 +46,7 @@ public class ToolStrategyHook implements Hook {
     /** 处理工具调用后事件。 */
     private void handleAfterToolCall(PostActingEvent event) {
         ToolStrategy strategy = context.getToolStrategy();
+        if (strategy == null) return;
         String toolName = extractToolName(event);
         strategy.afterToolCall(context, toolName, "");
     }

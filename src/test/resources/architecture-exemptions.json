@@ -1445,5 +1445,11 @@
     "parameterTypes" : [ "java.lang.String", "com.agenthub.domain.model.workflow.DagWorkflowContext" ],
     "reason" : "LIGHT 违规：11 行（>10），链式调用=0%，控制流=14%，赋值=57%",
     "severity" : "LIGHT"
+  }, {
+    "className" : "com.agenthub.infrastructure.camel.CamelSchemaIntrospector",
+    "methodName" : "discoverColumns",
+    "parameterTypes" : [ "java.sql.DatabaseMetaData", "java.lang.String", "java.lang.String" ],
+    "reason" : "LIGHT 违规：JDBC INFORMATION_SCHEMA 查询需要 try-with-resources + loop 结构",
+    "severity" : "LIGHT"
   } ]
 }
