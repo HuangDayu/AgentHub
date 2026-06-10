@@ -22,6 +22,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.UUID;
 
+import static com.agenthub.test.common.TestCommonTools.TENANT_ID;
+import static com.agenthub.test.common.TestCommonTools.WORKSPACE_ID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,8 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CamelDataSourcePgIntegrationTest {
 
-    private final String workspaceId = "100000002";
-    private final String tenantId = "100000002";
+    
+    
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -59,8 +61,8 @@ class CamelDataSourcePgIntegrationTest {
     @Test
     @Order(1)
     void shouldCreatePgDataSource() throws Exception {
-        String body = mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources", workspaceId)
-                        .header("X-Tenant-Id", tenantId)
+        String body = mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources", WORKSPACE_ID)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -84,7 +86,7 @@ class CamelDataSourcePgIntegrationTest {
         org.junit.jupiter.api.Assertions.assertNotNull(createdId);
         MvcResult result = mockMvc.perform(post(
                         "/api/v1/workspaces/{w}/agent-data-sources/{id}/test",
-                        workspaceId, createdId))
+                        WORKSPACE_ID, createdId))
                 .andExpect(status().isOk())
                 .andReturn();
         JsonNode json = objectMapper.readTree(result.getResponse().getContentAsString());

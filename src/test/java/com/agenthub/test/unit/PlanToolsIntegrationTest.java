@@ -13,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
+import static com.agenthub.test.common.TestCommonTools.TENANT_ID;
+import static com.agenthub.test.common.TestCommonTools.WORKSPACE_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -31,8 +33,6 @@ class PlanToolsIntegrationTest {
     @Autowired
     private ExecutionPlanUseCase executionPlanUseCase;
 
-    private static final String workspaceId = "100000002";
-    private static final String tenantId = "100000002";
     private static final String agentId = "2054196010662010881";
     private static final String sessionId = "2057834835146399745";
     private String createdPlanId;
@@ -40,7 +40,7 @@ class PlanToolsIntegrationTest {
 
     @BeforeAll
     static void init() {
-        TenantContextHolder.open(new TenantThreadContext(tenantId, workspaceId, agentId, sessionId, "1", "test-user", false));
+        TenantContextHolder.open(new TenantThreadContext(TENANT_ID, WORKSPACE_ID, agentId, sessionId, "1", "test-user", false));
     }
 
     @Test

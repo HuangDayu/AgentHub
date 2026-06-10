@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static com.agenthub.common.utils.RandomUtils.randomShortId;
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -25,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PromptTemplateControllerIntegrationTest {
 
     private String createdTemplateId = null;
-    private final String workspaceId = "100000002";
+    
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -46,7 +47,7 @@ class PromptTemplateControllerIntegrationTest {
     @Order(1)
     void shouldCreatePromptTemplate() throws Exception {
         String shortId = randomShortId();
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/prompt-templates", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/prompt-templates", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -69,7 +70,7 @@ class PromptTemplateControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListPromptTemplates() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/prompt-templates", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/prompt-templates", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -78,7 +79,7 @@ class PromptTemplateControllerIntegrationTest {
     @Order(3)
     void shouldGetPromptTemplateById() throws Exception {
         Assertions.assertNotNull(createdTemplateId, "Template should be created first");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/prompt-templates/{id}", workspaceId, createdTemplateId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/prompt-templates/{id}", WORKSPACE_ID, createdTemplateId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdTemplateId));
     }
@@ -87,7 +88,7 @@ class PromptTemplateControllerIntegrationTest {
     @Order(4)
     void shouldUpdatePromptTemplate() throws Exception {
         Assertions.assertNotNull(createdTemplateId, "Template should be created first");
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/prompt-templates/{id}", workspaceId, createdTemplateId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/prompt-templates/{id}", WORKSPACE_ID, createdTemplateId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -107,7 +108,7 @@ class PromptTemplateControllerIntegrationTest {
     @Test
     @Order(5)
     void shouldReturnNotFoundForUnknownId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/prompt-templates/{id}", workspaceId, "non-existent-id"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/prompt-templates/{id}", WORKSPACE_ID, "non-existent-id"))
                 .andExpect(status().isNotFound());
     }
 
@@ -115,7 +116,7 @@ class PromptTemplateControllerIntegrationTest {
     @Order(6)
     void shouldDeletePromptTemplate() throws Exception {
         Assertions.assertNotNull(createdTemplateId, "Template should be created first");
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/prompt-templates/{id}", workspaceId, createdTemplateId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/prompt-templates/{id}", WORKSPACE_ID, createdTemplateId))
                 .andExpect(status().isNoContent());
     }
 }

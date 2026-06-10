@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RetrievalStrategyControllerIntegrationTest {
 
     private String createdStrategyId = null;
-    private final String workspaceId = "100000002";
+    
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);
@@ -45,7 +46,7 @@ class RetrievalStrategyControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateRetrievalStrategy() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/retrieval-strategies", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/retrieval-strategies", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -72,7 +73,7 @@ class RetrievalStrategyControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListRetrievalStrategies() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/retrieval-strategies", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/retrieval-strategies", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -82,7 +83,7 @@ class RetrievalStrategyControllerIntegrationTest {
     void shouldGetRetrievalStrategyById() throws Exception {
         Assertions.assertNotNull(createdStrategyId);
 
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/retrieval-strategies/{id}", workspaceId, createdStrategyId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/retrieval-strategies/{id}", WORKSPACE_ID, createdStrategyId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdStrategyId))
                 .andExpect(jsonPath("$.name").value("hybrid-retrieval"));
@@ -93,7 +94,7 @@ class RetrievalStrategyControllerIntegrationTest {
     void shouldUpdateRetrievalStrategy() throws Exception {
         Assertions.assertNotNull(createdStrategyId);
 
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/retrieval-strategies/{id}", workspaceId, createdStrategyId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/retrieval-strategies/{id}", WORKSPACE_ID, createdStrategyId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -108,7 +109,7 @@ class RetrievalStrategyControllerIntegrationTest {
     @Test
     @Order(5)
     void shouldReturnNotFoundForUnknownId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/retrieval-strategies/{id}", workspaceId, "00000000-0000-0000-0000-000000000001"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/retrieval-strategies/{id}", WORKSPACE_ID, "00000000-0000-0000-0000-000000000001"))
                 .andExpect(status().isNotFound());
     }
 
@@ -117,10 +118,10 @@ class RetrievalStrategyControllerIntegrationTest {
     void shouldDeleteRetrievalStrategy() throws Exception {
         Assertions.assertNotNull(createdStrategyId);
 
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/retrieval-strategies/{id}", workspaceId, createdStrategyId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/retrieval-strategies/{id}", WORKSPACE_ID, createdStrategyId))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/retrieval-strategies/{id}", workspaceId, createdStrategyId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/retrieval-strategies/{id}", WORKSPACE_ID, createdStrategyId))
                 .andExpect(status().isNotFound());
     }
 }

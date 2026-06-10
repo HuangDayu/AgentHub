@@ -6,11 +6,11 @@ import com.agenthub.test.TestAgentHubApplication;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SystemToolsControllerIntegrationTest {
 
     private String createdToolId = null;
-    private final String workspaceId = "100000002";
+    
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -41,14 +41,14 @@ class SystemToolsControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldSyncTools() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/system-tools/sync", workspaceId))
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/system-tools/sync", WORKSPACE_ID))
                 .andExpect(status().isOk());
     }
 
     @Test
     @Order(2)
     void shouldListTools() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -56,7 +56,7 @@ class SystemToolsControllerIntegrationTest {
     @Test
     @Order(3)
     void shouldListEnabledTools() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools/enabled", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools/enabled", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -65,11 +65,11 @@ class SystemToolsControllerIntegrationTest {
     @Order(4)
     void shouldEnableTool() throws Exception {
         // 先同步确保有工具
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/system-tools/sync", workspaceId))
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/system-tools/sync", WORKSPACE_ID))
                 .andExpect(status().isOk());
         
         // 获取工具列表
-        String responseBody = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools", workspaceId))
+        String responseBody = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         
@@ -77,7 +77,7 @@ class SystemToolsControllerIntegrationTest {
         if (objectMapper.readTree(responseBody).size() > 0) {
             createdToolId = objectMapper.readTree(responseBody).get(0).get("id").asText();
             
-            mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/system-tools/{id}/enable", workspaceId, createdToolId))
+            mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/system-tools/{id}/enable", WORKSPACE_ID, createdToolId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.enabled").value(true));
         }
@@ -88,7 +88,7 @@ class SystemToolsControllerIntegrationTest {
     void shouldDisableTool() throws Exception {
         if (createdToolId == null) {
             // 尝试获取一个工具ID
-            String responseBody = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools", workspaceId))
+            String responseBody = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools", WORKSPACE_ID))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
             
@@ -98,7 +98,7 @@ class SystemToolsControllerIntegrationTest {
         }
         
         if (createdToolId != null) {
-            mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/system-tools/{id}/disable", workspaceId, createdToolId))
+            mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/system-tools/{id}/disable", WORKSPACE_ID, createdToolId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.enabled").value(false));
         }
@@ -109,7 +109,7 @@ class SystemToolsControllerIntegrationTest {
     void shouldGetToolById() throws Exception {
         if (createdToolId == null) {
             // 尝试获取一个工具ID
-            String responseBody = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools", workspaceId))
+            String responseBody = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools", WORKSPACE_ID))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
             
@@ -119,7 +119,7 @@ class SystemToolsControllerIntegrationTest {
         }
         
         if (createdToolId != null) {
-            mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools/{id}", workspaceId, createdToolId))
+            mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools/{id}", WORKSPACE_ID, createdToolId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(createdToolId));
         }
@@ -130,7 +130,7 @@ class SystemToolsControllerIntegrationTest {
     void shouldDeleteTool() throws Exception {
         if (createdToolId == null) {
             // 尝试获取一个工具ID
-            String responseBody = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools", workspaceId))
+            String responseBody = mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/system-tools", WORKSPACE_ID))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
             
@@ -140,7 +140,7 @@ class SystemToolsControllerIntegrationTest {
         }
         
         if (createdToolId != null) {
-            mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/system-tools/{id}", workspaceId, createdToolId))
+            mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/system-tools/{id}", WORKSPACE_ID, createdToolId))
                     .andExpect(status().isNoContent());
         }
     }

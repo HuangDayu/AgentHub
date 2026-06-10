@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static com.agenthub.test.common.TestCommonTools.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,8 +30,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DataSourceSchemaControllerIntegrationTest {
-    private final String workspaceId = "100000002";
-    private final String tenantId = "100000002";
+    
+    
+    private final String dsName = "test-schema-ds-" + System.currentTimeMillis();
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -49,18 +51,18 @@ class DataSourceSchemaControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateDataSourceForSchema() throws Exception {
-        String body = mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources", workspaceId)
-                        .header("X-Tenant-Id", tenantId)
+        String body = mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources", WORKSPACE_ID)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "name": "test-schema-ds",
+                                    "name": "%s",
                                     "description": "schema test",
                                     "protocol": "JDBC",
                                     "endpointUri": "jdbc:postgresql://localhost:5432/test",
                                     "propertiesJson": "{}"
                                 }
-                                """))
+                                """, dsName)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         dataSourceId = new com.fasterxml.jackson.databind.ObjectMapper()
@@ -71,7 +73,7 @@ class DataSourceSchemaControllerIntegrationTest {
     @Order(2)
     void shouldReturnEmptySchema() throws Exception {
         org.junit.jupiter.api.Assertions.assertNotNull(dataSourceId);
-        mockMvc.perform(get("/api/v1/workspaces/{w}/agent-data-sources/{id}/schema", workspaceId, dataSourceId))
+        mockMvc.perform(get("/api/v1/workspaces/{w}/agent-data-sources/{id}/schema", WORKSPACE_ID, dataSourceId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dataSourceId").value(dataSourceId));
     }
@@ -80,7 +82,7 @@ class DataSourceSchemaControllerIntegrationTest {
     @Order(3)
     void shouldAddTable() throws Exception {
         org.junit.jupiter.api.Assertions.assertNotNull(dataSourceId);
-        String body = mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/schema/tables", workspaceId, dataSourceId)
+        String body = mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/schema/tables", WORKSPACE_ID, dataSourceId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -106,7 +108,7 @@ class DataSourceSchemaControllerIntegrationTest {
     @Order(4)
     void shouldIntrospectSchema() throws Exception {
         org.junit.jupiter.api.Assertions.assertNotNull(dataSourceId);
-        mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/schema/introspect", workspaceId, dataSourceId))
+        mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/schema/introspect", WORKSPACE_ID, dataSourceId))
                 .andExpect(status().is(org.hamcrest.Matchers.anyOf(
                         org.hamcrest.Matchers.is(200),
                         org.hamcrest.Matchers.is(409),
@@ -118,7 +120,7 @@ class DataSourceSchemaControllerIntegrationTest {
     void shouldDeleteTable() throws Exception {
         org.junit.jupiter.api.Assertions.assertNotNull(tableId);
         mockMvc.perform(delete("/api/v1/workspaces/{w}/agent-data-sources/{ds}/schema/tables/{t}",
-                        workspaceId, dataSourceId, tableId))
+                        WORKSPACE_ID, dataSourceId, tableId))
                 .andExpect(status().isNoContent());
     }
 
@@ -126,7 +128,7 @@ class DataSourceSchemaControllerIntegrationTest {
     @Order(6)
     void shouldCleanupDataSource() throws Exception {
         org.junit.jupiter.api.Assertions.assertNotNull(dataSourceId);
-        mockMvc.perform(delete("/api/v1/workspaces/{w}/agent-data-sources/{id}", workspaceId, dataSourceId))
+        mockMvc.perform(delete("/api/v1/workspaces/{w}/agent-data-sources/{id}", WORKSPACE_ID, dataSourceId))
                 .andExpect(status().isNoContent());
     }
 }

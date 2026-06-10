@@ -4,11 +4,11 @@ import com.agenthub.test.TestAgentHubApplication;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -23,7 +23,7 @@ class SpanControllerIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
-    private final String workspaceId = "100000002";
+    
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -40,7 +40,7 @@ class SpanControllerIntegrationTest {
     @Order(2)
     void shouldListSpansByTrace() throws Exception {
         String traceId = "test-trace-001";
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/spans/traces/{traceId}",workspaceId, traceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/spans/traces/{traceId}", WORKSPACE_ID, traceId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -49,7 +49,7 @@ class SpanControllerIntegrationTest {
     @Order(3)
     void shouldListSpansByRun() throws Exception {
         String runId = "test-run-001";
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/spans/runs/{runId}",workspaceId, runId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/spans/runs/{runId}", WORKSPACE_ID, runId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -58,7 +58,7 @@ class SpanControllerIntegrationTest {
     @Order(4)
     void shouldReturn404WhenSpanNotFound() throws Exception {
         String spanId = "non-existent-span";
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/spans/{spanId}",workspaceId, spanId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/spans/{spanId}", WORKSPACE_ID, spanId))
             .andExpect(status().isNotFound());
     }
 
@@ -66,7 +66,7 @@ class SpanControllerIntegrationTest {
     @Order(5)
     void shouldDeleteSpan() throws Exception {
         String spanId = "test-span-to-delete";
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/spans/{spanId}",workspaceId, spanId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/spans/{spanId}", WORKSPACE_ID, spanId))
             .andExpect(status().isOk());
     }
 }

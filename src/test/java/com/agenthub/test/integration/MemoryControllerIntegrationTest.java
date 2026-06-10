@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,7 +28,7 @@ class MemoryControllerIntegrationTest {
 
     private MockMvc mockMvc;
     private String createdMemoryId;
-    private final String workspaceId = "100000002";
+    
     private final String agentId = "test-agent";
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -42,12 +43,10 @@ class MemoryControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateMemory() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/memories", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/memories", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "100000002",
-                                    "workspaceId": "100000002",
                                     "agentId": "test-agent",
                                     "memoryType": "EPISODIC",
                                     "content": "Test memory content",
@@ -67,7 +66,7 @@ class MemoryControllerIntegrationTest {
     @Order(2)
     void shouldGetMemoryById() throws Exception {
         Assertions.assertNotNull(createdMemoryId, "Memory should be created first");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/memories/{memoryId}", workspaceId, createdMemoryId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/memories/{memoryId}", WORKSPACE_ID, createdMemoryId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdMemoryId));
     }
@@ -75,7 +74,7 @@ class MemoryControllerIntegrationTest {
     @Test
     @Order(3)
     void shouldListMemoriesByAgent() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/memories/agents/{agentId}", workspaceId, agentId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/memories/agents/{agentId}", WORKSPACE_ID, agentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -84,7 +83,7 @@ class MemoryControllerIntegrationTest {
     @Order(4)
     void shouldUpdateMemory() throws Exception {
         Assertions.assertNotNull(createdMemoryId, "Memory should be created first");
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/memories/{memoryId}", workspaceId, createdMemoryId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/memories/{memoryId}", WORKSPACE_ID, createdMemoryId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -100,7 +99,7 @@ class MemoryControllerIntegrationTest {
     @Test
     @Order(5)
     void shouldReturnNotFoundForUnknownId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/memories/{memoryId}", workspaceId, "non-existent-id"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/memories/{memoryId}", WORKSPACE_ID, "non-existent-id"))
                 .andExpect(status().isNotFound());
     }
 
@@ -108,7 +107,7 @@ class MemoryControllerIntegrationTest {
     @Order(6)
     void shouldDeleteMemory() throws Exception {
         Assertions.assertNotNull(createdMemoryId, "Memory should be created first");
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/memories/{memoryId}", workspaceId, createdMemoryId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/memories/{memoryId}", WORKSPACE_ID, createdMemoryId))
                 .andExpect(status().isNoContent());
     }
 }

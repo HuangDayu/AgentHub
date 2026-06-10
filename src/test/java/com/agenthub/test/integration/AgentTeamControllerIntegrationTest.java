@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,7 +28,7 @@ class AgentTeamControllerIntegrationTest {
 
     private MockMvc mockMvc;
     private String createdTeamId;
-    private final String workspaceId = "100000002";
+    
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -41,12 +42,10 @@ class AgentTeamControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateTeam() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/teams", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/teams", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "100000002",
-                                    "workspaceId": "100000002",
                                     "teamCode": "test-team-001",
                                     "name": "Test Team",
                                     "description": "Test team description",
@@ -65,7 +64,7 @@ class AgentTeamControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListTeams() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/teams", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/teams", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -74,7 +73,7 @@ class AgentTeamControllerIntegrationTest {
     @Order(3)
     void shouldGetTeamById() throws Exception {
         Assertions.assertNotNull(createdTeamId, "Team should be created first");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/teams/{teamId}", workspaceId, createdTeamId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/teams/{teamId}", WORKSPACE_ID, createdTeamId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdTeamId));
     }
@@ -83,7 +82,7 @@ class AgentTeamControllerIntegrationTest {
     @Order(4)
     void shouldUpdateTeam() throws Exception {
         Assertions.assertNotNull(createdTeamId, "Team should be created first");
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/teams/{teamId}", workspaceId, createdTeamId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/teams/{teamId}", WORKSPACE_ID, createdTeamId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -101,7 +100,7 @@ class AgentTeamControllerIntegrationTest {
     @Order(5)
     void shouldActivateTeam() throws Exception {
         Assertions.assertNotNull(createdTeamId, "Team should be created first");
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/teams/{teamId}/activate", workspaceId, createdTeamId))
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/teams/{teamId}/activate", WORKSPACE_ID, createdTeamId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
     }
@@ -110,7 +109,7 @@ class AgentTeamControllerIntegrationTest {
     @Order(6)
     void shouldDeactivateTeam() throws Exception {
         Assertions.assertNotNull(createdTeamId, "Team should be created first");
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/teams/{teamId}/deactivate", workspaceId, createdTeamId))
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/teams/{teamId}/deactivate", WORKSPACE_ID, createdTeamId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("INACTIVE"));
     }
@@ -118,7 +117,7 @@ class AgentTeamControllerIntegrationTest {
     @Test
     @Order(7)
     void shouldReturnNotFoundForUnknownId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/teams/{teamId}", workspaceId, "non-existent-id"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/teams/{teamId}", WORKSPACE_ID, "non-existent-id"))
                 .andExpect(status().isNotFound());
     }
 
@@ -126,7 +125,7 @@ class AgentTeamControllerIntegrationTest {
     @Order(8)
     void shouldDeleteTeam() throws Exception {
         Assertions.assertNotNull(createdTeamId, "Team should be created first");
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/teams/{teamId}", workspaceId, createdTeamId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/teams/{teamId}", WORKSPACE_ID, createdTeamId))
                 .andExpect(status().isNoContent());
     }
 }

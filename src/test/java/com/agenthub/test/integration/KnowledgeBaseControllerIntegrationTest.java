@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static com.agenthub.common.utils.RandomUtils.randomShortId;
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class KnowledgeBaseControllerIntegrationTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final String workspaceId = "100000002";
+    
     private String createdKbId; // 用于存储创建的知识库ID
 
     @Autowired
@@ -52,7 +53,7 @@ class KnowledgeBaseControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldListKnowledgeBases() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isArray());
     }
@@ -63,7 +64,7 @@ class KnowledgeBaseControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldCreateKnowledgeBase() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", workspaceId)
+        MvcResult result = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -86,7 +87,7 @@ class KnowledgeBaseControllerIntegrationTest {
     @Test
     @Order(3)
     void shouldListDocuments() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/{createdKbId}/documents", workspaceId,createdKbId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/{createdKbId}/documents", WORKSPACE_ID,createdKbId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -98,7 +99,7 @@ class KnowledgeBaseControllerIntegrationTest {
     @Order(4)
     void shouldUploadDocument() throws Exception {
         byte[] fileContent = "test document content".getBytes();
-        mockMvc.perform(multipart("/api/v1/workspaces/{workspaceId}/knowledge-bases/{createdKbId}/documents", workspaceId,createdKbId)
+        mockMvc.perform(multipart("/api/v1/workspaces/{workspaceId}/knowledge-bases/{createdKbId}/documents", WORKSPACE_ID,createdKbId)
                         .file("file", fileContent)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isAccepted())
@@ -111,7 +112,7 @@ class KnowledgeBaseControllerIntegrationTest {
     @Test
     @Order(5)
     void shouldDeleteDocument() throws Exception {
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/knowledge-bases/{createdKbId}/documents/doc-nonexistent", workspaceId,createdKbId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/knowledge-bases/{createdKbId}/documents/doc-nonexistent", WORKSPACE_ID,createdKbId))
                 .andExpect(status().isNotFound());
     }
 
@@ -121,7 +122,7 @@ class KnowledgeBaseControllerIntegrationTest {
     @Test
     @Order(6)
     void shouldReturnNotFoundForUnknownJob() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/ingestion-jobs/job-nonexistent", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/ingestion-jobs/job-nonexistent", WORKSPACE_ID))
                 .andExpect(status().isNotFound());
     }
 
@@ -133,7 +134,7 @@ class KnowledgeBaseControllerIntegrationTest {
     void shouldGetPatchAndDeleteKnowledgeBase() throws Exception {
         String kbCode = "kb-crud-" + randomShortId();
         // 先创建一个 KB
-        MvcResult createResult = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", workspaceId)
+        MvcResult createResult = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -147,14 +148,14 @@ class KnowledgeBaseControllerIntegrationTest {
         String kbId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asText();
 
         // GET — 查询
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/{kbId}", workspaceId, kbId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/{kbId}", WORKSPACE_ID, kbId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(kbId))
                 .andExpect(jsonPath("$.kbCode").value(kbCode))
                 .andExpect(jsonPath("$.name").value("CRUD KB"));
 
         // PATCH — 更新
-        mockMvc.perform(patch("/api/v1/workspaces/{workspaceId}/knowledge-bases/{kbId}", workspaceId, kbId)
+        mockMvc.perform(patch("/api/v1/workspaces/{workspaceId}/knowledge-bases/{kbId}", WORKSPACE_ID, kbId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -166,11 +167,11 @@ class KnowledgeBaseControllerIntegrationTest {
                 .andExpect(jsonPath("$.name").value("Updated KB"));
 
         // DELETE — 删除
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/knowledge-bases/{kbId}", workspaceId, kbId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/knowledge-bases/{kbId}", WORKSPACE_ID, kbId))
                 .andExpect(status().isNoContent());
 
         // 验证已删除
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/{kbId}", workspaceId, kbId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/{kbId}", WORKSPACE_ID, kbId))
                 .andExpect(status().isNotFound());
     }
 
@@ -180,7 +181,7 @@ class KnowledgeBaseControllerIntegrationTest {
     @Test
     @Order(8)
     void shouldReturnNotFoundForUnknownKnowledgeBase() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/kb-nonexistent", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/knowledge-bases/kb-nonexistent", WORKSPACE_ID))
                 .andExpect(status().isNotFound());
     }
 
@@ -192,7 +193,7 @@ class KnowledgeBaseControllerIntegrationTest {
     void shouldReturnConflictForDuplicateKnowledgeBase() throws Exception {
         String kbCode = "kb-dup-" + randomShortId();
         // 创建
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -203,7 +204,7 @@ class KnowledgeBaseControllerIntegrationTest {
                 .andExpect(status().isCreated());
 
         // 再创建同 ID — 409
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/knowledge-bases", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {

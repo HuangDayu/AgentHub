@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static com.agenthub.common.utils.RandomUtils.randomShortId;
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -36,7 +37,7 @@ class SubagentIntegrationTest {
     private String sessionId;
     private String subsessionId;
     private String autoSubsessionId;
-    private final String workspaceId = "100000002";
+    
     private final String uniqueSuffix = randomShortId();
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -59,7 +60,7 @@ class SubagentIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateParentAgent() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -82,7 +83,7 @@ class SubagentIntegrationTest {
         Assertions.assertNotNull(parentAgentId, "Parent agent should be created first");
 
         String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/sessions",
-                        workspaceId, parentAgentId)
+                        WORKSPACE_ID, parentAgentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 { "name": "Test Session %s" }
@@ -102,7 +103,7 @@ class SubagentIntegrationTest {
         Assertions.assertNotNull(parentAgentId, "Parent agent should be created first");
 
         mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}/subagents",
-                        workspaceId, parentAgentId))
+                        WORKSPACE_ID, parentAgentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
@@ -120,7 +121,7 @@ class SubagentIntegrationTest {
 
         String responseBody = mockMvc.perform(post(
                         "/api/v1/workspaces/{workspaceId}/agents/{agentId}/sessions/{sessionId}/subsessions",
-                        workspaceId, parentAgentId, sessionId)
+                        WORKSPACE_ID, parentAgentId, sessionId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -146,7 +147,7 @@ class SubagentIntegrationTest {
 
         mockMvc.perform(get(
                         "/api/v1/workspaces/{workspaceId}/agents/{agentId}/sessions/{sessionId}/subsessions",
-                        workspaceId, parentAgentId, sessionId))
+                        WORKSPACE_ID, parentAgentId, sessionId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].subagentId").value(subagentId));
@@ -160,7 +161,7 @@ class SubagentIntegrationTest {
 
         mockMvc.perform(get(
                         "/api/v1/workspaces/{workspaceId}/agents/{agentId}/sessions/{sessionId}/subsessions/{subsessionId}",
-                        workspaceId, parentAgentId, sessionId, subsessionId))
+                        WORKSPACE_ID, parentAgentId, sessionId, subsessionId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(subsessionId))
                 .andExpect(jsonPath("$.parentSessionId").value(sessionId))
@@ -176,13 +177,13 @@ class SubagentIntegrationTest {
 
         mockMvc.perform(post(
                         "/api/v1/workspaces/{workspaceId}/agents/{agentId}/sessions/{sessionId}/subsessions/{subsessionId}/close",
-                        workspaceId, parentAgentId, sessionId, subsessionId))
+                        WORKSPACE_ID, parentAgentId, sessionId, subsessionId))
                 .andExpect(status().isNoContent());
 
         // Verify status changed to CLOSED
         mockMvc.perform(get(
                         "/api/v1/workspaces/{workspaceId}/agents/{agentId}/sessions/{sessionId}/subsessions/{subsessionId}",
-                        workspaceId, parentAgentId, sessionId, subsessionId))
+                        WORKSPACE_ID, parentAgentId, sessionId, subsessionId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"));
     }
@@ -194,7 +195,7 @@ class SubagentIntegrationTest {
     void shouldReturnNotFoundForUnknownSubsession() throws Exception {
         mockMvc.perform(get(
                         "/api/v1/workspaces/{workspaceId}/agents/{agentId}/sessions/{sessionId}/subsessions/{subsessionId}",
-                        workspaceId, parentAgentId, sessionId, "non-existent-id"))
+                        WORKSPACE_ID, parentAgentId, sessionId, "non-existent-id"))
                 .andExpect(status().isNotFound());
     }
 
@@ -207,7 +208,7 @@ class SubagentIntegrationTest {
 
         mockMvc.perform(delete(
                         "/api/v1/workspaces/{workspaceId}/agents/{agentId}",
-                        workspaceId, parentAgentId))
+                        WORKSPACE_ID, parentAgentId))
                 .andExpect(status().isNoContent());
     }
 }

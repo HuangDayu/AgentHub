@@ -13,7 +13,9 @@ import static com.agenthub.infrastructure.context.TenantContextHeaders.*;
  */
 public class TestCommonTools {
 
-    public static final String token = FileUtil.readUtf8String(System.getProperty("user.dir") + "/keys/token.txt");
+    public static final String TOKEN_FILE = System.getProperty("user.dir") + "/keys/token.txt";
+    public static final String WORKSPACE_ID = "100000002";
+    public static final String TENANT_ID = "100000002";
 
     public static String getConfigTestLocation() {
         String property = System.getProperty("user.dir");
@@ -39,11 +41,16 @@ public class TestCommonTools {
     }
 
     public static RequestBuilder getRequestBuilder() {
+        String token = FileUtil.readUtf8String(TOKEN_FILE);
         return MockMvcRequestBuilders.get("/")
                 .header("Authorization", token)
-                .header(CONTEXT_TENANT_ID, "100000002")
-                .header(CONTEXT_WORKSPACE_ID, "100000002")
+                .header(CONTEXT_TENANT_ID, TENANT_ID)
+                .header(CONTEXT_WORKSPACE_ID, WORKSPACE_ID)
                 .header(CONTEXT_REQUEST_ID, randomId());
+    }
+
+    public static void writeToken(String token) {
+        FileUtil.writeUtf8String(token, TOKEN_FILE);
     }
 
 }

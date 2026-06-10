@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -28,8 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PermissionStrategyControllerIntegrationTest {
-    private final String workspaceId = "100000002";
-    private final String tenantId = "100000002";
+    
+    
     private String policyId;
 
     @Autowired
@@ -47,8 +48,8 @@ class PermissionStrategyControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreatePermissionStrategy() throws Exception {
-        String body = mockMvc.perform(put("/api/v1/workspaces/{w}/permission-strategies", workspaceId)
-                        .header("X-Tenant-Id", tenantId)
+        String body = mockMvc.perform(put("/api/v1/workspaces/{w}/permission-strategies", WORKSPACE_ID)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -71,7 +72,7 @@ class PermissionStrategyControllerIntegrationTest {
     @Order(2)
     void shouldGetPermissionStrategy() throws Exception {
         org.junit.jupiter.api.Assertions.assertNotNull(policyId);
-        mockMvc.perform(get("/api/v1/workspaces/{w}/permission-strategies/{id}", workspaceId, policyId))
+        mockMvc.perform(get("/api/v1/workspaces/{w}/permission-strategies/{id}", WORKSPACE_ID, policyId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(policyId));
     }
@@ -79,7 +80,7 @@ class PermissionStrategyControllerIntegrationTest {
     @Test
     @Order(3)
     void shouldListPermissionStrategies() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{w}/permission-strategies", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{w}/permission-strategies", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -88,8 +89,8 @@ class PermissionStrategyControllerIntegrationTest {
     @Order(4)
     void shouldUpdatePermissionStrategy() throws Exception {
         org.junit.jupiter.api.Assertions.assertNotNull(policyId);
-        mockMvc.perform(put("/api/v1/workspaces/{w}/permission-strategies", workspaceId)
-                        .header("X-Tenant-Id", tenantId)
+        mockMvc.perform(put("/api/v1/workspaces/{w}/permission-strategies", WORKSPACE_ID)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

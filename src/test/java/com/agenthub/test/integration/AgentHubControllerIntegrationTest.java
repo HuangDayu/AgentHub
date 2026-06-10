@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static com.agenthub.common.utils.RandomUtils.randomShortId;
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -25,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AgentHubControllerIntegrationTest {
 
     private String createdAgentId = null;
-    private final String workspaceId = "100000002";
+    
     private final String uniqueSuffix = randomShortId();
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -46,7 +47,7 @@ class AgentHubControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateAgent() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -65,7 +66,7 @@ class AgentHubControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListAgents() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -74,7 +75,7 @@ class AgentHubControllerIntegrationTest {
     @Order(3)
     void shouldGetAgentById() throws Exception {
         Assertions.assertNotNull(createdAgentId, "Agent should be created first");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}", workspaceId, createdAgentId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}", WORKSPACE_ID, createdAgentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdAgentId))
                 .andExpect(jsonPath("$.name").value("Test Agent " + uniqueSuffix));
@@ -84,7 +85,7 @@ class AgentHubControllerIntegrationTest {
     @Order(4)
     void shouldUpdateAgent() throws Exception {
         Assertions.assertNotNull(createdAgentId, "Agent should be created first");
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/agents/{agentId}", workspaceId, createdAgentId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/agents/{agentId}", WORKSPACE_ID, createdAgentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -100,7 +101,7 @@ class AgentHubControllerIntegrationTest {
     @Order(5)
     void shouldEnabledAgent() throws Exception {
         Assertions.assertNotNull(createdAgentId, "Agent should be created first");
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/enabled", workspaceId, createdAgentId))
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/enabled", WORKSPACE_ID, createdAgentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
     }
@@ -109,7 +110,7 @@ class AgentHubControllerIntegrationTest {
     @Order(6)
     void shouldUnenabledAgent() throws Exception {
         Assertions.assertNotNull(createdAgentId, "Agent should be created first");
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/unenabled", workspaceId, createdAgentId))
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/unenabled", WORKSPACE_ID, createdAgentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("DRAFT"));
     }
@@ -117,7 +118,7 @@ class AgentHubControllerIntegrationTest {
     @Test
     @Order(7)
     void shouldReturnNotFoundForUnknownId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}", workspaceId, "non-existent-id"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}", WORKSPACE_ID, "non-existent-id"))
                 .andExpect(status().isNotFound());
     }
 
@@ -125,7 +126,7 @@ class AgentHubControllerIntegrationTest {
     @Order(8)
     void shouldDeleteAgent() throws Exception {
         Assertions.assertNotNull(createdAgentId, "Agent should be created first");
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/agents/{agentId}", workspaceId, createdAgentId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/agents/{agentId}", WORKSPACE_ID, createdAgentId))
                 .andExpect(status().isNoContent());
     }
 }

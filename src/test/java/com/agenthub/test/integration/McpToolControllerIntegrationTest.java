@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static com.agenthub.common.utils.RandomUtils.randomShortId;
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -25,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class McpToolControllerIntegrationTest {
 
     private String createdToolId = null;
-    private final String workspaceId = "100000002";
+    
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -46,7 +47,7 @@ class McpToolControllerIntegrationTest {
     @Order(1)
     void shouldCreateMcpTool() throws Exception {
         String shortId = randomShortId();
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/mcp-tools", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/mcp-tools", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -71,7 +72,7 @@ class McpToolControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListMcpTools() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/mcp-tools", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/mcp-tools", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -81,7 +82,7 @@ class McpToolControllerIntegrationTest {
     void shouldGetMcpToolById() throws Exception {
         Assertions.assertNotNull(createdToolId);
 
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/mcp-tools/{id}", workspaceId, createdToolId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/mcp-tools/{id}", WORKSPACE_ID, createdToolId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdToolId));
     }
@@ -91,7 +92,7 @@ class McpToolControllerIntegrationTest {
     void shouldUpdateMcpTool() throws Exception {
         Assertions.assertNotNull(createdToolId);
 
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/mcp-tools/{id}", workspaceId, createdToolId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/mcp-tools/{id}", WORKSPACE_ID, createdToolId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -109,7 +110,7 @@ class McpToolControllerIntegrationTest {
     @Test
     @Order(5)
     void shouldReturnNotFoundForUnknownId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/mcp-tools/{id}", workspaceId, "100000002"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/mcp-tools/{id}", WORKSPACE_ID, "100042356345423"))
                 .andExpect(status().isNotFound());
     }
 
@@ -118,7 +119,7 @@ class McpToolControllerIntegrationTest {
     void shouldDeleteMcpTool() throws Exception {
         Assertions.assertNotNull(createdToolId);
 
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/mcp-tools/{id}", workspaceId, createdToolId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/mcp-tools/{id}", WORKSPACE_ID, createdToolId))
                 .andExpect(status().isNoContent());
     }
 }

@@ -12,8 +12,11 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
+import static com.agenthub.test.common.TestCommonTools.writeToken;
 import static org.assertj.core.api.Assertions.assertThat;
+import static com.agenthub.test.common.TestCommonTools.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -53,12 +56,16 @@ class AuthControllerIntegrationTest {
     private WebApplicationContext webApplicationContext;
 
     private MockMvc mockMvc;
+    private MockMvc authMockMvc;
 
     @BeforeEach
     void setup() {
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(webApplicationContext)
                 .defaultRequest(getRequestBuilder())
+                .build();
+        authMockMvc = MockMvcBuilders
+                .webAppContextSetup(webApplicationContext)
                 .build();
     }
 
@@ -68,10 +75,9 @@ class AuthControllerIntegrationTest {
     @Order(1)
     void authLoginShouldReturnTokens() throws Exception {
         String loginBody = """
-                {"username":"admin","password":"admin123"}
+                {"username":"lisi","password":"user123"}
                 """;
-
-        String response = mockMvc.perform(post("/api/v1/auth/login")
+        String response = authMockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody))
                 .andExpect(status().isOk())
@@ -87,6 +93,7 @@ class AuthControllerIntegrationTest {
         savedRefreshToken = extractJsonStringValue(response, "refreshToken");
         assertThat(savedAccessToken).isNotBlank();
         assertThat(savedRefreshToken).isNotBlank();
+        writeToken("Bearer " + savedAccessToken);
     }
 
     @Test
@@ -125,7 +132,7 @@ class AuthControllerIntegrationTest {
                         .content(verifyBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true))
-                .andExpect(jsonPath("$.userId").value("admin"))
+                .andExpect(jsonPath("$.userId").value("lisi"))
                 .andExpect(jsonPath("$.tenantId").isNotEmpty());
     }
 
@@ -204,7 +211,7 @@ class AuthControllerIntegrationTest {
         String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"username":"admin","password":"admin123"}
+                                {"username":"lisi","password":"user123"}
                                 """))
                 .andExpect(status().isOk())
                 .andReturn()

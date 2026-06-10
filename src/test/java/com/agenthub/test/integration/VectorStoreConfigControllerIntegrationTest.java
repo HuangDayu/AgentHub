@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static com.agenthub.common.utils.RandomUtils.randomShortId;
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class VectorStoreConfigControllerIntegrationTest {
 
     private String createdConfigId = null;
-    private final String workspaceId = "100000002";
+    
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);
@@ -54,7 +55,7 @@ class VectorStoreConfigControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateVectorStoreConfig() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -84,7 +85,7 @@ class VectorStoreConfigControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldCreateChromaVectorStoreConfig() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -111,7 +112,7 @@ class VectorStoreConfigControllerIntegrationTest {
     @Order(3)
     void shouldCreateRedisVectorStoreConfig() throws Exception {
         String redisName = "redis-" + randomShortId();
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -135,7 +136,7 @@ class VectorStoreConfigControllerIntegrationTest {
     @Order(4)
     void shouldCreateMilvusVectorStoreConfig() throws Exception {
         String milvusName = "milvus-" + randomShortId();
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -161,7 +162,7 @@ class VectorStoreConfigControllerIntegrationTest {
     @Test
     @Order(5)
     void shouldListVectorStoreConfigs() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/vector-stores", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isNotEmpty()); // qdrant-main, chroma-test, redis-vector, milvus-store
@@ -175,7 +176,7 @@ class VectorStoreConfigControllerIntegrationTest {
     void shouldGetVectorStoreConfigById() throws Exception {
         Assertions.assertNotNull(createdConfigId, "createdConfigId should be set from previous test");
 
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", workspaceId, createdConfigId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", WORKSPACE_ID, createdConfigId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdConfigId))
                 .andExpect(jsonPath("$.name").value("qdrant-main"));
@@ -187,7 +188,7 @@ class VectorStoreConfigControllerIntegrationTest {
     @Test
     @Order(7)
     void shouldReturnNotFoundForUnknownConfig() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", workspaceId, "00000000-0000-0000-0000-000000000000"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", WORKSPACE_ID, "00000000-0000-0000-0000-000000000000"))
                 .andExpect(status().isNotFound());
     }
 
@@ -199,7 +200,7 @@ class VectorStoreConfigControllerIntegrationTest {
     void shouldUpdateVectorStoreConfig() throws Exception {
         Assertions.assertNotNull(createdConfigId, "createdConfigId should be set from previous test");
 
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", workspaceId, createdConfigId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", WORKSPACE_ID, createdConfigId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -220,7 +221,7 @@ class VectorStoreConfigControllerIntegrationTest {
     void shouldRefreshVectorStoreInstance() throws Exception {
         Assertions.assertNotNull(createdConfigId, "createdConfigId should be set from previous test");
         // 因为向量对象只有在入库时才会被创建和初始化
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}/refresh", workspaceId, createdConfigId))
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}/refresh", WORKSPACE_ID, createdConfigId))
                 .andExpect(status().isNotFound());
     }
 
@@ -232,7 +233,7 @@ class VectorStoreConfigControllerIntegrationTest {
     void shouldDestroyVectorStoreInstance() throws Exception {
         Assertions.assertNotNull(createdConfigId, "createdConfigId should be set from previous test");
 
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}/instance", workspaceId, createdConfigId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}/instance", WORKSPACE_ID, createdConfigId))
                 .andExpect(status().isNoContent());
     }
 
@@ -244,11 +245,11 @@ class VectorStoreConfigControllerIntegrationTest {
     void shouldDeleteVectorStoreConfig() throws Exception {
         Assertions.assertNotNull(createdConfigId, "createdConfigId should be set from previous test");
 
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", workspaceId, createdConfigId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", WORKSPACE_ID, createdConfigId))
                 .andExpect(status().isNoContent());
 
         // 验证已删除
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", workspaceId, createdConfigId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", WORKSPACE_ID, createdConfigId))
                 .andExpect(status().isNotFound());
     }
 
@@ -258,7 +259,7 @@ class VectorStoreConfigControllerIntegrationTest {
     @Test
     @Order(12)
     void shouldReturnNotFoundWhenDeletingUnknownConfig() throws Exception {
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", workspaceId, "00000000-0000-0000-0000-000000000001"))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/vector-stores/{configId}", WORKSPACE_ID, "00000000-0000-0000-0000-000000000001"))
                 .andExpect(status().isNotFound());
     }
 
@@ -271,7 +272,7 @@ class VectorStoreConfigControllerIntegrationTest {
         String dupName = "dup-vs-" + randomShortId();
 
         // 先创建一个
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -285,7 +286,7 @@ class VectorStoreConfigControllerIntegrationTest {
                 .andExpect(status().isCreated());
 
         // 再创建同名 — 409 Conflict
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/vector-stores", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(String.format("""
                                 {
@@ -305,7 +306,7 @@ class VectorStoreConfigControllerIntegrationTest {
     @Test
     @Order(14)
     void shouldReturnEmptyForUnknownTenant() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/vector-stores", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/vector-stores", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isNotEmpty());
     }

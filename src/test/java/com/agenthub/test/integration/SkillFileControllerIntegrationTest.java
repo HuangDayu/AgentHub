@@ -6,12 +6,12 @@ import com.agenthub.test.TestAgentHubApplication;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,8 +29,8 @@ class SkillFileControllerIntegrationTest {
 
     private MockMvc mockMvc;
     private String createdSkillId;
-    private final String workspaceId = "100000002";
-    private final String tenantId = "100000002";
+    
+    
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -52,9 +52,9 @@ class SkillFileControllerIntegrationTest {
                 zipContent
         );
 
-        String responseBody = mockMvc.perform(multipart("/api/v1/workspaces/{workspaceId}/skills/from-upload", workspaceId)
+        String responseBody = mockMvc.perform(multipart("/api/v1/workspaces/{workspaceId}/skills/from-upload", WORKSPACE_ID)
                         .file(file)
-                        .param("tenantId", tenantId)
+                        .param("tenantId", TENANT_ID)
                         .param("skillCode", "test-upload-skill")
                         .param("name", "Test Upload Skill")
                         .param("description", "An uploaded skill for testing"))
@@ -72,7 +72,7 @@ class SkillFileControllerIntegrationTest {
     @Order(2)
     void shouldListSkillFiles() throws Exception {
         Assertions.assertNotNull(createdSkillId, "Skill should be created first");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skills/{skillId}/files", workspaceId, createdSkillId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skills/{skillId}/files", WORKSPACE_ID, createdSkillId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -81,7 +81,7 @@ class SkillFileControllerIntegrationTest {
     @Order(3)
     void shouldGetSkillFileStats() throws Exception {
         Assertions.assertNotNull(createdSkillId, "Skill should be created first");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skills/{skillId}/files/stats", workspaceId, createdSkillId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skills/{skillId}/files/stats", WORKSPACE_ID, createdSkillId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.fileCount").exists())
                 .andExpect(jsonPath("$.totalSize").exists());
@@ -90,7 +90,7 @@ class SkillFileControllerIntegrationTest {
     @Test
     @Order(4)
     void shouldReturnEmptyFilesForNonExistentSkill() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skills/{skillId}/files", workspaceId, "non-existent-id"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skills/{skillId}/files", WORKSPACE_ID, "non-existent-id"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
@@ -100,7 +100,7 @@ class SkillFileControllerIntegrationTest {
     @Order(5)
     void shouldReturnNotFoundForNonExistentFile() throws Exception {
         Assertions.assertNotNull(createdSkillId, "Skill should be created first");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skills/{skillId}/files/{filePath}", workspaceId, createdSkillId, "non-existent.md"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skills/{skillId}/files/{filePath}", WORKSPACE_ID, createdSkillId, "non-existent.md"))
                 .andExpect(status().isNotFound());
     }
 
@@ -108,7 +108,7 @@ class SkillFileControllerIntegrationTest {
     @Order(6)
     void shouldDeleteSkill() throws Exception {
         Assertions.assertNotNull(createdSkillId, "Skill should be created first");
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/skills/{skillId}", workspaceId, createdSkillId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/skills/{skillId}", WORKSPACE_ID, createdSkillId))
                 .andExpect(status().isNoContent());
     }
 

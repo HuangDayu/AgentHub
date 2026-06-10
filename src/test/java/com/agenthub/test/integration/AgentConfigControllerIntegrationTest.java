@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -26,7 +27,7 @@ class AgentConfigControllerIntegrationTest {
 
     private String createdConfigId = null;
     private final String agentId = "100000002";
-    private final String workspaceId = "100000002";
+    
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -47,7 +48,7 @@ class AgentConfigControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldSetAgentConfig() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs", workspaceId, agentId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs", WORKSPACE_ID, agentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -71,7 +72,7 @@ class AgentConfigControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListAgentConfigs() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs", workspaceId, agentId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs", WORKSPACE_ID, agentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -79,7 +80,7 @@ class AgentConfigControllerIntegrationTest {
     @Test
     @Order(3)
     void shouldListConfigsByCategory() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs", workspaceId, agentId)
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs", WORKSPACE_ID, agentId)
                         .param("category", "STRATEGY"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
@@ -89,7 +90,7 @@ class AgentConfigControllerIntegrationTest {
     @Order(4)
     void shouldGetAgentConfigById() throws Exception {
         Assertions.assertNotNull(createdConfigId, "Config should be created first");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs/{id}", workspaceId, agentId, createdConfigId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs/{id}", WORKSPACE_ID, agentId, createdConfigId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdConfigId))
                 .andExpect(jsonPath("$.category").value("STRATEGY"));
@@ -98,7 +99,7 @@ class AgentConfigControllerIntegrationTest {
     @Test
     @Order(5)
     void shouldUpdateExistingConfig() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs", workspaceId, agentId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs", WORKSPACE_ID, agentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -117,7 +118,7 @@ class AgentConfigControllerIntegrationTest {
     @Test
     @Order(6)
     void shouldSetMultipleConfigs() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs", workspaceId, agentId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs", WORKSPACE_ID, agentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -135,7 +136,7 @@ class AgentConfigControllerIntegrationTest {
     @Test
     @Order(7)
     void shouldReturnNotFoundForUnknownId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs/{id}", workspaceId, agentId, "non-existent-id"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs/{id}", WORKSPACE_ID, agentId, "non-existent-id"))
                 .andExpect(status().isNotFound());
     }
 
@@ -143,7 +144,7 @@ class AgentConfigControllerIntegrationTest {
     @Order(8)
     void shouldDeleteAgentConfig() throws Exception {
         Assertions.assertNotNull(createdConfigId, "Config should be created first");
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs/{id}", workspaceId, agentId, createdConfigId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/agents/{agentId}/configs/{id}", WORKSPACE_ID, agentId, createdConfigId))
                 .andExpect(status().isNoContent());
     }
 }

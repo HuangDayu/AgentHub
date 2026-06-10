@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -26,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AgentDataSourceComponentControllerIntegrationTest {
-    private final String tenantId = "100000002";
+    
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -44,7 +45,7 @@ class AgentDataSourceComponentControllerIntegrationTest {
     @Order(1)
     void shouldListComponents() throws Exception {
         mockMvc.perform(get("/api/v1/agent-data-source-components")
-                        .header("X-Tenant-Id", tenantId))
+                        .header("X-Tenant-Id", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -53,7 +54,7 @@ class AgentDataSourceComponentControllerIntegrationTest {
     @Order(2)
     void shouldIncludeJdbcDescriptor() throws Exception {
         mockMvc.perform(get("/api/v1/agent-data-source-components")
-                        .header("X-Tenant-Id", tenantId))
+                        .header("X-Tenant-Id", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.protocol == 'JDBC')]").exists());
     }

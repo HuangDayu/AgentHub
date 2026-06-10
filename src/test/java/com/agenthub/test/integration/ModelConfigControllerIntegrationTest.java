@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -31,8 +32,7 @@ class ModelConfigControllerIntegrationTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private MockMvc mockMvc;
-    private static String createdModelId = "100000002";
-    private final String workspaceId = "100000002";
+    public static String createdModelId = null;
 
     @BeforeEach
     void setUp() {
@@ -48,7 +48,7 @@ class ModelConfigControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateChatModelConfig() throws Exception {
-        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -81,7 +81,7 @@ class ModelConfigControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldCreateEmbeddingModelConfig() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -106,7 +106,7 @@ class ModelConfigControllerIntegrationTest {
     @Test
     @Order(3)
     void shouldCreateOllamaModelConfig() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -130,7 +130,7 @@ class ModelConfigControllerIntegrationTest {
     @Test
     @Order(4)
     void shouldCreateDeepSeekModelConfig() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -154,7 +154,7 @@ class ModelConfigControllerIntegrationTest {
     @Test
     @Order(5)
     void shouldCreateOpenRouterModelConfig() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -178,7 +178,7 @@ class ModelConfigControllerIntegrationTest {
     @Test
     @Order(6)
     void shouldCreateImageModelConfig() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -203,7 +203,7 @@ class ModelConfigControllerIntegrationTest {
     @Order(7)
     void shouldListAllModelsForTenant() throws Exception {
         // Create a model first
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -218,7 +218,7 @@ class ModelConfigControllerIntegrationTest {
                                 """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
     }
@@ -230,7 +230,7 @@ class ModelConfigControllerIntegrationTest {
     @Order(8)
     void shouldListModelsByChatType() throws Exception {
         // Create a CHAT model first
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -245,7 +245,7 @@ class ModelConfigControllerIntegrationTest {
                                 """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .param("type", "CHAT"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
@@ -255,7 +255,7 @@ class ModelConfigControllerIntegrationTest {
     @Test
     @Order(9)
     void shouldListModelsByEmbeddingType() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .param("type", "EMBEDDING"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].type", everyItem(is("EMBEDDING"))));
@@ -268,7 +268,7 @@ class ModelConfigControllerIntegrationTest {
     @Order(10)
     void shouldListEnabledModels() throws Exception {
         // Create an enabled model first
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -283,7 +283,7 @@ class ModelConfigControllerIntegrationTest {
                                 """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .param("enabled", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
@@ -296,7 +296,7 @@ class ModelConfigControllerIntegrationTest {
     @Order(11)
     void shouldGetModelById() throws Exception {
         // Create a model first
-        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -315,7 +315,7 @@ class ModelConfigControllerIntegrationTest {
                 .getContentAsString();
         String modelId = objectMapper.readTree(response).get("id").asText();
 
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models/{id}", workspaceId, modelId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models/{id}", WORKSPACE_ID, modelId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(modelId))
                 .andExpect(jsonPath("$.name").value("get-by-id-test-model"))
@@ -325,7 +325,7 @@ class ModelConfigControllerIntegrationTest {
     @Test
     @Order(12)
     void shouldReturnNotFoundForUnknownModelId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models/{id}", workspaceId, 99999L))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models/{id}", WORKSPACE_ID, 99999L))
                 .andExpect(status().isNotFound());
     }
 
@@ -336,7 +336,7 @@ class ModelConfigControllerIntegrationTest {
     @Order(13)
     void shouldUpdateModelConfig() throws Exception {
         // Create a model first
-        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -355,7 +355,7 @@ class ModelConfigControllerIntegrationTest {
                 .getContentAsString();
         String modelId = objectMapper.readTree(response).get("id").asText();
 
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/models/{id}", workspaceId, modelId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/models/{id}", WORKSPACE_ID, modelId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -382,7 +382,7 @@ class ModelConfigControllerIntegrationTest {
     @Order(14)
     void shouldDeleteModelConfig() throws Exception {
         // Create a model first
-        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", workspaceId)
+        String response = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -401,18 +401,18 @@ class ModelConfigControllerIntegrationTest {
                 .getContentAsString();
         String modelId = objectMapper.readTree(response).get("id").asText();
 
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/models/{id}", workspaceId, modelId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/models/{id}", WORKSPACE_ID, modelId))
                 .andExpect(status().isNoContent());
 
         // 验证已删除
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models/{id}", workspaceId, modelId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models/{id}", WORKSPACE_ID, modelId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     @Order(15)
     void shouldReturnNotFoundWhenDeletingUnknownModel() throws Exception {
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/models/{id}", workspaceId, 99999L))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/models/{id}", WORKSPACE_ID, 99999L))
                 .andExpect(status().isNotFound());
     }
 
@@ -422,7 +422,7 @@ class ModelConfigControllerIntegrationTest {
     @Test
     @Order(16)
     void shouldReturnEmptyForUnknownTenant() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/models", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }

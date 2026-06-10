@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
+import static com.agenthub.test.common.TestCommonTools.WORKSPACE_ID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,7 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = TestAgentHubApplication.class)
 class RuntimeDataViewControllerIntegrationTest {
-    private static final String WORKSPACE_ID = "100000002";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired

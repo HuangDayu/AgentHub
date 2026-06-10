@@ -1,7 +1,6 @@
 package com.agenthub.test.integration;
 
 import cn.hutool.core.io.FileUtil;
-import com.agenthub.common.utils.RandomUtils;
 import com.agenthub.test.TestAgentHubApplication;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,9 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-import static com.agenthub.common.utils.RandomUtils.randomId;
 import static com.agenthub.common.utils.RandomUtils.randomShortId;
-import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
+import static com.agenthub.test.common.TestCommonTools.*;
 import static org.springframework.ai.util.json.JsonParser.toJson;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -40,8 +38,6 @@ public class AgentFullLifecycleIntegrationTest {
     public static final String key = FileUtil.readUtf8String(System.getProperty("user.dir") + "/keys/key.txt");
     @Autowired
     private WebApplicationContext webApplicationContext;
-    public static final String WORKSPACE_ID = "100000002";
-    public static final String TENANT_ID = "100000002";
     private static MockMvc mockMvc;
     private static ObjectMapper objectMapper;
 

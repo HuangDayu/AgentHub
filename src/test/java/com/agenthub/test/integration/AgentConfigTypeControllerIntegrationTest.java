@@ -14,6 +14,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.List;
 
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
+import static com.agenthub.test.common.TestCommonTools.WORKSPACE_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,7 +30,6 @@ class AgentConfigTypeControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
     private MockMvc mockMvc;
-    private static final String WORKSPACE_ID = "100000002";
 
     @BeforeAll
     void setUp() {

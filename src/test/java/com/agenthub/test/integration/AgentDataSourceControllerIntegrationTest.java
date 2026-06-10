@@ -18,7 +18,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.TENANT_ID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static com.agenthub.test.common.TestCommonTools.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,8 +34,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AgentDataSourceControllerIntegrationTest {
 
-    private final String workspaceId = "100000002";
-    private final String tenantId = "100000002";
+    
+    
+    private final String dsName = "test-ds-" + System.currentTimeMillis();
     private String createdId;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -54,12 +57,12 @@ class AgentDataSourceControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateAgentDataSource() throws Exception {
-        String body = mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources", workspaceId)
-                        .header("X-Tenant-Id", tenantId)
+        String body = mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources", WORKSPACE_ID)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+                        .content(String.format("""
                                 {
-                                    "name": "test-ds-create",
+                                    "name": "%s",
                                     "description": "test description",
                                     "protocol": "JDBC",
                                     "endpointUri": "jdbc:postgresql://localhost:5432/test",
@@ -67,10 +70,10 @@ class AgentDataSourceControllerIntegrationTest {
                                     "permissionPolicyId": null,
                                     "schemaId": null
                                 }
-                                """))
+                                """, dsName)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("test-ds-create"))
+                .andExpect(jsonPath("$.name").value(dsName))
                 .andExpect(jsonPath("$.protocol").value("JDBC"))
                 .andExpect(jsonPath("$.enabled").value(false))
                 .andReturn().getResponse().getContentAsString();
@@ -80,7 +83,7 @@ class AgentDataSourceControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListAgentDataSources() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{w}/agent-data-sources", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{w}/agent-data-sources", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -89,7 +92,7 @@ class AgentDataSourceControllerIntegrationTest {
     @Order(3)
     void shouldGetAgentDataSourceById() throws Exception {
         Assertions.assertNotNull(createdId);
-        mockMvc.perform(get("/api/v1/workspaces/{w}/agent-data-sources/{id}", workspaceId, createdId))
+        mockMvc.perform(get("/api/v1/workspaces/{w}/agent-data-sources/{id}", WORKSPACE_ID, createdId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdId));
     }
@@ -98,7 +101,7 @@ class AgentDataSourceControllerIntegrationTest {
     @Order(4)
     void shouldUpdateAgentDataSource() throws Exception {
         Assertions.assertNotNull(createdId);
-        mockMvc.perform(patch("/api/v1/workspaces/{w}/agent-data-sources/{id}", workspaceId, createdId)
+        mockMvc.perform(patch("/api/v1/workspaces/{w}/agent-data-sources/{id}", WORKSPACE_ID, createdId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -113,7 +116,7 @@ class AgentDataSourceControllerIntegrationTest {
     @Order(5)
     void shouldEnableAgentDataSource() throws Exception {
         Assertions.assertNotNull(createdId);
-        mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/enable", workspaceId, createdId))
+        mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/enable", WORKSPACE_ID, createdId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(true));
     }
@@ -122,7 +125,7 @@ class AgentDataSourceControllerIntegrationTest {
     @Order(6)
     void shouldTestAgentDataSource() throws Exception {
         Assertions.assertNotNull(createdId);
-        mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/test", workspaceId, createdId))
+        mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/test", WORKSPACE_ID, createdId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").exists());
     }
@@ -131,7 +134,7 @@ class AgentDataSourceControllerIntegrationTest {
     @Order(7)
     void shouldInvokeAgentDataSource() throws Exception {
         Assertions.assertNotNull(createdId);
-        mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/invoke", workspaceId, createdId)
+        mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/invoke", WORKSPACE_ID, createdId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -153,7 +156,7 @@ class AgentDataSourceControllerIntegrationTest {
     @Order(8)
     void shouldDisableAgentDataSource() throws Exception {
         Assertions.assertNotNull(createdId);
-        mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/disable", workspaceId, createdId))
+        mockMvc.perform(post("/api/v1/workspaces/{w}/agent-data-sources/{id}/disable", WORKSPACE_ID, createdId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(false));
     }
@@ -161,7 +164,7 @@ class AgentDataSourceControllerIntegrationTest {
     @Test
     @Order(9)
     void shouldReturnNotFoundForUnknownId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{w}/agent-data-sources/{id}", workspaceId, "non-existent"))
+        mockMvc.perform(get("/api/v1/workspaces/{w}/agent-data-sources/{id}", WORKSPACE_ID, "non-existent"))
                 .andExpect(status().isNotFound());
     }
 
@@ -169,7 +172,7 @@ class AgentDataSourceControllerIntegrationTest {
     @Order(10)
     void shouldDeleteAgentDataSource() throws Exception {
         Assertions.assertNotNull(createdId);
-        mockMvc.perform(delete("/api/v1/workspaces/{w}/agent-data-sources/{id}", workspaceId, createdId))
+        mockMvc.perform(delete("/api/v1/workspaces/{w}/agent-data-sources/{id}", WORKSPACE_ID, createdId))
                 .andExpect(status().isNoContent());
     }
 }

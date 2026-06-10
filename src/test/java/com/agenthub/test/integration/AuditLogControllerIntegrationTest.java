@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -26,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuditLogControllerIntegrationTest {
-    private final String tenantId = "100000002";
+    
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -44,7 +45,7 @@ class AuditLogControllerIntegrationTest {
     @Order(1)
     void shouldListResourceTypes() throws Exception {
         mockMvc.perform(get("/api/v1/audit-logs/resource-types")
-                        .header("X-Tenant-Id", tenantId))
+                        .header("X-Tenant-Id", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[?(@ == 'DATA_SOURCE')]").exists());
@@ -54,7 +55,7 @@ class AuditLogControllerIntegrationTest {
     @Order(2)
     void shouldListActions() throws Exception {
         mockMvc.perform(get("/api/v1/audit-logs/actions")
-                        .header("X-Tenant-Id", tenantId))
+                        .header("X-Tenant-Id", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -63,7 +64,7 @@ class AuditLogControllerIntegrationTest {
     @Order(3)
     void shouldQueryAuditLogs() throws Exception {
         mockMvc.perform(get("/api/v1/audit-logs")
-                        .header("X-Tenant-Id", tenantId)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .param("page", "1")
                         .param("size", "20"))
                 .andExpect(status().isOk())
@@ -76,7 +77,7 @@ class AuditLogControllerIntegrationTest {
     @Order(4)
     void shouldQueryAuditLogsByResource() throws Exception {
         mockMvc.perform(get("/api/v1/audit-logs")
-                        .header("X-Tenant-Id", tenantId)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .param("resourceType", "DATA_SOURCE")
                         .param("page", "1")
                         .param("size", "10"))

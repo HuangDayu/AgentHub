@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -25,7 +26,7 @@ class ScheduledTaskControllerIntegrationTest {
 
     private MockMvc mockMvc;
     private String createdTaskId;
-    private final String workspaceId = "100000002";
+    
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -39,12 +40,10 @@ class ScheduledTaskControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateScheduledTask() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/scheduled-tasks", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/scheduled-tasks", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "100000002",
-                                    "workspaceId": "100000002",
                                     "taskCode": "TEST_TASK_001",
                                     "name": "Test Task",
                                     "description": "Test task description",
@@ -67,7 +66,7 @@ class ScheduledTaskControllerIntegrationTest {
     @Order(2)
     void shouldGetScheduledTaskById() throws Exception {
         Assertions.assertNotNull(createdTaskId, "Task should be created first");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}", workspaceId, createdTaskId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}", WORKSPACE_ID, createdTaskId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdTaskId))
                 .andExpect(jsonPath("$.prompt").value("请帮我分析数据并生成报告"));
@@ -76,7 +75,7 @@ class ScheduledTaskControllerIntegrationTest {
     @Test
     @Order(3)
     void shouldListScheduledTasks() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/scheduled-tasks", workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/scheduled-tasks", WORKSPACE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -85,7 +84,7 @@ class ScheduledTaskControllerIntegrationTest {
     @Order(4)
     void shouldUpdateScheduledTask() throws Exception {
         Assertions.assertNotNull(createdTaskId, "Task should be created first");
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}", workspaceId, createdTaskId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}", WORKSPACE_ID, createdTaskId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -105,7 +104,7 @@ class ScheduledTaskControllerIntegrationTest {
     @Order(5)
     void shouldEnableScheduledTask() throws Exception {
         Assertions.assertNotNull(createdTaskId, "Task should be created first");
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}/enable", workspaceId, createdTaskId))
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}/enable", WORKSPACE_ID, createdTaskId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(true));
     }
@@ -114,7 +113,7 @@ class ScheduledTaskControllerIntegrationTest {
     @Order(6)
     void shouldDisableScheduledTask() throws Exception {
         Assertions.assertNotNull(createdTaskId, "Task should be created first");
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}/disable", workspaceId, createdTaskId))
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}/disable", WORKSPACE_ID, createdTaskId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(false));
     }
@@ -123,7 +122,7 @@ class ScheduledTaskControllerIntegrationTest {
     @Order(7)
     void shouldExecuteScheduledTask() throws Exception {
         Assertions.assertNotNull(createdTaskId, "Task should be created first");
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}/execute", workspaceId, createdTaskId))
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}/execute", WORKSPACE_ID, createdTaskId))
                 .andExpect(status().isNoContent());
     }
 
@@ -131,7 +130,7 @@ class ScheduledTaskControllerIntegrationTest {
     @Order(8)
     void shouldDeleteScheduledTask() throws Exception {
         Assertions.assertNotNull(createdTaskId, "Task should be created first");
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}", workspaceId, createdTaskId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/scheduled-tasks/{taskId}", WORKSPACE_ID, createdTaskId))
                 .andExpect(status().isNoContent());
     }
 }

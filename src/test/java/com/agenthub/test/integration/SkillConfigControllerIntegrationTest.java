@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -28,8 +29,8 @@ class SkillConfigControllerIntegrationTest {
 
     private MockMvc mockMvc;
     private String createdConfigId;
-    private final String workspaceId = "100000002";
-    private final String tenantId = "100000002";
+    
+    
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -43,11 +44,10 @@ class SkillConfigControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateSkillConfig() throws Exception {
-        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/skill-configs", workspaceId)
+        String responseBody = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/skill-configs", WORKSPACE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "100000002",
                                     "name": "Test Skill Config",
                                     "description": "A test skill config",
                                     "skillPaths": ["/path/to/skills", "/another/path"],
@@ -69,8 +69,8 @@ class SkillConfigControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListSkillConfigs() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skill-configs", workspaceId)
-                        .param("tenantId", tenantId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skill-configs", WORKSPACE_ID)
+                        .param("tenantId", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -79,7 +79,7 @@ class SkillConfigControllerIntegrationTest {
     @Order(3)
     void shouldGetSkillConfigById() throws Exception {
         Assertions.assertNotNull(createdConfigId, "Config should be created first");
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}", workspaceId, createdConfigId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}", WORKSPACE_ID, createdConfigId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdConfigId))
                 .andExpect(jsonPath("$.name").value("Test Skill Config"));
@@ -89,11 +89,10 @@ class SkillConfigControllerIntegrationTest {
     @Order(4)
     void shouldUpdateSkillConfig() throws Exception {
         Assertions.assertNotNull(createdConfigId, "Config should be created first");
-        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}", workspaceId, createdConfigId)
+        mockMvc.perform(put("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}", WORKSPACE_ID, createdConfigId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "tenantId": "100000002",
                                     "name": "Updated Skill Config",
                                     "description": "Updated description",
                                     "skillPaths": ["/updated/path"],
@@ -112,7 +111,7 @@ class SkillConfigControllerIntegrationTest {
     @Order(5)
     void shouldAddSkillPath() throws Exception {
         Assertions.assertNotNull(createdConfigId, "Config should be created first");
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}/paths", workspaceId, createdConfigId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}/paths", WORKSPACE_ID, createdConfigId)
                         .param("path", "/new/path"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.skillPaths").isArray());
@@ -122,7 +121,7 @@ class SkillConfigControllerIntegrationTest {
     @Order(6)
     void shouldRemoveSkillPath() throws Exception {
         Assertions.assertNotNull(createdConfigId, "Config should be created first");
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}/paths", workspaceId, createdConfigId)
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}/paths", WORKSPACE_ID, createdConfigId)
                         .param("path", "/new/path"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.skillPaths").isArray());
@@ -131,7 +130,7 @@ class SkillConfigControllerIntegrationTest {
     @Test
     @Order(7)
     void shouldReturnNotFoundForUnknownId() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}", workspaceId, "non-existent-id"))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}", WORKSPACE_ID, "non-existent-id"))
                 .andExpect(status().isNotFound());
     }
 
@@ -139,7 +138,7 @@ class SkillConfigControllerIntegrationTest {
     @Order(8)
     void shouldDeleteSkillConfig() throws Exception {
         Assertions.assertNotNull(createdConfigId, "Config should be created first");
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}", workspaceId, createdConfigId))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/skill-configs/{configId}", WORKSPACE_ID, createdConfigId))
                 .andExpect(status().isNoContent());
     }
 }

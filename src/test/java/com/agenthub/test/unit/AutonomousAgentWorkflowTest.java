@@ -12,15 +12,15 @@ import com.agenthub.infrastructure.tools.system_tools.core_tools.ModelTools;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.KnowledgeBaseSummary;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.ModelCapabilitySummary;
 import com.agenthub.test.TestAgentHubApplication;
-import jakarta.annotation.security.RunAs;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.agenthub.test.common.TestCommonTools.TENANT_ID;
+import static com.agenthub.test.common.TestCommonTools.WORKSPACE_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -39,8 +39,6 @@ class AutonomousAgentWorkflowTest {
 
     @Autowired
     private KnowledgeTools knowledgeTools;
-    private static final String workspaceId = "100000002";
-    private static final String tenantId = "100000002";
     private static final String agentId = "2054196010662010881";
     private static final String sessionId = "2057834835146399745";
     private ExecutionPlanOutput currentPlan;
@@ -48,7 +46,7 @@ class AutonomousAgentWorkflowTest {
 
     @BeforeAll
     void init() {
-        TenantContextHolder.open(new TenantThreadContext(tenantId, workspaceId, agentId, sessionId, "1", "test-user", false));
+        TenantContextHolder.open(new TenantThreadContext(TENANT_ID, WORKSPACE_ID, agentId, sessionId, "1", "test-user", false));
     }
 
     @Test

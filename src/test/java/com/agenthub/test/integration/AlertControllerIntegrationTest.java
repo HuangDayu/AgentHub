@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.agenthub.test.common.TestCommonTools.*;
 import static com.agenthub.test.common.TestCommonTools.getRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -23,7 +24,7 @@ class AlertControllerIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
-    private final String workspaceId = "100000002";
+    
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -37,7 +38,7 @@ class AlertControllerIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateAlert() throws Exception {
-        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/alerts",workspaceId)
+        mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/alerts", WORKSPACE_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -56,7 +57,7 @@ class AlertControllerIntegrationTest {
     @Test
     @Order(2)
     void shouldListAlerts() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts",workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts", WORKSPACE_ID))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -65,7 +66,7 @@ class AlertControllerIntegrationTest {
     @Order(3)
     void shouldListAlertsByRun() throws Exception {
         String runId = "test-run-001";
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts/runs/{runId}",workspaceId, runId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts/runs/{runId}", WORKSPACE_ID, runId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -73,7 +74,7 @@ class AlertControllerIntegrationTest {
     @Test
     @Order(4)
     void shouldListUnresolvedAlerts() throws Exception {
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts/unresolved",workspaceId))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts/unresolved", WORKSPACE_ID))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
     }
@@ -82,7 +83,7 @@ class AlertControllerIntegrationTest {
     @Order(5)
     void shouldReturn404WhenAlertNotFound() throws Exception {
         String id = "non-existent-alert";
-        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts/{id}",workspaceId, id))
+        mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/alerts/{id}", WORKSPACE_ID, id))
             .andExpect(status().isNotFound());
     }
 
@@ -90,7 +91,7 @@ class AlertControllerIntegrationTest {
     @Order(6)
     void shouldDeleteAlert() throws Exception {
         String id = "test-alert-to-delete";
-        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/alerts/{id}",workspaceId, id))
+        mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/alerts/{id}", WORKSPACE_ID, id))
             .andExpect(status().isOk());
     }
 }
