@@ -10,6 +10,8 @@ import io.agentscope.core.model.Model;
 import io.agentscope.core.model.ToolSchema;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.model.tool.DefaultToolCallingChatOptions;
+import org.springframework.ai.tool.ToolCallback;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -20,15 +22,18 @@ import java.util.stream.Collectors;
  * <p>
  * 将 AgentScope 的消息格式转换为 Spring AI 格式，委托底层模型执行推理，
  * 再将 Spring AI 的响应转换回 AgentScope 的 {@link ChatResponse}。
+ * 工具通过 Spring AI 的 internalToolExecutionEnabled 机制执行。
  */
 public class AgentScopeSpringModelAdapter implements Model {
 
     private final String modelName;
     private final ChatModel chatModel;
+    private final List<ToolCallback> toolCallbacks;
 
-    public AgentScopeSpringModelAdapter(String modelName, ChatModel chatModel) {
+    public AgentScopeSpringModelAdapter(String modelName, ChatModel chatModel, List<ToolCallback> toolCallbacks) {
         this.modelName = modelName;
         this.chatModel = chatModel;
+        this.toolCallbacks = toolCallbacks;
     }
 
     @Override
@@ -38,8 +43,20 @@ public class AgentScopeSpringModelAdapter implements Model {
                 .map(MsgToSpringMessageConverter::convert)
                 .collect(Collectors.toList());
 
-        return chatModel.stream(new Prompt(springMessages))
+        Prompt prompt = buildPrompt(springMessages);
+        return chatModel.stream(prompt)
                 .map(AgentScopeSpringModelAdapter::convertChatResponse);
+    }
+
+    private Prompt buildPrompt(List<org.springframework.ai.chat.messages.Message> messages) {
+        if (toolCallbacks == null || toolCallbacks.isEmpty()) {
+            return new Prompt(messages);
+        }
+        var toolOptions = DefaultToolCallingChatOptions.builder()
+                .toolCallbacks(toolCallbacks)
+                .internalToolExecutionEnabled(true)
+                .build();
+        return new Prompt(messages, toolOptions);
     }
 
     @Override

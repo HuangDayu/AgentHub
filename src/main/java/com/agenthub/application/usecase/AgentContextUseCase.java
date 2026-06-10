@@ -224,7 +224,7 @@ public class AgentContextUseCase implements AgentContextFactory {
         return castCallbacks(toolCallbackResolver.resolveToolCallbacks(MCP_TOOL, toolIds));
     }
 
-    private Set<ToolCallback> castCallbacks(Set<Object> callbacks) {
+private Set<ToolCallback> castCallbacks(Set<Object> callbacks) {
         return callbacks.stream()
                 .filter(ToolCallback.class::isInstance)
                 .map(ToolCallback.class::cast)

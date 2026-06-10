@@ -113,7 +113,11 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
                     chatModelId, e.getMessage());
         }
         var chatModel = springShareObjectFactory.getChatModelByConfigId(chatModelId);
-        return new AgentScopeSpringModelAdapter(ctx.getAgent().getName(), chatModel);
+        var toolCallbacks = ctx.getToolCallbacks().stream()
+                .filter(ToolCallback.class::isInstance)
+                .map(ToolCallback.class::cast)
+                .toList();
+        return new AgentScopeSpringModelAdapter(ctx.getAgent().getName(), chatModel, toolCallbacks);
     }
 
     private HarnessAgent buildHarnessAgent(AgentScopeReActAgentConfig config, ReActAgentContext ctx) {
