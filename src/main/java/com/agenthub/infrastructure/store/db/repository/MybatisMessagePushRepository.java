@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.MessagePushRepository;
 import com.agenthub.domain.model.studio.MessagePush;
 import com.agenthub.infrastructure.store.db.entity.MessagePushEntity;
@@ -61,14 +62,6 @@ public class MybatisMessagePushRepository implements MessagePushRepository {
     }
 
     private MessagePush toDomain(MessagePushEntity entity) {
-        MessagePush domain = new MessagePush();
-        domain.setMessageId(entity.getMessageId());
-        domain.setRunId(entity.getRunId());
-        domain.setRole(entity.getRole());
-        domain.setContent(entity.getContent());
-        domain.setMetadata(entity.getMetadata());
-        domain.setTimestamp(entity.getTimestamp());
-        domain.setCreatedAt(entity.getCreatedAt());
-        return domain;
+        return BeanUtil.copyProperties(entity, MessagePush.class);
     }
 }

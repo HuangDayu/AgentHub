@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.SystemToolsRepository;
 import com.agenthub.domain.model.tools.SystemTool;
 import com.agenthub.infrastructure.store.db.entity.SystemToolsEntity;
@@ -102,36 +103,10 @@ public class MybatisSystemToolsRepository implements SystemToolsRepository {
     }
 
     private SystemToolsEntity toEntity(SystemTool tool) {
-        SystemToolsEntity e = new SystemToolsEntity();
-        e.setId(tool.getId());
-        e.setTenantId(tool.getTenantId());
-        e.setToolClassName(tool.getToolClassName());
-        e.setToolName(tool.getToolName());
-        e.setDescription(tool.getDescription());
-        e.setCategory(tool.getCategory());
-        e.setMethodCount(tool.getMethodCount());
-        e.setDescription(tool.getDescription());
-        e.setEnabled(tool.isEnabled());
-        e.setSystemTool(tool.isSystemTool());
-        e.setCreatedAt(tool.getCreatedAt());
-        e.setUpdatedAt(tool.getUpdatedAt());
-        return e;
+        return BeanUtil.copyProperties(tool, SystemToolsEntity.class);
     }
 
     private SystemTool toDomain(SystemToolsEntity e) {
-        SystemTool t = new SystemTool();
-        t.setId(e.getId());
-        t.setTenantId(e.getTenantId());
-        t.setToolClassName(e.getToolClassName());
-        t.setToolName(e.getToolName());
-        t.setDescription(e.getDescription());
-        t.setCategory(e.getCategory());
-        t.setMethodCount(e.getMethodCount());
-        t.setDescription(e.getDescription());
-        t.setEnabled(e.isEnabled());
-        t.setSystemTool(e.isSystemTool());
-        t.setCreatedAt(e.getCreatedAt());
-        t.setUpdatedAt(e.getUpdatedAt());
-        return t;
+        return BeanUtil.copyProperties(e, SystemTool.class);
     }
 }

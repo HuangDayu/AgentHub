@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.agenthub.application.port.out.repositories.PermissionStrategyRepository;
@@ -75,46 +76,58 @@ public class MybatisPermissionStrategyRepository implements PermissionStrategyRe
 
     private PermissionStrategyEntity toEntity(PermissionStrategy p) {
         PermissionStrategyEntity e = new PermissionStrategyEntity();
-        BeanUtil.copyProperties(p, e);
+        BeanUtil.copyProperties(p, e, CopyOptions.create().setIgnoreProperties("allowedRoles", "allowedOperations", "protocolBlocklist", "requireApprovalFor", "tablePermissions"));
         e.setAllowedRoles(join(p.getAllowedRoles()));
         e.setAllowedOperations(joinEnums(p.getAllowedOperations(), OperationLevel.class));
         e.setProtocolBlocklist(joinEnums(p.getProtocolBlocklist(), AgentDataSourceProtocol.class));
         e.setRequireApprovalFor(joinEnums(p.getRequireApprovalFor(), TableOperation.class));
-        if (p.getTablePermissions() != null) {
-            Map<String, String> map = new HashMap<>();
-            p.getTablePermissions().forEach((k, v) -> map.put(k, joinEnums(v, TableOperation.class)));
-            e.setTablePermissions(JSONUtil.toJsonStr(map));
-        }
+        e.setTablePermissions(serializeTablePermissions(p.getTablePermissions()));
         return e;
     }
 
     private PermissionStrategy toDomain(PermissionStrategyEntity e) {
         if (e == null) return null;
         PermissionStrategy p = new PermissionStrategy();
-        p.setId(e.getId());
-        p.setTenantId(e.getTenantId());
-        p.setWorkspaceId(e.getWorkspaceId());
-        p.setName(e.getName());
-        p.setDescription(e.getDescription());
+        BeanUtil.copyProperties(e, p, CopyOptions.create().setIgnoreProperties("dangerousSqlBlock", "rateLimitPerMinute", "rateLimitPerHour", "auditLogEnabled", "auditLogRetentionDays", "piiMaskingOnResult", "allowedRoles", "allowedOperations", "protocolBlocklist", "requireApprovalFor", "tablePermissions"));
+        setNullSafeBooleans(p, e);
+        setNullSafeInts(p, e);
+        setCollectionFields(p, e);
+        p.setTablePermissions(deserializeTablePermissions(e.getTablePermissions()));
+        return p;
+    }
+
+    private void setNullSafeBooleans(PermissionStrategy p, PermissionStrategyEntity e) {
         p.setDangerousSqlBlock(Boolean.TRUE.equals(e.getDangerousSqlBlock()));
+        p.setAuditLogEnabled(Boolean.TRUE.equals(e.getAuditLogEnabled()));
+        p.setPiiMaskingOnResult(Boolean.TRUE.equals(e.getPiiMaskingOnResult()));
+    }
+
+    private void setNullSafeInts(PermissionStrategy p, PermissionStrategyEntity e) {
         p.setRateLimitPerMinute(e.getRateLimitPerMinute() == null ? 0 : e.getRateLimitPerMinute());
         p.setRateLimitPerHour(e.getRateLimitPerHour() == null ? 0 : e.getRateLimitPerHour());
-        p.setAuditLogEnabled(Boolean.TRUE.equals(e.getAuditLogEnabled()));
         p.setAuditLogRetentionDays(e.getAuditLogRetentionDays() == null ? 0 : e.getAuditLogRetentionDays());
-        p.setPiiMaskingOnResult(Boolean.TRUE.equals(e.getPiiMaskingOnResult()));
-        p.setCreatedAt(e.getCreatedAt());
-        p.setUpdatedAt(e.getUpdatedAt());
+    }
+
+    private void setCollectionFields(PermissionStrategy p, PermissionStrategyEntity e) {
         p.setAllowedRoles(splitToSet(e.getAllowedRoles()));
         p.setAllowedOperations(splitEnums(e.getAllowedOperations(), OperationLevel.class));
         p.setProtocolBlocklist(splitEnums(e.getProtocolBlocklist(), AgentDataSourceProtocol.class));
         p.setRequireApprovalFor(splitEnums(e.getRequireApprovalFor(), TableOperation.class));
-        if (StrUtil.isNotBlank(e.getTablePermissions())) {
-            Map<String, String> raw = JSONUtil.toBean(e.getTablePermissions(), Map.class);
-            Map<String, Set<TableOperation>> map = new HashMap<>();
-            raw.forEach((k, v) -> map.put(k, splitEnums(v, TableOperation.class)));
-            p.setTablePermissions(map);
-        }
-        return p;
+    }
+
+    private String serializeTablePermissions(Map<String, Set<TableOperation>> perms) {
+        if (perms == null) return null;
+        Map<String, String> map = new HashMap<>();
+        perms.forEach((k, v) -> map.put(k, joinEnums(v, TableOperation.class)));
+        return JSONUtil.toJsonStr(map);
+    }
+
+    private Map<String, Set<TableOperation>> deserializeTablePermissions(String json) {
+        if (StrUtil.isBlank(json)) return null;
+        Map<String, String> raw = JSONUtil.toBean(json, Map.class);
+        Map<String, Set<TableOperation>> map = new HashMap<>();
+        raw.forEach((k, v) -> map.put(k, splitEnums(v, TableOperation.class)));
+        return map;
     }
 
     private String join(Set<String> s) {

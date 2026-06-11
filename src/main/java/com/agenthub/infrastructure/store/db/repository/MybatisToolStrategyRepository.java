@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.ToolStrategyRepository;
 import com.agenthub.domain.model.strategy.ToolStrategy;
@@ -43,24 +44,12 @@ public class MybatisToolStrategyRepository implements ToolStrategyRepository {
     }
 
     private ToolStrategyEntity toEntity(ToolStrategy strategy) {
-        ToolStrategyEntity entity = new ToolStrategyEntity();
-        entity.setId(strategy.getId());
-        entity.setTenantId(strategy.getTenantId());
-        entity.setWorkspaceId(strategy.getWorkspaceId());
-        entity.setName(strategy.getName());
-        entity.setDescription(strategy.getDescription());
-        entity.setMaxConcurrentCalls(strategy.getMaxConcurrentCalls());
-        entity.setTimeoutSeconds(strategy.getTimeoutSeconds());
-        entity.setRetryCount(strategy.getRetryCount());
-        entity.setFallbackEnabled(strategy.isFallbackEnabled());
-        entity.setCreatedAt(strategy.getCreatedAt());
-        entity.setUpdatedAt(strategy.getUpdatedAt());
-        return entity;
+        return BeanUtil.copyProperties(strategy, ToolStrategyEntity.class);
     }
 
     private ToolStrategy toDomain(ToolStrategyEntity entity) {
         ToolStrategy.State state = new ToolStrategy.State();
-        cn.hutool.core.bean.BeanUtil.copyProperties(entity, state);
+        BeanUtil.copyProperties(entity, state);
         return ToolStrategy.rebuild(state);
     }
 }

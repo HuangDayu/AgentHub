@@ -4,6 +4,7 @@ import com.agenthub.application.command.CreateSkillConfigCommand;
 import com.agenthub.application.dto.SkillConfigOutput;
 import com.agenthub.application.port.out.SkillSyncSchedulerPort;
 import com.agenthub.application.port.out.repositories.SkillConfigRepository;
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.skill.SkillConfig;
 import lombok.RequiredArgsConstructor;
@@ -112,19 +113,7 @@ public class SkillConfigUseCase {
      */
     private SkillConfigOutput toOutput(SkillConfig config) {
         SkillConfigOutput output = new SkillConfigOutput();
-        output.setId(config.getId());
-        output.setTenantId(config.getTenantId());
-        output.setWorkspaceId(config.getWorkspaceId());
-        output.setName(config.getName());
-        output.setDescription(config.getDescription());
-        output.setSkillPaths(config.getSkillPaths());
-        output.setSyncEnabled(config.isSyncEnabled());
-        output.setSyncInterval(config.getSyncInterval());
-        output.setAutoSync(config.isAutoSync());
-        output.setEnabled(config.isEnabled());
-        output.setLastSyncAt(config.getLastSyncAt());
-        output.setCreatedAt(config.getCreatedAt());
-        output.setUpdatedAt(config.getUpdatedAt());
+        BeanUtil.copyProperties(config, output);
         return output;
     }
 }

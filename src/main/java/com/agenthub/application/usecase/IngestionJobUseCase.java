@@ -64,8 +64,10 @@ public class IngestionJobUseCase {
     public IngestionJob uploadDocument(UploadDocumentCommand command) {
         validateUploadParams(command.getKbId(), command.getFileName(), command.getStoragePath());
         IngestionJob savedJob = createAndSaveJob(command.getKbId());
-        IngestionDocument document = createDocument(command.getKbId(), savedJob.getJobId(),
-                command.getFileName(), command.getContentType(), command.getSize(), command.getStoragePath());
+        IngestionDocument.CreationSpec spec = new IngestionDocument.CreationSpec(
+                command.getKbId(), savedJob.getJobId(), command.getFileName(),
+                command.getContentType(), command.getSize(), command.getStoragePath());
+        IngestionDocument document = saveDocument(spec);
         log.info("Document uploaded: jobId={}, documentId={}, storagePath={}",
                 savedJob.getJobId(), document.getId(), command.getStoragePath());
         pipelineService.execute(savedJob.getJobId());
@@ -87,17 +89,6 @@ public class IngestionJobUseCase {
     private IngestionJob createAndSaveJob(String kbId) {
         String jobId = randomId();
         return jobRepository.save(IngestionJob.create(jobId, kbId, 1));
-    }
-
-    /**
-     * 创建并持久化文档记录。
-     */
-    private IngestionDocument createDocument(String kbId, String jobId, String fileName,
-                                             String contentType, long size, String storagePath) {
-        IngestionDocument.CreationSpec request = new IngestionDocument.CreationSpec(
-                kbId, jobId, fileName, contentType, size, storagePath);
-        IngestionDocument document = IngestionDocument.createWithStoragePath(request);
-        return documentRepository.save(document);
     }
 
     /**
@@ -197,22 +188,16 @@ public class IngestionJobUseCase {
         log.info("Stored file to MinIO: objectKey={}, size={}", objectKey, size);
     }
 
+    private IngestionDocument saveDocument(IngestionDocument.CreationSpec spec) {
+        return documentRepository.save(IngestionDocument.createWithStoragePath(spec));
+    }
+
     private IngestionDocument saveDocument(SaveDocumentCommand command) {
-        IngestionDocument document = createDocument(command.getKbId(), command.getJobId(),
-                command.getFile(), command.getObjectKey());
-        IngestionDocument save = documentRepository.save(document);
-        logDocumentSave(save.getId());
+        IngestionDocument.CreationSpec spec = new IngestionDocument.CreationSpec(
+                command.getKbId(), command.getJobId(), command.getFile().getOriginalFilename(),
+                command.getFile().getContentType(), command.getFile().getSize(), command.getObjectKey());
+        IngestionDocument save = documentRepository.save(IngestionDocument.createWithStoragePath(spec));
+        log.info("Saved document record: documentId={}", save.getId());
         return save;
-    }
-
-    private IngestionDocument createDocument(String kbId, String jobId, MultipartFile file, String objectKey) {
-        IngestionDocument.CreationSpec request = new IngestionDocument.CreationSpec(
-                kbId, jobId, file.getOriginalFilename(),
-                file.getContentType(), file.getSize(), objectKey);
-        return IngestionDocument.createWithStoragePath(request);
-    }
-
-    private void logDocumentSave(String documentId) {
-        log.info("Saved document record: documentId={}", documentId);
     }
 }

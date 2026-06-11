@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.agenthub.application.port.out.repositories.DagWorkflowRepository;
 import com.agenthub.domain.model.workflow.DagWorkflow;
@@ -51,32 +52,10 @@ public class MybatisDagWorkflowRepository implements DagWorkflowRepository {
     }
 
     private DagWorkflowEntity toEntity(DagWorkflow workflow) {
-        DagWorkflowEntity entity = new DagWorkflowEntity();
-        entity.setId(workflow.getId());
-        entity.setTenantId(workflow.getTenantId());
-        entity.setWorkspaceId(workflow.getWorkspaceId());
-        entity.setWorkflowCode(workflow.getWorkflowCode());
-        entity.setName(workflow.getName());
-        entity.setDescription(workflow.getDescription());
-        entity.setGraphDefinition(workflow.getGraphDefinition());
-        entity.setStatus(workflow.getStatus());
-        entity.setCreatedAt(workflow.getCreatedAt());
-        entity.setUpdatedAt(workflow.getUpdatedAt());
-        return entity;
+        return BeanUtil.copyProperties(workflow, DagWorkflowEntity.class);
     }
 
     private DagWorkflow toDomain(DagWorkflowEntity entity) {
-        DagWorkflow workflow = new DagWorkflow();
-        workflow.setId(entity.getId());
-        workflow.setTenantId(entity.getTenantId());
-        workflow.setWorkspaceId(entity.getWorkspaceId());
-        workflow.setWorkflowCode(entity.getWorkflowCode());
-        workflow.setName(entity.getName());
-        workflow.setDescription(entity.getDescription());
-        workflow.setGraphDefinition(entity.getGraphDefinition());
-        workflow.setStatus(entity.getStatus());
-        workflow.setCreatedAt(entity.getCreatedAt());
-        workflow.setUpdatedAt(entity.getUpdatedAt());
-        return workflow;
+        return BeanUtil.copyProperties(entity, DagWorkflow.class);
     }
 }

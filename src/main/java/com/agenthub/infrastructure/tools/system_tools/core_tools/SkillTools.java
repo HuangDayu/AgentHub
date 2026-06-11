@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.tools.system_tools.core_tools;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.DocumentFileStoragePort;
 import com.agenthub.application.port.out.repositories.SkillFileRepository;
 import com.agenthub.application.port.out.repositories.SkillRepository;
@@ -115,29 +116,13 @@ public class SkillTools {
 
     private AgentSkillDTO toBasicDto(Skill skill) {
         AgentSkillDTO dto = new AgentSkillDTO();
-        dto.setId(skill.getId());
-        dto.setName(skill.getName());
-        dto.setDescription(skill.getDescription());
-        dto.setSkillType(skill.getSkillType());
-        dto.setEnabled(skill.isEnabled());
-        dto.setSkillCode(skill.getSkillCode());
-        dto.setFileCount(skill.getFileCount());
-        dto.setTotalSize(skill.getTotalSize());
+        BeanUtil.copyProperties(skill, dto);
         return dto;
     }
 
     private SkillDetailDTO toDetailDto(Skill skill) {
         SkillDetailDTO dto = new SkillDetailDTO();
-        dto.setId(skill.getId());
-        dto.setName(skill.getName());
-        dto.setDescription(skill.getDescription());
-        dto.setSkillType(skill.getSkillType());
-        dto.setSkillPath(skill.getSkillPath());
-        dto.setSkillFilesTree(skill.getSkillFilesTree());
-        dto.setEnabled(skill.isEnabled());
-        dto.setFileCount(skill.getFileCount());
-        dto.setTotalSize(skill.getTotalSize());
-        dto.setLastSyncAt(skill.getLastSyncAt());
+        BeanUtil.copyProperties(skill, dto);
         return dto;
     }
 }

@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.SubsessionRepository;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.agent.ChatMessage;
@@ -94,27 +95,12 @@ public class MybatisSubsessionRepository implements SubsessionRepository {
 
     private SubsessionEntity toEntity(Subsession subsession) {
         if (subsession == null) return null;
-        SubsessionEntity entity = new SubsessionEntity();
-        entity.setId(subsession.getId());
-        entity.setParentSessionId(subsession.getParentSessionId());
-        entity.setSubagentId(subsession.getSubagentId());
-        entity.setName(subsession.getName());
-        entity.setStatus(subsession.getStatus());
-        entity.setCreatedAt(subsession.getCreatedAt());
-        entity.setUpdatedAt(subsession.getUpdatedAt());
-        return entity;
+        return BeanUtil.copyProperties(subsession, SubsessionEntity.class);
     }
 
     private Subsession toDomain(SubsessionEntity entity) {
         if (entity == null) return null;
-        Subsession subsession = new Subsession();
-        subsession.setId(entity.getId());
-        subsession.setParentSessionId(entity.getParentSessionId());
-        subsession.setSubagentId(entity.getSubagentId());
-        subsession.setName(entity.getName());
-        subsession.setStatus(entity.getStatus());
-        subsession.setCreatedAt(entity.getCreatedAt());
-        subsession.setUpdatedAt(entity.getUpdatedAt());
+        Subsession subsession = BeanUtil.copyProperties(entity, Subsession.class);
         subsession.setMessages(new ArrayList<>());
         return subsession;
     }

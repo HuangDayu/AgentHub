@@ -182,24 +182,25 @@ public class RagElasticsearchTextSearchAdapter implements RagTextSearchPort {
         return response.hits().hits().stream().map(this::toRetrievalResult).toList();
     }
 
+    private String resolveDisplayContent(Hit<Map> hit, String content) {
+        String highlighted = extractHighlightedContent(hit);
+        return highlighted != null ? highlighted : content != null ? content : "";
+    }
+
+    private static String nvl(String s) {
+        return s != null ? s : "";
+    }
+
     /**
      * 转换为单个检索结果。
      */
     private RetrievalResult toRetrievalResult(Hit<Map> hit) {
         Map<String, Object> source = hit.source() != null ? hit.source() : Collections.emptyMap();
-        String documentId = extractString(source, DOCUMENT_ID_FIELD);
+        String docId = nvl(extractString(source, DOCUMENT_ID_FIELD));
         String content = extractString(source, CONTENT_FIELD);
-        String highlightedContent = extractHighlightedContent(hit);
-        String displayContent = highlightedContent != null ? highlightedContent : content;
+        String display = resolveDisplayContent(hit, content);
         double score = hit.score() != null ? normalizeScore(hit.score()) : 0.0;
-        return new RetrievalResult(
-                documentId != null ? documentId : "",
-                null,
-                hit.id() != null ? hit.id() : "",
-                displayContent != null ? displayContent : "",
-                score,
-                source
-        );
+        return new RetrievalResult(docId, null, nvl(hit.id()), display, score, source);
     }
 
     /**

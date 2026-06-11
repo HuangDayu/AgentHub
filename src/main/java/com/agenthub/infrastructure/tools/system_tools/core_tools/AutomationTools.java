@@ -36,7 +36,10 @@ public class AutomationTools {
             @ToolParam(description = "执行该任务的AgentID（可选，为空则使用工作空间内第一个Agent）") String agentId,
             ToolContext toolContext) {
         ReActAgentContext ctx = getAgentContext(toolContext);
-        ScheduledTask task = buildTask(ctx, taskName, taskType, cronExpression, prompt);
+        ScheduledTask task = new ScheduledTask();
+        task.setName(taskName); task.setTaskType(taskType);
+        task.setCronExpression(cronExpression); task.setPrompt(prompt);
+        task = buildTask(ctx, task);
         if (agentId != null && !agentId.isBlank()) task.setAgentId(agentId);
         ScheduledTask saved = scheduledTaskRepository.saveOrUpdate(task);
         scheduledTaskScheduler.scheduleTask(saved);
@@ -108,16 +111,10 @@ public class AutomationTools {
                         "定时任务不存在: " + taskId));
     }
 
-    private ScheduledTask buildTask(ReActAgentContext ctx, String name, String type,
-                                    String cronExpression, String prompt) {
-        ScheduledTask task = new ScheduledTask();
+    private ScheduledTask buildTask(ReActAgentContext ctx, ScheduledTask task) {
         task.setTenantId(ctx.getAgent().getTenantId());
         task.setWorkspaceId(ctx.getWorkspace().getWorkspace().getId());
-        task.setTaskCode(generateTaskCode(name));
-        task.setName(name);
-        task.setTaskType(type);
-        task.setCronExpression(cronExpression);
-        task.setPrompt(prompt);
+        task.setTaskCode(generateTaskCode(task.getName()));
         task.setEnabled(true);
         task.setStatus("ACTIVE");
         task.setCreatedAt(LocalDateTime.now());

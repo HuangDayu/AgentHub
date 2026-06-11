@@ -44,22 +44,7 @@ public class MybatisGuardrailStrategyRepository implements GuardrailStrategyRepo
     }
 
     private GuardrailStrategyEntity toEntity(GuardrailStrategy strategy) {
-        GuardrailStrategyEntity entity = new GuardrailStrategyEntity();
-        entity.setId(strategy.getId());
-        entity.setTenantId(strategy.getTenantId());
-        entity.setWorkspaceId(strategy.getWorkspaceId());
-        entity.setName(strategy.getName());
-        entity.setDescription(strategy.getDescription());
-        entity.setInputValidationEnabled(strategy.isInputValidationEnabled());
-        entity.setOutputValidationEnabled(strategy.isOutputValidationEnabled());
-        entity.setPiiDetectionEnabled(strategy.isPiiDetectionEnabled());
-        entity.setPiiMaskingEnabled(strategy.isPiiMaskingEnabled());
-        entity.setPromptInjectionDetection(strategy.isPromptInjectionDetection());
-        entity.setMaxInputLength(strategy.getMaxInputLength());
-        entity.setMaxOutputLength(strategy.getMaxOutputLength());
-        entity.setCreatedAt(strategy.getCreatedAt());
-        entity.setUpdatedAt(strategy.getUpdatedAt());
-        return entity;
+        return BeanUtil.copyProperties(strategy, GuardrailStrategyEntity.class);
     }
 
     private GuardrailStrategy toDomain(GuardrailStrategyEntity entity) {

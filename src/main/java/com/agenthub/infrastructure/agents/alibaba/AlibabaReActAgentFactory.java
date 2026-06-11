@@ -69,7 +69,16 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
     }
 
     private ReactAgent buildReactAgent(AlibabaReActAgentConfig config) {
-        Builder builder = ReactAgent.builder()
+        var builder = createBaseBuilder(config);
+        applySystemPrompt(builder, config);
+        applySaver(builder, config);
+        applyHooks(builder, config);
+        applyInterceptors(builder, config);
+        return builder.build();
+    }
+
+    private Builder createBaseBuilder(AlibabaReActAgentConfig config) {
+        return ReactAgent.builder()
                 .name(config.getAgent().getName())
                 .description(config.getAgent().getDescription())
                 .toolContext(config.getToolContext())
@@ -79,11 +88,6 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
                 .maxParallelTools(5)
                 .parallelToolExecution(true)
                 .releaseThread(true);
-        applySystemPrompt(builder, config);
-        applySaver(builder, config);
-        applyHooks(builder, config);
-        applyInterceptors(builder, config);
-        return builder.build();
     }
 
     private ChatClient buildChatClient(AlibabaReActAgentConfig config) {
@@ -98,20 +102,14 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
     }
 
     private AlibabaReActAgentConfig buildAliReActAgentConfig(ReActAgentContext context) {
-        return new AlibabaReActAgentConfig(
-                context.getAgent(),
-                resolveChatModel(context),
-                resolveAdvisors(context),
-                resolveChatOptions(context),
-                context.getSystemPrompt(),
-                resolveTools(context),
-                resolveHooks(context),
-                resolveInterceptors(context),
-                resolveSaver(),
-                resolveStore(),
-                resolveToolsContext(context),
-                resolveRunnableConfig(context)
-        );
+        ChatModel chatModel = resolveChatModel(context); Advisor[] advisors = resolveAdvisors(context);
+        ChatOptions chatOptions = resolveChatOptions(context);
+        var hooks = resolveHooks(context); var interceptors = resolveInterceptors(context);
+        var saver = resolveSaver(); var store = resolveStore();
+        var toolsContext = resolveToolsContext(context); var runConfig = resolveRunnableConfig(context);
+        return new AlibabaReActAgentConfig(context.getAgent(), chatModel, advisors, chatOptions,
+                context.getSystemPrompt(), resolveTools(context), hooks, interceptors, saver, store,
+                toolsContext, runConfig);
     }
 
     private Advisor[] resolveAdvisors(ReActAgentContext context) {

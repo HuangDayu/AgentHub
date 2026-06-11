@@ -115,22 +115,30 @@ public class ClawHubAdapter implements SkillMarketPort {
     @SuppressWarnings("unchecked")
     private MarketSkillDetail toDetail(Object obj, String skillId) {
         if (!(obj instanceof Map root)) return null;
-        Map<String, Object> skill = (Map<String, Object>) root.get("skill");
-        Map<String, Object> owner = (Map<String, Object>) root.get("owner");
-        Map<String, Object> stats = skill != null ? (Map<String, Object>) skill.get("stats") : null;
-        if (skill == null) return null;
+        Map<String, Object> skillMap = (Map<String, Object>) root.get("skill");
+        if (skillMap == null) return null;
+        return buildDetail(skillId, skillMap, (Map<String, Object>) root.get("owner"));
+    }
 
+    /**
+     * 构建详情对象。
+     */
+    private MarketSkillDetail buildDetail(String skillId, Map<String, Object> skillMap, Map<String, Object> owner) {
         MarketSkillDetail d = new MarketSkillDetail();
-        d.setMarketId("clawhub");
-        d.setSkillId(skillId);
-        d.setName(str(skill, "displayName"));
-        d.setDescription(str(skill, "summary"));
-        d.setAuthor(owner != null ? str(owner, "handle") : "");
-        d.setHomepage(BASE_URL + "/" + skillId);
-        d.setDownloadCount(stats != null ? intVal(stats, "downloads") : 0);
-        d.setStarCount(stats != null ? intVal(stats, "stars") : 0);
+        d.setMarketId("clawhub"); d.setSkillId(skillId);
+        d.setName(str(skillMap, "displayName")); d.setDescription(str(skillMap, "summary"));
+        d.setAuthor(owner != null ? str(owner, "handle") : ""); d.setHomepage(BASE_URL + "/" + skillId);
+        d.setDownloadCount(getStatsValue(skillMap, "downloads")); d.setStarCount(getStatsValue(skillMap, "stars"));
         d.setDownloadUrl(DOWNLOAD_URL + skillId);
         return d;
+    }
+
+    /**
+     * 从技能的 stats 映射中获取数值。
+     */
+    private int getStatsValue(Map<String, Object> skillMap, String key) {
+        Map<String, Object> stats = (Map<String, Object>) skillMap.get("stats");
+        return stats != null ? intVal(stats, key) : 0;
     }
 
     /**

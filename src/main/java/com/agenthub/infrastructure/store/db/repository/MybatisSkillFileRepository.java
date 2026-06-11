@@ -1,5 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.agenthub.application.port.out.repositories.SkillFileRepository;
 import com.agenthub.domain.model.skill.SkillFile;
 import com.agenthub.domain.model.skill.SkillFileStats;
@@ -99,23 +101,8 @@ public class MybatisSkillFileRepository implements SkillFileRepository {
      */
     private SkillFileEntity toEntity(SkillFile domain) {
         SkillFileEntity entity = new SkillFileEntity();
-        entity.setId(domain.getId());
-        entity.setSkillId(domain.getSkillId());
-        entity.setTenantId(domain.getTenantId());
-        entity.setWorkspaceId(domain.getWorkspaceId());
-        entity.setFilePath(domain.getFilePath());
-        entity.setFileName(domain.getFileName());
-        entity.setFileExt(domain.getFileExt());
-        entity.setFileSize(domain.getFileSize());
+        BeanUtil.copyProperties(domain, entity, CopyOptions.create().setIgnoreProperties("fileType"));
         entity.setFileType(domain.getFileType() != null ? domain.getFileType().name() : null);
-        entity.setEncoding(domain.getEncoding());
-        entity.setStoragePath(domain.getStoragePath());
-        entity.setChecksum(domain.getChecksum());
-        entity.setDirectory(domain.isDirectory());
-        entity.setMetadata(domain.getMetadata());
-        entity.setVersion(domain.getVersion());
-        entity.setCreatedAt(domain.getCreatedAt());
-        entity.setUpdatedAt(domain.getUpdatedAt());
         return entity;
     }
 
@@ -124,24 +111,9 @@ public class MybatisSkillFileRepository implements SkillFileRepository {
      */
     private SkillFile toDomain(SkillFileEntity entity) {
         SkillFile domain = new SkillFile();
-        domain.setId(entity.getId());
-        domain.setSkillId(entity.getSkillId());
-        domain.setTenantId(entity.getTenantId());
-        domain.setWorkspaceId(entity.getWorkspaceId());
-        domain.setFilePath(entity.getFilePath());
-        domain.setFileName(entity.getFileName());
-        domain.setFileExt(entity.getFileExt());
-        domain.setFileSize(entity.getFileSize());
-        domain.setFileType(entity.getFileType() != null ?
-                SkillFile.FileType.valueOf(entity.getFileType()) : null);
-        domain.setEncoding(entity.getEncoding());
-        domain.setStoragePath(entity.getStoragePath());
-        domain.setChecksum(entity.getChecksum());
-        domain.setDirectory(entity.isDirectory());
-        domain.setMetadata(entity.getMetadata());
+        BeanUtil.copyProperties(entity, domain, CopyOptions.create().setIgnoreProperties("fileType", "version"));
+        domain.setFileType(entity.getFileType() != null ? SkillFile.FileType.valueOf(entity.getFileType()) : null);
         domain.setVersion(entity.getVersion() != null ? entity.getVersion() : 1);
-        domain.setCreatedAt(entity.getCreatedAt());
-        domain.setUpdatedAt(entity.getUpdatedAt());
         return domain;
     }
 }

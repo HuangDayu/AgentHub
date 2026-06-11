@@ -68,18 +68,10 @@ public class SkillController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String description,
             @RequestParam("file") MultipartFile file) throws Exception {
-        SkillOutput result = useCase.createFromUpload(CreateSkillCommand.builder()
-                .workspaceId(workspaceId)
-                .skillCode(skillCode)
-                .name(name)
-                .skillType("UPLOADED")
-                .source("UPLOAD")
-                .sourcePath(file.getOriginalFilename())
-                .description(description)
-                .zipStream(file.getInputStream())
-                .zipSize(file.getSize())
-                .build());
-        return toResponse(result);
+        return toResponse(useCase.createFromUpload(CreateSkillCommand.builder().workspaceId(workspaceId)
+                .skillCode(skillCode).name(name).skillType("UPLOADED").source("UPLOAD")
+                .sourcePath(file.getOriginalFilename()).description(description)
+                .zipStream(file.getInputStream()).zipSize(file.getSize()).build()));
     }
 
     /**
@@ -156,25 +148,7 @@ public class SkillController {
      */
     private SkillResponse toResponse(SkillOutput output) {
         SkillResponse response = new SkillResponse();
-        response.setId(output.getId());
-        response.setTenantId(output.getTenantId());
-        response.setWorkspaceId(output.getWorkspaceId());
-        response.setSkillCode(output.getSkillCode());
-        response.setName(output.getName());
-        response.setDescription(output.getDescription());
-        response.setSkillType(output.getSkillType());
-        response.setSkillPath(output.getSkillPath());
-        response.setSkillFilesTree(output.getSkillFilesTree());
-        response.setSource(output.getSource());
-        response.setSourcePath(output.getSourcePath());
-        response.setZipStoragePath(output.getZipStoragePath());
-        response.setConfigId(output.getConfigId());
-        response.setFileCount(output.getFileCount());
-        response.setTotalSize(output.getTotalSize());
-        response.setEnabled(output.isEnabled());
-        response.setCreatedAt(output.getCreatedAt());
-        response.setUpdatedAt(output.getUpdatedAt());
-        response.setLastSyncAt(output.getLastSyncAt());
+        BeanUtil.copyProperties(output, response);
         return response;
     }
 }

@@ -34,67 +34,56 @@ public class Skill {
     /**
      * 创建同步技能。
      */
-    public static Skill createSynced(String tenantId, String workspaceId,
-                                      String skillCode, String name,
-                                      String description, String skillPath) {
-        Skill skill = new Skill();
-        skill.id = randomId();
-        skill.tenantId = tenantId;
-        skill.workspaceId = workspaceId;
-        skill.skillCode = skillCode;
-        skill.name = name;
-        skill.description = description;
-        skill.skillType = "SYNCED";
-        skill.source = "LOCAL";
-        skill.sourcePath = skillPath;
-        skill.skillPath = skillPath;
-        skill.enabled = true;
-        skill.createdAt = Instant.now();
-        skill.updatedAt = Instant.now();
+    public static Skill createSynced(String tenantId, String workspaceId, String skillCode, String name, String description, String skillPath) {
+        Skill skill = createBase();
+        skill.tenantId = tenantId; skill.workspaceId = workspaceId;
+        skill.skillCode = skillCode; skill.name = name; skill.description = description;
+        skill.skillType = "SYNCED"; skill.source = "LOCAL";
+        skill.sourcePath = skillPath; skill.skillPath = skillPath;
+        initTimestamps(skill);
         return skill;
     }
 
     /**
      * 创建从 URL 上传的技能。
      */
-    public static Skill createFromUrl(String tenantId, String workspaceId,
-                                       String skillCode, String name,
-                                       String description, String zipUrl) {
-        Skill skill = new Skill();
-        skill.id = randomId();
-        skill.tenantId = tenantId;
-        skill.workspaceId = workspaceId;
-        skill.skillCode = skillCode;
-        skill.name = name;
-        skill.description = description;
-        skill.skillType = "UPLOADED";
-        skill.source = "URL";
+    public static Skill createFromUrl(String tenantId, String workspaceId, String skillCode, String name, String description, String zipUrl) {
+        Skill skill = createBase();
+        skill.tenantId = tenantId; skill.workspaceId = workspaceId;
+        skill.skillCode = skillCode; skill.name = name; skill.description = description;
+        skill.skillType = "UPLOADED"; skill.source = "URL";
         skill.sourcePath = zipUrl;
-        skill.enabled = true;
-        skill.createdAt = Instant.now();
-        skill.updatedAt = Instant.now();
+        initTimestamps(skill);
         return skill;
     }
 
     /**
      * 创建从文件上传的技能。
      */
-    public static Skill createFromUpload(String tenantId, String workspaceId,
-                                          String skillCode, String name,
-                                          String description) {
+    public static Skill createFromUpload(String tenantId, String workspaceId, String skillCode, String name, String description) {
+        Skill skill = createBase();
+        skill.tenantId = tenantId; skill.workspaceId = workspaceId;
+        skill.skillCode = skillCode; skill.name = name; skill.description = description;
+        skill.skillType = "UPLOADED"; skill.source = "UPLOAD";
+        initTimestamps(skill);
+        return skill;
+    }
+
+    /**
+     * 创建技能基础实例。
+     */
+    private static Skill createBase() {
         Skill skill = new Skill();
-        skill.id = randomId();
-        skill.tenantId = tenantId;
-        skill.workspaceId = workspaceId;
-        skill.skillCode = skillCode;
-        skill.name = name;
-        skill.description = description;
-        skill.skillType = "UPLOADED";
-        skill.source = "UPLOAD";
-        skill.enabled = true;
+        skill.id = randomId(); skill.enabled = true;
+        return skill;
+    }
+
+    /**
+     * 初始化时间戳字段。
+     */
+    private static void initTimestamps(Skill skill) {
         skill.createdAt = Instant.now();
         skill.updatedAt = Instant.now();
-        return skill;
     }
 
     /**

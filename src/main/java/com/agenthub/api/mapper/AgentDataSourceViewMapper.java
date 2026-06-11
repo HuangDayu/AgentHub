@@ -1,6 +1,7 @@
 package com.agenthub.api.mapper;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.agenthub.api.dto.AgentDataSourceDescriptorResponse;
 import com.agenthub.api.dto.AgentDataSourceFieldResponse;
 import com.agenthub.api.dto.AgentDataSourceInvokeResponse;
@@ -69,11 +70,7 @@ public class AgentDataSourceViewMapper {
     public static AgentDataSourceDescriptorResponse toDescriptorResponse(AgentDataSourceDescriptor descriptor) {
         if (descriptor == null) return null;
         AgentDataSourceDescriptorResponse resp = new AgentDataSourceDescriptorResponse();
-        resp.setProtocol(descriptor.getProtocol());
-        resp.setScheme(descriptor.getScheme());
-        resp.setDisplayName(descriptor.getDisplayName());
-        resp.setDescription(descriptor.getDescription());
-        resp.setSyntaxHint(descriptor.getSyntaxHint());
+        BeanUtil.copyProperties(descriptor, resp, CopyOptions.create().setIgnoreProperties("fields"));
         resp.setFields(toFieldResponses(descriptor.getFields()));
         return resp;
     }
@@ -90,12 +87,7 @@ public class AgentDataSourceViewMapper {
     public static AgentDataSourceFieldResponse toFieldResponse(AgentDataSourceField field) {
         if (field == null) return null;
         AgentDataSourceFieldResponse resp = new AgentDataSourceFieldResponse();
-        resp.setName(field.getName());
-        resp.setType(field.getType());
-        resp.setDescription(field.getDescription());
-        resp.setPlaceholder(field.getPlaceholder());
-        resp.setDefaultValue(field.getDefaultValue());
-        resp.setRequired(field.isRequired());
+        BeanUtil.copyProperties(field, resp);
         return resp;
     }
 
@@ -157,18 +149,30 @@ public class AgentDataSourceViewMapper {
     public static UpsertPermissionStrategyCommand toCommand(PermissionStrategyRequest request) {
         if (request == null) return null;
         UpsertPermissionStrategyCommand cmd = new UpsertPermissionStrategyCommand();
+        setBaseFields(cmd, request);
+        setPermissionFields(cmd, request);
+        setRateLimitFields(cmd, request);
+        return cmd;
+    }
+
+    private static void setBaseFields(UpsertPermissionStrategyCommand cmd, PermissionStrategyRequest request) {
         cmd.setName(request.getName());
         cmd.setDescription(request.getDescription());
+    }
+
+    private static void setPermissionFields(UpsertPermissionStrategyCommand cmd, PermissionStrategyRequest request) {
         cmd.setAllowedRoles(request.getAllowedRoles() == null ? Set.of() : new HashSet<>(request.getAllowedRoles()));
         cmd.setAllowedOperations(toOperationLevels(request.getAllowedOperations()));
         cmd.setProtocolBlocklist(toProtocolBlocklist(request.getProtocolBlocklist()));
         cmd.setDangerousSqlBlock(Boolean.TRUE.equals(request.getDangerousSqlBlock()));
         cmd.setRequireApprovalFor(toTableOps(request.getRequireApprovalFor()));
         cmd.setTablePermissions(toTablePermissionMap(request.getTablePermissions()));
+        cmd.setPiiMaskingOnResult(Boolean.TRUE.equals(request.getPiiMaskingOnResult()));
+    }
+
+    private static void setRateLimitFields(UpsertPermissionStrategyCommand cmd, PermissionStrategyRequest request) {
         cmd.setRateLimitPerMinute(request.getRateLimitPerMinute() == null ? 0 : request.getRateLimitPerMinute());
         cmd.setRateLimitPerHour(request.getRateLimitPerHour() == null ? 0 : request.getRateLimitPerHour());
-        cmd.setPiiMaskingOnResult(Boolean.TRUE.equals(request.getPiiMaskingOnResult()));
-        return cmd;
     }
 
     public static DataSourceSchema fromSchemaRequest(String dataSourceId, DataSourceSchemaRequest request) {
@@ -202,12 +206,9 @@ public class AgentDataSourceViewMapper {
     public static DataSourceColumn fromColumnRequest(DataSourceColumnRequest request) {
         if (request == null) return null;
         DataSourceColumn c = new DataSourceColumn();
-        c.setName(request.getName());
-        c.setType(request.getType());
-        c.setDescription(request.getDescription());
+        BeanUtil.copyProperties(request, c, CopyOptions.create().setIgnoreProperties("nullable"));
         c.setNullable(Boolean.TRUE.equals(request.getNullable()));
         c.setPrimary(Boolean.TRUE.equals(request.getPrimaryKey()));
-        c.setDefaultValue(request.getDefaultValue());
         return c;
     }
 
@@ -223,12 +224,7 @@ public class AgentDataSourceViewMapper {
     public static TableRelationship fromRelRequest(TableRelationshipRequest request) {
         if (request == null) return null;
         TableRelationship r = new TableRelationship();
-        r.setName(request.getName());
-        r.setSourceTableId(request.getSourceTableId());
-        r.setTargetTableId(request.getTargetTableId());
-        r.setType(request.getType());
-        r.setSourceColumn(request.getSourceColumn());
-        r.setTargetColumn(request.getTargetColumn());
+        BeanUtil.copyProperties(request, r);
         return r;
     }
 

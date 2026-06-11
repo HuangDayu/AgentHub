@@ -23,6 +23,7 @@ import io.agentscope.core.model.Model;
 import io.agentscope.core.rag.Knowledge;
 import io.agentscope.core.skill.repository.AgentSkillRepository;
 import io.agentscope.core.skill.repository.FileSystemSkillRepository;
+import io.agentscope.core.hook.Hook;
 import io.agentscope.core.studio.StudioClient;
 import io.agentscope.core.studio.StudioConfig;
 import io.agentscope.core.studio.StudioMessageHook;
@@ -121,21 +122,12 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
     }
 
     private HarnessAgent buildHarnessAgent(AgentScopeReActAgentConfig config, ReActAgentContext ctx) {
-        return HarnessAgent.builder()
-                .name(config.getAgent().getName())
-                .sysPrompt(config.getSystemPrompt())
-                .model(config.getModel())
-                .workspace(config.getWorkspacePath())
-                .compaction(memoryConfigFactory.createDefaultCompactionConfig())
-                .enablePendingToolRecovery(true)
-                .hook(resolveStudioMessageHook(config, ctx))
-                .hook(new ToolStrategyHook(ctx))
-                .hook(new RetrievalStrategyHook(ctx))
-                .toolExecutionContext(resolveToolExecutionContext(ctx))
-                .toolResultEviction(memoryConfigFactory.createDefaultToolResultEvictionConfig())
-                .toolkit(resolveToolkit(ctx))
-                .knowledges(resolveKnowledge(ctx))
-                .build();
+        return HarnessAgent.builder().name(config.getAgent().getName()).sysPrompt(config.getSystemPrompt())
+                .model(config.getModel()).workspace(config.getWorkspacePath())
+                .compaction(memoryConfigFactory.createDefaultCompactionConfig()).enablePendingToolRecovery(true)
+                .hooks(buildHooks(config, ctx)).toolExecutionContext(resolveToolExecutionContext(ctx))
+                .toolResultEviction(memoryConfigFactory.createDefaultToolResultEvictionConfig()).toolkit(resolveToolkit(ctx))
+                .knowledges(resolveKnowledge(ctx)).build();
     }
 
     private AgentSkillRepository resolveSkillRepository(ReActAgentContext ctx) {
@@ -147,6 +139,10 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
                 .register(AGENT_CONTEXT_KEY, ctx)
                 .register(THREAD_CONTEXT_KEY, tenantContextGetter.findTenantThreadContext().orElse(null))
                 .build();
+    }
+
+    private List<Hook> buildHooks(AgentScopeReActAgentConfig config, ReActAgentContext ctx) {
+        return List.of(resolveStudioMessageHook(config, ctx), new ToolStrategyHook(ctx), new RetrievalStrategyHook(ctx));
     }
 
     private List<Knowledge> resolveKnowledge(ReActAgentContext ctx) {

@@ -90,16 +90,11 @@ public class MybatisSpanRepository implements SpanRepository {
     private Span toDomain(SpanEntity entity) {
         Span span = new Span();
         BeanUtil.copyProperties(entity, span, jsonCopyOptions());
-        span.setAttributes(fromJson(entity.getAttributes(), new TypeReference<>() {
-        }));
-        span.setEvents(fromJson(entity.getEvents(), new TypeReference<>() {
-        }));
-        span.setLinks(fromJson(entity.getLinks(), new TypeReference<>() {
-        }));
-        span.setResource(fromJson(entity.getResource(), new TypeReference<>() {
-        }));
-        span.setScope(fromJson(entity.getScope(), new TypeReference<>() {
-        }));
+        span.setAttributes(fromJson(entity.getAttributes(), new TypeReference<>() {}));
+        span.setEvents(fromJson(entity.getEvents(), new TypeReference<>() {}));
+        span.setLinks(fromJson(entity.getLinks(), new TypeReference<>() {}));
+        span.setResource(fromJson(entity.getResource(), new TypeReference<>() {}));
+        span.setScope(fromJson(entity.getScope(), new TypeReference<>() {}));
         return span;
     }
 

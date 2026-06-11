@@ -1,5 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.agenthub.application.port.out.repositories.SkillConfigRepository;
 import com.agenthub.domain.model.skill.SkillConfig;
 import com.agenthub.infrastructure.store.db.entity.SkillConfigEntity;
@@ -76,19 +78,8 @@ public class MybatisSkillConfigRepository implements SkillConfigRepository {
      */
     private SkillConfigEntity toEntity(SkillConfig domain) {
         SkillConfigEntity entity = new SkillConfigEntity();
-        entity.setId(domain.getId());
-        entity.setTenantId(domain.getTenantId());
-        entity.setWorkspaceId(domain.getWorkspaceId());
-        entity.setName(domain.getName());
-        entity.setDescription(domain.getDescription());
+        BeanUtil.copyProperties(domain, entity, CopyOptions.create().setIgnoreProperties("skillPaths"));
         entity.setSkillPaths(toJson(domain.getSkillPaths()));
-        entity.setSyncEnabled(domain.isSyncEnabled());
-        entity.setSyncInterval(domain.getSyncInterval());
-        entity.setAutoSync(domain.isAutoSync());
-        entity.setEnabled(domain.isEnabled());
-        entity.setCreatedAt(domain.getCreatedAt());
-        entity.setUpdatedAt(domain.getUpdatedAt());
-        entity.setLastSyncAt(domain.getLastSyncAt());
         return entity;
     }
 
@@ -97,19 +88,12 @@ public class MybatisSkillConfigRepository implements SkillConfigRepository {
      */
     private SkillConfig toDomain(SkillConfigEntity entity) {
         SkillConfig domain = new SkillConfig();
-        domain.setId(entity.getId());
-        domain.setTenantId(entity.getTenantId());
-        domain.setWorkspaceId(entity.getWorkspaceId());
-        domain.setName(entity.getName());
-        domain.setDescription(entity.getDescription());
+        BeanUtil.copyProperties(entity, domain, CopyOptions.create().setIgnoreProperties("skillPaths", "syncEnabled", "syncInterval", "autoSync", "enabled"));
         domain.setSkillPaths(fromJson(entity.getSkillPaths()));
         domain.setSyncEnabled(entity.getSyncEnabled() != null ? entity.getSyncEnabled() : true);
         domain.setSyncInterval(entity.getSyncInterval() != null ? entity.getSyncInterval() : 3600);
         domain.setAutoSync(entity.getAutoSync() != null ? entity.getAutoSync() : false);
         domain.setEnabled(entity.getEnabled() != null ? entity.getEnabled() : true);
-        domain.setCreatedAt(entity.getCreatedAt());
-        domain.setUpdatedAt(entity.getUpdatedAt());
-        domain.setLastSyncAt(entity.getLastSyncAt());
         return domain;
     }
 

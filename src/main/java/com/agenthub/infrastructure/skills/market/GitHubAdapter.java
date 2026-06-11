@@ -79,23 +79,24 @@ public class GitHubAdapter implements SkillMarketPort {
         return result;
     }
 
+    private void setBaseFields(MarketSkillSummary s, Map<String, Object> item) {
+        s.setMarketId("github");
+        s.setSkillId(str(item, "full_name"));
+        s.setSkillCode(str(item, "name"));
+        s.setName(str(item, "name"));
+        s.setDescription(str(item, "description"));
+        s.setAuthor(extractAuthor(item));
+        s.setStarCount(intVal(item, "stargazers_count"));
+        s.setDownloadCount(intVal(item, "forks_count"));
+    }
+
     /**
      * 转换为摘要。
      */
     @SuppressWarnings("unchecked")
     private MarketSkillSummary toSummary(Map<String, Object> item) {
         MarketSkillSummary s = new MarketSkillSummary();
-        s.setMarketId("github");
-        s.setSkillId(str(item, "full_name"));
-        s.setSkillCode(str(item, "name"));
-        s.setName(str(item, "name"));
-        s.setDescription(str(item, "description"));
-        Object owner = item.get("owner");
-        if (owner instanceof Map ownerMap) {
-            s.setAuthor(str(ownerMap, "login"));
-        }
-        s.setStarCount(intVal(item, "stargazers_count"));
-        s.setDownloadCount(intVal(item, "forks_count"));
+        setBaseFields(s, item);
         return s;
     }
 
@@ -112,6 +113,14 @@ public class GitHubAdapter implements SkillMarketPort {
         }
     }
 
+    private void setDetailBaseFields(MarketSkillDetail d, Map<String, Object> item, String skillId) {
+        d.setMarketId("github"); d.setSkillId(skillId);
+        d.setName(str(item, "name")); d.setDescription(str(item, "description"));
+        d.setHomepage(str(item, "html_url")); d.setDownloadUrl(str(item, "html_url"));
+        d.setStarCount(intVal(item, "stargazers_count")); d.setDownloadCount(intVal(item, "forks_count"));
+        d.setAuthor(extractAuthor(item));
+    }
+
     /**
      * 转换为详情。
      */
@@ -119,18 +128,7 @@ public class GitHubAdapter implements SkillMarketPort {
     private MarketSkillDetail toDetail(Object obj, String skillId) {
         if (!(obj instanceof Map item)) return null;
         MarketSkillDetail d = new MarketSkillDetail();
-        d.setMarketId("github");
-        d.setSkillId(skillId);
-        d.setName(str(item, "name"));
-        d.setDescription(str(item, "description"));
-        d.setHomepage(str(item, "html_url"));
-        d.setStarCount(intVal(item, "stargazers_count"));
-        d.setDownloadCount(intVal(item, "forks_count"));
-        d.setDownloadUrl(str(item, "html_url"));
-        Object owner = item.get("owner");
-        if (owner instanceof Map ownerMap) {
-            d.setAuthor(str(ownerMap, "login"));
-        }
+        setDetailBaseFields(d, item, skillId);
         return d;
     }
 
@@ -168,6 +166,14 @@ public class GitHubAdapter implements SkillMarketPort {
         Object v = m.get(key);
         if (v instanceof Number n) return n.intValue();
         return 0;
+    }
+
+    /**
+     * 提取作者。
+     */
+    private String extractAuthor(Map<String, Object> item) {
+        Object owner = item.get("owner");
+        return owner instanceof Map ownerMap ? str(ownerMap, "login") : null;
     }
 }
 

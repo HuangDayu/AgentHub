@@ -80,12 +80,13 @@ public class SkillFileManager implements SkillToolScannerPort {
     }
 
     private Skill buildSkillFromFrontMatter(Path skillPath, ParsedFrontMatter frontMatter) {
-        String name = StrUtil.isNotBlank(frontMatter.name())
-                ? frontMatter.name()
-                : skillPath.getFileName().toString().trim();
-        String path = skillPath.toString();
-        String skillFilesTree = buildFilesTreeJson(skillPath);
-        return createSkill(name, name, frontMatter.description(), path, skillFilesTree);
+        String name = StrUtil.isNotBlank(frontMatter.name()) ? frontMatter.name() : skillPath.getFileName().toString().trim();
+        Skill skill = new Skill();
+        skill.setSkillCode(name); skill.setName(name);
+        skill.setDescription(frontMatter.description()); skill.setSkillType("FILE");
+        skill.setSkillPath(skillPath.toString()); skill.setSkillFilesTree(buildFilesTreeJson(skillPath));
+        skill.setEnabled(true); skill.setCreatedAt(Instant.now()); skill.setUpdatedAt(Instant.now());
+        return skill;
     }
 
     private ParsedFrontMatter parseFrontMatter(List<String> lines) {
@@ -139,20 +140,6 @@ public class SkillFileManager implements SkillToolScannerPort {
         String name = lines.get(0).replaceAll("^#\\s*", "").trim();
         String description = lines.size() > 1 ? String.join(" ", lines.subList(1, lines.size())).trim() : "";
         return new ParsedFrontMatter(name, description);
-    }
-
-    private Skill createSkill(String skillCode, String name, String description, String path, String skillFilesTree) {
-        Skill skill = new Skill();
-        skill.setSkillCode(skillCode);
-        skill.setName(name);
-        skill.setDescription(description);
-        skill.setSkillType("FILE");
-        skill.setSkillPath(path);
-        skill.setSkillFilesTree(skillFilesTree);
-        skill.setEnabled(true);
-        skill.setCreatedAt(Instant.now());
-        skill.setUpdatedAt(Instant.now());
-        return skill;
     }
 
     private String buildFilesTreeJson(Path skillPath) {

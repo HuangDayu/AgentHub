@@ -176,17 +176,16 @@ public class SkillsMPAdapter implements SkillMarketPort {
      */
     private MarketSkillDetail toDetail(Object obj, String skillId) {
         if (!(obj instanceof Map m)) return null;
+        return buildDetail(m, skillId);
+    }
+
+    private MarketSkillDetail buildDetail(Map m, String skillId) {
         MarketSkillDetail d = new MarketSkillDetail();
-        d.setMarketId("skillsmp");
-        d.setSkillId(skillId);
-        d.setSkillCode(str(m, "name"));
-        d.setName(str(m, "name"));
-        d.setDescription(str(m, "description"));
-        d.setAuthor(str(m, "author"));
-        d.setVersion(str(m, "version"));
-        d.setDownloadUrl(str(m, "skillUrl"));
-        d.setStarCount(intVal(m, "stars"));
-        d.setHomepage(str(m, "githubUrl"));
+        d.setMarketId("skillsmp"); d.setSkillId(skillId);
+        d.setSkillCode(str(m, "name")); d.setName(str(m, "name"));
+        d.setDescription(str(m, "description")); d.setAuthor(str(m, "author"));
+        d.setVersion(str(m, "version")); d.setDownloadUrl(str(m, "skillUrl"));
+        d.setStarCount(intVal(m, "stars")); d.setHomepage(str(m, "githubUrl"));
         d.setReadmeContent(str(m, "content"));
         return d;
     }

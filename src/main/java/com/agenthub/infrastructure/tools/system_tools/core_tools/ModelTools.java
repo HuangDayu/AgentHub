@@ -115,12 +115,14 @@ public class ModelTools {
         return 4096;
     }
 
-    private ModelRecommendation findBestModel(List<ModelConfig> models,
-                                               String taskDescription, String complexity) {
-        String taskDomain = inferCapabilityDomain(taskDescription);
-        int complexityScore = parseComplexity(complexity);
+    private ModelRecommendation findBestModel(List<ModelConfig> models, String taskDescription, String complexity) {
+        String taskDomain = inferCapabilityDomain(taskDescription); int complexityScore = parseComplexity(complexity);
         ModelConfig best = pickBestModel(models, taskDomain, complexityScore);
-        return buildRecommendation(best, models.size(), taskDomain, complexityScore);
+        ModelRecommendation rec = new ModelRecommendation();
+        rec.setModelConfigId(best.getId()); rec.setModelName(best.getModel());
+        rec.setSupplier(best.getSupplier() != null ? best.getSupplier().name() : "UNKNOWN");
+        rec.setReason(buildRecommendationReason(best, taskDomain, complexityScore));
+        rec.setConfidence(calculateConfidence(models.size())); return rec;
     }
 
     private ModelConfig pickBestModel(List<ModelConfig> models, String taskDomain, int complexityScore) {
@@ -128,16 +130,6 @@ public class ModelTools {
                 .sorted(Comparator.comparingInt(m -> calculateMatchScore(m, taskDomain, complexityScore)))
                 .findFirst()
                 .orElse(models.getFirst());
-    }
-
-    private ModelRecommendation buildRecommendation(ModelConfig best, int modelCount, String taskDomain, int complexityScore) {
-        ModelRecommendation rec = new ModelRecommendation();
-        rec.setModelConfigId(best.getId());
-        rec.setModelName(best.getModel());
-        rec.setSupplier(best.getSupplier() != null ? best.getSupplier().name() : "UNKNOWN");
-        rec.setReason(buildRecommendationReason(best, taskDomain, complexityScore));
-        rec.setConfidence(calculateConfidence(modelCount));
-        return rec;
     }
 
     private int calculateMatchScore(ModelConfig model, String taskDomain, int complexity) {
@@ -167,21 +159,30 @@ public class ModelTools {
     private String buildRecommendationReason(ModelConfig model, String taskDomain, int complexity) {
         String modelDomain = inferCapabilityDomain(model.getModel());
         String speed = inferSpeedLevel(model.getModel());
-
         StringBuilder reason = new StringBuilder();
+        appendDomainMatch(reason, taskDomain, modelDomain);
+        appendSpeedMatch(reason, complexity, speed);
+        appendComplexityMatch(reason, complexity);
+        if (reason.isEmpty()) reason.append("综合能力匹配");
+        return reason.toString();
+    }
+
+    private void appendDomainMatch(StringBuilder reason, String taskDomain, String modelDomain) {
         if (taskDomain.equals(modelDomain)) {
             reason.append("模型擅长").append(taskDomain).append("；");
         }
+    }
+
+    private void appendSpeedMatch(StringBuilder reason, int complexity, String speed) {
         if (complexity <= 1 && "FAST".equals(speed)) {
             reason.append("快速响应适合简单任务；");
         }
+    }
+
+    private void appendComplexityMatch(StringBuilder reason, int complexity) {
         if (complexity >= 3) {
             reason.append("适合复杂推理任务；");
         }
-        if (reason.isEmpty()) {
-            reason.append("综合能力匹配");
-        }
-        return reason.toString();
     }
 
     private String calculateConfidence(int modelCount) {

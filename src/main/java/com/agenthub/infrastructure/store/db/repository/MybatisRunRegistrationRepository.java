@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.RunRegistrationRepository;
 import com.agenthub.domain.model.studio.RunRegistration;
 import com.agenthub.infrastructure.store.db.entity.RunRegistrationEntity;
@@ -61,16 +62,7 @@ public class MybatisRunRegistrationRepository implements RunRegistrationReposito
     }
 
     private RunRegistrationEntity toEntity(RunRegistration domain) {
-        RunRegistrationEntity entity = new RunRegistrationEntity();
-        entity.setId(domain.getId());
-        entity.setProject(domain.getProject());
-        entity.setName(domain.getName());
-        entity.setTimestamp(domain.getTimestamp());
-        entity.setPid(domain.getPid());
-        entity.setStatus(domain.getStatus());
-        entity.setRunDir(domain.getRunDir());
-        entity.setCreatedAt(domain.getCreatedAt());
-        return entity;
+        return BeanUtil.copyProperties(domain, RunRegistrationEntity.class);
     }
 
     private List<RunRegistration> findByProjectSafely(String project) {
@@ -80,15 +72,6 @@ public class MybatisRunRegistrationRepository implements RunRegistrationReposito
     }
 
     private RunRegistration toDomain(RunRegistrationEntity entity) {
-        RunRegistration domain = new RunRegistration();
-        domain.setId(entity.getId());
-        domain.setProject(entity.getProject());
-        domain.setName(entity.getName());
-        domain.setTimestamp(entity.getTimestamp());
-        domain.setPid(entity.getPid());
-        domain.setStatus(entity.getStatus());
-        domain.setRunDir(entity.getRunDir());
-        domain.setCreatedAt(entity.getCreatedAt());
-        return domain;
+        return BeanUtil.copyProperties(entity, RunRegistration.class);
     }
 }

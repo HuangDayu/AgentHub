@@ -44,20 +44,7 @@ public class MybatisModelStrategyRepository implements ModelStrategyRepository {
     }
 
     private ModelStrategyEntity toEntity(ModelStrategy strategy) {
-        ModelStrategyEntity entity = new ModelStrategyEntity();
-        entity.setId(strategy.getId());
-        entity.setTenantId(strategy.getTenantId());
-        entity.setWorkspaceId(strategy.getWorkspaceId());
-        entity.setName(strategy.getName());
-        entity.setDescription(strategy.getDescription());
-        entity.setTemperature(strategy.getTemperature());
-        entity.setMaxTokens(strategy.getMaxTokens());
-        entity.setTopP(strategy.getTopP());
-        entity.setFrequencyPenalty(strategy.getFrequencyPenalty());
-        entity.setPresencePenalty(strategy.getPresencePenalty());
-        entity.setCreatedAt(strategy.getCreatedAt());
-        entity.setUpdatedAt(strategy.getUpdatedAt());
-        return entity;
+        return BeanUtil.copyProperties(strategy, ModelStrategyEntity.class);
     }
 
     private ModelStrategy toDomain(ModelStrategyEntity entity) {

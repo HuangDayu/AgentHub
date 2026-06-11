@@ -1,5 +1,6 @@
 package com.agenthub.api.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.InstallMarketSkillRequest;
 import com.agenthub.api.dto.MarketInfoResponse;
 import com.agenthub.api.dto.MarketSearchRequest;
@@ -112,19 +113,7 @@ public class SkillMarketController {
      */
     private MarketSkillDetailResponse toDetailResponse(Map<String, Object> m) {
         MarketSkillDetailResponse response = new MarketSkillDetailResponse();
-        response.setMarketId((String) m.get("marketId"));
-        response.setSkillId((String) m.get("skillId"));
-        response.setSkillCode((String) m.get("skillCode"));
-        response.setName((String) m.get("name"));
-        response.setDescription((String) m.get("description"));
-        response.setAuthor((String) m.get("author"));
-        response.setVersion((String) m.get("version"));
-        response.setLicense((String) m.get("license"));
-        response.setHomepage((String) m.get("homepage"));
-        response.setDownloadUrl((String) m.get("downloadUrl"));
-        response.setDownloadCount((int) m.get("downloadCount"));
-        response.setStarCount((int) m.get("starCount"));
-        response.setReadmeContent((String) m.get("readmeContent"));
+        BeanUtil.copyProperties(m, response);
         return response;
     }
 

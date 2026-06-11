@@ -55,28 +55,18 @@ public class AgentContextUseCase implements AgentContextFactory {
     public ReActAgentContext buildContext(String agentId, String sessionId) {
         Agent agent = agentRepository.findById(agentId).orElseThrow(() -> new NotFoundException("Agent not found: " + agentId));
         List<AgentConfig> configs = agentConfigRepository.findByAgentIdAndEnabled(agentId);
-        return buildContext(agent, sessionId, configs, agent.getWorkspaceId());
+        return buildContext(agent, sessionId, configs);
     }
 
-
-    private ReActAgentContext buildContext(Agent agent, String sessionId, List<AgentConfig> configs, String workspaceId) {
-        List<AgentToolInfo> agentToolInfos = resolveTools(configs);
-        ToolStrategy toolStrategy = resolveToolStrategy(configs);
-        return ReActAgentContext.builder()
-                .agent(agent)
-                .sessionId(sessionId)
-                .chatModelId(resolveChatModelId(configs))
-                .systemPrompt(resolveSystemPrompt(configs))
-                .toolInfos(agentToolInfos)
-                .toolCallbacks(resolveToolCallbacks(agentToolInfos, toolStrategy))
-                .knowledgeIds(resolveKnowledgeIds(configs))
-                .modelStrategy(resolveModelStrategy(configs))
-                .toolStrategy(toolStrategy)
-                .guardrailStrategy(resolveGuardrailStrategy(configs))
-                .retrievalStrategy(resolveRetrievalStrategy(configs))
-                .workspace(resolveReActAgentWorkspace(workspaceId))
-                .agentConfigs(configs)
-                .build();
+    private ReActAgentContext buildContext(Agent agent, String sessionId, List<AgentConfig> configs) {
+        List<AgentToolInfo> agentToolInfos = resolveTools(configs); ToolStrategy toolStrategy = resolveToolStrategy(configs);
+        return ReActAgentContext.builder().agent(agent).sessionId(sessionId)
+                .chatModelId(resolveChatModelId(configs)).systemPrompt(resolveSystemPrompt(configs))
+                .toolInfos(agentToolInfos).toolCallbacks(resolveToolCallbacks(agentToolInfos, toolStrategy))
+                .knowledgeIds(resolveKnowledgeIds(configs)).modelStrategy(resolveModelStrategy(configs))
+                .toolStrategy(toolStrategy).guardrailStrategy(resolveGuardrailStrategy(configs))
+                .retrievalStrategy(resolveRetrievalStrategy(configs)).workspace(resolveReActAgentWorkspace(agent.getWorkspaceId()))
+                .agentConfigs(configs).build();
     }
 
     private ReActAgentWorkspace resolveReActAgentWorkspace(String workspaceId) {

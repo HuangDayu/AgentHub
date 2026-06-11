@@ -148,37 +148,41 @@ public class DagWorkflowExecutionUseCase {
      * 转换为输出对象（含状态映射和结果转换）。
      */
     private DagExecutionOutput toOutput(DagWorkflowContext context) {
-        // 不使用 BeanUtil.copyProperties，因为 status 和 nodeResults 字段类型不匹配会导致异常
         DagExecutionOutput output = new DagExecutionOutput();
-        output.setExecutionId(context.getExecutionId());
-        output.setWorkflowId(context.getWorkflowId());
-        // 将状态转为小写以匹配前端TaskStatus格式
-        if (context.getStatus() != null) {
-            output.setStatus(mapWorkflowStatus(context.getStatus()));
-        } else {
-            output.setStatus("pending");
-        }
-        output.setVariables(context.getVariables());
-        output.setStartTime(context.getStartTime());
-        output.setEndTime(context.getEndTime());
-        // 将 Map<String, NodeResult> 转换为前端需要的 List<Map> 格式
-        if (context.getNodeResults() != null && !context.getNodeResults().isEmpty()) {
-            List<Map<String, Object>> nodeResults = new ArrayList<>();
-            context.getNodeResults().forEach((nodeId, result) -> {
-                Map<String, Object> item = new HashMap<>();
-                item.put("node_id", result.getNodeId());
-                item.put("node_name", result.getNodeId()); // fallback, actual name from graph
-                item.put("node_type", "");
-                item.put("node_status", mapNodeStatus(result.getStatus()));
-                item.put("output", result.getOutputs());
-                item.put("error_info", result.getErrorMessage());
-                item.put("node_exec_time", result.getStartTime() != null && result.getEndTime() != null
-                        ? (result.getEndTime().toEpochMilli() - result.getStartTime().toEpochMilli()) + "ms"
-                        : "");
-                nodeResults.add(item);
-            });
-            output.setNodeResults(nodeResults);
-        }
+        output.setExecutionId(context.getExecutionId()); output.setWorkflowId(context.getWorkflowId());
+        output.setStatus(context.getStatus() != null ? mapWorkflowStatus(context.getStatus()) : "pending");
+        output.setVariables(context.getVariables()); output.setStartTime(context.getStartTime());
+        output.setEndTime(context.getEndTime()); output.setNodeResults(buildNodeResultList(context.getNodeResults()));
         return output;
+    }
+
+    /**
+     * 将节点结果映射转换为前端需要的列表格式。
+     */
+    private List<Map<String, Object>> buildNodeResultList(Map<String, NodeResult> nodeResults) {
+        if (nodeResults == null || nodeResults.isEmpty()) return null;
+        List<Map<String, Object>> list = new ArrayList<>();
+        nodeResults.forEach((nodeId, result) -> list.add(toNodeResultMap(result)));
+        return list;
+    }
+
+    /**
+     * 将单个节点结果转换为前端 Map 格式。
+     */
+    private Map<String, Object> toNodeResultMap(NodeResult result) {
+        Map<String, Object> item = new HashMap<>();
+        item.put("node_id", result.getNodeId()); item.put("node_name", result.getNodeId());
+        item.put("node_type", ""); item.put("node_status", mapNodeStatus(result.getStatus()));
+        item.put("output", result.getOutputs()); item.put("error_info", result.getErrorMessage());
+        item.put("node_exec_time", formatExecTime(result));
+        return item;
+    }
+
+    /**
+     * 格式化节点执行时间。
+     */
+    private String formatExecTime(NodeResult result) {
+        if (result.getStartTime() == null || result.getEndTime() == null) return "";
+        return (result.getEndTime().toEpochMilli() - result.getStartTime().toEpochMilli()) + "ms";
     }
 }

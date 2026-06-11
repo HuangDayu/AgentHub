@@ -23,6 +23,10 @@ public final class AgentMessageConverter {
         if (message == null) {
             return new AgentMessage();
         }
+        return buildFromMessage(message);
+    }
+
+    private static AgentMessage buildFromMessage(Message message) {
         AgentMessage result = new AgentMessage();
         result.setMessageType(AgentMessage.MessageType.valueOf(message.getMessageType().name()));
         result.setText(message.getText());
@@ -31,7 +35,7 @@ public final class AgentMessageConverter {
         switch (message) {
             case AssistantMessage msg -> convertFromAssistant(result, msg);
             case ToolResponseMessage msg -> convertFromToolResponse(result, msg);
-            default -> { /* UserMessage / SystemMessage: fields already populated */ }
+            default -> { }
         }
 
         return result;
@@ -121,20 +125,20 @@ public final class AgentMessageConverter {
     private static org.springframework.ai.content.Media toSpringMedia(AgentMessage.Media media) {
         MimeType mt = MimeType.valueOf(media.getMimeType());
         org.springframework.ai.content.Media.Builder builder = org.springframework.ai.content.Media.builder()
-                .mimeType(mt);
-
-        if (media.getData() instanceof byte[] bytes) {
-            builder.data(new ByteArrayResource(bytes));
-        } else if (media.getData() instanceof String str) {
-            builder.data(URI.create(str));
-        } else {
-            builder.data(media.getData());
-        }
-
+                .mimeType(mt).data(resolveData(media));
         if (media.getId() != null) builder.id(media.getId());
         if (media.getName() != null) builder.name(media.getName());
-
         return builder.build();
+    }
+
+    private static Object resolveData(AgentMessage.Media media) {
+        if (media.getData() instanceof byte[] bytes) {
+            return new ByteArrayResource(bytes);
+        } else if (media.getData() instanceof String str) {
+            return URI.create(str);
+        } else {
+            return media.getData();
+        }
     }
 
     private static AgentMessage.ToolResult fromToolResponse(ToolResponseMessage.ToolResponse spring) {

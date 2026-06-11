@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.dto.SkillFileOutput;
 import com.agenthub.application.port.out.DocumentFileStoragePort;
 import com.agenthub.application.port.out.repositories.SkillFileRepository;
@@ -58,12 +59,16 @@ public class SkillFileUseCase {
     public String getFileContent(String skillId, String fileId) {
         SkillFile file = skillFileRepository.findBySkillIdAndFileId(skillId, fileId)
                 .orElseThrow(() -> new RuntimeException("File not found: " + fileId));
-
         String ext = file.getFileExt() != null ? file.getFileExt().toLowerCase() : "";
-        if (BINARY_EXTENSIONS.contains(ext)) {
-            return "[二进制文件: " + file.getFileName() + "]";
-        }
+        if (isBinary(ext)) return "[二进制文件: " + file.getFileName() + "]";
+        return readContent(file);
+    }
 
+    private boolean isBinary(String ext) {
+        return BINARY_EXTENSIONS.contains(ext);
+    }
+
+    private String readContent(SkillFile file) {
         try (InputStream is = documentFileStoragePort.retrieve(file.getStoragePath())) {
             return TIKA.parseToString(is);
         } catch (Exception e) {
@@ -103,23 +108,8 @@ public class SkillFileUseCase {
      */
     private SkillFileOutput toOutput(SkillFile file) {
         SkillFileOutput output = new SkillFileOutput();
-        output.setId(file.getId());
-        output.setSkillId(file.getSkillId());
-        output.setTenantId(file.getTenantId());
-        output.setWorkspaceId(file.getWorkspaceId());
-        output.setFilePath(file.getFilePath());
-        output.setFileName(file.getFileName());
-        output.setFileExt(file.getFileExt());
-        output.setFileSize(file.getFileSize());
+        BeanUtil.copyProperties(file, output);
         output.setFileType(file.getFileType() != null ? file.getFileType().name() : null);
-        output.setEncoding(file.getEncoding());
-        output.setStoragePath(file.getStoragePath());
-        output.setChecksum(file.getChecksum());
-        output.setDirectory(file.isDirectory());
-        output.setMetadata(file.getMetadata());
-        output.setVersion(file.getVersion());
-        output.setCreatedAt(file.getCreatedAt());
-        output.setUpdatedAt(file.getUpdatedAt());
         return output;
     }
 }

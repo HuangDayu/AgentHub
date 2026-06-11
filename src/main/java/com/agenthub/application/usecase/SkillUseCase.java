@@ -259,7 +259,9 @@ public class SkillUseCase {
             String relativePath = skillPath.relativize(path).toString();
             long size = Files.size(path);
             String storagePath = uploadFileToMinio(skill.getSkillCode(), relativePath, path, size);
-            return createSkillFile(skill, relativePath, size, storagePath);
+            return SkillFile.create(new SkillFile.CreationSpec(
+                    skill.getId(), skill.getTenantId(), skill.getWorkspaceId(),
+                    relativePath, size, "UTF-8", skill.getSkillCode(), storagePath));
         } catch (Exception e) {
             log.error("Failed to process file: {}", path, e);
             return null;
@@ -284,16 +286,6 @@ public class SkillUseCase {
      */
     private String buildStoragePath(String skillCode, String relativePath) {
         return String.format("skills/%s/%s", skillCode, relativePath);
-    }
-
-    /**
-     * 创建 SkillFile 对象。
-     */
-    private SkillFile createSkillFile(Skill skill, String relativePath, long size, String storagePath) {
-        SkillFile.CreationSpec request = new SkillFile.CreationSpec(
-                skill.getId(), skill.getTenantId(), skill.getWorkspaceId(),
-                relativePath, size, "UTF-8", skill.getSkillCode(), storagePath);
-        return SkillFile.create(request);
     }
 
     /**
@@ -410,25 +402,7 @@ public class SkillUseCase {
      */
     private SkillOutput toOutput(Skill skill) {
         SkillOutput output = new SkillOutput();
-        output.setId(skill.getId());
-        output.setTenantId(skill.getTenantId());
-        output.setWorkspaceId(skill.getWorkspaceId());
-        output.setSkillCode(skill.getSkillCode());
-        output.setName(skill.getName());
-        output.setDescription(skill.getDescription());
-        output.setSkillType(skill.getSkillType());
-        output.setSkillPath(skill.getSkillPath());
-        output.setSkillFilesTree(skill.getSkillFilesTree());
-        output.setSource(skill.getSource());
-        output.setSourcePath(skill.getSourcePath());
-        output.setZipStoragePath(skill.getZipStoragePath());
-        output.setConfigId(skill.getConfigId());
-        output.setFileCount(skill.getFileCount());
-        output.setTotalSize(skill.getTotalSize());
-        output.setEnabled(skill.isEnabled());
-        output.setCreatedAt(skill.getCreatedAt());
-        output.setUpdatedAt(skill.getUpdatedAt());
-        output.setLastSyncAt(skill.getLastSyncAt());
+        BeanUtil.copyProperties(skill, output);
         return output;
     }
 }

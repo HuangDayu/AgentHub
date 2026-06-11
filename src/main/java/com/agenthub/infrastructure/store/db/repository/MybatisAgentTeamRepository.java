@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.AgentTeamRepository;
 import com.agenthub.domain.model.agent.AgentTeam;
 import com.agenthub.infrastructure.store.db.entity.AgentTeamEntity;
@@ -51,34 +52,10 @@ public class MybatisAgentTeamRepository implements AgentTeamRepository {
     }
 
     private AgentTeamEntity toEntity(AgentTeam team) {
-        AgentTeamEntity entity = new AgentTeamEntity();
-        entity.setId(team.getId());
-        entity.setTenantId(team.getTenantId());
-        entity.setWorkspaceId(team.getWorkspaceId());
-        entity.setTeamCode(team.getTeamCode());
-        entity.setName(team.getName());
-        entity.setDescription(team.getDescription());
-        entity.setCoordinationMode(team.getCoordinationMode());
-        entity.setMemberConfig(team.getMemberConfig());
-        entity.setStatus(team.getStatus());
-        entity.setCreatedAt(team.getCreatedAt());
-        entity.setUpdatedAt(team.getUpdatedAt());
-        return entity;
+        return BeanUtil.copyProperties(team, AgentTeamEntity.class);
     }
 
     private AgentTeam toDomain(AgentTeamEntity entity) {
-        AgentTeam team = new AgentTeam();
-        team.setId(entity.getId());
-        team.setTenantId(entity.getTenantId());
-        team.setWorkspaceId(entity.getWorkspaceId());
-        team.setTeamCode(entity.getTeamCode());
-        team.setName(entity.getName());
-        team.setDescription(entity.getDescription());
-        team.setCoordinationMode(entity.getCoordinationMode());
-        team.setMemberConfig(entity.getMemberConfig());
-        team.setStatus(entity.getStatus());
-        team.setCreatedAt(entity.getCreatedAt());
-        team.setUpdatedAt(entity.getUpdatedAt());
-        return team;
+        return BeanUtil.copyProperties(entity, AgentTeam.class);
     }
 }

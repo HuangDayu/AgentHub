@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import static com.agenthub.domain.enums.AgentDataSourceProtocol.*;
 
 /**
  * Camel Component 描述符反射器
@@ -15,6 +17,24 @@ import java.util.List;
  */
 @Component
 public class CamelComponentIntrospector {
+
+    private static final Map<AgentDataSourceProtocol, String> HINTS = Map.ofEntries(
+        Map.entry(JDBC, "jdbc:postgresql://host:port/db?user=xxx&password=xxx"),
+        Map.entry(HTTP, "http://host:port/path"),
+        Map.entry(HTTPS, "https://host:port/path"),
+        Map.entry(KAFKA, "kafka:topic?brokers=host:9092"),
+        Map.entry(FTP, "ftp://host/path?username=xxx&password=xxx"),
+        Map.entry(SFTP, "sftp://host/path?username=xxx&password=xxx"),
+        Map.entry(FILE, "file:/path?noop=true"),
+        Map.entry(MAIL, "smtp://host:port?username=xxx&password=xxx"),
+        Map.entry(MONGODB, "mongodb:host:27017/database?collection=xxx"),
+        Map.entry(REDIS, "redis://host:6379"),
+        Map.entry(SQL, "sql:SELECT * FROM table?dataSource=#mySql"),
+        Map.entry(REST, "rest:http://host:port/path?method=GET"),
+        Map.entry(JMS, "jms:queue:myQueue"),
+        Map.entry(DIRECT, "direct:endpointName"),
+        Map.entry(TIMER, "timer:tick?period=1000")
+    );
 
     /**
      * 列出所有支持的协议描述符
@@ -39,46 +59,42 @@ public class CamelComponentIntrospector {
     }
 
     private String buildSyntaxHint(AgentDataSourceProtocol proto) {
-        return switch (proto) {
-            case JDBC -> "jdbc:postgresql://host:port/db?user=xxx&password=xxx";
-            case HTTP -> "http://host:port/path";
-            case HTTPS -> "https://host:port/path";
-            case KAFKA -> "kafka:topic?brokers=host:9092";
-            case FTP -> "ftp://host/path?username=xxx&password=xxx";
-            case SFTP -> "sftp://host/path?username=xxx&password=xxx";
-            case FILE -> "file:/path?noop=true";
-            case MAIL -> "smtp://host:port?username=xxx&password=xxx";
-            case MONGODB -> "mongodb:host:27017/database?collection=xxx";
-            case REDIS -> "redis://host:6379";
-            case SQL -> "sql:SELECT * FROM table?dataSource=#mySql";
-            case REST -> "rest:http://host:port/path?method=GET";
-            case JMS -> "jms:queue:myQueue";
-            case DIRECT -> "direct:endpointName";
-            case TIMER -> "timer:tick?period=1000";
-        };
+        return HINTS.getOrDefault(proto, "");
     }
 
     private List<AgentDataSourceField> buildFields(AgentDataSourceProtocol proto) {
         return switch (proto) {
-            case JDBC -> Arrays.asList(
-                setField("host", "string", true, "localhost", "Database host"),
-                setField("port", "integer", true, "5432", "Database port"),
-                setField("database", "string", true, null, "Database name"),
-                setField("username", "string", true, null, "Username"),
-                setField("password", "password", true, null, "Password")
-            );
-            case HTTP, HTTPS, REST -> Arrays.asList(
-                setField("host", "string", true, "localhost", "HTTP host"),
-                setField("port", "integer", true, "8080", "HTTP port"),
-                setField("path", "string", false, "/", "URL path"),
-                setField("method", "string", false, "GET", "HTTP method")
-            );
-            case KAFKA -> Arrays.asList(
-                setField("brokers", "string", true, "localhost:9092", "Bootstrap servers"),
-                setField("topic", "string", true, null, "Topic name")
-            );
+            case JDBC -> jdbcFields();
+            case HTTP, HTTPS, REST -> httpFields();
+            case KAFKA -> kafkaFields();
             default -> new ArrayList<>();
         };
+    }
+
+    private List<AgentDataSourceField> jdbcFields() {
+        return Arrays.asList(
+            setField("host", "string", true, "localhost", "Database host"),
+            setField("port", "integer", true, "5432", "Database port"),
+            setField("database", "string", true, null, "Database name"),
+            setField("username", "string", true, null, "Username"),
+            setField("password", "password", true, null, "Password")
+        );
+    }
+
+    private List<AgentDataSourceField> httpFields() {
+        return Arrays.asList(
+            setField("host", "string", true, "localhost", "HTTP host"),
+            setField("port", "integer", true, "8080", "HTTP port"),
+            setField("path", "string", false, "/", "URL path"),
+            setField("method", "string", false, "GET", "HTTP method")
+        );
+    }
+
+    private List<AgentDataSourceField> kafkaFields() {
+        return Arrays.asList(
+            setField("brokers", "string", true, "localhost:9092", "Bootstrap servers"),
+            setField("topic", "string", true, null, "Topic name")
+        );
     }
 
     private AgentDataSourceField setField(String name, String type, boolean required,

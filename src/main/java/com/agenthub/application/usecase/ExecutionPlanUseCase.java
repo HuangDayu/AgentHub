@@ -1,5 +1,7 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.agenthub.application.command.AddStepCommand;
 import com.agenthub.application.command.CreatePlanCommand;
 import com.agenthub.application.command.PlanStepInput;
@@ -221,36 +223,16 @@ public class ExecutionPlanUseCase {
 
     private ExecutionPlanOutput toOutput(ExecutionPlan plan) {
         ExecutionPlanOutput output = new ExecutionPlanOutput();
-        output.setId(plan.getId());
-        output.setAgentId(plan.getAgentId());
-        output.setSessionId(plan.getSessionId());
-        output.setGoal(plan.getGoal());
-        output.setStatus(plan.getStatus());
-        output.setCurrentStepIndex(plan.getCurrentStepIndex());
-        output.setResult(plan.getResult());
-        output.setSteps(plan.getSteps().stream().map(this::toStepOutput).toList());
+        BeanUtil.copyProperties(plan, output, CopyOptions.create().setIgnoreProperties("steps"));
         output.setStepCount(plan.getStepCount());
         output.setCompletedStepCount(plan.getCompletedStepCount());
-        output.setCreatedAt(plan.getCreatedAt());
-        output.setUpdatedAt(plan.getUpdatedAt());
+        output.setSteps(plan.getSteps().stream().map(this::toStepOutput).toList());
         return output;
     }
 
     private PlanStepOutput toStepOutput(PlanStep step) {
         PlanStepOutput output = new PlanStepOutput();
-        output.setId(step.getId());
-        output.setPlanId(step.getPlanId());
-        output.setOrder(step.getOrder());
-        output.setDescription(step.getDescription());
-        output.setToolName(step.getToolName());
-        output.setToolInput(step.getToolInput());
-        output.setStatus(step.getStatus());
-        output.setOutput(step.getOutput());
-        output.setSubagentId(step.getSubagentId());
-        output.setSubsessionId(step.getSubsessionId());
-        output.setDependencyIds(step.getDependencyIds());
-        output.setCreatedAt(step.getCreatedAt());
-        output.setUpdatedAt(step.getUpdatedAt());
+        BeanUtil.copyProperties(step, output);
         return output;
     }
 }

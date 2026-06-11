@@ -105,15 +105,12 @@ public class RestfulTools {
 
     private HttpToolResult doHttpCall(String method, String url, String body, String label) {
         long start = System.currentTimeMillis();
-        try {
-            HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
-            HttpEntity<String> entity = buildEntity(body);
-            ResponseEntity<String> resp = restTemplate.exchange(url, httpMethod, entity, String.class);
-            return buildResult(true, resp.getStatusCode().value(),
-                    resp.getBody(), System.currentTimeMillis() - start, label);
-        } catch (Exception e) {
-            throw e;
-        }
+        HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
+        HttpEntity<String> entity = buildEntity(body);
+        ResponseEntity<String> resp = restTemplate.exchange(url, httpMethod, entity, String.class);
+        HttpToolResult r = successResult(resp.getStatusCode().value(), resp.getBody(), label);
+        r.setDurationMs(System.currentTimeMillis() - start);
+        return r;
     }
 
     private HttpEntity<String> buildEntity(String body) {
@@ -141,17 +138,22 @@ public class RestfulTools {
         return dto;
     }
 
-    private HttpToolResult buildResult(boolean ok, int code, String body, long ms, String name) {
+    private HttpToolResult successResult(int code, String body, String label) {
         HttpToolResult r = new HttpToolResult();
-        r.setSuccess(ok);
+        r.setSuccess(true);
         r.setStatusCode(code);
         r.setBody(body);
-        r.setDurationMs(ms);
-        r.setToolName(name);
+        r.setToolName(label);
         return r;
     }
 
     private HttpToolResult errorResult(String msg, String label) {
-        return buildResult(false, 0, msg, 0, label);
+        HttpToolResult r = new HttpToolResult();
+        r.setSuccess(false);
+        r.setStatusCode(0);
+        r.setBody(msg);
+        r.setDurationMs(0);
+        r.setToolName(label);
+        return r;
     }
 }

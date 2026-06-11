@@ -1,5 +1,7 @@
 package com.agenthub.application.usecase;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.agenthub.application.command.CreateWorkflowCommand;
 import com.agenthub.application.dto.DynamicWorkflowOutput;
 import com.agenthub.application.dto.DynamicWorkflowSummary;
@@ -230,20 +232,7 @@ public class DynamicWorkflowUseCase {
 
     private DynamicWorkflowOutput toOutput(DynamicWorkflow workflow) {
         DynamicWorkflowOutput output = new DynamicWorkflowOutput();
-        output.setId(workflow.getId());
-        output.setAgentId(workflow.getAgentId());
-        output.setSessionId(workflow.getSessionId());
-        output.setTask(workflow.getTask());
-        output.setPattern(workflow.getPattern());
-        output.setStatus(workflow.getStatus());
-        output.setResult(workflow.getResult());
-        output.setMaxConcurrentAgents(workflow.getMaxConcurrentAgents());
-        output.setTotalTokensUsed(workflow.getTotalTokensUsed());
-        output.setProgressPercent(workflow.getProgressPercent());
-        output.setStageCount(workflow.getStageCount());
-        output.setCompletedStageCount(workflow.getCompletedStageCount());
-        output.setCreatedAt(workflow.getCreatedAt());
-        output.setUpdatedAt(workflow.getUpdatedAt());
+        BeanUtil.copyProperties(workflow, output, CopyOptions.create().setIgnoreProperties("stages"));
         output.setStages(toStageOutputs(workflow));
         return output;
     }
@@ -273,14 +262,7 @@ public class DynamicWorkflowUseCase {
 
     private DynamicWorkflowSummary toSummary(DynamicWorkflow workflow) {
         DynamicWorkflowSummary summary = new DynamicWorkflowSummary();
-        summary.setId(workflow.getId());
-        summary.setTask(workflow.getTask());
-        summary.setPattern(workflow.getPattern());
-        summary.setStatus(workflow.getStatus());
-        summary.setProgressPercent(workflow.getProgressPercent());
-        summary.setStageCount(workflow.getStageCount());
-        summary.setCompletedStageCount(workflow.getCompletedStageCount());
-        summary.setCreatedAt(workflow.getCreatedAt());
+        BeanUtil.copyProperties(workflow, summary);
         return summary;
     }
 }

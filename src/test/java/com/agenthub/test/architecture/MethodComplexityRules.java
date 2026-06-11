@@ -16,13 +16,15 @@ final class MethodComplexityRules {
     static final int MAX_METHOD_PARAMS = 3;
 
     /**
-     * 排除的方法名模式：转换方法、getter/setter、builder、toString/equals/hashCode、canEqual。
+     * 排除的方法名模式：转换方法、builder、toString/equals/hashCode、canEqual。
+     * <p>
+     * 注意：getter/setter/getXxx/isXxx 不在此排除范围，
+     * 因为 Lombok 生成的 getter/setter 已通过 isLombokGenerated() 排除，
+     * 而手动编写的 getXxx 业务方法（如 getWeatherDescription）也应被行数/参数规则检查。
+     * 简单的 1 行 getter/setter 自然满足 ≤10 行和 ≤3 参数的限制，不会被误报。
      */
     private static final Pattern EXCLUDED_NAME = Pattern.compile(
             "^(" +
-                    "to[A-Z].*|from[A-Z].*|" +
-                    "get[A-Z].*|set[A-Z].*|is[A-Z].*|" +
-                    "build.*|create[A-Z].*|" +
                     "toString|equals|hashCode|canEqual|" +
                     "clone|finalize" +
                     ")$"

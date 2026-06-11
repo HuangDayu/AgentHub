@@ -4,6 +4,7 @@ import com.agenthub.application.port.out.repositories.AgentDataSourceRepository;
 import com.agenthub.application.port.out.repositories.DataSourceSchemaRepository;
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
 import com.agenthub.domain.model.AgentDataSource;
+import com.agenthub.domain.model.DataSourceColumn;
 import com.agenthub.domain.model.DataSourceSchema;
 import com.agenthub.domain.model.DataSourceTable;
 import com.agenthub.infrastructure.tools.data_source.standard.ProtocolStandard;
@@ -106,23 +107,30 @@ public class DataSourceDiscoveryTools {
 
     private String buildSchemaDetail(String name, List<DataSourceTable> tables) {
         StringBuilder sb = new StringBuilder("数据源 [").append(name).append("] Schema:\n\n");
+        appendTableList(sb, tables);
+        return sb.toString();
+    }
+
+    private void appendTableList(StringBuilder sb, List<DataSourceTable> tables) {
         for (var table : tables) {
             sb.append("表: ").append(table.getName());
             if (table.getDescription() != null && !table.getDescription().isEmpty()) {
                 sb.append(" (").append(table.getDescription()).append(")");
             }
             sb.append("\n");
-            if (table.getColumns() == null || table.getColumns().isEmpty()) continue;
-            for (var col : table.getColumns()) {
-                sb.append("  - ").append(col.getName())
-                  .append(" (").append(col.getType()).append(")")
-                  .append(col.isPrimary() ? " [主键]" : "")
-                  .append(col.getDescription() != null ? " " + col.getDescription() : "")
-                  .append("\n");
-            }
+            appendColumnList(sb, table.getColumns());
+        }
+    }
+
+    private void appendColumnList(StringBuilder sb, List<DataSourceColumn> columns) {
+        if (columns == null || columns.isEmpty()) return;
+        for (var col : columns) {
+            sb.append("  - ").append(col.getName()).append(" (").append(col.getType()).append(")");
+            if (col.isPrimary()) sb.append(" [主键]");
+            if (col.getDescription() != null) sb.append(" ").append(col.getDescription());
             sb.append("\n");
         }
-        return sb.toString();
+        sb.append("\n");
     }
 
     private static String protocolName(AgentDataSourceProtocol protocol) {

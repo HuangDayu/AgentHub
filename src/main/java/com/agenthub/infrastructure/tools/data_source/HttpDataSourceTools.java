@@ -54,20 +54,19 @@ public class HttpDataSourceTools {
                 || p == AgentDataSourceProtocol.REST;
     }
 
+    private void resolveMapResult(HttpInvokeResult res, Map<String, Object> data) {
+        Object status = data.getOrDefault("statusCode", data.get("status"));
+        res.setStatusCode(status instanceof Number ? ((Number) status).intValue() : 0);
+        res.setBody(data.getOrDefault("body", "").toString());
+    }
+
     @SuppressWarnings("unchecked")
     private HttpInvokeResult toResult(AgentDataSourcePort.AgentDataSourceInvokeResult r) {
         HttpInvokeResult res = new HttpInvokeResult();
-        res.setSuccess(r.isSuccess());
-        res.setElapsedMs(r.getElapsedMs());
+        res.setSuccess(r.isSuccess()); res.setElapsedMs(r.getElapsedMs());
         if (!r.isSuccess()) { res.setErrorMessage(r.getErrorMessage()); return res; }
-        if (r.getData() instanceof Map) {
-            Map<String, Object> data = (Map<String, Object>) r.getData();
-            Object status = data.getOrDefault("statusCode", data.get("status"));
-            res.setStatusCode(status instanceof Number ? ((Number) status).intValue() : 0);
-            res.setBody(data.getOrDefault("body", "").toString());
-        } else if (r.getData() != null) {
-            res.setBody(r.getData().toString());
-        }
+        if (r.getData() instanceof Map) { resolveMapResult(res, (Map<String, Object>) r.getData()); }
+        else if (r.getData() != null) { res.setBody(r.getData().toString()); }
         return res;
     }
 }

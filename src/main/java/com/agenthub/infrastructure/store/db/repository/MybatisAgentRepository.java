@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.store.db.repository;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.AgentRepository;
 import com.agenthub.domain.model.agent.Agent;
 import com.agenthub.infrastructure.store.db.entity.AgentEntity;
@@ -63,42 +64,12 @@ public class MybatisAgentRepository implements AgentRepository {
     }
 
     private AgentEntity toEntity(Agent agent) {
-        if (agent == null) {
-            return null;
-        }
-        AgentEntity entity = new AgentEntity();
-        entity.setId(agent.getId());
-        entity.setTenantId(agent.getTenantId());
-        entity.setWorkspaceId(agent.getWorkspaceId());
-        entity.setAgentCode(agent.getAgentCode());
-        entity.setName(agent.getName());
-        entity.setDescription(agent.getDescription());
-        entity.setStatus(agent.getStatus());
-        entity.setEnabled(agent.isEnabled());
-        entity.setCreatedAt(agent.getCreatedAt());
-        entity.setUpdatedAt(agent.getUpdatedAt());
-        entity.setCreatedBy(agent.getCreatedBy());
-        entity.setUpdatedBy(agent.getUpdatedBy());
-        return entity;
+        if (agent == null) return null;
+        return BeanUtil.copyProperties(agent, AgentEntity.class);
     }
 
     private Agent toDomain(AgentEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-        Agent agent = new Agent();
-        agent.setId(entity.getId());
-        agent.setTenantId(entity.getTenantId());
-        agent.setWorkspaceId(entity.getWorkspaceId());
-        agent.setAgentCode(entity.getAgentCode());
-        agent.setName(entity.getName());
-        agent.setDescription(entity.getDescription());
-        agent.setStatus(entity.getStatus());
-        agent.setEnabled(entity.isEnabled());
-        agent.setCreatedAt(entity.getCreatedAt());
-        agent.setUpdatedAt(entity.getUpdatedAt());
-        agent.setCreatedBy(entity.getCreatedBy());
-        agent.setUpdatedBy(entity.getUpdatedBy());
-        return agent;
+        if (entity == null) return null;
+        return BeanUtil.copyProperties(entity, Agent.class);
     }
 }

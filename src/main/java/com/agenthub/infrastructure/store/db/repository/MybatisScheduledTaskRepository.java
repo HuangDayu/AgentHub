@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.agenthub.application.port.out.repositories.ScheduledTaskRepository;
 import com.agenthub.domain.model.ScheduledTask;
 import com.agenthub.infrastructure.store.db.entity.ScheduledTaskEntity;
@@ -60,23 +61,9 @@ public class MybatisScheduledTaskRepository implements ScheduledTaskRepository {
 
     public static ScheduledTaskEntity toEntity(ScheduledTask task) {
         ScheduledTaskEntity entity = new ScheduledTaskEntity();
-        entity.setId(task.getId());
-        entity.setTenantId(task.getTenantId());
-        entity.setWorkspaceId(task.getWorkspaceId());
-        entity.setTaskCode(task.getTaskCode());
-        entity.setName(task.getName());
-        entity.setDescription(task.getDescription());
-        entity.setTaskType(task.getTaskType());
-        entity.setCronExpression(task.getCronExpression());
-        entity.setExecutorConfig(task.getExecutorConfig());
-        entity.setPrompt(task.getPrompt());
-        entity.setEnabled(task.isEnabled());
+        BeanUtil.copyProperties(task, entity, CopyOptions.create().setIgnoreProperties("lastExecuteTime", "nextExecuteTime", "createdAt", "updatedAt"));
         entity.setLastExecuteTime(toInstant(task.getLastExecuteTime()));
         entity.setNextExecuteTime(toInstant(task.getNextExecuteTime()));
-        entity.setStatus(task.getStatus());
-        entity.setAgentId(task.getAgentId());
-        entity.setLastRunResult(task.getLastRunResult());
-        entity.setRunCount(task.getRunCount());
         entity.setCreatedAt(toInstant(task.getCreatedAt()));
         entity.setUpdatedAt(toInstant(task.getUpdatedAt()));
         return entity;
@@ -84,23 +71,9 @@ public class MybatisScheduledTaskRepository implements ScheduledTaskRepository {
 
     public static ScheduledTask toDomain(ScheduledTaskEntity entity) {
         ScheduledTask task = new ScheduledTask();
-        task.setId(entity.getId());
-        task.setTenantId(entity.getTenantId());
-        task.setWorkspaceId(entity.getWorkspaceId());
-        task.setTaskCode(entity.getTaskCode());
-        task.setName(entity.getName());
-        task.setDescription(entity.getDescription());
-        task.setTaskType(entity.getTaskType());
-        task.setCronExpression(entity.getCronExpression());
-        task.setExecutorConfig(entity.getExecutorConfig());
-        task.setPrompt(entity.getPrompt());
-        task.setEnabled(entity.isEnabled());
+        BeanUtil.copyProperties(entity, task, CopyOptions.create().setIgnoreProperties("lastExecuteTime", "nextExecuteTime", "createdAt", "updatedAt"));
         task.setLastExecuteTime(toLocalDateTime(entity.getLastExecuteTime()));
         task.setNextExecuteTime(toLocalDateTime(entity.getNextExecuteTime()));
-        task.setStatus(entity.getStatus());
-        task.setAgentId(entity.getAgentId());
-        task.setLastRunResult(entity.getLastRunResult());
-        task.setRunCount(entity.getRunCount());
         task.setCreatedAt(toLocalDateTime(entity.getCreatedAt()));
         task.setUpdatedAt(toLocalDateTime(entity.getUpdatedAt()));
         return task;
