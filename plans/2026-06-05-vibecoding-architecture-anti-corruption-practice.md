@@ -458,8 +458,8 @@ VibeCoding 不是洪水猛兽，但它确实会加速架构腐败 —— 就像�
 ---
 
 > **参考文档**
-> - [架构设计文档](2026-05-16-architecture-design.md)
-> - [开发指南](2026-05-16-development-guide.md)
+> - [架构设计文档](../docs/architecture-design.md)
+> - [开发指南](../docs/development-guide.md)
 > - [方法复杂度治理方案](2026-06-04-method-complexity-governance.md)
 > - [AGENTS.md](../AGENTS.md) — AI Agent 行为契约
 > - [CLAUDE.md](../CLAUDE.md) — Claude Code 专项指令
