@@ -31,26 +31,45 @@ public class SkillConfig {
     /**
      * 创建配置。
      */
-    public static SkillConfig create(String tenantId, String workspaceId,
-                                      String name, List<String> skillPaths) {
+    public static SkillConfig create(CreateSpec spec) {
         SkillConfig config = new SkillConfig();
-        Instant now = Instant.now();
         config.id = randomId();
-        config.tenantId = tenantId;
-        config.workspaceId = workspaceId;
-        config.name = name;
-        config.skillPaths = skillPaths != null ? new ArrayList<>(skillPaths) : new ArrayList<>();
-        applyDefaultFlags(config);
-        config.createdAt = now;
-        config.updatedAt = now;
+        config.tenantId = spec.tenantId; config.workspaceId = spec.workspaceId;
+        config.name = spec.name;
+        config.skillPaths = spec.skillPaths != null ? new ArrayList<>(spec.skillPaths) : new ArrayList<>();
+        setDefaults(config);
+        initTimestamps(config);
         return config;
     }
 
-    private static void applyDefaultFlags(SkillConfig config) {
+    private static void setDefaults(SkillConfig config) {
         config.syncEnabled = true;
         config.syncInterval = 3600;
         config.autoSync = false;
         config.enabled = true;
+    }
+
+    private static void initTimestamps(SkillConfig config) {
+        Instant now = Instant.now();
+        config.createdAt = now;
+        config.updatedAt = now;
+    }
+
+    /**
+     * 创建配置规格。
+     */
+    public static final class CreateSpec {
+        private final String tenantId;
+        private final String workspaceId;
+        private final String name;
+        private final List<String> skillPaths;
+
+        public CreateSpec(String tenantId, String workspaceId, String name, List<String> skillPaths) {
+            this.tenantId = tenantId;
+            this.workspaceId = workspaceId;
+            this.name = name;
+            this.skillPaths = skillPaths;
+        }
     }
 
     /**

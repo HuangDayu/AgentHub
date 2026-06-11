@@ -107,16 +107,20 @@ public class SkillConfigController {
      * 将请求转换为命令。
      */
     private CreateSkillConfigCommand toCommand(CreateSkillConfigRequest request,
-                                               String workspaceId) {
+                                                String workspaceId) {
         CreateSkillConfigCommand command = new CreateSkillConfigCommand();
-        command.setTenantId(request.getTenantId());
         command.setWorkspaceId(workspaceId);
+        setCommandFields(command, request);
+        return command;
+    }
+
+    private void setCommandFields(CreateSkillConfigCommand command, CreateSkillConfigRequest request) {
+        command.setTenantId(request.getTenantId());
         command.setName(request.getName());
         command.setDescription(request.getDescription());
         command.setSkillPaths(request.getSkillPaths());
         command.setSyncEnabled(request.isSyncEnabled());
         command.setSyncInterval(request.getSyncInterval());
         command.setAutoSync(request.isAutoSync());
-        return command;
     }
 }

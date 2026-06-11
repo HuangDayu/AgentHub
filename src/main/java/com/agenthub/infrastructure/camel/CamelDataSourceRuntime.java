@@ -23,16 +23,18 @@ public class CamelDataSourceRuntime {
      * 获取或创建工作空间的 CamelContext
      */
     public CamelContext getOrCreateContext(String workspaceId) {
-        return workspaceContexts.computeIfAbsent(workspaceId, ws -> {
-            try {
-                CamelContext ctx = new DefaultCamelContext();
-                ctx.start();
-                log.info("created CamelContext for workspace {}", ws);
-                return ctx;
-            } catch (Exception e) {
-                throw new RuntimeException("failed to create CamelContext for " + ws, e);
-            }
-        });
+        return workspaceContexts.computeIfAbsent(workspaceId, this::createNewContext);
+    }
+
+    private CamelContext createNewContext(String ws) {
+        try {
+            CamelContext ctx = new DefaultCamelContext();
+            ctx.start();
+            log.info("created CamelContext for workspace {}", ws);
+            return ctx;
+        } catch (Exception e) {
+            throw new RuntimeException("failed to create CamelContext for " + ws, e);
+        }
     }
 
     /**

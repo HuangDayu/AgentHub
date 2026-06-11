@@ -101,7 +101,6 @@ public class ParallelNodeProcessor extends AbstractNodeProcessor {
             .flatMap(node -> executeNodeAsync(node, context), concurrency)
             .collectList()
             .block();
-
         Map<String, Object> output = new HashMap<>();
         output.put("results", results);
         output.put("totalNodes", nodes.size());

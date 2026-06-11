@@ -78,16 +78,20 @@ public class AlibabaReActAgentFactory implements ReActAgentFactory {
     }
 
     private Builder createBaseBuilder(AlibabaReActAgentConfig config) {
-        return ReactAgent.builder()
-                .name(config.getAgent().getName())
-                .description(config.getAgent().getDescription())
-                .toolContext(config.getToolContext())
-                .tools(config.getTools())
+        return buildBaseReactAgent(config)
                 .chatClient(buildChatClient(config))
                 .executor(TtlUtils.getTtlExecutorService())
                 .maxParallelTools(5)
                 .parallelToolExecution(true)
                 .releaseThread(true);
+    }
+
+    private Builder buildBaseReactAgent(AlibabaReActAgentConfig config) {
+        return ReactAgent.builder()
+                .name(config.getAgent().getName())
+                .description(config.getAgent().getDescription())
+                .toolContext(config.getToolContext())
+                .tools(config.getTools());
     }
 
     private ChatClient buildChatClient(AlibabaReActAgentConfig config) {

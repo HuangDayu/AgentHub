@@ -56,14 +56,10 @@ public class MybatisDynamicWorkflowRepository implements DynamicWorkflowPort {
     @Override
     public Optional<DynamicWorkflow> findActiveBySessionId(String sessionId) {
         LambdaQueryWrapper<DynamicWorkflowEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DynamicWorkflowEntity::getSessionId, sessionId)
-                .in(DynamicWorkflowEntity::getStatus, "PLANNING", "EXECUTING", "VERIFYING")
-                .orderByDesc(DynamicWorkflowEntity::getCreatedAt)
-                .last("LIMIT 1");
+        wrapper.eq(DynamicWorkflowEntity::getSessionId, sessionId).in(DynamicWorkflowEntity::getStatus, "PLANNING", "EXECUTING", "VERIFYING").orderByDesc(DynamicWorkflowEntity::getCreatedAt).last("LIMIT 1");
         DynamicWorkflowEntity entity = workflowMapper.selectOne(wrapper);
         if (entity == null) return Optional.empty();
-        List<WorkflowStage> stages = findStagesByWorkflowId(entity.getId());
-        return Optional.of(toDomain(entity, stages));
+        return Optional.of(toDomain(entity, findStagesByWorkflowId(entity.getId())));
     }
 
     @Override

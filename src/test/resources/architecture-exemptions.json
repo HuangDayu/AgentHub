@@ -1451,5 +1451,20 @@
     "parameterTypes" : [ "java.sql.DatabaseMetaData", "java.lang.String", "java.lang.String" ],
     "reason" : "LIGHT 违规：JDBC INFORMATION_SCHEMA 查询需要 try-with-resources + loop 结构",
     "severity" : "LIGHT"
+  }, {
+    "className" : "com.agenthub.infrastructure.tools.system_tools.core_tools.AutomationTools",
+    "methodName" : "createScheduledTask",
+    "parameterTypes" : [ "java.lang.String", "java.lang.String", "java.lang.String", "java.lang.String", "java.lang.String", "org.springframework.ai.chat.model.ToolContext" ],
+    "reason" : "@Tool 方法签名不可变更：6 个参数"
+  }, {
+    "className" : "com.agenthub.infrastructure.tools.system_tools.core_tools.DynamicWorkflowTools",
+    "methodName" : "createWorkflow",
+    "parameterTypes" : [ "java.lang.String", "java.lang.String", "java.lang.String", "org.springframework.ai.chat.model.ToolContext" ],
+    "reason" : "@Tool 方法签名不可变更：4 个参数"
+  }, {
+    "className" : "com.agenthub.infrastructure.tools.system_tools.core_tools.PromptTools",
+    "methodName" : "createPromptTemplate",
+    "parameterTypes" : [ "org.springframework.ai.chat.model.ToolContext", "java.lang.String", "java.lang.String", "java.lang.String", "java.lang.String", "java.lang.Boolean" ],
+    "reason" : "@Tool 方法签名不可变更：6 个参数"
   } ]
 }

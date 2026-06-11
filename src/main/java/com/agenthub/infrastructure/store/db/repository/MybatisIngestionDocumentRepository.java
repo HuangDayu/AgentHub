@@ -72,13 +72,9 @@ public class MybatisIngestionDocumentRepository implements IngestionDocumentRepo
     }
 
     /**
-     * 将领域对象转换为数据库实体。
-     *
-     * @param document 入库文档领域对象
-     * @return 数据库实体
+     * 将领域对象属性复制到数据库实体。
      */
-    private IngestionDocumentEntity toEntity(IngestionDocument document) {
-        IngestionDocumentEntity entity = new IngestionDocumentEntity();
+    private void copyDocumentProperties(IngestionDocumentEntity entity, IngestionDocument document) {
         entity.setId(document.getId());
         entity.setKbId(document.getKbId());
         entity.setJobId(document.getJobId());
@@ -87,6 +83,30 @@ public class MybatisIngestionDocumentRepository implements IngestionDocumentRepo
         entity.setSize(document.getSize());
         entity.setStoragePath(document.getStoragePath());
         entity.setStatus(document.getStatus().name());
+    }
+
+    /**
+     * 构建IngestionDocument快照。
+     */
+    private IngestionDocument.Snapshot buildSnapshot(IngestionDocumentEntity entity) {
+        return new IngestionDocument.Snapshot(
+                entity.getId(), entity.getKbId(), entity.getJobId(),
+                entity.getFileName(), entity.getContentType(),
+                entity.getSize() != null ? entity.getSize() : 0L,
+                entity.getStoragePath(),
+                IngestionDocument.DocumentStatus.valueOf(entity.getStatus())
+        );
+    }
+
+    /**
+     * 将领域对象转换为数据库实体。
+     *
+     * @param document 入库文档领域对象
+     * @return 数据库实体
+     */
+    private IngestionDocumentEntity toEntity(IngestionDocument document) {
+        IngestionDocumentEntity entity = new IngestionDocumentEntity();
+        copyDocumentProperties(entity, document);
         return entity;
     }
 
@@ -97,16 +117,7 @@ public class MybatisIngestionDocumentRepository implements IngestionDocumentRepo
      * @return 入库文档领域对象
      */
     private IngestionDocument toDomain(IngestionDocumentEntity entity) {
-        IngestionDocument.Snapshot snapshot = new IngestionDocument.Snapshot(
-                entity.getId(),
-                entity.getKbId(),
-                entity.getJobId(),
-                entity.getFileName(),
-                entity.getContentType(),
-                entity.getSize() != null ? entity.getSize() : 0L,
-                entity.getStoragePath(),
-                IngestionDocument.DocumentStatus.valueOf(entity.getStatus())
-        );
+        IngestionDocument.Snapshot snapshot = buildSnapshot(entity);
         return IngestionDocument.reconstruct(snapshot);
     }
 }

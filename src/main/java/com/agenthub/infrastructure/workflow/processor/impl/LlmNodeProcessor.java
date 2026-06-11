@@ -7,6 +7,7 @@ import com.agenthub.domain.enums.workflow.DagNodeType;
 import com.agenthub.domain.model.agent.Session;
 import com.agenthub.domain.model.workflow.DagWorkflowChat;
 import com.agenthub.domain.model.workflow.DagWorkflowContext;
+import com.agenthub.domain.model.agent.AgentMessage;
 import com.agenthub.domain.model.workflow.DagWorkflowNode;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
@@ -85,18 +86,20 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
     }
 
     private Mono<Map<String, Object>> executeStreamingChat(DagWorkflowChat workflowChat) {
-        // 确保 session 存在，如果不存在则创建
         ensureSessionExists(workflowChat.getAgentId(), workflowChat.getSessionId());
-
-        return agentChatPort.streamMessages(new AgentChatCommand(workflowChat.getAgentId(), workflowChat.getSessionId(), workflowChat.getMessage(), List.of()))
+        var command = new AgentChatCommand(workflowChat.getAgentId(), workflowChat.getSessionId(), workflowChat.getMessage(), List.of());
+        return agentChatPort.streamMessages(command)
                 .collectList()
-                .map(messages -> {
-                    Map<String, Object> result = new HashMap<>();
-                    result.put("messages", messages);
-                    result.put("count", messages.size());
-                    result.put("success", true);
-                    return result;
-                });
+                .map(this::toStreamingResult);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> toStreamingResult(List<AgentMessage> messages) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("messages", messages);
+        result.put("count", messages.size());
+        result.put("success", true);
+        return result;
     }
 
     /**
@@ -105,18 +108,24 @@ public class LlmNodeProcessor extends AbstractNodeProcessor {
      */
     private void ensureSessionExists(String agentId, String sessionId) {
         try {
-            // 尝试检查 session 是否存在
             sessionRepository.existSession(sessionId, agentId);
         } catch (Exception e) {
-            // 如果 session 不存在，创建一个
-            if (e.getMessage() != null && e.getMessage().contains("Session not owned by agent")) {
-                Session session = new Session();
-                session.setId(sessionId);
-                session.setAgentId(agentId);
-                session.setName("Workflow Execution Session");
-                session.setCreatedAt(Instant.now());
-                sessionRepository.save(session);
+            if (isSessionNotOwned(e)) {
+                sessionRepository.save(createWorkflowSession(agentId, sessionId));
             }
         }
+    }
+
+    private boolean isSessionNotOwned(Exception e) {
+        return e.getMessage() != null && e.getMessage().contains("Session not owned by agent");
+    }
+
+    private Session createWorkflowSession(String agentId, String sessionId) {
+        Session session = new Session();
+        session.setId(sessionId);
+        session.setAgentId(agentId);
+        session.setName("Workflow Execution Session");
+        session.setCreatedAt(Instant.now());
+        return session;
     }
 }

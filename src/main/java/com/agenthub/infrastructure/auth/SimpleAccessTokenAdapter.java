@@ -40,14 +40,18 @@ public class SimpleAccessTokenAdapter implements AccessTokenPort {
      */
     private String queryTenantId(String username) {
         try {
-            AppUserEntity user = queryActiveUser(username);
-            if (user == null || user.getTenantId() == null) {
-                return "default";
-            }
-            return user.getTenantId();
+            return resolveTenantId(username);
         } catch (Exception ignored) {
             return "default";
         }
+    }
+
+    private String resolveTenantId(String username) {
+        AppUserEntity user = queryActiveUser(username);
+        if (user == null || user.getTenantId() == null) {
+            return "default";
+        }
+        return user.getTenantId();
     }
 
     /**

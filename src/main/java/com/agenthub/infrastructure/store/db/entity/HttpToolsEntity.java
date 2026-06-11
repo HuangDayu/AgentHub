@@ -57,17 +57,9 @@ public class HttpToolsEntity {
      * @return 领域对象
      */
     public HttpTool toDomain() {
-        return new HttpTool(
-                this.id,
-                this.name,
-                this.description,
-                this.enabled,
-                this.endpoint,
-                this.authType,
-                this.inputSchema,
-                this.timeoutMs,
-                this.createdAt
-        );
+        return new HttpTool(this.id, this.name, this.description, this.enabled,
+                this.endpoint, this.authType, this.inputSchema,
+                this.timeoutMs, this.createdAt);
     }
 
 }

@@ -91,8 +91,7 @@ public class VariableResolver {
         Matcher matcher = VARIABLE_PATTERN.matcher(template);
         StringBuffer result = new StringBuffer();
         while (matcher.find()) {
-            String variable = matcher.group(1);
-            Object value = resolveVariableValue(variable, context);
+            Object value = resolveVariableValue(matcher.group(1), context);
             matcher.appendReplacement(result, String.valueOf(value));
         }
         matcher.appendTail(result);
@@ -108,15 +107,12 @@ public class VariableResolver {
      */
     private Object resolveVariableValue(String variable, DagWorkflowContext context) {
         String[] parts = variable.split("\\.", 2);
-        String scope = parts[0];
-        String path = parts.length > 1 ? parts[1] : "";
-        
-        return switch (scope) {
-            case "user", "var" -> resolveUserVariable(path, context);
-            case "sys" -> resolveSystemVariable(path, context);
-            case "env" -> resolveEnvironmentVariable(path);
-            case "node" -> resolveNodeVariableFromPath(path, context);
-            default -> resolveNodeVariable(scope, path, context);
+        return switch (parts[0]) {
+            case "user", "var" -> resolveUserVariable(parts.length > 1 ? parts[1] : "", context);
+            case "sys" -> resolveSystemVariable(parts.length > 1 ? parts[1] : "", context);
+            case "env" -> resolveEnvironmentVariable(parts.length > 1 ? parts[1] : "");
+            case "node" -> resolveNodeVariableFromPath(parts.length > 1 ? parts[1] : "", context);
+            default -> resolveNodeVariable(parts[0], parts.length > 1 ? parts[1] : "", context);
         };
     }
 

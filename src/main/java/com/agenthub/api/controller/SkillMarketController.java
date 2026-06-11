@@ -76,6 +76,13 @@ public class SkillMarketController {
      */
     private MarketSkillSummaryResponse toSummaryResponse(Map<String, Object> m) {
         MarketSkillSummaryResponse response = new MarketSkillSummaryResponse();
+        populateSummary(response, m);
+        populateSummaryCounts(response, m);
+        return response;
+    }
+
+    /** 填充文本字段。 */
+    private void populateSummary(MarketSkillSummaryResponse response, Map<String, Object> m) {
         response.setMarketId((String) m.get("marketId"));
         response.setSkillId((String) m.get("skillId"));
         response.setSkillCode((String) m.get("skillCode"));
@@ -83,10 +90,13 @@ public class SkillMarketController {
         response.setDescription((String) m.get("description"));
         response.setAuthor((String) m.get("author"));
         response.setVersion((String) m.get("version"));
+    }
+
+    /** 填充数值字段。 */
+    private void populateSummaryCounts(MarketSkillSummaryResponse response, Map<String, Object> m) {
         response.setDownloadCount((int) m.get("downloadCount"));
         response.setStarCount((int) m.get("starCount"));
         response.setThumbnailUrl((String) m.get("thumbnailUrl"));
-        return response;
     }
 
     /**
@@ -97,15 +107,25 @@ public class SkillMarketController {
             @PathVariable String workspaceId,
             @RequestParam String marketId,
             @RequestParam String skillId) {
+        return fetchDetail(marketId, skillId);
+    }
+
+    /** 查询详情并处理异常。 */
+    private ResponseEntity<MarketSkillDetailResponse> fetchDetail(String marketId, String skillId) {
         try {
-            Map<String, Object> raw = skillMarketUseCase.getDetail(marketId, skillId);
-            if (raw == null || raw.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(toDetailResponse(raw));
+            return doFetchDetail(marketId, skillId);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /** 执行详情查询。 */
+    private ResponseEntity<MarketSkillDetailResponse> doFetchDetail(String marketId, String skillId) {
+        Map<String, Object> raw = skillMarketUseCase.getDetail(marketId, skillId);
+        if (raw == null || raw.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(toDetailResponse(raw));
     }
 
     /**

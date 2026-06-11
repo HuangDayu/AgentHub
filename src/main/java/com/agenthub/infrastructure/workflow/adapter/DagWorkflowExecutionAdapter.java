@@ -68,9 +68,7 @@ public class DagWorkflowExecutionAdapter implements DagWorkflowExecutionPort {
         context.setTenantId(command.getTenantId());
         context.setWorkspaceId(command.getWorkspaceId());
         context.setTriggeredBy(command.getTriggeredBy());
-        if (command.getInput() != null) {
-            command.getInput().forEach(context::setVariable);
-        }
+        if (command.getInput() != null) command.getInput().forEach(context::setVariable);
         return context;
     }
 
@@ -125,15 +123,9 @@ public class DagWorkflowExecutionAdapter implements DagWorkflowExecutionPort {
      * 转换数值节点（整数/浮点/BigDecimal）。
      */
     private Object convertNumericNode(JsonNode node) {
-        if (node.isInt() || node.isLong()) {
-            return node.asLong();
-        }
-        if (node.isFloat() || node.isDouble()) {
-            return node.asDouble();
-        }
-        if (node.isBigDecimal()) {
-            return node.decimalValue();
-        }
+        if (node.isInt() || node.isLong()) return node.asLong();
+        if (node.isFloat() || node.isDouble()) return node.asDouble();
+        if (node.isBigDecimal()) return node.decimalValue();
         return node.asText();
     }
 
@@ -145,16 +137,20 @@ public class DagWorkflowExecutionAdapter implements DagWorkflowExecutionPort {
      */
     private DagWorkflowGraph parseGraphDefinition(String json) {
         try {
-            JsonNode root = objectMapper.readTree(json);
-            List<DagWorkflowNode> nodes = parseNodes(root.get("nodes"));
-            List<DagWorkflowEdge> edges = parseEdges(root.get("edges"));
-            DagWorkflowGraph graph = new DagWorkflowGraph(nodes, edges);
-            log.debug("Parsed graph: {} nodes, {} edges", nodes.size(), edges.size());
-            return graph;
+            return doParseGraph(json);
         } catch (Exception e) {
             log.error("Failed to parse graph definition: {}", e.getMessage());
             return DagWorkflowGraph.empty();
         }
+    }
+
+    private DagWorkflowGraph doParseGraph(String json) throws Exception {
+        JsonNode root = objectMapper.readTree(json);
+        List<DagWorkflowNode> nodes = parseNodes(root.get("nodes"));
+        List<DagWorkflowEdge> edges = parseEdges(root.get("edges"));
+        DagWorkflowGraph graph = new DagWorkflowGraph(nodes, edges);
+        log.debug("Parsed graph: {} nodes, {} edges", nodes.size(), edges.size());
+        return graph;
     }
 
     /**
@@ -192,9 +188,7 @@ public class DagWorkflowExecutionAdapter implements DagWorkflowExecutionPort {
             return;
         }
         JsonNode labelJson = dataJson.get("label");
-        if (labelJson != null) {
-            node.setName(labelJson.asText());
-        }
+        if (labelJson != null) node.setName(labelJson.asText());
         node.setConfig(buildNodeConfig(dataJson.get("node_param")));
     }
 
@@ -225,16 +219,10 @@ public class DagWorkflowExecutionAdapter implements DagWorkflowExecutionPort {
      * 解析 edges 数组。
      */
     private List<DagWorkflowEdge> parseEdges(JsonNode edgesArray) {
-        if (edgesArray == null || !edgesArray.isArray()) {
-            return new ArrayList<>();
-        }
+        if (edgesArray == null || !edgesArray.isArray()) return new ArrayList<>();
         List<DagWorkflowEdge> edges = new ArrayList<>();
-        for (JsonNode edgeJson : edgesArray) {
-            edges.add(new DagWorkflowEdge(
-                    edgeJson.get("id").asText(),
-                    edgeJson.get("source").asText(),
-                    edgeJson.get("target").asText()));
-        }
+        edgesArray.forEach(edge -> edges.add(new DagWorkflowEdge(
+                edge.get("id").asText(), edge.get("source").asText(), edge.get("target").asText())));
         return edges;
     }
 

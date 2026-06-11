@@ -81,15 +81,9 @@ public class IngestionJobResponseMapper {
      * @return 文档响应DTO
      */
     private DocumentResponse toDocumentResponse(IngestionDocument document) {
-        return new DocumentResponse(
-                document.getId(),
-                document.getKbId(),
-                document.getFileName(),
-                document.getContentType(),
-                document.getSize(),
-                document.getStatus().name(),
-                Instant.now()
-        );
+        return new DocumentResponse(document.getId(), document.getKbId(),
+                document.getFileName(), document.getContentType(),
+                document.getSize(), document.getStatus().name(), Instant.now());
     }
 
     /**

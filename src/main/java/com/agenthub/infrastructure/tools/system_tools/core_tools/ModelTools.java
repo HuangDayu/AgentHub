@@ -62,15 +62,25 @@ public class ModelTools {
         return findBestModel(models, taskDescription, complexity);
     }
 
-    private ModelCapabilitySummary toCapabilitySummary(ModelConfig config) {
-        ModelCapabilitySummary summary = new ModelCapabilitySummary();
-        summary.setModelConfigId(config.getId());
-        summary.setModelName(config.getModel());
+    /**
+     * 填充模型能力摘要的供应商、域、成本、速度、最大Token字段。
+     */
+    private void fillCapabilityFields(ModelCapabilitySummary summary, ModelConfig config) {
         summary.setSupplier(config.getSupplier() != null ? config.getSupplier().name() : "UNKNOWN");
         summary.setCapabilityDomain(inferCapabilityDomain(config.getModel()));
         summary.setCostLevel(inferCostLevel(config.getSupplier()));
         summary.setSpeedLevel(inferSpeedLevel(config.getModel()));
         summary.setMaxTokens(inferMaxTokens(config.getModel()));
+    }
+
+    /**
+     * 将模型配置转换为能力摘要。
+     */
+    private ModelCapabilitySummary toCapabilitySummary(ModelConfig config) {
+        ModelCapabilitySummary summary = new ModelCapabilitySummary();
+        summary.setModelConfigId(config.getId());
+        summary.setModelName(config.getModel());
+        fillCapabilityFields(summary, config);
         summary.setAvailable(true);
         return summary;
     }

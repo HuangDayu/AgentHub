@@ -2,6 +2,8 @@ package com.agenthub.infrastructure.rag;
 
 import com.agenthub.domain.model.agent.ChatMessage;
 import com.agenthub.domain.model.rag.RetrievalChunk;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
@@ -26,14 +28,24 @@ public class RagContextPromptBuilder {
     /**
      * 组装 RAG Prompt。
      *
-     * @param userPrompt 用户问题
-     * @param chunks     检索到的文档片段
+     * @param input 构建参数
      * @return 组装后的完整 Prompt
      */
-    public List<ChatMessage> build(String sessionId, String template, String userPrompt, List<RetrievalChunk> chunks) {
-        String tpl = resolveTemplate(template);
-        String prompt = (chunks == null || chunks.isEmpty()) ? tpl : applyTemplate(tpl, buildContext(chunks), userPrompt);
-        return List.of(ChatMessage.assistant(sessionId, prompt), ChatMessage.user(sessionId, userPrompt));
+    public List<ChatMessage> build(BuildInput input) {
+        String tpl = resolveTemplate(input.getTemplate());
+        String prompt = (input.getChunks() == null || input.getChunks().isEmpty())
+                ? tpl : applyTemplate(tpl, buildContext(input.getChunks()), input.getUserPrompt());
+        return List.of(ChatMessage.assistant(input.getSessionId(), prompt),
+                ChatMessage.user(input.getSessionId(), input.getUserPrompt()));
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class BuildInput {
+        private String sessionId;
+        private String template;
+        private String userPrompt;
+        private List<RetrievalChunk> chunks;
     }
 
     /**

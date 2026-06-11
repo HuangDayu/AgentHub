@@ -85,16 +85,33 @@ public class AgentStreamExecutor {
     }
 
     private void handleAssistantMessage(String sessionId, StringBuilder builder, AgentMessage msg) {
-        if (msg.getText() != null) {
-            builder.append(msg.getText());
-        }
-        if (msg.getToolCalls() != null && !msg.getToolCalls().isEmpty()) {
-            saveMessage(flushPendingText(sessionId, builder));
-            saveMessage(assistant(sessionId, toJson(msg.getToolCalls())));
-        }
-        if ("STOP".equalsIgnoreCase((String) msg.getMetadata().getOrDefault("finishReason", ""))) {
-            saveMessage(flushPendingText(sessionId, builder));
-        }
+        appendText(builder, msg.getText());
+        handleToolCalls(sessionId, builder, msg);
+        handleStopMessage(sessionId, builder, msg);
+    }
+
+    private static void appendText(StringBuilder builder, String text) {
+        if (text != null) builder.append(text);
+    }
+
+    private void handleToolCalls(String sessionId, StringBuilder builder, AgentMessage msg) {
+        if (!hasToolCalls(msg)) return;
+        saveMessage(flushPendingText(sessionId, builder));
+        saveMessage(assistant(sessionId, toJson(msg.getToolCalls())));
+    }
+
+    private void handleStopMessage(String sessionId, StringBuilder builder, AgentMessage msg) {
+        if (!isStopMessage(msg)) return;
+        saveMessage(flushPendingText(sessionId, builder));
+    }
+
+    private static boolean hasToolCalls(AgentMessage msg) {
+        return msg.getToolCalls() != null && !msg.getToolCalls().isEmpty();
+    }
+
+    private static boolean isStopMessage(AgentMessage msg) {
+        Object finishReason = msg.getMetadata().getOrDefault("finishReason", "");
+        return "STOP".equalsIgnoreCase((String) finishReason);
     }
 
     private void finallyHandleMessage(String sessionId, StringBuilder responseBuilder) {

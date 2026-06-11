@@ -79,12 +79,8 @@ public class AuthJwtConfiguration {
     private AuthApplicationUseCase buildAuthApplicationUseCase(
             CredentialVerifierPort verifier, SimpleAccessTokenAdapter tokenService,
             RefreshTokenRepository refreshTokenRepository) {
-        return new AuthApplicationUseCase(
-                verifier,
-                tokenService,
-                new UuidRefreshTokenGenerator(),
-                refreshTokenRepository,
-                Clock.systemUTC(),
-                Duration.ofDays(30));
+        return new AuthApplicationUseCase(verifier, tokenService,
+                new UuidRefreshTokenGenerator(), refreshTokenRepository,
+                Clock.systemUTC(), Duration.ofDays(30));
     }
 }

@@ -28,8 +28,9 @@ public class SkillConfigUseCase {
      */
     @Transactional
     public SkillConfigOutput create(CreateSkillConfigCommand command) {
-        SkillConfig config = SkillConfig.create(command.getTenantId(), command.getWorkspaceId(),
-                command.getName(), command.getSkillPaths());
+        SkillConfig config = SkillConfig.create(new SkillConfig.CreateSpec(
+                command.getTenantId(), command.getWorkspaceId(),
+                command.getName(), command.getSkillPaths()));
         config.setDescription(command.getDescription());
         config.setSyncEnabled(command.isSyncEnabled());
         config.setSyncInterval(command.getSyncInterval());

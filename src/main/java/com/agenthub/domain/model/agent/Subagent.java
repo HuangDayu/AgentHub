@@ -60,6 +60,11 @@ public class Subagent {
      */
     public static Subagent create(CreationSpec spec) {
         Subagent subagent = new Subagent();
+        applySpec(subagent, spec);
+        return subagent;
+    }
+
+    private static void applySpec(Subagent subagent, CreationSpec spec) {
         subagent.tenantId = spec.tenantId;
         subagent.workspaceId = spec.workspaceId;
         subagent.parentAgentId = spec.parentAgentId;
@@ -67,7 +72,6 @@ public class Subagent {
         subagent.description = spec.description;
         subagent.systemPrompt = spec.systemPrompt;
         subagent.modelConfigId = spec.modelConfigId;
-        return subagent;
     }
 
     /**

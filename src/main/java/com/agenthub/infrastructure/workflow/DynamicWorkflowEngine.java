@@ -42,12 +42,16 @@ public class DynamicWorkflowEngine {
         DynamicWorkflow workflow = loadWorkflow(workflowId);
         workflowUseCase.updateStatus(workflowId, "EXECUTING");
         try {
-            executeAllStages(workflow, parentContext);
-            completeWorkflowIfSuccess(workflow);
+            executeAndComplete(workflow, parentContext);
         } catch (Exception e) {
             log.error("工作流执行失败: {}", workflowId, e);
             workflowUseCase.failWorkflow(workflowId, e.getMessage());
         }
+    }
+
+    private void executeAndComplete(DynamicWorkflow workflow, ReActAgentContext parentContext) {
+        executeAllStages(workflow, parentContext);
+        completeWorkflowIfSuccess(workflow);
     }
 
     private DynamicWorkflow loadWorkflow(String workflowId) {
@@ -114,16 +118,24 @@ public class DynamicWorkflowEngine {
     private String executeSingleTask(DynamicWorkflow workflow, AgentTask task, ReActAgentContext parentContext) {
         workflowUseCase.updateTaskResult(task.getId(), "", "RUNNING");
         try {
-            SubagentRunOutput output = runSubagent(workflow, task, parentContext);
-            task.assignSubagent(output.getSubagentId(), output.getSubsessionId());
-            SubagentRuntimeOutput result = awaitSubagent(output);
-            workflowUseCase.updateTaskResult(task.getId(), result.getResult(), "COMPLETED");
-            return result.getResult();
+            return doExecuteTask(workflow, task, parentContext);
         } catch (Exception e) {
-            log.error("任务执行失败: {}", task.getId(), e);
-            workflowUseCase.updateTaskResult(task.getId(), e.getMessage(), "FAILED");
-            return "执行失败: " + e.getMessage();
+            return handleTaskFailure(task, e);
         }
+    }
+
+    private String doExecuteTask(DynamicWorkflow workflow, AgentTask task, ReActAgentContext parentContext) {
+        SubagentRunOutput output = runSubagent(workflow, task, parentContext);
+        task.assignSubagent(output.getSubagentId(), output.getSubsessionId());
+        SubagentRuntimeOutput result = awaitSubagent(output);
+        workflowUseCase.updateTaskResult(task.getId(), result.getResult(), "COMPLETED");
+        return result.getResult();
+    }
+
+    private String handleTaskFailure(AgentTask task, Exception e) {
+        log.error("任务执行失败: {}", task.getId(), e);
+        workflowUseCase.updateTaskResult(task.getId(), e.getMessage(), "FAILED");
+        return "执行失败: " + e.getMessage();
     }
 
     private SubagentRunOutput runSubagent(DynamicWorkflow workflow, AgentTask task, ReActAgentContext parentContext) {
@@ -145,14 +157,19 @@ public class DynamicWorkflowEngine {
     private SubagentRuntimeOutput awaitSubagent(SubagentRunOutput output) {
         long deadline = System.currentTimeMillis() + (TASK_TIMEOUT_SECONDS * 1000L);
         while (System.currentTimeMillis() < deadline) {
-            SubagentRuntimeOutput status = subagentUseCase.status(
-                    output.getSubagentId(), output.getSubsessionId());
-            if (isTerminal(status.getStatus())) {
-                return subagentUseCase.result(
-                        output.getSubagentId(), output.getSubsessionId());
+            if (isTerminal(pollSubagentStatus(output).getStatus())) {
+                return getSubagentResult(output);
             }
             sleepBriefly();
         }
+        return getSubagentResult(output);
+    }
+
+    private SubagentRuntimeOutput pollSubagentStatus(SubagentRunOutput output) {
+        return subagentUseCase.status(output.getSubagentId(), output.getSubsessionId());
+    }
+
+    private SubagentRuntimeOutput getSubagentResult(SubagentRunOutput output) {
         return subagentUseCase.result(output.getSubagentId(), output.getSubsessionId());
     }
 

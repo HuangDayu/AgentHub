@@ -55,7 +55,8 @@ public class RagCustomizePipelineAdapter implements RetrievalAugmentedGeneration
 
     public List<ChatMessage> buildMessages(RagCommand ragCommand) {
         List<RetrievalChunk> contexts = ragRetrievalPort.retrieve(ragCommand);
-        return ragContextPromptBuilder.build(ragCommand.getSessionId(), ragCommand.getPromptTemplate(), ragCommand.getPrompt(), contexts);
+        return ragContextPromptBuilder.build(new RagContextPromptBuilder.BuildInput(
+                ragCommand.getSessionId(), ragCommand.getPromptTemplate(), ragCommand.getPrompt(), contexts));
     }
 
 

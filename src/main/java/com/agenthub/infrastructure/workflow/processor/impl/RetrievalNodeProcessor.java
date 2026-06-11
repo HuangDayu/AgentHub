@@ -81,16 +81,23 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
 
     private void setRetrievalType(RetrievalCommand command, Map<String, Object> config) {
         String type = (String) config.getOrDefault("retrievalType", "similarity");
-
         if ("hybrid".equals(type)) {
-            command.setEnableVectorSearch(true);
-            command.setEnableTextSearch(true);
-            command.setVectorWeight(0.7);
-            command.setKeywordWeight(0.3);
+            applyHybridRetrieval(command);
         } else {
-            command.setEnableVectorSearch(true);
-            command.setEnableTextSearch(false);
+            applySimilarityRetrieval(command);
         }
+    }
+
+    private void applyHybridRetrieval(RetrievalCommand command) {
+        command.setEnableVectorSearch(true);
+        command.setEnableTextSearch(true);
+        command.setVectorWeight(0.7);
+        command.setKeywordWeight(0.3);
+    }
+
+    private void applySimilarityRetrieval(RetrievalCommand command) {
+        command.setEnableVectorSearch(true);
+        command.setEnableTextSearch(false);
     }
 
     private Mono<Map<String, Object>> executeRetrieval(
@@ -195,14 +202,8 @@ public class RetrievalNodeProcessor extends AbstractNodeProcessor {
             RetrievalResultOutput doc, boolean includeMetadata, boolean includeScores) {
         Map<String, Object> docMap = new HashMap<>();
         docMap.put("content", doc.getContent());
-
-        if (includeMetadata && doc.getMetadata() != null) {
-            docMap.put("metadata", doc.getMetadata());
-        }
-        if (includeScores) {
-            docMap.put("score", doc.getScore());
-        }
-
+        if (includeMetadata && doc.getMetadata() != null) docMap.put("metadata", doc.getMetadata());
+        if (includeScores) docMap.put("score", doc.getScore());
         return docMap;
     }
 

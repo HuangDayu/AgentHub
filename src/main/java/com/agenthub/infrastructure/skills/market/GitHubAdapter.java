@@ -103,14 +103,21 @@ public class GitHubAdapter implements SkillMarketPort {
     @Override
     public MarketSkillDetail getDetail(String skillId) {
         try {
-            String url = "https://api.github.com/repos/" + skillId;
-            ResponseEntity<Map> resp = restTemplate.exchange(
-                    url, HttpMethod.GET, buildHeaders(), Map.class);
-            return toDetail(resp.getBody(), skillId);
+            return fetchAndParseDetail(skillId);
         } catch (Exception e) {
             log.warn("GitHub detail failed: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 执行 GitHub API 请求并解析详情。
+     */
+    private MarketSkillDetail fetchAndParseDetail(String skillId) {
+        String url = "https://api.github.com/repos/" + skillId;
+        ResponseEntity<Map> resp = restTemplate.exchange(
+                url, HttpMethod.GET, buildHeaders(), Map.class);
+        return toDetail(resp.getBody(), skillId);
     }
 
     private void setDetailBaseFields(MarketSkillDetail d, Map<String, Object> item, String skillId) {

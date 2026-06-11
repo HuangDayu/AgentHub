@@ -35,15 +35,25 @@ public class AutomationTools {
             @ToolParam(description = "执行提示词或命令内容") String prompt,
             @ToolParam(description = "执行该任务的AgentID（可选，为空则使用工作空间内第一个Agent）") String agentId,
             ToolContext toolContext) {
-        ReActAgentContext ctx = getAgentContext(toolContext);
-        ScheduledTask task = new ScheduledTask();
-        task.setName(taskName); task.setTaskType(taskType);
-        task.setCronExpression(cronExpression); task.setPrompt(prompt);
+        CreateScheduledTaskCommand cmd = new CreateScheduledTaskCommand(
+                cronExpression, taskName, taskType, prompt, agentId);
+        return executeCreate(cmd, getAgentContext(toolContext));
+    }
+
+    private ScheduledTaskResult executeCreate(CreateScheduledTaskCommand cmd, ReActAgentContext ctx) {
+        ScheduledTask task = newTask(cmd);
         task = buildTask(ctx, task);
-        if (agentId != null && !agentId.isBlank()) task.setAgentId(agentId);
+        if (cmd.getAgentId() != null && !cmd.getAgentId().isBlank()) task.setAgentId(cmd.getAgentId());
         ScheduledTask saved = scheduledTaskRepository.saveOrUpdate(task);
         scheduledTaskScheduler.scheduleTask(saved);
         return toResult(saved);
+    }
+
+    private static ScheduledTask newTask(CreateScheduledTaskCommand cmd) {
+        ScheduledTask task = new ScheduledTask();
+        task.setName(cmd.getTaskName()); task.setTaskType(cmd.getTaskType());
+        task.setCronExpression(cmd.getCronExpression()); task.setPrompt(cmd.getPrompt());
+        return task;
     }
 
     @Tool(description = "获取当前工作空间的所有定时任务列表")

@@ -57,14 +57,16 @@ public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPor
     public List<RetrievalChunk> ragRetrieve(RagCommand ragCommand) {
         List<RetrievalChunk> list = new ArrayList<>();
         for (String kbId : ragCommand.getKbIds()) {
-            VectorStore vectorStore = springShareObjectFactory.getVectorStoreByKbId(kbId);
-            DocumentRetriever documentRetriever = buildDocumentRetriever(vectorStore, ragCommand);
-            List<Document> documents = documentRetriever.retrieve(new Query(ragCommand.getPrompt()));
-            if (!documents.isEmpty()) {
-                list.addAll(convertResults(kbId, documents));
-            }
+            list.addAll(retrieveFromSingleKb(kbId, ragCommand));
         }
         return list;
+    }
+
+    private List<RetrievalChunk> retrieveFromSingleKb(String kbId, RagCommand ragCommand) {
+        VectorStore vectorStore = springShareObjectFactory.getVectorStoreByKbId(kbId);
+        DocumentRetriever documentRetriever = buildDocumentRetriever(vectorStore, ragCommand);
+        List<Document> documents = documentRetriever.retrieve(new Query(ragCommand.getPrompt()));
+        return documents.isEmpty() ? List.of() : convertResults(kbId, documents);
     }
 
 
@@ -105,12 +107,11 @@ public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPor
     }
 
     private ChatOptions getToolChatOptions(RagCommand ragCommand) {
-        ModelStrategy modelStrategy = ragCommand.getModelStrategy();
         DefaultToolCallingChatOptions options = new DefaultToolCallingChatOptions();
-        options.setTemperature(modelStrategy.getTemperature());
-        options.setTopK(modelStrategy.getTopK());
-        options.setTopP(modelStrategy.getTopP());
-        options.setMaxTokens(modelStrategy.getMaxTokens());
+        options.setTemperature(ragCommand.getModelStrategy().getTemperature());
+        options.setTopK(ragCommand.getModelStrategy().getTopK());
+        options.setTopP(ragCommand.getModelStrategy().getTopP());
+        options.setMaxTokens(ragCommand.getModelStrategy().getMaxTokens());
         options.setInternalToolExecutionEnabled(true);
         options.setToolContext(Map.of(ragCommand.getAgentId(), ragCommand));
         return options;
@@ -159,16 +160,22 @@ public class RagSpringPipelineAdapter implements RetrievalAugmentedGenerationPor
     private List<QueryTransformer> buildQueryTransformers(RagCommand ragCommand, ChatModel chatModel) {
         ChatClient.Builder chatClientBuilder = ChatClient.builder(chatModel);
         List<QueryTransformer> queryTransformers = new LinkedList<>();
-        if (ragCommand.getStrategy().isEnableQueryRewrite()) {
-            queryTransformers.add(RewriteQueryTransformer.builder().chatClientBuilder(chatClientBuilder).promptTemplate(new PromptTemplate(REWRITE_PROMPT_TEMPLATE.formatted(ragCommand.getPrompt()))).build());
-        }
-        if (ragCommand.getStrategy().isEnableTranslationQuery()) {
-            queryTransformers.add(TranslationQueryTransformer.builder().chatClientBuilder(chatClientBuilder).promptTemplate(new PromptTemplate(TRANSLATION_PROMPT_TEMPLATE)).targetLanguage("Chinese").build());
-        }
-        if (ragCommand.getStrategy().isEnableCompressionQuery()) {
-            queryTransformers.add(CompressionQueryTransformer.builder().chatClientBuilder(chatClientBuilder).promptTemplate(new PromptTemplate(COMPRESSION_PROMPT_TEMPLATE)).build());
-        }
+        if (ragCommand.getStrategy().isEnableQueryRewrite()) queryTransformers.add(buildRewriteTransformer(chatClientBuilder, ragCommand));
+        if (ragCommand.getStrategy().isEnableTranslationQuery()) queryTransformers.add(buildTranslationTransformer(chatClientBuilder));
+        if (ragCommand.getStrategy().isEnableCompressionQuery()) queryTransformers.add(buildCompressionTransformer(chatClientBuilder));
         return queryTransformers;
+    }
+
+    private QueryTransformer buildRewriteTransformer(ChatClient.Builder builder, RagCommand cmd) {
+        return RewriteQueryTransformer.builder().chatClientBuilder(builder).promptTemplate(new PromptTemplate(REWRITE_PROMPT_TEMPLATE.formatted(cmd.getPrompt()))).build();
+    }
+
+    private QueryTransformer buildTranslationTransformer(ChatClient.Builder builder) {
+        return TranslationQueryTransformer.builder().chatClientBuilder(builder).promptTemplate(new PromptTemplate(TRANSLATION_PROMPT_TEMPLATE)).targetLanguage("Chinese").build();
+    }
+
+    private QueryTransformer buildCompressionTransformer(ChatClient.Builder builder) {
+        return CompressionQueryTransformer.builder().chatClientBuilder(builder).promptTemplate(new PromptTemplate(COMPRESSION_PROMPT_TEMPLATE)).build();
     }
 
 }

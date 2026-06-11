@@ -188,7 +188,6 @@ public class DagWorkflowBuilder {
             .map(DagWorkflowNode::getId)
             .filter(nodeId -> dag.incomingEdgesOf(nodeId).isEmpty() && dag.outgoingEdgesOf(nodeId).isEmpty())
             .collect(Collectors.toSet());
-        
         if (!orphanNodes.isEmpty()) {
             errors.add("存在孤立节点: " + orphanNodes);
         }
@@ -208,7 +207,6 @@ public class DagWorkflowBuilder {
             .map(DagWorkflowNode::getId)
             .filter(nodeId -> !dag.containsVertex(nodeId))
             .collect(Collectors.toSet());
-        
         if (!unconnectedNodes.isEmpty()) {
             errors.add("存在未连接的节点: " + unconnectedNodes);
         }

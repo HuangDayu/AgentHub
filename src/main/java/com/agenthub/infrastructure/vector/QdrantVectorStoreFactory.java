@@ -65,15 +65,23 @@ public class QdrantVectorStoreFactory implements VectorStoreFactory {
     }
 
     /**
+     * 执行集合创建（如不存在）。
+     */
+    private void doCreateCollection(QdrantClient client, VectorStoreConfig config,
+            EmbeddingModel embeddingModel) throws Exception {
+        if (checkCollectionExists(client, config)) {
+            return;
+        }
+        createNewCollection(client, config, embeddingModel);
+    }
+
+    /**
      * 创建Qdrant集合（如不存在）。
      */
     private void createCollection(QdrantClient client, VectorStoreConfig config,
             EmbeddingModel embeddingModel) {
         try {
-            if (checkCollectionExists(client, config)) {
-                return;
-            }
-            createNewCollection(client, config, embeddingModel);
+            doCreateCollection(client, config, embeddingModel);
         } catch (VectorStoreException e) {
             throw e;
         } catch (Exception e) {

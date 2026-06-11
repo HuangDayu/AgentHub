@@ -8,6 +8,9 @@ import com.agenthub.common.utils.TtlUtils;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import com.agenthub.infrastructure.workflow.DynamicWorkflowEngine;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -36,7 +39,7 @@ public class DynamicWorkflowTools {
             @ToolParam(description = "子任务描述（逗号分隔）") String subtasks,
             ToolContext toolContext) {
         ReActAgentContext ctx = getAgentContext(toolContext);
-        CreateWorkflowCommand command = buildCommand(ctx, task, pattern, subtasks);
+        CreateWorkflowCommand command = buildCommand(new CommandSpec(ctx, task, pattern, subtasks));
         DynamicWorkflowOutput workflow = workflowUseCase.createWorkflow(command);
         executeAsync(workflow.getId(), ctx);
         return "工作流已创建并开始执行: " + workflow.getId();
@@ -55,14 +58,24 @@ public class DynamicWorkflowTools {
         return workflowUseCase.listBySession(ctx.getSessionId());
     }
 
-    private CreateWorkflowCommand buildCommand(ReActAgentContext ctx, String task, String pattern, String subtasks) {
+    private CreateWorkflowCommand buildCommand(CommandSpec spec) {
         CreateWorkflowCommand command = new CreateWorkflowCommand();
-        command.setAgentId(ctx.getAgent().getId());
-        command.setSessionId(ctx.getSessionId());
-        command.setTask(task);
-        command.setPattern(pattern);
-        command.setStages(buildStages(subtasks));
+        command.setAgentId(spec.getCtx().getAgent().getId());
+        command.setSessionId(spec.getCtx().getSessionId());
+        command.setTask(spec.getTask());
+        command.setPattern(spec.getPattern());
+        command.setStages(buildStages(spec.getSubtasks()));
         return command;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class CommandSpec {
+        private ReActAgentContext ctx;
+        private String task;
+        private String pattern;
+        private String subtasks;
     }
 
     private List<CreateWorkflowCommand.StageInput> buildStages(String subtasks) {

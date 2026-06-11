@@ -36,11 +36,22 @@ public class MybatisAgentConfigRepository implements AgentConfigRepository {
         return toDomain(newEntity);
     }
 
-    private LambdaQueryWrapper<AgentConfigEntity> buildQueryWrapper(int sum, AgentConfigEntity entity) {
+    /**
+     * 构建基础查询包装器（agentId + category + type）。
+     */
+    private LambdaQueryWrapper<AgentConfigEntity> buildBaseWrapper(AgentConfigEntity entity) {
         LambdaQueryWrapper<AgentConfigEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(AgentConfigEntity::getAgentId, entity.getAgentId());
         queryWrapper.eq(AgentConfigEntity::getCategory, entity.getCategory());
         queryWrapper.eq(AgentConfigEntity::getType, entity.getType());
+        return queryWrapper;
+    }
+
+    /**
+     * 构建条件查询包装器，根据sum决定是否追加configId条件。
+     */
+    private LambdaQueryWrapper<AgentConfigEntity> buildQueryWrapper(int sum, AgentConfigEntity entity) {
+        LambdaQueryWrapper<AgentConfigEntity> queryWrapper = buildBaseWrapper(entity);
         if (sum == 1) {
             return queryWrapper;
         }

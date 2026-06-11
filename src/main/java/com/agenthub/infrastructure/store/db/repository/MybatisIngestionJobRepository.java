@@ -58,13 +58,18 @@ public class MybatisIngestionJobRepository implements IngestionJobRepository {
      * 将领域对象转换为数据库实体。
      */
     private IngestionJobEntity toEntity(IngestionJob job) {
-        IngestionJobEntity entity = new IngestionJobEntity();
-        entity.setId(job.getJobId());
-        entity.setKbId(job.getKbId());
+        IngestionJobEntity entity = initBaseEntity(job);
         entity.setStatus(job.getStatus().name());
         entity.setProgress(0);
         entity.setDocumentCount(job.getDocumentCount());
         entity.setErrorMessage(job.getErrorMessage());
+        return entity;
+    }
+
+    private IngestionJobEntity initBaseEntity(IngestionJob job) {
+        IngestionJobEntity entity = new IngestionJobEntity();
+        entity.setId(job.getJobId());
+        entity.setKbId(job.getKbId());
         entity.setCreatedAt(job.getCreatedAt());
         entity.setUpdatedAt(job.getUpdatedAt());
         return entity;
@@ -87,15 +92,13 @@ public class MybatisIngestionJobRepository implements IngestionJobRepository {
      * 应用状态转换。
      */
     private IngestionJob applyStatus(IngestionJob job, String status, String errorMessage) {
-        return switch (status) {
-            case "PENDING" -> job;
-            case "PARSING" -> job.markParsing();
-            case "CLEANING" -> job.markCleaning();
-            case "CHUNKING" -> job.markChunking();
-            case "VECTORIZING" -> job.markVectorizing();
-            case "COMPLETED" -> job.markCompleted();
-            case "FAILED" -> job.markFailed(errorMessage != null ? errorMessage : "Unknown error");
-            default -> job;
-        };
+        if (status == null || "PENDING".equals(status)) return job;
+        if ("PARSING".equals(status)) return job.markParsing();
+        if ("CLEANING".equals(status)) return job.markCleaning();
+        if ("CHUNKING".equals(status)) return job.markChunking();
+        if ("VECTORIZING".equals(status)) return job.markVectorizing();
+        if ("COMPLETED".equals(status)) return job.markCompleted();
+        if ("FAILED".equals(status)) return job.markFailed(errorMessage != null ? errorMessage : "Unknown error");
+        return job;
     }
 }

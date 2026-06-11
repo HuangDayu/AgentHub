@@ -87,17 +87,26 @@ public class GuardrailStrategy {
      */
     public static GuardrailStrategy rebuild(State state) {
         GuardrailStrategy strategy = new GuardrailStrategy(state.getId(), state.getWorkspaceId(), state.getCreatedAt());
+        applyState(strategy, state);
+        return strategy;
+    }
+
+    private static void applyState(GuardrailStrategy strategy, State state) {
         strategy.name = state.getName();
         strategy.description = state.getDescription();
+        applyFlags(strategy, state);
+        strategy.maxInputLength = state.getMaxInputLength() != null ? state.getMaxInputLength() : 10000;
+        strategy.maxOutputLength = state.getMaxOutputLength() != null ? state.getMaxOutputLength() : 4000;
+        strategy.updatedAt = state.getUpdatedAt();
+    }
+
+    /** 应用布尔开关字段。 */
+    private static void applyFlags(GuardrailStrategy strategy, State state) {
         strategy.inputValidationEnabled = Boolean.TRUE.equals(state.getInputValidationEnabled());
         strategy.outputValidationEnabled = Boolean.TRUE.equals(state.getOutputValidationEnabled());
         strategy.piiDetectionEnabled = Boolean.TRUE.equals(state.getPiiDetectionEnabled());
         strategy.piiMaskingEnabled = Boolean.TRUE.equals(state.getPiiMaskingEnabled());
         strategy.promptInjectionDetection = Boolean.TRUE.equals(state.getPromptInjectionDetection());
-        strategy.maxInputLength = state.getMaxInputLength() != null ? state.getMaxInputLength() : 10000;
-        strategy.maxOutputLength = state.getMaxOutputLength() != null ? state.getMaxOutputLength() : 4000;
-        strategy.updatedAt = state.getUpdatedAt();
-        return strategy;
     }
 
     /**
@@ -107,15 +116,19 @@ public class GuardrailStrategy {
      * @return 验证结果
      */
     public ValidationResult validateInput(String input) {
-        List<String> violations = new ArrayList<>();
         if (input == null || input.isEmpty()) {
             return ValidationResult.pass();
         }
+        return toResult(collectViolations(input));
+    }
+
+    private List<String> collectViolations(String input) {
+        List<String> violations = new ArrayList<>();
         validateInputLength(input, violations);
         validateHarmfulContent(input, violations);
         validatePii(input, violations);
         validatePromptInjection(input, violations);
-        return toResult(violations);
+        return violations;
     }
 
     /**

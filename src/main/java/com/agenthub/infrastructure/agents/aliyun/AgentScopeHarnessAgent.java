@@ -141,7 +141,7 @@ public class AgentScopeHarnessAgent extends AbstractReActAgent {
         if (event.isLast() && msg.getChatUsage() != null) {
             return buildUsageMessage(msg, messageType, event);
         }
-        return buildContentMessage(msg, messageType, event);
+        return buildContentMessageWithTools(msg, messageType, event);
     }
 
     /** 构建含 token 使用量的消息。 */
@@ -155,31 +155,37 @@ public class AgentScopeHarnessAgent extends AbstractReActAgent {
                 toMetadata(event, "STOP"));
     }
 
-    /** 构建含内容的消息。 */
-    private AgentMessage buildContentMessage(Msg msg,
-                                             AgentMessage.MessageType messageType,
-                                             Event event) {
+    /** 构建含工具调用的内容消息。 */
+    private AgentMessage buildContentMessageWithTools(Msg msg, AgentMessage.MessageType messageType,
+                                                        Event event) {
         List<AgentMessage.ToolCall> toolCalls = toToolCalls(msg);
-        String finishReason = !toolCalls.isEmpty()
-                ? "TOOL_CALLS" : event.getType().name();
-        AgentMessage agentMessage = new AgentMessage(messageType,
-                event.isLast() ? "" : msg.getTextContent(),
-                toMetadata(event, finishReason));
+        AgentMessage agentMessage = new AgentMessage(messageType, event.isLast() ? "" : msg.getTextContent(), toMetadata(event, resolveFinishReason(toolCalls, event)));
         agentMessage.setToolCalls(toolCalls);
         agentMessage.setResponses(toToolResults(msg));
         return agentMessage;
     }
 
+    /** 解析完成原因。 */
+    private String resolveFinishReason(List<AgentMessage.ToolCall> toolCalls, Event event) {
+        return !toolCalls.isEmpty() ? "TOOL_CALLS" : event.getType().name();
+    }
+
+    /** 填充元数据。 */
     private Map<String, Object> toMetadata(Event event, String finishReason) {
+        Map<String, Object> metadata = event.getMessage().getMetadata();
+        populateMetadata(event, finishReason, metadata);
+        return metadata;
+    }
+
+    /** 设置元数据字段。 */
+    private void populateMetadata(Event event, String finishReason, Map<String, Object> metadata) {
         AgentMessage.MessageType messageType = AgentMessage.MessageType
                 .valueOf(event.getMessage().getRole().name());
-        Map<String, Object> metadata = event.getMessage().getMetadata();
         metadata.put("role", messageType);
         metadata.put("finishReason", finishReason);
         metadata.put("messageId", event.getMessageId());
         metadata.put("source", event.getSource());
         metadata.put("messageType", messageType);
-        return metadata;
     }
 
     private List<AgentMessage.ToolCall> toToolCalls(Msg msg) {

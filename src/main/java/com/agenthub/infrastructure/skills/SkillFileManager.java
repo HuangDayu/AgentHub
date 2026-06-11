@@ -157,11 +157,15 @@ public class SkillFileManager implements SkillToolScannerPort {
         node.put("name", currentPath.getFileName().toString());
         node.put("path", rootPath.relativize(currentPath).toString().replace("\\", "/"));
         BasicFileAttributes attrs = Files.readAttributes(currentPath, BasicFileAttributes.class);
+        putFileAttributes(node, attrs);
+        if (attrs.isDirectory()) addChildren(rootPath, currentPath, node);
+        return node;
+    }
+
+    private void putFileAttributes(Map<String, Object> node, BasicFileAttributes attrs) {
         node.put("isDirectory", attrs.isDirectory());
         node.put("size", attrs.size());
         node.put("lastModified", attrs.lastModifiedTime().toInstant().toString());
-        if (attrs.isDirectory()) addChildren(rootPath, currentPath, node);
-        return node;
     }
 
     private void addChildren(Path rootPath, Path currentPath, Map<String, Object> node) throws IOException {

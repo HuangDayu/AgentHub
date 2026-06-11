@@ -86,14 +86,18 @@ public class ClawHubAdapter implements SkillMarketPort {
     private MarketSkillSummary toSummary(Map<String, Object> item) {
         MarketSkillSummary s = new MarketSkillSummary();
         s.setMarketId("clawhub");
+        populateSummary(s, item);
+        s.setUpdatedAt(parseInstant(item.get("updatedAt")));
+        return s;
+    }
+
+    private static void populateSummary(MarketSkillSummary s, Map<String, Object> item) {
         s.setSkillId(str(item, "slug"));
         s.setSkillCode(str(item, "slug"));
         s.setName(str(item, "displayName"));
         s.setDescription(str(item, "summary"));
         s.setAuthor(str(item, "ownerHandle"));
         s.setVersion(str(item, "version"));
-        s.setUpdatedAt(parseInstant(item.get("updatedAt")));
-        return s;
     }
 
     @Override
@@ -144,7 +148,7 @@ public class ClawHubAdapter implements SkillMarketPort {
     /**
      * 解析时间戳（毫秒 epoch）。
      */
-    private Instant parseInstant(Object v) {
+    private static Instant parseInstant(Object v) {
         if (v instanceof Number n) {
             return Instant.ofEpochMilli(n.longValue());
         }
@@ -161,7 +165,7 @@ public class ClawHubAdapter implements SkillMarketPort {
     /**
      * 安全获取字符串值。
      */
-    private String str(Map m, String key) {
+    private static String str(Map m, String key) {
         Object v = m.get(key);
         return v != null ? v.toString() : "";
     }
@@ -169,7 +173,7 @@ public class ClawHubAdapter implements SkillMarketPort {
     /**
      * 安全获取整数值。
      */
-    private int intVal(Map m, String key) {
+    private static int intVal(Map m, String key) {
         Object v = m.get(key);
         if (v instanceof Number n) return n.intValue();
         return 0;

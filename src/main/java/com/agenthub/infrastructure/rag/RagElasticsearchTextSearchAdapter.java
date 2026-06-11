@@ -96,20 +96,16 @@ public class RagElasticsearchTextSearchAdapter implements RagTextSearchPort {
             log.warn("Elasticsearch client not available, returning empty results for kbCode={}", kbId);
             return Collections.emptyList();
         }
-        return executeSearch(client, kbId, queryText, topK);
+        return executeSearch(kbId, queryText, topK);
     }
 
     /**
      * 获取或初始化客户端。
      */
     private ElasticsearchClient getClient() {
-        if (initialized) {
-            return elasticsearchClient;
-        }
+        if (initialized) return elasticsearchClient;
         synchronized (this) {
-            if (initialized) {
-                return elasticsearchClient;
-            }
+            if (initialized) return elasticsearchClient;
             return initializeClient();
         }
     }
@@ -119,12 +115,7 @@ public class RagElasticsearchTextSearchAdapter implements RagTextSearchPort {
      */
     private ElasticsearchClient initializeClient() {
         try {
-            RestClient restClient = RestClient.builder(new HttpHost(host, port)).build();
-            RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-            this.elasticsearchClient = new ElasticsearchClient(transport);
-            this.initialized = true;
-            log.info("Elasticsearch client initialized successfully, target={}:{}", host, port);
-            return this.elasticsearchClient;
+            return doInitializeClient();
         } catch (Exception e) {
             log.error("Failed to initialize Elasticsearch client, target={}:{}", host, port, e);
             this.initialized = true;
@@ -132,21 +123,42 @@ public class RagElasticsearchTextSearchAdapter implements RagTextSearchPort {
         }
     }
 
+    private ElasticsearchClient doInitializeClient() {
+        RestClient restClient = RestClient.builder(new HttpHost(host, port)).build();
+        RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
+        this.elasticsearchClient = new ElasticsearchClient(transport);
+        this.initialized = true;
+        log.info("Elasticsearch client initialized successfully, target={}:{}", host, port);
+        return this.elasticsearchClient;
+    }
+
+    /**
+     * 记录错误并返回空结果。
+     */
+    private List<RetrievalResult> logAndReturnEmpty(String message, String kbId, Exception e) {
+        log.error(message, kbId, e);
+        return Collections.emptyList();
+    }
+
     /**
      * 执行搜索请求。
      */
-    private List<RetrievalResult> executeSearch(ElasticsearchClient client, String kbId, String queryText, int topK) {
+    private List<RetrievalResult> executeSearch(String kbId, String queryText, int topK) {
         try {
-            SearchRequest searchRequest = buildSearchRequest(kbId, queryText, topK);
-            SearchResponse<Map> response = client.search(searchRequest, Map.class);
-            return toRetrievalResults(response);
+            return doExecuteSearch(kbId, queryText, topK);
         } catch (IOException e) {
-            log.error("Text search failed for kbCode={}", kbId, e);
-            return Collections.emptyList();
+            return logAndReturnEmpty("Text search failed for kbCode={}", kbId, e);
         } catch (ElasticsearchException e) {
-            log.error("Elasticsearch exception for kbCode={}", kbId, e);
-            return Collections.emptyList();
+            return logAndReturnEmpty("Elasticsearch exception for kbCode={}", kbId, e);
         }
+    }
+
+    private List<RetrievalResult> doExecuteSearch(String kbId, String queryText, int topK) throws IOException {
+        ElasticsearchClient client = getClient();
+        if (client == null) return Collections.emptyList();
+        SearchRequest searchRequest = buildSearchRequest(kbId, queryText, topK);
+        SearchResponse<Map> response = client.search(searchRequest, Map.class);
+        return toRetrievalResults(response);
     }
 
     /**

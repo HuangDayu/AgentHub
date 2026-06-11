@@ -111,6 +111,11 @@ public class SkillsMPAdapter implements SkillMarketPort {
      */
     private MarketSkillSummary toSummary(Map<String, Object> item) {
         MarketSkillSummary s = new MarketSkillSummary();
+        setSummaryFields(s, item);
+        return s;
+    }
+
+    private void setSummaryFields(MarketSkillSummary s, Map<String, Object> item) {
         s.setMarketId("skillsmp");
         s.setSkillId(str(item, "id"));
         s.setSkillCode(str(item, "name"));
@@ -119,7 +124,6 @@ public class SkillsMPAdapter implements SkillMarketPort {
         s.setAuthor(str(item, "author"));
         s.setStarCount(intVal(item, "stars"));
         s.setUpdatedAt(parseInstant(str(item, "updatedAt")));
-        return s;
     }
 
     @Override

@@ -50,14 +50,10 @@ public class MybatisExecutionPlanRepository implements ExecutionPlanRepository {
     @Override
     public Optional<ExecutionPlan> findActiveBySessionId(String sessionId) {
         LambdaQueryWrapper<ExecutionPlanEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ExecutionPlanEntity::getSessionId, sessionId)
-                .in(ExecutionPlanEntity::getStatus, "PLANNING", "EXECUTING")
-                .orderByDesc(ExecutionPlanEntity::getCreatedAt)
-                .last("LIMIT 1");
+        wrapper.eq(ExecutionPlanEntity::getSessionId, sessionId).in(ExecutionPlanEntity::getStatus, "PLANNING", "EXECUTING").orderByDesc(ExecutionPlanEntity::getCreatedAt).last("LIMIT 1");
         ExecutionPlanEntity planEntity = planMapper.selectOne(wrapper);
         if (planEntity == null) return Optional.empty();
-        List<PlanStep> steps = findStepsByPlanId(planEntity.getId());
-        return Optional.of(toDomain(planEntity, steps));
+        return Optional.of(toDomain(planEntity, findStepsByPlanId(planEntity.getId())));
     }
 
     @Override

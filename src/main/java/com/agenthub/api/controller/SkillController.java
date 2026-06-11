@@ -2,6 +2,7 @@ package com.agenthub.api.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.CreateSkillFromUrlRequest;
+import com.agenthub.api.dto.CreateSkillFromUploadRequest;
 import com.agenthub.api.dto.CreateSkillRequest;
 import com.agenthub.api.dto.SkillResponse;
 import com.agenthub.application.command.CreateSkillCommand;
@@ -64,13 +65,11 @@ public class SkillController {
     @ResponseStatus(HttpStatus.CREATED)
     public SkillResponse createFromUpload(
             @PathVariable String workspaceId,
-            @RequestParam(required = false) String skillCode,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String description,
+            @RequestPart("request") CreateSkillFromUploadRequest request,
             @RequestParam("file") MultipartFile file) throws Exception {
         return toResponse(useCase.createFromUpload(CreateSkillCommand.builder().workspaceId(workspaceId)
-                .skillCode(skillCode).name(name).skillType("UPLOADED").source("UPLOAD")
-                .sourcePath(file.getOriginalFilename()).description(description)
+                .skillCode(request.getSkillCode()).name(request.getName()).skillType("UPLOADED").source("UPLOAD")
+                .sourcePath(file.getOriginalFilename()).description(request.getDescription())
                 .zipStream(file.getInputStream()).zipSize(file.getSize()).build()));
     }
 

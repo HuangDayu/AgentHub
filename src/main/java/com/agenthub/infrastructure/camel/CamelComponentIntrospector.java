@@ -5,6 +5,9 @@ import com.agenthub.domain.model.AgentDataSourceField;
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
 import org.springframework.stereotype.Component;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -73,38 +76,48 @@ public class CamelComponentIntrospector {
 
     private List<AgentDataSourceField> jdbcFields() {
         return Arrays.asList(
-            setField("host", "string", true, "localhost", "Database host"),
-            setField("port", "integer", true, "5432", "Database port"),
-            setField("database", "string", true, null, "Database name"),
-            setField("username", "string", true, null, "Username"),
-            setField("password", "password", true, null, "Password")
+            setField(new FieldDef("host", "string", true, "localhost", "Database host")),
+            setField(new FieldDef("port", "integer", true, "5432", "Database port")),
+            setField(new FieldDef("database", "string", true, null, "Database name")),
+            setField(new FieldDef("username", "string", true, null, "Username")),
+            setField(new FieldDef("password", "password", true, null, "Password"))
         );
     }
 
     private List<AgentDataSourceField> httpFields() {
         return Arrays.asList(
-            setField("host", "string", true, "localhost", "HTTP host"),
-            setField("port", "integer", true, "8080", "HTTP port"),
-            setField("path", "string", false, "/", "URL path"),
-            setField("method", "string", false, "GET", "HTTP method")
+            setField(new FieldDef("host", "string", true, "localhost", "HTTP host")),
+            setField(new FieldDef("port", "integer", true, "8080", "HTTP port")),
+            setField(new FieldDef("path", "string", false, "/", "URL path")),
+            setField(new FieldDef("method", "string", false, "GET", "HTTP method"))
         );
     }
 
     private List<AgentDataSourceField> kafkaFields() {
         return Arrays.asList(
-            setField("brokers", "string", true, "localhost:9092", "Bootstrap servers"),
-            setField("topic", "string", true, null, "Topic name")
+            setField(new FieldDef("brokers", "string", true, "localhost:9092", "Bootstrap servers")),
+            setField(new FieldDef("topic", "string", true, null, "Topic name"))
         );
     }
 
-    private AgentDataSourceField setField(String name, String type, boolean required,
-                                          String defaultValue, String description) {
+    private AgentDataSourceField setField(FieldDef def) {
         AgentDataSourceField f = new AgentDataSourceField();
-        f.setName(name);
-        f.setType(type);
-        f.setRequired(required);
-        f.setDefaultValue(defaultValue);
-        f.setDescription(description);
+        f.setName(def.getName());
+        f.setType(def.getType());
+        f.setRequired(def.isRequired());
+        f.setDefaultValue(def.getDefaultValue());
+        f.setDescription(def.getDescription());
         return f;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class FieldDef {
+        private String name;
+        private String type;
+        private boolean required;
+        private String defaultValue;
+        private String description;
     }
 }

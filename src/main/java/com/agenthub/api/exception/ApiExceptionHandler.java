@@ -42,18 +42,20 @@ public class ApiExceptionHandler {
     private ErrorResponse handlerException(Exception exception, int status) {
         String messageId = randomId();
         String requestPath = getRequestPath();
-        logException(exception, status, messageId, requestPath);
+        logException(exception, status, messageId);
         return createErrorResponse(status, exception.getMessage(), messageId);
     }
 
     /**
      * 记录异常日志信息。
      */
-    private void logException(Exception exception, int status, String messageId, String requestPath) {
-        String message = exception.getMessage();
-        String logMsg = String.format("Api [%s] exception, status: %s, messageId: %s, message: %s, stackTrace:\n",
-                requestPath, status, messageId, message);
-        log.error(logMsg, exception);
+    private void logException(Exception exception, int status, String messageId) {
+        log.error(buildLogMessage(exception, status, messageId), exception);
+    }
+
+    private static String buildLogMessage(Exception exception, int status, String messageId) {
+        return String.format("Api [%s] exception, status: %s, messageId: %s, message: %s, stackTrace:\n",
+                getRequestPath(), status, messageId, exception.getMessage());
     }
 
     /**
@@ -116,15 +118,16 @@ public class ApiExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleRuntime(Exception exception) {
         if (exception.getClass().getName().startsWith("io.jsonwebtoken")) {
-            ErrorResponse errorResponse = handlerException(exception, HttpStatus.UNAUTHORIZED.value());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(errorResponse);
+            return buildErrorResponse(exception, HttpStatus.UNAUTHORIZED);
         }
-        ErrorResponse errorResponse = handlerException(exception, HttpStatus.INTERNAL_SERVER_ERROR.value());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        return buildErrorResponse(exception, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private ResponseEntity<ErrorResponse> buildErrorResponse(Exception exception, HttpStatus status) {
+        ErrorResponse body = handlerException(exception, status.value());
+        return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(errorResponse);
+                .body(body);
     }
 
     /**

@@ -50,14 +50,18 @@ public class SmitheryPlatformClient implements McpPlatformClient {
     @Override
     public McpToolInfo getToolDetail(String qualifiedName) {
         try {
-            String url = PLATFORM.detailApiUrl() + "/" + qualifiedName;
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET,
-                    new HttpEntity<>(new HttpHeaders()), String.class);
+            ResponseEntity<String> response = exchangeDetail(qualifiedName);
             return parseToolDetail(response.getBody(), qualifiedName);
         } catch (Exception e) {
             log.error("Smithery获取工具详情失败: {}", qualifiedName, e);
             return null;
         }
+    }
+
+    private ResponseEntity<String> exchangeDetail(String qualifiedName) {
+        String url = PLATFORM.detailApiUrl() + "/" + qualifiedName;
+        return restTemplate.exchange(url, HttpMethod.GET,
+                new HttpEntity<>(new HttpHeaders()), String.class);
     }
 
     @Override

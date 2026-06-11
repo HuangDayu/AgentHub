@@ -67,9 +67,7 @@ public class RagKeywordRerankerAdapter implements RagRerankerPort {
      */
     @Override
     public List<RetrievalResult> rerank(String queryText, List<RetrievalResult> results) {
-        if (results == null || results.isEmpty() || queryText == null || queryText.isBlank()) {
-            return results;
-        }
+        if (results == null || results.isEmpty() || queryText == null || queryText.isBlank()) return results;
         Set<String> queryKeywords = extractKeywords(queryText);
         if (queryKeywords.isEmpty()) {
             log.debug("No valid keywords extracted from prompt, returning original order");
@@ -84,15 +82,9 @@ public class RagKeywordRerankerAdapter implements RagRerankerPort {
      */
     private List<RetrievalResult> sortResults(List<RetrievalResult> results, Set<String> queryKeywords) {
         List<RetrievalResult> reranked = results.stream()
-                .sorted((r1, r2) -> {
-                    double score1 = computeFinalScore(r1, queryKeywords);
-                    double score2 = computeFinalScore(r2, queryKeywords);
-                    return Double.compare(score2, score1);
-                })
+                .sorted((r1, r2) -> Double.compare(computeFinalScore(r2, queryKeywords), computeFinalScore(r1, queryKeywords)))
                 .collect(Collectors.toList());
-        if (log.isDebugEnabled()) {
-            log.debug("Reranking complete. Top result changed: {}", !Objects.equals(results.get(0).getChunkId(), reranked.get(0).getChunkId()));
-        }
+        if (log.isDebugEnabled()) log.debug("Reranking complete. Top result changed: {}", !Objects.equals(results.get(0).getChunkId(), reranked.get(0).getChunkId()));
         return reranked;
     }
 
@@ -108,13 +100,9 @@ public class RagKeywordRerankerAdapter implements RagRerankerPort {
      * 计算文档内容与查询关键词的匹配分数。
      */
     private double computeKeywordScore(String content, Set<String> queryKeywords) {
-        if (content == null || content.isBlank()) {
-            return 0.0;
-        }
+        if (content == null || content.isBlank()) return 0.0;
         Set<String> docKeywords = extractKeywords(content);
-        if (docKeywords.isEmpty()) {
-            return 0.0;
-        }
+        if (docKeywords.isEmpty()) return 0.0;
         double coverage = computeCoverage(queryKeywords, docKeywords);
         double normalizedFreq = computeNormalizedFreq(content, queryKeywords);
         return 0.7 * coverage + 0.3 * normalizedFreq;
@@ -146,14 +134,10 @@ public class RagKeywordRerankerAdapter implements RagRerankerPort {
      * 从文本中提取关键词。
      */
     private Set<String> extractKeywords(String text) {
-        if (text == null || text.isBlank()) {
-            return Collections.emptySet();
-        }
+        if (text == null || text.isBlank()) return Collections.emptySet();
         Set<String> keywords = new HashSet<>();
         String lowerText = text.toLowerCase();
-        if (CJK_PATTERN.matcher(lowerText).find()) {
-            keywords.addAll(extractChineseKeywords(lowerText));
-        }
+        if (CJK_PATTERN.matcher(lowerText).find()) keywords.addAll(extractChineseKeywords(lowerText));
         addEnglishKeywords(lowerText, keywords);
         return keywords;
     }

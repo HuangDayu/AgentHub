@@ -32,45 +32,36 @@ public class SystemPromptBuilderUseCase {
         return sb.toString();
     }
 
+    /**
+     * 构建工具区域。
+     */
     private String buildToolSection(List<AgentConfig> configs) {
         List<AgentConfig> tools = filterByCategory(configs, AgentConfigCategory.TOOL);
         if (tools.isEmpty()) return "";
-        StringBuilder sb = new StringBuilder();
-        sb.append("### 工具（").append(tools.size()).append("个）\n");
-        for (AgentConfig t : tools) {
-            sb.append("- ").append(t.getName());
-            if (t.getDescription() != null && !t.getDescription().isBlank()) {
-                sb.append(": ").append(truncate(t.getDescription(), 50));
-            }
-            sb.append("\n");
-        }
+        StringBuilder sb = new StringBuilder(buildSectionHeader("工具", tools.size()));
+        tools.forEach(t -> sb.append(buildDescriptionLine(t)));
         return sb.append("\n").toString();
     }
 
+    /**
+     * 构建模型区域。
+     */
     private String buildModelSection(List<AgentConfig> configs) {
         List<AgentConfig> models = filterByCategory(configs, AgentConfigCategory.MODEL);
         if (models.isEmpty()) return "";
-        StringBuilder sb = new StringBuilder();
-        sb.append("### 模型（").append(models.size()).append("个）\n");
-        for (AgentConfig m : models) {
-            sb.append("- ").append(m.getName());
-            sb.append(" [").append(m.getType()).append("]\n");
-        }
+        StringBuilder sb = new StringBuilder(buildSectionHeader("模型", models.size()));
+        models.forEach(m -> sb.append(buildModelLine(m)));
         return sb.append("\n").toString();
     }
 
+    /**
+     * 构建知识库区域。
+     */
     private String buildKnowledgeSection(List<AgentConfig> configs) {
         List<AgentConfig> kbs = filterByType(configs, AgentConfigType.KNOWLEDGE_BASE);
         if (kbs.isEmpty()) return "";
-        StringBuilder sb = new StringBuilder();
-        sb.append("### 知识库（").append(kbs.size()).append("个）\n");
-        for (AgentConfig kb : kbs) {
-            sb.append("- ").append(kb.getName());
-            if (kb.getDescription() != null && !kb.getDescription().isBlank()) {
-                sb.append(": ").append(truncate(kb.getDescription(), 50));
-            }
-            sb.append("\n");
-        }
+        StringBuilder sb = new StringBuilder(buildSectionHeader("知识库", kbs.size()));
+        kbs.forEach(kb -> sb.append(buildDescriptionLine(kb)));
         return sb.append("\n").toString();
     }
 
@@ -89,5 +80,30 @@ public class SystemPromptBuilderUseCase {
     private String truncate(String text, int maxLen) {
         if (text == null) return "";
         return text.length() > maxLen ? text.substring(0, maxLen) + "..." : text;
+    }
+
+    /**
+     * 构建区域标题行。
+     */
+    private String buildSectionHeader(String prefix, int count) {
+        return "### " + prefix + "（" + count + "个）\n";
+    }
+
+    /**
+     * 构建带描述的单行条目。
+     */
+    private String buildDescriptionLine(AgentConfig config) {
+        String line = "- " + config.getName();
+        if (config.getDescription() != null && !config.getDescription().isBlank()) {
+            line += ": " + truncate(config.getDescription(), 50);
+        }
+        return line + "\n";
+    }
+
+    /**
+     * 构建带类型的单行条目。
+     */
+    private String buildModelLine(AgentConfig config) {
+        return "- " + config.getName() + " [" + config.getType() + "]\n";
     }
 }

@@ -47,9 +47,7 @@ public class RagSpringQueryRewriteAdapter implements RagQueryRewritePort {
      */
     @Override
     public String rewrite(String kbId, String queryText) {
-        if (queryText == null || queryText.isBlank()) {
-            return queryText;
-        }
+        if (queryText == null || queryText.isBlank()) return queryText;
         try {
             ChatModel chatModel = springShareObjectFactory.getChatModelByKbId(kbId);
             return callLlmForRewrite(chatModel, queryText);

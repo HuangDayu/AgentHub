@@ -90,29 +90,16 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
     private Map<String, Object> resolveVariables(
             Map<String, Object> mapping, DagWorkflowContext context) {
         Map<String, Object> resolved = new HashMap<>();
-
-        for (Map.Entry<String, Object> entry : mapping.entrySet()) {
-            Object value = entry.getValue();
-            if (value instanceof String str) {
-                resolved.put(entry.getKey(), variableResolver.resolveTemplateString(str, context));
-            } else {
-                resolved.put(entry.getKey(), value);
-            }
-        }
-
+        mapping.forEach((key, value) -> resolved.put(key,
+                value instanceof String str ? variableResolver.resolveTemplateString(str, context) : value));
         return resolved;
     }
 
     private Mono<Map<String, Object>> executeSubWorkflow(
             ExecutionCommand command, DagWorkflowNode node, DagWorkflowContext context) {
-        log.info("Executing sub-workflow: {}", command.getWorkflowId());
-
-        // 延迟获取 executionPort
-        DagWorkflowExecutionPort executionPort = executionPortProvider.getObject();
-        
-        int timeout = getTimeout(node);
+        var executionPort = executionPortProvider.getObject();
         return executionPort.initializeContext(command)
-            .timeout(java.time.Duration.ofSeconds(timeout))
+            .timeout(java.time.Duration.ofSeconds(getTimeout(node)))
             .flatMap(ctx -> executionPort.executeWorkflow(ctx)
                 .then(statePort.loadContext(ctx.getExecutionId()))
                 .map(opt -> opt.orElse(ctx)))
@@ -131,10 +118,8 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
             DagWorkflowNode node, DagWorkflowContext context) {
         Map<String, Object> result = createBaseResult(ctx, command);
         Map<String, Object> mappedOutput = applyOutputMapping(ctx, node);
-
         saveToContext(mappedOutput, context);
         result.put("output", mappedOutput);
-
         log.info("Sub-workflow completed: {}", command.getWorkflowId());
         return result;
     }
@@ -170,16 +155,12 @@ public class SubWorkflowNodeProcessor extends AbstractNodeProcessor {
     }
 
     private Object extractByPath(Map<String, Object> data, String path) {
-        if (path == null || path.isEmpty()) {
-            return data;
-        }
-
+        if (path == null || path.isEmpty()) return data;
         Object current = data;
         for (String part : path.split("\\.")) {
             current = extractPart(current, part);
             if (current == null) return null;
         }
-
         return current;
     }
 

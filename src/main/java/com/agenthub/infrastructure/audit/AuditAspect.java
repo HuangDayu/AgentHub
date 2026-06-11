@@ -65,12 +65,13 @@ public class AuditAspect {
         long start = System.currentTimeMillis();
         Audited audited = method.getAnnotation(Audited.class);
         return audited != null
-                ? buildFromAnnotation(audited, pjp, method, start)
+                ? buildFromAnnotation(audited, pjp, method)
                 : buildFromInference(pjp, method, start);
     }
 
     private AuditEvent buildFromAnnotation(Audited audited, ProceedingJoinPoint pjp,
-                                            Method method, long start) {
+                                            Method method) {
+        long start = System.currentTimeMillis();
         AuditEvent e = newEvent(pjp, method, start);
         e.setResourceType(AuditResourceType.valueOf(audited.resourceType()));
         e.setAction(AuditAction.valueOf(resolveAction(audited.action(), method)));

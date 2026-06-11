@@ -2,6 +2,7 @@ package com.agenthub.test.integration;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.agenthub.api.dto.CreateSkillFromUploadRequest;
 import com.agenthub.test.TestAgentHubApplication;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,12 +53,14 @@ class SkillFileControllerIntegrationTest {
                 zipContent
         );
 
+        String requestJson = objectMapper.writeValueAsString(
+                new CreateSkillFromUploadRequest("test-upload-skill", "Test Upload Skill", "An uploaded skill for testing"));
+        MockMultipartFile requestPart = new MockMultipartFile(
+                "request", "request.json", "application/json", requestJson.getBytes());
+
         String responseBody = mockMvc.perform(multipart("/api/v1/workspaces/{workspaceId}/skills/from-upload", WORKSPACE_ID)
                         .file(file)
-                        .param("tenantId", TENANT_ID)
-                        .param("skillCode", "test-upload-skill")
-                        .param("name", "Test Upload Skill")
-                        .param("description", "An uploaded skill for testing"))
+                        .file(requestPart))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.skillCode").value("test-upload-skill"))

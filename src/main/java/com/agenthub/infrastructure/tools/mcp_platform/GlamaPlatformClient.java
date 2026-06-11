@@ -50,14 +50,21 @@ public class GlamaPlatformClient implements McpPlatformClient {
     @Override
     public McpToolInfo getToolDetail(String qualifiedName) {
         try {
-            String url = PLATFORM.detailApiUrl() + "/" + qualifiedName;
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET,
-                    new HttpEntity<>(new HttpHeaders()), String.class);
-            return parseToolDetail(response.getBody(), qualifiedName);
+            return fetchToolDetail(qualifiedName);
         } catch (Exception e) {
             log.error("Glama获取工具详情失败: {}", qualifiedName, e);
             return null;
         }
+    }
+
+    /**
+     * 执行 Glama API 请求并解析工具详情。
+     */
+    private McpToolInfo fetchToolDetail(String qualifiedName) {
+        String url = PLATFORM.detailApiUrl() + "/" + qualifiedName;
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET,
+                new HttpEntity<>(new HttpHeaders()), String.class);
+        return parseToolDetail(response.getBody(), qualifiedName);
     }
 
     @Override

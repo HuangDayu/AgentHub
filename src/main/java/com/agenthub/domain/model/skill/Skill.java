@@ -34,12 +34,12 @@ public class Skill {
     /**
      * 创建同步技能。
      */
-    public static Skill createSynced(String tenantId, String workspaceId, String skillCode, String name, String description, String skillPath) {
+    public static Skill createSynced(CreateSpec spec) {
         Skill skill = createBase();
-        skill.tenantId = tenantId; skill.workspaceId = workspaceId;
-        skill.skillCode = skillCode; skill.name = name; skill.description = description;
+        skill.tenantId = spec.tenantId; skill.workspaceId = spec.workspaceId;
+        skill.skillCode = spec.skillCode; skill.name = spec.name; skill.description = spec.description;
         skill.skillType = "SYNCED"; skill.source = "LOCAL";
-        skill.sourcePath = skillPath; skill.skillPath = skillPath;
+        skill.sourcePath = spec.extraPath; skill.skillPath = spec.extraPath;
         initTimestamps(skill);
         return skill;
     }
@@ -47,12 +47,12 @@ public class Skill {
     /**
      * 创建从 URL 上传的技能。
      */
-    public static Skill createFromUrl(String tenantId, String workspaceId, String skillCode, String name, String description, String zipUrl) {
+    public static Skill createFromUrl(CreateSpec spec) {
         Skill skill = createBase();
-        skill.tenantId = tenantId; skill.workspaceId = workspaceId;
-        skill.skillCode = skillCode; skill.name = name; skill.description = description;
+        skill.tenantId = spec.tenantId; skill.workspaceId = spec.workspaceId;
+        skill.skillCode = spec.skillCode; skill.name = spec.name; skill.description = spec.description;
         skill.skillType = "UPLOADED"; skill.source = "URL";
-        skill.sourcePath = zipUrl;
+        skill.sourcePath = spec.extraPath;
         initTimestamps(skill);
         return skill;
     }
@@ -60,13 +60,38 @@ public class Skill {
     /**
      * 创建从文件上传的技能。
      */
-    public static Skill createFromUpload(String tenantId, String workspaceId, String skillCode, String name, String description) {
+    public static Skill createFromUpload(CreateSpec spec) {
         Skill skill = createBase();
-        skill.tenantId = tenantId; skill.workspaceId = workspaceId;
-        skill.skillCode = skillCode; skill.name = name; skill.description = description;
+        skill.tenantId = spec.tenantId; skill.workspaceId = spec.workspaceId;
+        skill.skillCode = spec.skillCode; skill.name = spec.name; skill.description = spec.description;
         skill.skillType = "UPLOADED"; skill.source = "UPLOAD";
         initTimestamps(skill);
         return skill;
+    }
+
+    /**
+     * 创建技能规格。
+     */
+    public static final class CreateSpec {
+        private final String tenantId;
+        private final String workspaceId;
+        private final String skillCode;
+        private final String name;
+        private final String description;
+        private final String extraPath;
+
+        public CreateSpec(String tenantId, String workspaceId, String skillCode, String name, String description) {
+            this(tenantId, workspaceId, skillCode, name, description, null);
+        }
+
+        public CreateSpec(String tenantId, String workspaceId, String skillCode, String name, String description, String extraPath) {
+            this.tenantId = tenantId;
+            this.workspaceId = workspaceId;
+            this.skillCode = skillCode;
+            this.name = name;
+            this.description = description;
+            this.extraPath = extraPath;
+        }
     }
 
     /**

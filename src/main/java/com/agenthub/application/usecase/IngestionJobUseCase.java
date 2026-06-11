@@ -64,14 +64,21 @@ public class IngestionJobUseCase {
     public IngestionJob uploadDocument(UploadDocumentCommand command) {
         validateUploadParams(command.getKbId(), command.getFileName(), command.getStoragePath());
         IngestionJob savedJob = createAndSaveJob(command.getKbId());
-        IngestionDocument.CreationSpec spec = new IngestionDocument.CreationSpec(
-                command.getKbId(), savedJob.getJobId(), command.getFileName(),
-                command.getContentType(), command.getSize(), command.getStoragePath());
-        IngestionDocument document = saveDocument(spec);
+        IngestionDocument document = createAndSaveDocument(command, savedJob);
         log.info("Document uploaded: jobId={}, documentId={}, storagePath={}",
                 savedJob.getJobId(), document.getId(), command.getStoragePath());
         pipelineService.execute(savedJob.getJobId());
         return savedJob;
+    }
+
+    /**
+     * 创建并持久化文档记录。
+     */
+    private IngestionDocument createAndSaveDocument(UploadDocumentCommand command, IngestionJob savedJob) {
+        IngestionDocument.CreationSpec spec = new IngestionDocument.CreationSpec(
+                command.getKbId(), savedJob.getJobId(), command.getFileName(),
+                command.getContentType(), command.getSize(), command.getStoragePath());
+        return saveDocument(spec);
     }
 
     /**

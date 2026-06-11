@@ -65,8 +65,13 @@ public class SkillFile {
      */
     public static SkillFile create(CreationSpec spec) {
         SkillFile file = new SkillFile();
-        Instant now = Instant.now();
         applySpecToFile(file, spec);
+        initFileMetadata(file, spec);
+        return file;
+    }
+
+    private static void initFileMetadata(SkillFile file, CreationSpec spec) {
+        Instant now = Instant.now();
         file.id = randomId();
         file.fileName = extractFileName(spec.filePath);
         file.fileExt = extractExtension(spec.filePath);
@@ -74,7 +79,6 @@ public class SkillFile {
         file.version = 1;
         file.createdAt = now;
         file.updatedAt = now;
-        return file;
     }
 
     private static void applySpecToFile(SkillFile file, CreationSpec spec) {

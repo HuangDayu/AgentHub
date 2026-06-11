@@ -6,6 +6,7 @@ import com.agenthub.domain.model.PromptTemplateInfo;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.AgentPromptTemplateDTO;
+import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.TemplateSpec;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -36,24 +37,44 @@ public class PromptTools {
                 .collect(Collectors.toList());
     }
 
-    @Tool(description = "创建新的提示模板")
-    public AgentPromptTemplateDTO createPromptTemplate(ToolContext toolContext,
-                                                         @ToolParam(description = "模板名称") String name,
-                                                         @ToolParam(description = "模板描述") String description,
-                                                         @ToolParam(description = "模板类别(SYSTEM/USER/ASSISTANT/GENERAL)") String category,
-                                                         @ToolParam(description = "模板内容") String content,
-                                                         @ToolParam(description = "是否启用", required = false) Boolean active) {
-        ReActAgentContext ctx = getAgentContext(toolContext);
+    /**
+     * 构建PromptTemplateInfo并设置基本字段。
+     */
+    private PromptTemplateInfo buildTemplate(TemplateSpec spec) {
         PromptTemplateInfo template = new PromptTemplateInfo();
+        initTemplateContext(template, spec.getCtx());
+        template.setName(spec.getName());
+        template.setDescription(spec.getDescription());
+        template.setCategory(PromptTemplateInfo.Category.valueOf(spec.getCategory().toUpperCase()));
+        template.setContent(spec.getContent());
+        template.setActive(spec.getActive() != null && spec.getActive());
+        return template;
+    }
+
+    /** 初始化模板上下文信息。 */
+    private void initTemplateContext(PromptTemplateInfo template, ReActAgentContext ctx) {
         template.setTenantId(ctx.getAgent().getTenantId());
         template.setWorkspaceId(ctx.getWorkspace().getWorkspace().getId());
-        template.setName(name);
-        template.setDescription(description);
-        template.setCategory(PromptTemplateInfo.Category.valueOf(category.toUpperCase()));
-        template.setContent(content);
-        template.setActive(active != null && active);
+    }
+
+    /**
+     * 执行创建模板并持久化。
+     */
+    private AgentPromptTemplateDTO doCreateTemplate(TemplateSpec spec) {
+        PromptTemplateInfo template = buildTemplate(spec);
         template.setCreatedAt(Instant.now());
         template.setUpdatedAt(Instant.now());
         return BeanUtil.copyProperties(promptTemplateRepository.save(template), AgentPromptTemplateDTO.class);
+    }
+
+    @Tool(description = "创建新的提示模板")
+    public AgentPromptTemplateDTO createPromptTemplate(ToolContext toolContext,
+                                                           @ToolParam(description = "模板名称") String name,
+                                                           @ToolParam(description = "模板描述") String description,
+                                                           @ToolParam(description = "模板类别(SYSTEM/USER/ASSISTANT/GENERAL)") String category,
+                                                           @ToolParam(description = "模板内容") String content,
+                                                           @ToolParam(description = "是否启用", required = false) Boolean active) {
+        TemplateSpec spec = new TemplateSpec(name, description, category, content, active, getAgentContext(toolContext));
+        return doCreateTemplate(spec);
     }
 }

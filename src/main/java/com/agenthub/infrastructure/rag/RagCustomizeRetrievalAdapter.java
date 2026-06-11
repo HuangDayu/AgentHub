@@ -59,10 +59,9 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
      */
     private List<RetrievalChunk> retrieveFromKnowledgeBase(String kbId, RagCommand query) {
         try {
-            RetrievalOutput result = retrieve(buildRetrievalCommand(kbId, query));
-            return addChunksToResult(result, kbId);
+            return addChunksToResult(retrieve(buildRetrievalCommand(kbId, query)), kbId);
         } catch (NotFoundException e) {
-            log.warn("Knowledge base not found during retrieval: {}, skipping", kbId);
+            log.warn("Knowledge base not found, skipping: {}", kbId);
         } catch (Exception e) {
             log.error("Retrieval failed for knowledge base {}: {}", kbId, e.getMessage(), e);
         }
@@ -80,18 +79,12 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
      * 添加检索结果到块列表。
      */
     private List<RetrievalChunk> addChunksToResult(RetrievalOutput result, String kbId) {
-        List<RetrievalChunk> chunks = new ArrayList<>();
-        for (RetrievalResultOutput item : result.getResults()) {
-            chunks.add(new RetrievalChunk(
-                    item.getContent(),
-                    item.getDocumentId(),
-                    item.getDocumentId(),
-                    item.getChunkId(),
-                    item.getScore(),
-                    kbId
-            ));
-        }
-        return chunks;
+        return result.getResults().stream()
+                .map(item -> new RetrievalChunk(
+                        item.getContent(), item.getDocumentId(),
+                        item.getDocumentId(), item.getChunkId(),
+                        item.getScore(), kbId))
+                .toList();
     }
 
     /**
@@ -206,13 +199,17 @@ public class RagCustomizeRetrievalAdapter implements RagRetrievalPort {
         List<RetrievalResultOutput> outputResults = results.stream()
                 .map(r -> new RetrievalResultOutput(r.getDocumentId(), r.getChunkId(), r.getContent(), r.getScore(), r.getMetadata()))
                 .toList();
-        List<CitationOutput> outputCitations = IntStream.range(0, results.size())
+        List<CitationOutput> outputCitations = buildCitations(results);
+        return new RetrievalOutput(rewrittenQuery, outputResults, outputCitations);
+    }
+
+    private List<CitationOutput> buildCitations(List<RetrievalResult> results) {
+        return IntStream.range(0, results.size())
                 .mapToObj(i -> {
                     RetrievalResult r = results.get(i);
                     return new CitationOutput(i + 1, r.getDocumentId(), r.getChunkId(), excerpt(r.getContent()));
                 })
                 .toList();
-        return new RetrievalOutput(rewrittenQuery, outputResults, outputCitations);
     }
 
 

@@ -206,14 +206,18 @@ public class SkillMarketUseCase {
     private CreateSkillCommand buildInstallCommand(String workspaceId, MarketSkillDetail detail) {
         CreateSkillCommand command = new CreateSkillCommand();
         command.setWorkspaceId(workspaceId);
+        command.setSkillType("UPLOADED");
+        command.setSource("MARKET");
+        setDetailFields(command, detail);
+        return command;
+    }
+
+    private void setDetailFields(CreateSkillCommand command, MarketSkillDetail detail) {
         command.setSkillCode(detail.getSkillCode());
         command.setName(detail.getName());
         command.setDescription(detail.getDescription());
-        command.setSkillType("UPLOADED");
-        command.setSource("MARKET");
         command.setSourcePath(detail.getDownloadUrl());
         command.setZipUrl(detail.getDownloadUrl());
-        return command;
     }
 }
 

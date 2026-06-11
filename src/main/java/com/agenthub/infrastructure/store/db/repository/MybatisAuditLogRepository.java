@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,61 +59,61 @@ public class MybatisAuditLogRepository implements AuditLogRepository {
 
     private LambdaQueryWrapper<AuditLogEntity> buildQuery(AuditLogQuery query) {
         LambdaQueryWrapper<AuditLogEntity> q = new LambdaQueryWrapper<>();
-        if (StrUtil.isNotBlank(query.getTenantId())) {
-            q.eq(AuditLogEntity::getTenantId, query.getTenantId());
-        }
-        if (StrUtil.isNotBlank(query.getWorkspaceId())) {
-            q.eq(AuditLogEntity::getWorkspaceId, query.getWorkspaceId());
-        }
-        if (StrUtil.isNotBlank(query.getResourceType())) {
-            q.eq(AuditLogEntity::getResourceType, query.getResourceType());
-        }
-        if (StrUtil.isNotBlank(query.getResourceId())) {
-            q.eq(AuditLogEntity::getResourceId, query.getResourceId());
-        }
-        if (StrUtil.isNotBlank(query.getActorId())) {
-            q.eq(AuditLogEntity::getActorId, query.getActorId());
-        }
-        if (StrUtil.isNotBlank(query.getAction())) {
-            q.eq(AuditLogEntity::getAction, query.getAction());
-        }
-        if (StrUtil.isNotBlank(query.getStatus())) {
-            q.eq(AuditLogEntity::getStatus, query.getStatus());
-        }
-        if (query.getFrom() != null) {
-            q.ge(AuditLogEntity::getCreatedAt, query.getFrom());
-        }
-        if (query.getTo() != null) {
-            q.le(AuditLogEntity::getCreatedAt, query.getTo());
-        }
+        applyStringFilters(q, query);
+        applyDateFilters(q, query);
         return q;
+    }
+
+    private void applyStringFilters(LambdaQueryWrapper<AuditLogEntity> q, AuditLogQuery query) {
+        if (StrUtil.isNotBlank(query.getTenantId())) q.eq(AuditLogEntity::getTenantId, query.getTenantId());
+        if (StrUtil.isNotBlank(query.getWorkspaceId())) q.eq(AuditLogEntity::getWorkspaceId, query.getWorkspaceId());
+        if (StrUtil.isNotBlank(query.getResourceType())) q.eq(AuditLogEntity::getResourceType, query.getResourceType());
+        if (StrUtil.isNotBlank(query.getResourceId())) q.eq(AuditLogEntity::getResourceId, query.getResourceId());
+        if (StrUtil.isNotBlank(query.getActorId())) q.eq(AuditLogEntity::getActorId, query.getActorId());
+        if (StrUtil.isNotBlank(query.getAction())) q.eq(AuditLogEntity::getAction, query.getAction());
+        if (StrUtil.isNotBlank(query.getStatus())) q.eq(AuditLogEntity::getStatus, query.getStatus());
+    }
+
+    private void applyDateFilters(LambdaQueryWrapper<AuditLogEntity> q, AuditLogQuery query) {
+        if (query.getFrom() != null) q.ge(AuditLogEntity::getCreatedAt, query.getFrom());
+        if (query.getTo() != null) q.le(AuditLogEntity::getCreatedAt, query.getTo());
     }
 
     private AuditLogEntity toEntity(AuditEvent e) {
         AuditLogEntity entity = new AuditLogEntity();
         BeanUtil.copyProperties(e, entity);
+        setEnumFields(entity, e);
+        setJsonFields(entity, e);
+        return entity;
+    }
+
+    private void setEnumFields(AuditLogEntity entity, AuditEvent e) {
         if (e.getActorType() != null) entity.setActorType(e.getActorType().name());
         if (e.getResourceType() != null) entity.setResourceType(e.getResourceType().name());
         if (e.getAction() != null) entity.setAction(e.getAction().name());
         if (e.getStatus() != null) entity.setStatus(e.getStatus().name());
+    }
+
+    private void setJsonFields(AuditLogEntity entity, AuditEvent e) {
         if (e.getRequest() != null) entity.setRequest(JSONUtil.toJsonStr(e.getRequest()));
         if (e.getResponse() != null) entity.setResponse(JSONUtil.toJsonStr(e.getResponse()));
         if (e.getMetadata() != null) entity.setMetadata(JSONUtil.toJsonStr(e.getMetadata()));
-        return entity;
     }
 
     private AuditEvent toDomain(AuditLogEntity e) {
         if (e == null) return null;
         AuditEvent event = new AuditEvent();
         BeanUtil.copyProperties(e, event, "metadata");
-        if (StrUtil.isNotBlank(e.getMetadata())) {
-            try {
-                Map<String, Object> map = JSONUtil.toBean(e.getMetadata(), Map.class);
-                event.setMetadata(new java.util.HashMap<>(map));
-            } catch (Exception ignored) {
-                event.setMetadata(new java.util.HashMap<>());
-            }
-        }
+        event.setMetadata(parseMetadata(e.getMetadata()));
         return event;
+    }
+
+    private HashMap<String, Object> parseMetadata(String metadata) {
+        if (StrUtil.isNotBlank(metadata)) {
+            try {
+                return new HashMap<>(JSONUtil.toBean(metadata, Map.class));
+            } catch (Exception ignored) {}
+        }
+        return new HashMap<>();
     }
 }

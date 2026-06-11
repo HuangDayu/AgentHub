@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Agent 数据源/审计/Schema 视图转换器
@@ -238,42 +239,25 @@ public class AgentDataSourceViewMapper {
     }
 
     private static Set<OperationLevel> toOperationLevels(Set<String> raw) {
-        if (raw == null) return Set.of();
-        Set<OperationLevel> out = new HashSet<>();
-        for (String s : raw) {
-            if (s == null || s.isBlank()) continue;
-            try {
-                out.add(OperationLevel.valueOf(s.trim().toUpperCase()));
-            } catch (IllegalArgumentException ignored) {
-                // 忽略非法枚举值，避免前端传脏数据
-            }
-        }
-        return out;
+        return toEnumSet(raw, OperationLevel::valueOf);
     }
 
     private static Set<AgentDataSourceProtocol> toProtocolBlocklist(Set<String> raw) {
-        if (raw == null) return Set.of();
-        Set<AgentDataSourceProtocol> out = new HashSet<>();
-        for (String s : raw) {
-            if (s == null || s.isBlank()) continue;
-            try {
-                out.add(AgentDataSourceProtocol.valueOf(s.trim().toUpperCase()));
-            } catch (IllegalArgumentException ignored) {
-                // 忽略非法枚举值
-            }
-        }
-        return out;
+        return toEnumSet(raw, AgentDataSourceProtocol::valueOf);
     }
 
     private static Set<TableOperation> toTableOps(Set<String> raw) {
+        return toEnumSet(raw, TableOperation::valueOf);
+    }
+
+    private static <T extends Enum<T>> Set<T> toEnumSet(Set<String> raw, Function<String, T> mapper) {
         if (raw == null) return Set.of();
-        Set<TableOperation> out = new HashSet<>();
+        Set<T> out = new HashSet<>();
         for (String s : raw) {
             if (s == null || s.isBlank()) continue;
             try {
-                out.add(TableOperation.valueOf(s.trim().toUpperCase()));
+                out.add(mapper.apply(s.trim().toUpperCase()));
             } catch (IllegalArgumentException ignored) {
-                // 忽略非法枚举值
             }
         }
         return out;

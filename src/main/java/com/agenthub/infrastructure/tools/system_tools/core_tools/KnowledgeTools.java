@@ -133,14 +133,21 @@ public class KnowledgeTools {
     private String buildRecommendationReason(KnowledgeBase kb, String topic, int docCount) {
         if (topic == null || topic.isBlank()) return "所有可用知识库";
         String lower = topic.toLowerCase();
-        if (kb.getName() != null && kb.getName().toLowerCase().contains(lower)) {
-            return "知识库名称与查询主题匹配";
-        }
-        if (kb.getDescription() != null && kb.getDescription().toLowerCase().contains(lower)) {
-            return "知识库描述与查询主题相关";
-        }
+        String matchResult = matchTopic(kb, lower);
+        if (matchResult != null) return matchResult;
         if (docCount > 0) return "包含" + docCount + "篇文档，可能包含相关信息";
         return "知识库可用但文档数量未知";
+    }
+
+    /** 根据名称和描述匹配主题。 */
+    private String matchTopic(KnowledgeBase kb, String lowerTopic) {
+        if (kb.getName() != null && kb.getName().toLowerCase().contains(lowerTopic)) {
+            return "知识库名称与查询主题匹配";
+        }
+        if (kb.getDescription() != null && kb.getDescription().toLowerCase().contains(lowerTopic)) {
+            return "知识库描述与查询主题相关";
+        }
+        return null;
     }
 
     private String calculateRelevance(KnowledgeBase kb, String topic, int docCount) {

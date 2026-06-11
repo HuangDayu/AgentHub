@@ -37,12 +37,8 @@ public class ScriptNodeProcessor extends AbstractNodeProcessor {
     private ScriptEngine initializeScriptEngine() {
         ScriptEngineManager manager = new ScriptEngineManager();
         ScriptEngine engine = manager.getEngineByName("JavaScript");
-        if (engine == null) {
-            engine = manager.getEngineByName("graal.js");
-        }
-        if (engine == null) {
-            log.warn("未找到JavaScript引擎，代码节点将返回空结果");
-        }
+        if (engine == null) engine = manager.getEngineByName("graal.js");
+        if (engine == null) log.warn("未找到JavaScript引擎，代码节点将返回空结果");
         return engine;
     }
 

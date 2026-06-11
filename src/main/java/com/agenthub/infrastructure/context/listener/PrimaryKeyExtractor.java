@@ -78,13 +78,21 @@ class PrimaryKeyExtractor {
         return keys;
     }
 
+    /**
+     * 安全获取字段值（不抛出异常）。
+     */
+    private Object doGetFieldValue(Object obj, String fieldName) throws Exception {
+        Field field = findField(obj.getClass(), fieldName);
+        if (field != null) {
+            field.setAccessible(true);
+            return field.get(obj);
+        }
+        return null;
+    }
+
     private Object getFieldValue(Object obj, String fieldName) {
         try {
-            Field field = findField(obj.getClass(), fieldName);
-            if (field != null) {
-                field.setAccessible(true);
-                return field.get(obj);
-            }
+            return doGetFieldValue(obj, fieldName);
         } catch (Exception e) {
             log.warn("获取字段值失败: {}", fieldName);
         }

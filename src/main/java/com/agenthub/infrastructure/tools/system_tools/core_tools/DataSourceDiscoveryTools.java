@@ -72,6 +72,10 @@ public class DataSourceDiscoveryTools {
         sb.append("协议: ").append(s.getDisplayName()).append("\n");
         sb.append("---\n");
         sb.append(s.getDescription()).append("\n\n");
+        return appendStandardSections(sb, s);
+    }
+
+    private static String appendStandardSections(StringBuilder sb, ProtocolStandard s) {
         sb.append("【语法规则】\n").append(s.getSyntaxGuidelines()).append("\n\n");
         sb.append("【支持的操作】\n").append(s.getAllowedOperations()).append("\n\n");
         sb.append("【示例】\n").append(s.getExamples()).append("\n\n");

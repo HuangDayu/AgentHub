@@ -89,6 +89,11 @@ public class ToolStrategy {
      */
     public static ToolStrategy rebuild(State state) {
         ToolStrategy strategy = new ToolStrategy(state.getId(), state.getWorkspaceId(), state.getCreatedAt());
+        applyState(strategy, state);
+        return strategy;
+    }
+
+    private static void applyState(ToolStrategy strategy, State state) {
         strategy.name = state.getName();
         strategy.description = state.getDescription();
         strategy.maxConcurrentCalls = state.getMaxConcurrentCalls() != null ? state.getMaxConcurrentCalls() : 5;
@@ -96,7 +101,6 @@ public class ToolStrategy {
         strategy.retryCount = state.getRetryCount() != null ? state.getRetryCount() : 3;
         strategy.fallbackEnabled = Boolean.TRUE.equals(state.getFallbackEnabled());
         strategy.updatedAt = state.getUpdatedAt();
-        return strategy;
     }
 
     /**

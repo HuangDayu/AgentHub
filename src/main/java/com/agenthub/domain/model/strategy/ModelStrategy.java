@@ -89,8 +89,19 @@ public class ModelStrategy {
      */
     public static ModelStrategy rebuild(State state) {
         ModelStrategy strategy = new ModelStrategy(state.getId(), state.getWorkspaceId(), state.getCreatedAt());
+        applyState(strategy, state);
+        return strategy;
+    }
+
+    private static void applyState(ModelStrategy strategy, State state) {
         strategy.name = state.getName();
         strategy.description = state.getDescription();
+        applyParams(strategy, state);
+        strategy.updatedAt = state.getUpdatedAt();
+    }
+
+    /** 应用推理参数字段。 */
+    private static void applyParams(ModelStrategy strategy, State state) {
         strategy.temperature = state.getTemperature() != null ? state.getTemperature() : 0.7;
         strategy.maxTokens = state.getMaxTokens() != null ? state.getMaxTokens() : 2048;
         strategy.maxMessages = state.getMaxMessages() != null ? state.getMaxMessages() : 100;
@@ -98,8 +109,6 @@ public class ModelStrategy {
         strategy.topK = state.getTopK() != null ? state.getTopK() : 0;
         strategy.frequencyPenalty = state.getFrequencyPenalty() != null ? state.getFrequencyPenalty() : 0.0;
         strategy.presencePenalty = state.getPresencePenalty() != null ? state.getPresencePenalty() : 0.0;
-        strategy.updatedAt = state.getUpdatedAt();
-        return strategy;
     }
 
     /**

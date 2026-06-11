@@ -5,6 +5,8 @@ import com.agenthub.domain.model.workflow.*;
 import com.agenthub.infrastructure.workflow.processor.AbstractNodeProcessor;
 import com.agenthub.infrastructure.workflow.processor.NodeProcessor;
 import com.agenthub.infrastructure.workflow.variable.VariableResolver;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -41,7 +43,8 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
             NodeConfig config = node.getConfig();
             List<?> items = getLoopItems(config, context);
             DagWorkflowNode loopBody = getLoopBody(config);
-            return executeLoop(items, loopBody, context, node);
+            LoopContext loopCtx = new LoopContext(items, loopBody, context, getMaxIterations(config));
+            return executeLoop(loopCtx);
         });
     }
 
@@ -110,24 +113,27 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
     /**
      * 执行循环.
      */
-    private Map<String, Object> executeLoop(List<?> items, DagWorkflowNode loopBody,
-                                            DagWorkflowContext context, DagWorkflowNode node) {
-        int maxIterations = getMaxIterations(node.getConfig());
-        return buildLoopOutput(items, loopBody, context, maxIterations);
+    private Map<String, Object> executeLoop(LoopContext ctx) {
+        return buildLoopOutput(ctx);
     }
 
-    private Map<String, Object> buildLoopOutput(List<?> items, DagWorkflowNode loopBody,
-                                                 DagWorkflowContext context, int maxIterations) {
+    private Map<String, Object> buildLoopOutput(LoopContext ctx) {
+        List<Map<String, Object>> results = executeLoopIterations(ctx);
+        return buildLoopResultMap(results);
+    }
+
+    private List<Map<String, Object>> executeLoopIterations(LoopContext ctx) {
         List<Map<String, Object>> results = new ArrayList<>();
-        int iterationCount = 0;
-        for (Object item : items) {
-            if (iterationCount >= maxIterations) break;
-            results.add(executeIteration(item, loopBody, context, iterationCount));
-            iterationCount++;
+        for (int i = 0; i < ctx.getItems().size() && i < ctx.getMaxIterations(); i++) {
+            results.add(executeIteration(ctx.getItems().get(i), ctx.getLoopBody(), ctx.getContext(), i));
         }
+        return results;
+    }
+
+    private Map<String, Object> buildLoopResultMap(List<Map<String, Object>> results) {
         Map<String, Object> output = new HashMap<>();
         output.put("results", results);
-        output.put("iterations", iterationCount);
+        output.put("iterations", results.size());
         return output;
     }
 
@@ -170,5 +176,14 @@ public class LoopNodeProcessor extends AbstractNodeProcessor {
     @Override
     public String getSupportedType() {
         return DagNodeType.LOOP.name();
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class LoopContext {
+        private List<?> items;
+        private DagWorkflowNode loopBody;
+        private DagWorkflowContext context;
+        private int maxIterations;
     }
 }

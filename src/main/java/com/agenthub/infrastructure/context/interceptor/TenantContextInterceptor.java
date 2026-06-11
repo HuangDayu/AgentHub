@@ -41,15 +41,12 @@ public class TenantContextInterceptor implements HandlerInterceptor {
     private TenantThreadContext buildContext(HttpServletRequest request, Object handler) {
         String tenantId = getTenantId(request, handler);
         String userId = getSubject(request);
-        return new TenantThreadContext(
-                tenantId,
-                getPathId(request, "/workspaces/"),
-                getPathId(request, "/agents/"),
-                getPathId(request, "/sessions/"),
-                request.getHeader(TenantContextHeaders.CONTEXT_REQUEST_ID),
-                userId,
-                isIgnoreTenantContext(handler)
-        );
+        String workspaceId = getPathId(request, "/workspaces/");
+        String agentId = getPathId(request, "/agents/");
+        String sessionId = getPathId(request, "/sessions/");
+        String requestId = request.getHeader(TenantContextHeaders.CONTEXT_REQUEST_ID);
+        return new TenantThreadContext(tenantId, workspaceId, agentId,
+                sessionId, requestId, userId, isIgnoreTenantContext(handler));
     }
 
     private boolean isIgnoreTenantContext(Object handler) {

@@ -47,6 +47,11 @@ public class RunRegistration {
      */
     public static RunRegistration create(CreationSpec spec) {
         RunRegistration registration = new RunRegistration();
+        applySpec(registration, spec);
+        return registration;
+    }
+
+    private static void applySpec(RunRegistration registration, CreationSpec spec) {
         registration.id = spec.id;
         registration.project = spec.project;
         registration.name = spec.name;
@@ -55,6 +60,5 @@ public class RunRegistration {
         registration.status = spec.status;
         registration.runDir = spec.runDir;
         registration.createdAt = Instant.now();
-        return registration;
     }
 }

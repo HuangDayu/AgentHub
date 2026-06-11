@@ -1,6 +1,8 @@
 package com.agenthub.infrastructure.agents.aliyun.subagent;
 
 import io.agentscope.harness.agent.subagent.SubagentDeclaration;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
@@ -20,22 +22,33 @@ public class SubagentDeclarationFactory {
                 .build();
     }
 
-    public SubagentDeclaration createSubagentWithWorkspace(String name, String description, Path workspace, int maxIters) {
+    public SubagentDeclaration createSubagentWithWorkspace(SubagentSpec spec) {
         return SubagentDeclaration.builder()
-                .name(name)
-                .description(description)
-                .workspace(workspace)
-                .maxIters(maxIters)
+                .name(spec.getName())
+                .description(spec.getDescription())
+                .workspace(spec.getWorkspace())
+                .maxIters(spec.getMaxIters())
                 .build();
     }
 
-    public SubagentDeclaration createSubagentWithTools(String name, String description, int maxIters, List<String> tools) {
+    public SubagentDeclaration createSubagentWithTools(SubagentSpec spec) {
         return SubagentDeclaration.builder()
-                .name(name)
-                .description(description)
-                .maxIters(maxIters)
-                .tools(tools)
+                .name(spec.getName())
+                .description(spec.getDescription())
+                .maxIters(spec.getMaxIters())
+                .tools(spec.getTools())
                 .build();
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class SubagentSpec {
+        private String name;
+        private String description;
+        private int maxIters;
+        private Path workspace;
+        private List<String> tools;
+        private String url;
     }
 
     public SubagentDeclaration createRemoteSubagent(String name, String description, String url) {

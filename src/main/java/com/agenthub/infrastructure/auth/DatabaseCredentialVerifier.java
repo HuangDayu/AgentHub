@@ -38,14 +38,16 @@ public class DatabaseCredentialVerifier implements CredentialVerifierPort {
     @Override
     public boolean verify(String username, String password) {
         try {
-            AppUserEntity user = queryActiveUser(username);
-            if (user == null || user.getPasswordHash() == null) {
-                return false;
-            }
-            return passwordEncoder.matches(password, user.getPasswordHash());
+            return verifyCredentials(username, password);
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private boolean verifyCredentials(String username, String password) {
+        AppUserEntity user = queryActiveUser(username);
+        return user != null && user.getPasswordHash() != null
+                && passwordEncoder.matches(password, user.getPasswordHash());
     }
 
     /**

@@ -37,14 +37,19 @@ public class AgentTask {
      */
     public static AgentTask create(String stageId, String workflowId, String taskDescription) {
         AgentTask task = new AgentTask();
-        task.id = randomId();
-        task.stageId = stageId;
-        task.workflowId = workflowId;
-        task.taskDescription = taskDescription;
-        task.status = AgentTaskStatus.PENDING.name();
-        task.createdAt = Instant.now();
-        task.updatedAt = Instant.now();
+        task.initTask(stageId, workflowId, taskDescription);
         return task;
+    }
+
+    private void initTask(String stageId, String workflowId, String taskDescription) {
+        Instant now = Instant.now();
+        this.id = randomId();
+        this.stageId = stageId;
+        this.workflowId = workflowId;
+        this.taskDescription = taskDescription;
+        this.status = AgentTaskStatus.PENDING.name();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
     /**

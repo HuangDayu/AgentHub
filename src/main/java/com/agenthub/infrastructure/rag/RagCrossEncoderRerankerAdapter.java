@@ -100,18 +100,16 @@ public class RagCrossEncoderRerankerAdapter implements RagRerankerPort {
      * @return 更新分数后的检索结果
      */
     private RetrievalResult mapToResult(ScoredCandidate scored, List<RetrievalResult> originals) {
-        if (scored.index() < 0 || scored.index() >= originals.size()) {
-            return originals.get(0);
-        }
-        RetrievalResult original = originals.get(scored.index());
+        RetrievalResult original = getSafeOriginal(scored, originals);
         return new RetrievalResult(
-                original.getDocumentId(),
-                original.getDocumentTitle(),
-                original.getChunkId(),
-                original.getContent(),
-                Math.min(scored.score(), 1.0),
-                original.getMetadata()
-        );
+                original.getDocumentId(), original.getDocumentTitle(),
+                original.getChunkId(), original.getContent(),
+                Math.min(scored.score(), 1.0), original.getMetadata());
+    }
+
+    private RetrievalResult getSafeOriginal(ScoredCandidate scored, List<RetrievalResult> originals) {
+        return (scored.index() < 0 || scored.index() >= originals.size())
+                ? originals.get(0) : originals.get(scored.index());
     }
 
     /**

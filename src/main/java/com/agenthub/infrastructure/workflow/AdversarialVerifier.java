@@ -20,6 +20,21 @@ public class AdversarialVerifier {
     private final SubagentRuntimeUseCase subagentUseCase;
     private static final int VERIFY_TIMEOUT_SECONDS = 300;
 
+    private static final String VERIFICATION_TEMPLATE = """
+            你是一个严格的审查员。请审查以下结果，找出其中的：
+            1. 事实错误
+            2. 遗漏的关键信息
+            3. 逻辑矛盾
+            4. 可能的改进点
+
+            原始任务: %s
+
+            待审查结果:
+            %s
+
+            请给出你的审查意见，如果结果质量高则确认，如果发现问题则指出具体问题。
+            """;
+
     /**
      * 执行对抗验证。
      *
@@ -37,20 +52,7 @@ public class AdversarialVerifier {
     }
 
     private String buildVerificationPrompt(String originalResult, String task) {
-        return """
-                你是一个严格的审查员。请审查以下结果，找出其中的：
-                1. 事实错误
-                2. 遗漏的关键信息
-                3. 逻辑矛盾
-                4. 可能的改进点
-
-                原始任务: %s
-
-                待审查结果:
-                %s
-
-                请给出你的审查意见，如果结果质量高则确认，如果发现问题则指出具体问题。
-                """.formatted(task, originalResult);
+        return VERIFICATION_TEMPLATE.formatted(task, originalResult);
     }
 
     private RunSubagentCommand buildVerifyCommand(String prompt, ReActAgentContext parentContext) {
@@ -65,14 +67,19 @@ public class AdversarialVerifier {
     private SubagentRuntimeOutput awaitVerification(SubagentRunOutput output) {
         long deadline = System.currentTimeMillis() + (VERIFY_TIMEOUT_SECONDS * 1000L);
         while (System.currentTimeMillis() < deadline) {
-            SubagentRuntimeOutput status = subagentUseCase.status(
-                    output.getSubagentId(), output.getSubsessionId());
-            if (isTerminal(status.getStatus())) {
-                return subagentUseCase.result(
-                        output.getSubagentId(), output.getSubsessionId());
+            if (isTerminal(pollVerifyStatus(output).getStatus())) {
+                return getVerifyResult(output);
             }
             sleepBriefly();
         }
+        return getVerifyResult(output);
+    }
+
+    private SubagentRuntimeOutput pollVerifyStatus(SubagentRunOutput output) {
+        return subagentUseCase.status(output.getSubagentId(), output.getSubsessionId());
+    }
+
+    private SubagentRuntimeOutput getVerifyResult(SubagentRunOutput output) {
         return subagentUseCase.result(output.getSubagentId(), output.getSubsessionId());
     }
 

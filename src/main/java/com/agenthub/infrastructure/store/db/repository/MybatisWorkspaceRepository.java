@@ -73,17 +73,7 @@ public class MybatisWorkspaceRepository implements WorkspaceRepository {
      */
     @Override
     public List<Workspace> findByTenantId(int page, int size) {
-        // 构建查询条件
-        LambdaQueryWrapper<WorkspaceEntity> query = new LambdaQueryWrapper<WorkspaceEntity>();
-        // 执行查询并分页
-        return mapper.selectList(query).stream()
-                .filter(this::isValidEntity)
-                .map(this::toDomain)
-                .filter(w -> w.getCreatedAt() != null)
-                .sorted(Comparator.comparing(Workspace::getCreatedAt))
-                .skip((long) page * size)
-                .limit(size)
-                .toList();
+        return queryWorkspaces(new LambdaQueryWrapper<>(), page, size);
     }
 
     /**
@@ -110,10 +100,12 @@ public class MybatisWorkspaceRepository implements WorkspaceRepository {
      */
     @Override
     public List<Workspace> findWorkspacesByTenantId(String tenantId, int page, int size) {
-        // 构建查询条件
-        LambdaQueryWrapper<WorkspaceEntity> query = new LambdaQueryWrapper<WorkspaceEntity>();
+        LambdaQueryWrapper<WorkspaceEntity> query = new LambdaQueryWrapper<>();
         query.eq(WorkspaceEntity::getTenantId, tenantId);
-        // 执行查询并分页
+        return queryWorkspaces(query, page, size);
+    }
+
+    private List<Workspace> queryWorkspaces(LambdaQueryWrapper<WorkspaceEntity> query, int page, int size) {
         return mapper.selectList(query).stream()
                 .filter(this::isValidEntity)
                 .map(this::toDomain)

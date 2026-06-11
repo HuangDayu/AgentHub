@@ -2,6 +2,8 @@ package com.agenthub.infrastructure.tools.system_tools.core_tools;
 
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.ProcessResult;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -75,7 +77,7 @@ public class RuntimeTools {
             String output = readStream(process.getInputStream());
             boolean done = process.waitFor(timeout, TimeUnit.SECONDS);
             if (!done) process.destroyForcibly();
-            return buildResult(done, process.exitValue(), truncate(output), System.currentTimeMillis() - start);
+            return buildResult(new ResultSpec(done, process.exitValue(), truncate(output), System.currentTimeMillis() - start));
         } catch (Exception e) {
             return error(e.getMessage());
         }
@@ -108,16 +110,25 @@ public class RuntimeTools {
                 ? text.substring(0, MAX_OUTPUT_LENGTH) + "...(截断)" : text;
     }
 
-    private ProcessResult buildResult(boolean ok, int code, String out, long ms) {
+    private ProcessResult buildResult(ResultSpec spec) {
         ProcessResult r = new ProcessResult();
-        r.setSuccess(ok);
-        r.setExitCode(code);
-        r.setOutput(out);
-        r.setExecutionTime(ms);
+        r.setSuccess(spec.isSuccess());
+        r.setExitCode(spec.getExitCode());
+        r.setOutput(spec.getOutput());
+        r.setExecutionTime(spec.getExecutionTime());
         return r;
     }
 
-    private ProcessResult ok(String msg) { return buildResult(true, 0, msg, 0); }
+    private ProcessResult ok(String msg) { return buildResult(new ResultSpec(true, 0, msg, 0)); }
 
-    private ProcessResult error(String msg) { return buildResult(false, -1, msg, 0); }
+    private ProcessResult error(String msg) { return buildResult(new ResultSpec(false, -1, msg, 0)); }
+
+    @Data
+    @AllArgsConstructor
+    private static class ResultSpec {
+        private boolean success;
+        private int exitCode;
+        private String output;
+        private long executionTime;
+    }
 }

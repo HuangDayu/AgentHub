@@ -166,12 +166,9 @@ public class MybatisKnowledgeBaseRepository implements KnowledgeBaseRepository {
         LambdaQueryWrapper<KnowledgeBaseEntity> qw = new LambdaQueryWrapper<>();
         qw.eq(KnowledgeBaseEntity::getId, entity.getId());
         KnowledgeBaseEntity existing = mapper.selectOne(qw);
-        if (existing == null) {
-            mapper.insert(entity);
-        } else {
-            entity.setId(existing.getId());
-            mapper.updateById(entity);
-        }
+        if (existing == null) { mapper.insert(entity); return; }
+        entity.setId(existing.getId());
+        mapper.updateById(entity);
     }
 
     /**
@@ -231,13 +228,9 @@ public class MybatisKnowledgeBaseRepository implements KnowledgeBaseRepository {
      * @return 版本号整数
      */
     private int parseVersionNumber(String version) {
-        if (version == null || version.isBlank()) {
-            return 1;
-        }
+        if (version == null || version.isBlank()) return 1;
         try {
-            // 去掉前缀 "v" 后解析数字
-            String num = version.startsWith("v") ? version.substring(1) : version;
-            return Integer.parseInt(num);
+            return Integer.parseInt(version.startsWith("v") ? version.substring(1) : version);
         } catch (NumberFormatException e) {
             return 1;
         }

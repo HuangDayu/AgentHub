@@ -554,13 +554,7 @@ public class MybatisKeyValueRepository implements KeyValueRepository {
     @Override
     public Long del(String... keys) {
         long count = 0;
-        for (String key : keys) {
-            count += deleteByKey(storeMapper, key);
-            count += deleteByKey(hashMapper, key);
-            count += deleteByKey(listMapper, key);
-            count += deleteByKey(setMapper, key);
-            count += deleteByKey(zsetMapper, key);
-        }
+        for (String key : keys) count += deleteAllTypes(key);
         return count;
     }
 
@@ -831,11 +825,17 @@ public class MybatisKeyValueRepository implements KeyValueRepository {
     private String blockPop(long timeout, String[] keys, boolean left) {
         long endTime = System.currentTimeMillis() + timeout * 1000;
         while (System.currentTimeMillis() < endTime) {
-            for (String key : keys) {
-                String value = left ? lpop(key) : rpop(key);
-                if (value != null) return value;
-            }
+            String value = tryPopAny(keys, left);
+            if (value != null) return value;
             sleep(100);
+        }
+        return null;
+    }
+
+    private String tryPopAny(String[] keys, boolean left) {
+        for (String key : keys) {
+            String value = left ? lpop(key) : rpop(key);
+            if (value != null) return value;
         }
         return null;
     }
@@ -846,6 +846,12 @@ public class MybatisKeyValueRepository implements KeyValueRepository {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private long deleteAllTypes(String key) {
+        return deleteByKey(storeMapper, key) + deleteByKey(hashMapper, key)
+                + deleteByKey(listMapper, key) + deleteByKey(setMapper, key)
+                + deleteByKey(zsetMapper, key);
     }
 
     private <T> long deleteByKey(com.baomidou.mybatisplus.core.mapper.BaseMapper<T> mapper, String key) {

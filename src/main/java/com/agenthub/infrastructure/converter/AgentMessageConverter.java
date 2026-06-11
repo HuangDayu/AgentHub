@@ -31,14 +31,16 @@ public final class AgentMessageConverter {
         result.setMessageType(AgentMessage.MessageType.valueOf(message.getMessageType().name()));
         result.setText(message.getText());
         result.setMetadata(copyMap(message.getMetadata()));
+        convertMessage(result, message);
+        return result;
+    }
 
+    private static void convertMessage(AgentMessage result, Message message) {
         switch (message) {
             case AssistantMessage msg -> convertFromAssistant(result, msg);
             case ToolResponseMessage msg -> convertFromToolResponse(result, msg);
             default -> { }
         }
-
-        return result;
     }
 
 

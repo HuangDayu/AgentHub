@@ -43,16 +43,14 @@ public class MybatisSessionRepository implements SessionRepository {
     @Override
     public Optional<Session> findSessionMessageById(String sessionId) {
         SessionEntity sessionEntity = sessionMapper.selectById(sessionId);
-        if (sessionEntity == null) {
-            return Optional.empty();
-        }
+        if (sessionEntity == null) return Optional.empty();
+        return Optional.of(toSession(sessionEntity, findChatMessages(sessionEntity.getId())));
+    }
 
+    private List<ChatMessageEntity> findChatMessages(String sessionId) {
         LambdaQueryWrapper<ChatMessageEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ChatMessageEntity::getSessionId, sessionEntity.getId())
-                .orderByAsc(ChatMessageEntity::getCreatedAt);
-        List<ChatMessageEntity> chatMessageEntities = messageMapper.selectList(wrapper);
-        Session session = toSession(sessionEntity, chatMessageEntities);
-        return Optional.of(session);
+        wrapper.eq(ChatMessageEntity::getSessionId, sessionId).orderByAsc(ChatMessageEntity::getCreatedAt);
+        return messageMapper.selectList(wrapper);
     }
 
     @Override

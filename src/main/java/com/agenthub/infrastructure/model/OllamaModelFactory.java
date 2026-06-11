@@ -42,16 +42,20 @@ public class OllamaModelFactory implements ModelFactory {
                 .build();
     }
 
+    /**
+     * 构建Ollama嵌入选项。
+     */
+    private OllamaEmbeddingOptions buildEmbeddingOptions(ModelConfig config) {
+        return OllamaEmbeddingOptions.builder()
+                .model(config.getModel())
+                .build();
+    }
+
     @Override
     public EmbeddingModel createEmbeddingModel(ModelConfig config) {
         log.info("Creating Ollama EmbeddingModel: model={}", config.getModel());
-
         OllamaApi ollamaApi = createOllamaApi(config);
-
-        OllamaEmbeddingOptions options = OllamaEmbeddingOptions.builder()
-                .model(config.getModel())
-                .build();
-
+        OllamaEmbeddingOptions options = buildEmbeddingOptions(config);
         return OllamaEmbeddingModel.builder()
                 .ollamaApi(ollamaApi)
                 .defaultOptions(options)

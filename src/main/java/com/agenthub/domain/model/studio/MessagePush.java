@@ -44,6 +44,11 @@ public class MessagePush {
      */
     public static MessagePush create(CreationSpec spec) {
         MessagePush push = new MessagePush();
+        applySpec(push, spec);
+        return push;
+    }
+
+    private static void applySpec(MessagePush push, CreationSpec spec) {
         push.messageId = spec.messageId;
         push.runId = spec.runId;
         push.role = spec.role;
@@ -51,6 +56,5 @@ public class MessagePush {
         push.metadata = spec.metadata;
         push.timestamp = spec.timestamp;
         push.createdAt = Instant.now();
-        return push;
     }
 }

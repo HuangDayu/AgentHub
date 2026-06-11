@@ -91,13 +91,18 @@ public class CamelSchemaIntrospector {
             throws SQLException {
         DataSourceColumn col = new DataSourceColumn();
         col.setId(UUID.randomUUID().toString());
+        populateColumn(col, rs, pks);
+        col.setColumnOrder(order);
+        return col;
+    }
+
+    /** 填充列属性。 */
+    private void populateColumn(DataSourceColumn col, ResultSet rs, Set<String> pks) throws SQLException {
         col.setName(rs.getString("COLUMN_NAME"));
         col.setType(rs.getString("TYPE_NAME"));
         col.setNullable("YES".equals(rs.getString("IS_NULLABLE")));
         col.setDefaultValue(rs.getString("COLUMN_DEF"));
         col.setPrimary(pks.contains(col.getName()));
-        col.setColumnOrder(order);
-        return col;
     }
 
     private Set<String> discoverPrimaryKeys(DatabaseMetaData meta, String schema,
@@ -143,6 +148,12 @@ public class CamelSchemaIntrospector {
     private DataSourceSchema buildSchema(AgentDataSource source, List<DataSourceTable> tables) {
         DataSourceSchema schema = new DataSourceSchema();
         schema.setId(UUID.randomUUID().toString());
+        populateSchema(source, tables, schema);
+        return schema;
+    }
+
+    /** 填充 schema 属性。 */
+    private void populateSchema(AgentDataSource source, List<DataSourceTable> tables, DataSourceSchema schema) {
         schema.setTenantId(source.getTenantId());
         schema.setWorkspaceId(source.getWorkspaceId());
         schema.setDataSourceId(source.getId());
@@ -150,6 +161,5 @@ public class CamelSchemaIntrospector {
         schema.setIntrospected(true);
         schema.setLastIntrospectedAt(java.time.Instant.now());
         schema.setTables(tables);
-        return schema;
     }
 }
