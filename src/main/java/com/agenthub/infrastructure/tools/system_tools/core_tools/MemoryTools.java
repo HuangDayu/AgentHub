@@ -4,6 +4,7 @@ import com.agenthub.application.port.out.repositories.MemoryRepository;
 import com.agenthub.domain.enums.MemoryType;
 import com.agenthub.domain.model.Memory;
 import com.agenthub.domain.model.agent.ReActAgentContext;
+import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.MemorySaveToolInput;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
@@ -46,15 +47,12 @@ public class MemoryTools {
     @Tool(description = "保存一条新记忆")
     public Memory memorySave(
             ToolContext toolContext,
-            @ToolParam(description = "记忆内容") String content,
-            @ToolParam(description = "记忆名称/标题") String name,
-            @ToolParam(description = "记忆类型：SHORT_TERM / LONG_TERM / EPISODIC / SEMANTIC") MemoryType memoryType) {
-        ReActAgentContext context = getAgentContext(toolContext);
+            @ToolParam(description = "记忆信息") MemorySaveToolInput input) {
         Memory memory = new Memory();
-        memory.setAgentId(context.getAgent().getId());
-        memory.setContent(content);
-        memory.setName(name);
-        memory.setMemoryType(memoryType);
+        memory.setAgentId(getAgentContext(toolContext).getAgent().getId());
+        memory.setContent(input.getContent());
+        memory.setName(input.getName());
+        memory.setMemoryType(input.getMemoryType());
         return memoryRepository.save(memory);
     }
 

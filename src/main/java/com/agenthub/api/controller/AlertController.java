@@ -3,6 +3,7 @@ package com.agenthub.api.controller;
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.api.dto.AlertResponse;
 import com.agenthub.api.dto.CreateAlertRequest;
+import com.agenthub.application.command.CreateAlertCommand;
 import com.agenthub.application.dto.AlertOutput;
 import com.agenthub.application.usecase.AlertUseCase;
 import org.springframework.web.bind.annotation.*;
@@ -23,12 +24,12 @@ public class AlertController {
 
     @PostMapping
     public AlertResponse create(@RequestBody CreateAlertRequest request) {
-        return toResponse(useCase.create(
+        return toResponse(useCase.create(new CreateAlertCommand(
             request.getAlertLevel(),
             request.getAlertType(),
             request.getTitle(),
             request.getMessage()
-        ));
+        )));
     }
 
     @GetMapping("/{id}")

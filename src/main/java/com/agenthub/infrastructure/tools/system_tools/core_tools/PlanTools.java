@@ -8,7 +8,9 @@ import com.agenthub.application.dto.PlanStepOutput;
 import com.agenthub.application.usecase.ExecutionPlanUseCase;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
+import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.AddStepToolInput;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.PlanStepToolInput;
+import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.UpdateStepToolInput;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -58,22 +60,18 @@ public class PlanTools {
 
     @Tool(description = "添加步骤到现有计划")
     public ExecutionPlanOutput addStep(
-            @ToolParam(description = "计划ID") String planId,
-            @ToolParam(description = "步骤描述") String description,
-            @ToolParam(required = false, description = "使用的工具名称") String toolName,
-            @ToolParam(required = false, description = "工具调用参数（JSON）") String toolInput,
+            @ToolParam(description = "步骤信息") AddStepToolInput step,
             ToolContext toolContext) {
         return executionPlanUseCase.addStepToPlan(
-                new AddStepCommand(planId, description, toolName, toolInput));
+                new AddStepCommand(step.getPlanId(), step.getDescription(),
+                        step.getToolName(), step.getToolInput()));
     }
 
     @Tool(description = "更新步骤状态：PENDING/RUNNING/COMPLETED/FAILED/SKIPPED")
     public ExecutionPlanOutput updateStep(
-            @ToolParam(description = "计划ID") String planId,
-            @ToolParam(description = "步骤ID") String stepId,
-            @ToolParam(description = "新状态") String status,
-            @ToolParam(required = false, description = "执行结果或错误信息") String output) {
-        return executionPlanUseCase.updateStep(planId, stepId, status, output);
+            @ToolParam(description = "步骤更新信息") UpdateStepToolInput input) {
+        return executionPlanUseCase.updateStep(input.getPlanId(), input.getStepId(),
+                input.getStatus(), input.getOutput());
     }
 
     @Tool(description = "获取当前可执行的步骤列表（依赖已满足）")

@@ -4,6 +4,8 @@ import com.agenthub.application.port.out.repositories.HttpToolRepository;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.domain.model.tools.HttpTool;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
+import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.HttpCallToolInput;
+import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.HttpRequest;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.HttpToolResult;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.RestfulToolDTO;
 import lombok.RequiredArgsConstructor;
@@ -62,18 +64,17 @@ public class RestfulTools {
             @ToolParam(description = "请求参数（JSON格式）") String requestBody,
             ToolContext toolContext) {
         HttpTool tool = findTool(toolId);
-        return executeWithRetry(tool.getHttpMethod(), tool.getEndpoint(),
-                requestBody, tool.getName());
+        return executeWithRetry(new HttpRequest(tool.getHttpMethod(), tool.getEndpoint(), requestBody),
+                tool.getName());
     }
 
     @Tool(description = "直接调用任意HTTP接口，使用RetryTemplate自动重试")
     public HttpToolResult callHttp(
-            @ToolParam(description = "请求方法：GET/POST/PUT/DELETE") String method,
-            @ToolParam(description = "完整的请求URL") String url,
-            @ToolParam(description = "请求头（JSON格式，可选）") String headersJson,
-            @ToolParam(description = "请求体（JSON格式，POST/PUT时使用）") String body) {
-        if (!isSafeUrl(url)) return errorResult("不安全的URL: " + url, method + " " + url);
-        return executeWithRetry(method, url, body, method + " " + url);
+            @ToolParam(description = "HTTP请求信息") HttpCallToolInput input) {
+        if (!isSafeUrl(input.getUrl())) return errorResult("不安全的URL: " + input.getUrl(),
+                input.getMethod() + " " + input.getUrl());
+        return executeWithRetry(new HttpRequest(input.getMethod(), input.getUrl(), input.getBody()),
+                input.getMethod() + " " + input.getUrl());
     }
 
     private boolean isSafeUrl(String url) {
@@ -89,25 +90,29 @@ public class RestfulTools {
                         "HTTP接口不存在: " + toolId));
     }
 
-    private HttpToolResult executeWithRetry(String method, String url, String body, String label) {
+    private HttpToolResult executeWithRetry(HttpRequest request, String label) {
         for (int i = 1; i <= MAX_RETRIES; i++) {
-            try {
-                return doHttpCall(method, url, body, label);
-            } catch (ResourceAccessException | HttpServerErrorException e) {
-                log.warn("HTTP调用失败, 第{}次重试: {}", i, e.getMessage());
-                sleep(RETRY_BACKOFF_MS * i);
-            } catch (Exception e) {
-                return errorResult(e.getMessage(), label);
-            }
+            HttpToolResult result = attemptCall(request, label);
+            if (result != null) { return result; }
         }
         return errorResult("重试" + MAX_RETRIES + "次后仍失败", label);
     }
 
-    private HttpToolResult doHttpCall(String method, String url, String body, String label) {
+    private HttpToolResult attemptCall(HttpRequest request, String label) {
+        try { return doHttpCall(request, label); }
+        catch (ResourceAccessException | HttpServerErrorException e) {
+            log.warn("HTTP调用失败: {}", e.getMessage());
+            sleep(RETRY_BACKOFF_MS);
+            return null;
+        }
+        catch (Exception e) { return errorResult(e.getMessage(), label); }
+    }
+
+    private HttpToolResult doHttpCall(HttpRequest request, String label) {
         long start = System.currentTimeMillis();
-        HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
-        HttpEntity<String> entity = buildEntity(body);
-        ResponseEntity<String> resp = restTemplate.exchange(url, httpMethod, entity, String.class);
+        HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod().toUpperCase());
+        HttpEntity<String> entity = buildEntity(request.getBody());
+        ResponseEntity<String> resp = restTemplate.exchange(request.getUrl(), httpMethod, entity, String.class);
         HttpToolResult r = successResult(resp.getStatusCode().value(), resp.getBody(), label);
         r.setDurationMs(System.currentTimeMillis() - start);
         return r;

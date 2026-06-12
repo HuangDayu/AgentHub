@@ -6,6 +6,7 @@ import com.agenthub.domain.model.PromptTemplateInfo;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.AgentPromptTemplateDTO;
+import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.CreatePromptTemplateInput;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.TemplateSpec;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
@@ -68,13 +69,11 @@ public class PromptTools {
     }
 
     @Tool(description = "创建新的提示模板")
-    public AgentPromptTemplateDTO createPromptTemplate(ToolContext toolContext,
-                                                           @ToolParam(description = "模板名称") String name,
-                                                           @ToolParam(description = "模板描述") String description,
-                                                           @ToolParam(description = "模板类别(SYSTEM/USER/ASSISTANT/GENERAL)") String category,
-                                                           @ToolParam(description = "模板内容") String content,
-                                                           @ToolParam(description = "是否启用", required = false) Boolean active) {
-        TemplateSpec spec = new TemplateSpec(name, description, category, content, active, getAgentContext(toolContext));
+    public AgentPromptTemplateDTO createPromptTemplate(
+            @ToolParam(description = "模板信息") CreatePromptTemplateInput input,
+            ToolContext toolContext) {
+        TemplateSpec spec = new TemplateSpec(input.getName(), input.getDescription(),
+                input.getCategory(), input.getContent(), input.getActive(), getAgentContext(toolContext));
         return doCreateTemplate(spec);
     }
 }

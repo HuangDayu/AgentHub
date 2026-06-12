@@ -1,5 +1,6 @@
 package com.agenthub.application.usecase;
 
+import com.agenthub.application.command.CreateAlertCommand;
 import com.agenthub.application.dto.AlertOutput;
 import com.agenthub.application.port.out.repositories.AlertRepository;
 import com.agenthub.domain.exception.NotFoundException;
@@ -17,13 +18,9 @@ import java.util.List;
 public class AlertUseCase {
     private final AlertRepository repository;
 
-    public AlertOutput create(
-        String alertLevel,
-        String alertType,
-        String title,
-        String message
-    ) {
-        Alert alert = Alert.create(alertLevel, alertType, title, message);
+    public AlertOutput create(CreateAlertCommand command) {
+        Alert alert = Alert.create(command.getAlertLevel(), command.getAlertType(),
+                command.getTitle(), command.getMessage());
         Alert saved = repository.save(alert);
         return toOutput(saved);
     }

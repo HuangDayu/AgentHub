@@ -5,6 +5,7 @@ import com.agenthub.domain.model.ScheduledTask;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.infrastructure.scheduler.ScheduledTaskScheduler;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
+import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.CreateScheduledTaskToolInput;
 import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.ScheduledTaskResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ToolContext;
@@ -29,14 +30,11 @@ public class AutomationTools {
 
     @Tool(description = "创建定时任务。返回任务ID。")
     public ScheduledTaskResult createScheduledTask(
-            @ToolParam(description = "Cron表达式，如 '0 9 * * ?' 表示每天9点") String cronExpression,
-            @ToolParam(description = "任务名称") String taskName,
-            @ToolParam(description = "任务类型：AGENT_CHAT / WORKFLOW / SYSTEM") String taskType,
-            @ToolParam(description = "执行提示词或命令内容") String prompt,
-            @ToolParam(description = "执行该任务的AgentID（可选，为空则使用工作空间内第一个Agent）") String agentId,
+            @ToolParam(description = "定时任务信息") CreateScheduledTaskToolInput input,
             ToolContext toolContext) {
         CreateScheduledTaskCommand cmd = new CreateScheduledTaskCommand(
-                cronExpression, taskName, taskType, prompt, agentId);
+                input.getCronExpression(), input.getTaskName(),
+                input.getTaskType(), input.getPrompt(), input.getAgentId());
         return executeCreate(cmd, getAgentContext(toolContext));
     }
 

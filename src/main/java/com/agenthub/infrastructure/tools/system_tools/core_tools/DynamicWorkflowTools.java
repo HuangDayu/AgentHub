@@ -7,6 +7,7 @@ import com.agenthub.application.usecase.DynamicWorkflowUseCase;
 import com.agenthub.common.utils.TtlUtils;
 import com.agenthub.domain.model.agent.ReActAgentContext;
 import com.agenthub.infrastructure.tools.system_tools.annotations.AgentTools;
+import com.agenthub.infrastructure.tools.system_tools.core_tools.dto.CreateWorkflowToolInput;
 import com.agenthub.infrastructure.workflow.DynamicWorkflowEngine;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,12 +35,11 @@ public class DynamicWorkflowTools {
 
     @Tool(description = "创建并执行动态工作流，支持扇出、管道、评审等编排模式")
     public String createWorkflow(
-            @ToolParam(description = "任务描述") String task,
-            @ToolParam(description = "编排模式: FAN_OUT/PIPELINE/JUDGE") String pattern,
-            @ToolParam(description = "子任务描述（逗号分隔）") String subtasks,
+            @ToolParam(description = "工作流信息") CreateWorkflowToolInput input,
             ToolContext toolContext) {
         ReActAgentContext ctx = getAgentContext(toolContext);
-        CreateWorkflowCommand command = buildCommand(new CommandSpec(ctx, task, pattern, subtasks));
+        CreateWorkflowCommand command = buildCommand(new CommandSpec(ctx, input.getTask(),
+                input.getPattern(), input.getSubtasks()));
         DynamicWorkflowOutput workflow = workflowUseCase.createWorkflow(command);
         executeAsync(workflow.getId(), ctx);
         return "工作流已创建并开始执行: " + workflow.getId();
