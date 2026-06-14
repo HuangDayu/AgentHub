@@ -12,8 +12,8 @@ import com.agenthub.domain.enums.OperationLevel;
 import com.agenthub.domain.event.AuditEvent;
 import com.agenthub.domain.exception.DangerousOperationBlockedException;
 import com.agenthub.domain.exception.PermissionDeniedException;
-import com.agenthub.domain.model.AgentDataSource;
-import com.agenthub.domain.model.PermissionStrategy;
+import com.agenthub.domain.model.data_source.AgentDataSource;
+import com.agenthub.domain.model.strategy.PermissionStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

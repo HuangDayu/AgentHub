@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.camel;
 
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
-import com.agenthub.domain.model.AgentDataSource;
+import com.agenthub.domain.model.data_source.AgentDataSource;
 import com.agenthub.infrastructure.store.db.datasource.JdbcDataSourceFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

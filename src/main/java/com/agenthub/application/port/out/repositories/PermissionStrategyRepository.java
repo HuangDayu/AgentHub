@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.PermissionStrategy;
+import com.agenthub.domain.model.strategy.PermissionStrategy;
 
 import java.util.List;
 import java.util.Optional;

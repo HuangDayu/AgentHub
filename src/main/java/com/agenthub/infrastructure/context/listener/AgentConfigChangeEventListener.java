@@ -29,7 +29,7 @@ public class AgentConfigChangeEventListener {
     @Async("ttlExecutorService")
     @EventListener
     public void handleDataChange(AgentConfigChangedEvent event) {
-        log.info("【Agent配置改变】实体: {}, 操作: {}, IDs: {}", event.getEntityType(), event.getChangeType(), event.getPrimaryKeys());
+        log.debug("【Agent配置改变】实体: {}, 操作: {}, IDs: {}", event.getEntityType(), event.getChangeType(), event.getPrimaryKeys());
         List<String> pks = event.getPrimaryKeys();
         if (pks == null || pks.isEmpty()) return;
         ConfigChangeListenerEntity entity = event.getEntityAnnotation();

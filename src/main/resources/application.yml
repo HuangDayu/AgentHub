@@ -8,8 +8,8 @@ spring:
   sql:
     init:
       mode: always
-      schema-locations: file:${user.dir}\sql\schema.sql
-      data-locations: file:${user.dir}\sql\init.sql
+      schema-locations: file:${user.dir}\sql\postgres\schema.sql
+      data-locations: file:${user.dir}\sql\postgres\init.sql
       platform: postgresql
   datasource:
     url: jdbc:postgresql://localhost:5432/agenthub?schema=app

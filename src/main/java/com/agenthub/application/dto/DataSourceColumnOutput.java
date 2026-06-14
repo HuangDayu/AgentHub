@@ -1,6 +1,6 @@
 package com.agenthub.application.dto;
 
-import com.agenthub.domain.model.DataSourceColumn;
+import com.agenthub.domain.model.data_source.DataSourceColumn;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

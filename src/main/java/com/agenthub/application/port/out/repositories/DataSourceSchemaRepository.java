@@ -1,6 +1,6 @@
 package com.agenthub.application.port.out.repositories;
 
-import com.agenthub.domain.model.DataSourceSchema;
+import com.agenthub.domain.model.data_source.DataSourceSchema;
 
 import java.util.Optional;
 

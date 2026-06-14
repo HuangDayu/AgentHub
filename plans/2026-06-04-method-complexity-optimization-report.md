@@ -322,7 +322,7 @@ Spring AI `@Tool` 框架要求方法的 `@ToolParam` 必须是扁平的命名参
 
 ```json
 {
-  "className": "com.agenthub.infrastructure.tools.system_tools.core_tools.PlanTools",
+  "className": "com.agenthub.infrastructure.tools.core_tools.PlanTools",
   "methodName": "addStep",
   "parameterTypes": ["java.lang.String", "java.lang.String", "java.lang.String", "java.lang.String", "org.springframework.ai.chat.model.ToolContext"],
   "reason": "Spring AI @Tool 框架要求扁平 @ToolParam 参数",

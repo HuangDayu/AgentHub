@@ -1,10 +1,10 @@
 package com.agenthub.infrastructure.camel;
 
-import com.agenthub.domain.model.AgentDataSource;
-import com.agenthub.domain.model.DataSourceColumn;
-import com.agenthub.domain.model.DataSourceSchema;
-import com.agenthub.domain.model.DataSourceTable;
-import com.agenthub.domain.model.TableRelationship;
+import com.agenthub.domain.model.data_source.AgentDataSource;
+import com.agenthub.domain.model.data_source.DataSourceColumn;
+import com.agenthub.domain.model.data_source.DataSourceSchema;
+import com.agenthub.domain.model.data_source.DataSourceTable;
+import com.agenthub.domain.model.data_source.TableRelationship;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * JDBC Schema 自动发现器

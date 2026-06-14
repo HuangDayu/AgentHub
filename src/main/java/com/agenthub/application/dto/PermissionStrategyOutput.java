@@ -1,6 +1,6 @@
 package com.agenthub.application.dto;
 
-import com.agenthub.domain.model.PermissionStrategy;
+import com.agenthub.domain.model.strategy.PermissionStrategy;
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
 import com.agenthub.domain.enums.OperationLevel;
 import com.agenthub.domain.enums.TableOperation;

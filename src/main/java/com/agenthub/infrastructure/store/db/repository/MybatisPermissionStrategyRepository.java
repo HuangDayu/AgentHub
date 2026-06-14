@@ -8,7 +8,7 @@ import com.agenthub.application.port.out.repositories.PermissionStrategyReposito
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
 import com.agenthub.domain.enums.OperationLevel;
 import com.agenthub.domain.enums.TableOperation;
-import com.agenthub.domain.model.PermissionStrategy;
+import com.agenthub.domain.model.strategy.PermissionStrategy;
 import com.agenthub.infrastructure.store.db.entity.PermissionStrategyEntity;
 import com.agenthub.infrastructure.store.db.mapper.PermissionStrategyMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

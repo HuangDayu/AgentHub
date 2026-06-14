@@ -6,7 +6,7 @@ import com.agenthub.application.dto.PermissionStrategyOutput;
 import com.agenthub.application.port.out.repositories.PermissionStrategyRepository;
 import com.agenthub.domain.exception.AgentDataSourceConflictException;
 import com.agenthub.domain.exception.AgentDataSourceNotFoundException;
-import com.agenthub.domain.model.PermissionStrategy;
+import com.agenthub.domain.model.strategy.PermissionStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

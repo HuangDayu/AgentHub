@@ -5,18 +5,17 @@ import com.agenthub.application.command.AgentConfigCommand;
 import com.agenthub.application.dto.AgentConfigOutput;
 import com.agenthub.application.port.out.repositories.AgentConfigRepository;
 import com.agenthub.application.port.out.repositories.McpToolRepository;
+import com.agenthub.application.port.out.repositories.SkillRepository;
 import com.agenthub.application.port.out.repositories.SystemToolsRepository;
-import com.agenthub.application.port.out.tools.SkillToolScannerPort;
 import com.agenthub.application.port.out.tools.SystemToolScannerPort;
 import com.agenthub.domain.enums.AgentConfigCategory;
 import com.agenthub.domain.enums.AgentConfigType;
 import com.agenthub.domain.exception.NotFoundException;
 import com.agenthub.domain.model.agent.AgentConfig;
-import com.agenthub.domain.model.tools.McpTool;
 import com.agenthub.domain.model.skill.Skill;
+import com.agenthub.domain.model.tools.McpTool;
 import com.agenthub.domain.model.tools.SystemTool;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -32,10 +31,7 @@ public class AgentConfigUseCase {
     private final SystemToolScannerPort systemToolScannerPort;
     private final SystemToolsRepository systemToolsRepository;
     private final McpToolRepository mcpToolRepository;
-    private final SkillToolScannerPort skillToolScannerPort;
-
-    @Value("${agenthub.skills.share-path:${user.home}/.agents/skills}")
-    private String skillSharePath;
+    private final SkillRepository skillRepository;
 
     public void syncConfig(String agentId) {
         syncSystemTool(agentId);
@@ -44,7 +40,8 @@ public class AgentConfigUseCase {
     }
 
     private void syncSkillTool(String agentId) {
-        List<Skill> skills = skillToolScannerPort.scanSkills(skillSharePath);
+        List<Skill> skills = skillRepository.findAll();
+        agentConfigRepository.delete(agentId, TOOL, SKILL_TOOL);
         parallelStreamWithTtl(4, skills, skill -> {
             agentConfigRepository.saveOrUpdate(new AgentConfig(agentId, TOOL, SKILL_TOOL, skill.getSkillCode(), skill.getName(), skill.getDescription(), 1, skill.isEnabled()));
             return null;
@@ -53,6 +50,7 @@ public class AgentConfigUseCase {
 
     private void syncMcpTool(String agentId) {
         List<McpTool> list = mcpToolRepository.findList();
+        agentConfigRepository.delete(agentId, TOOL, MCP_TOOL);
         parallelStreamWithTtl(4, list, mcpTool -> {
             agentConfigRepository.saveOrUpdate(new AgentConfig(agentId, TOOL, MCP_TOOL, mcpTool.getId(), mcpTool.getName(), mcpTool.getDescription(), 1, mcpTool.isEnabled()));
             return null;
@@ -62,6 +60,7 @@ public class AgentConfigUseCase {
     public void syncSystemTool(String agentId) {
         List<SystemTool> systemTools = systemToolScannerPort.scanSystemTools();
         systemTools = systemToolsRepository.syncTools(systemTools);
+        agentConfigRepository.delete(agentId, TOOL, SYSTEM_TOOL);
         parallelStreamWithTtl(4, systemTools, systemTool -> {
             agentConfigRepository.saveOrUpdate(new AgentConfig(agentId, TOOL, SYSTEM_TOOL, systemTool.getId(), systemTool.getToolName(), systemTool.getDescription(), 1, systemTool.isEnabled()));
             return null;

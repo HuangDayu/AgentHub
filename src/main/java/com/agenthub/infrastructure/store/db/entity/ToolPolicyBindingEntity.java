@@ -1,6 +1,7 @@
 package com.agenthub.infrastructure.store.db.entity;
 import lombok.Data;
 
+import com.agenthub.infrastructure.store.db.mapper.ToolPolicyBindingMybatisMapper;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.time.Instant;

@@ -92,7 +92,7 @@ public class AgentConfigChangeInterceptor implements InnerInterceptor {
     }
 
     private void logAuditInfo(Class<?> entityClass, AgentConfigChangedEvent.ChangeType changeType, List<String> primaryKeys) {
-        log.info("检测到数据变更 - 实体: {}, 类型: {}, 主键IDs: {}",
+        log.debug("检测到数据变更 - 实体: {}, 类型: {}, 主键IDs: {}",
                 entityClass.getSimpleName(), changeType, primaryKeys);
     }
 }

@@ -3,7 +3,7 @@ package com.agenthub.application.usecase;
 import com.agenthub.application.port.out.AgentDataSourcePort;
 import com.agenthub.application.port.out.repositories.AgentDataSourceRepository;
 import com.agenthub.common.annotations.IgnoreTenantContext;
-import com.agenthub.domain.model.AgentDataSource;
+import com.agenthub.domain.model.data_source.AgentDataSource;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1948,7 +1948,7 @@ AgentDataSourceBootstrapUseCase.onApplicationReady()
 - **UseCase 单元测试**：`AgentDataSourceUseCaseUnitTest`（Mock Repository + Port）
 - **ArchUnit**：`gradle test --tests "com.agenthub.test.architecture.AgentHubCleanArchitectureTest"` → 19/19
   - 新增：`com.agenthub.infrastructure.camel.*` 之外禁止引用 `org.apache.camel.*`
-  - 新增：`com.agenthub.infrastructure.tools.data_source.*` 禁止引用 `org.apache.camel.*`
+  - 新增：`com.agenthub.infrastructure.tools.camel_tools.*` 禁止引用 `org.apache.camel.*`
 
 ## 15. 不在本次范围内
 

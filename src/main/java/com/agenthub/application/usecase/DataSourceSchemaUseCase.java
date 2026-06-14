@@ -7,10 +7,10 @@ import com.agenthub.application.port.out.repositories.DataSourceSchemaRepository
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
 import com.agenthub.domain.exception.AgentDataSourceNotFoundException;
 import com.agenthub.domain.exception.AgentDataSourceValidationException;
-import com.agenthub.domain.model.AgentDataSource;
-import com.agenthub.domain.model.DataSourceColumn;
-import com.agenthub.domain.model.DataSourceSchema;
-import com.agenthub.domain.model.DataSourceTable;
+import com.agenthub.domain.model.data_source.AgentDataSource;
+import com.agenthub.domain.model.data_source.DataSourceColumn;
+import com.agenthub.domain.model.data_source.DataSourceSchema;
+import com.agenthub.domain.model.data_source.DataSourceTable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

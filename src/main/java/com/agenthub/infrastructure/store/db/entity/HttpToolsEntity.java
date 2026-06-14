@@ -2,7 +2,11 @@ package com.agenthub.infrastructure.store.db.entity;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.common.annotations.ConfigChangeListenerEntity;
+import com.agenthub.domain.annotation.AgentDataField;
+import com.agenthub.domain.annotation.AgentDataModel;
+import com.agenthub.domain.enums.HttpAuthType;
 import com.agenthub.domain.model.tools.HttpTool;
+import com.agenthub.infrastructure.store.db.mapper.HttpToolMybatisMapper;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
@@ -21,19 +25,34 @@ import static com.agenthub.domain.enums.AgentConfigType.HTTP_TOOL;
 @Data
 @TableName("http_tools")
 @ConfigChangeListenerEntity(category = TOOL, type = HTTP_TOOL)
+@AgentDataModel(
+    name = "HTTP工具",
+    description = "HTTP接口工具，通过REST API调用外部服务",
+    domain = "工具管理",
+    mapper = HttpToolMybatisMapper.class
+)
 public class HttpToolsEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
+    @AgentDataField(hidden = true)
     @TableField(value = "tenant_id", fill = FieldFill.INSERT)
     private String tenantId;
+    @AgentDataField(hidden = true)
     @TableField(value = "workspace_id", fill = FieldFill.INSERT)
     private String workspaceId;
+    @AgentDataField(description = "工具名称", required = true, filterable = true)
     private String name;
+    @AgentDataField(description = "工具描述")
     private String description;
+    @AgentDataField(description = "是否启用")
     private boolean enabled;
+    @AgentDataField(description = "接口地址")
     private String endpoint;
+    @AgentDataField(description = "认证方式", enumType = HttpAuthType.class)
     private String authType;
+    @AgentDataField(description = "输入参数Schema")
     private String inputSchema;
+    @AgentDataField(description = "超时时间(ms)")
     private int timeoutMs;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;

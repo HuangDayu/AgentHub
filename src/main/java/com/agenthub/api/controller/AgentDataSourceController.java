@@ -1,8 +1,6 @@
 package com.agenthub.api.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.agenthub.api.dto.AgentDataSourceDescriptorResponse;
-import com.agenthub.api.dto.AgentDataSourceFieldResponse;
 import com.agenthub.api.dto.AgentDataSourceInvokeResponse;
 import com.agenthub.api.dto.AgentDataSourceResponse;
 import com.agenthub.api.dto.AgentDataSourceTestResponse;
@@ -13,9 +11,7 @@ import com.agenthub.api.mapper.AgentDataSourceViewMapper;
 import com.agenthub.application.command.CreateAgentDataSourceCommand;
 import com.agenthub.application.command.InvokeAgentDataSourceCommand;
 import com.agenthub.application.command.UpdateAgentDataSourceCommand;
-import com.agenthub.application.dto.AgentDataSourceOutput;
 import com.agenthub.application.usecase.AgentDataSourceUseCase;
-import com.agenthub.domain.model.AgentDataSourceDescriptor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,6 +1,6 @@
 package com.agenthub.infrastructure.store.db.datasource;
 
-import com.agenthub.domain.model.AgentDataSource;
+import com.agenthub.domain.model.data_source.AgentDataSource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zaxxer.hikari.HikariConfig;

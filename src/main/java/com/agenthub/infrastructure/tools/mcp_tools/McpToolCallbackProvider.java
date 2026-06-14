@@ -1,5 +1,6 @@
 package com.agenthub.infrastructure.tools.mcp_tools;
 
+import cn.hutool.core.collection.ConcurrentHashSet;
 import com.agenthub.domain.model.tools.McpTool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +36,15 @@ public class McpToolCallbackProvider {
      * 将McpTool列表转换为ToolCallback集合。
      */
     private Set<ToolCallback> convertToToolCallbacks(List<McpTool> mcpTools) {
+        Set<String> names = new ConcurrentHashSet<>();
         return mcpTools.parallelStream()
-                .filter(this::isEnabled)
+                .filter(v -> {
+                    if (v.isEnabled() && !names.contains(v.getName())) {
+                        names.add(v.getName());
+                        return true;
+                    }
+                    return false;
+                })
                 .map(v -> createToolCallback(v).getToolCallbacks())
                 .flatMap(v -> Set.of(v).stream())
                 .collect(Collectors.toSet());

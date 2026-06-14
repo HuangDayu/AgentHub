@@ -2,9 +2,11 @@
 
 <h1 align="center">AgentHub</h1>
 
-<h3 align="center">企业级 AI Agent 全生命周期管理平台</h3>
+<h3 align="center">Agent自管理、自进化、自治理平台</h3>
 
-<h5 align="center">一站式管理 AI Agent 和 Agent Team 的创建、配置、运行、监控与协作</h5>
+<h5 align="center">将一切交给可信的、可控的、可进化的Agent</h5>
+
+<h5 align="center">三权分立： Human Console 立法 、 Admin Agent 行政 、 Auditor Agent 监督</h5>
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0--M2-brightgreen)](https://spring.io/projects/spring-boot)
 [![Spring AI](https://img.shields.io/badge/Spring%20AI-2.0.0--M4-blue)](https://spring.io/projects/spring-ai)

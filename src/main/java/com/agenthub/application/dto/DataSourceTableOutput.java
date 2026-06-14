@@ -1,7 +1,7 @@
 package com.agenthub.application.dto;
 
 import com.agenthub.domain.enums.TableOperation;
-import com.agenthub.domain.model.DataSourceTable;
+import com.agenthub.domain.model.data_source.DataSourceTable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
