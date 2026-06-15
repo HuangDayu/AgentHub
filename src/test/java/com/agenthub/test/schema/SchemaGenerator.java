@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 /**
  * MyBatis-Plus Entity到PostgreSQL Schema生成器。
  */
+@Deprecated
 public class SchemaGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(SchemaGenerator.class);

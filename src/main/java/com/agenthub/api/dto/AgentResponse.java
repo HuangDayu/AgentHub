@@ -1,5 +1,7 @@
 package com.agenthub.api.dto;
 
+import com.agenthub.domain.enums.AgentRuntimeCategory;
+import com.agenthub.domain.enums.AgentType;
 import java.time.Instant;
 
 import lombok.Data;
@@ -18,6 +20,8 @@ public class AgentResponse {
     private String description;
     private String status;
     private boolean enabled;
+    private AgentType type;
+    private AgentRuntimeCategory runtimeCategory;
     private Instant createdAt;
     private Instant updatedAt;
 }

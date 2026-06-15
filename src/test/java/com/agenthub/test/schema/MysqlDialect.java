@@ -1,11 +1,15 @@
 package com.agenthub.test.schema;
 
+import org.apache.ibatis.type.JdbcType;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.agenthub.test.schema.SchemaFileGenerator.mapJdbcType;
 
 /**
  * MySQL 8.0+ 方言：反引号标识符、datetime(6)、INSERT IGNORE / ON DUPLICATE KEY UPDATE。
@@ -24,12 +28,17 @@ public class MysqlDialect implements SchemaDialect {
     }
 
     @Override
-    public String mapType(Class<?> javaType, String colName) {
+    public String mapType(EntitySchemaScanner.ColumnDefinition  col) {
+        Class<?> javaType = col.javaType;
+        String colName = col.columnName;
+        if (col.tableField != null && !col.tableField.jdbcType().equals(JdbcType.UNDEFINED)) {
+            return mapJdbcType(col.tableField.jdbcType()).toUpperCase();
+        }
         if ("id".equals(colName)) {
             return "varchar(64)";
         }
         if (javaType == String.class) {
-            return mapStringType(colName);
+            return mapStringType(col);
         }
         if (javaType == Long.class || javaType == long.class) {
             return "BIGINT";
@@ -109,7 +118,8 @@ public class MysqlDialect implements SchemaDialect {
         return "SET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS = 0;\n";
     }
 
-    private String mapStringType(String columnName) {
+    private String mapStringType(EntitySchemaScanner.ColumnDefinition  col) {
+        String columnName = col.columnName;
         if (columnName.contains("url") || columnName.contains("uri") || columnName.contains("payload")) {
             return "LONGTEXT";
         }

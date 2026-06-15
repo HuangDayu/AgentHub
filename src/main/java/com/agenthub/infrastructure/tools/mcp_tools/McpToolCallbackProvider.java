@@ -38,13 +38,7 @@ public class McpToolCallbackProvider {
     private Set<ToolCallback> convertToToolCallbacks(List<McpTool> mcpTools) {
         Set<String> names = new ConcurrentHashSet<>();
         return mcpTools.parallelStream()
-                .filter(v -> {
-                    if (v.isEnabled() && !names.contains(v.getName())) {
-                        names.add(v.getName());
-                        return true;
-                    }
-                    return false;
-                })
+                .filter(v -> v.isEnabled() && names.add(v.getName()))
                 .map(v -> createToolCallback(v).getToolCallbacks())
                 .flatMap(v -> Set.of(v).stream())
                 .collect(Collectors.toSet());

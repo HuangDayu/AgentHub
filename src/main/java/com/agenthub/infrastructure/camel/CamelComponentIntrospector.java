@@ -1,7 +1,7 @@
 package com.agenthub.infrastructure.camel;
 
-import com.agenthub.domain.model.data_source.AgentDataSourceDescriptor;
-import com.agenthub.domain.model.data_source.AgentDataSourceField;
+import com.agenthub.domain.model.datasource.AgentDataSourceDescriptor;
+import com.agenthub.domain.model.datasource.AgentDataSourceField;
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
 import org.springframework.stereotype.Component;
 

@@ -7,10 +7,6 @@ import com.agenthub.application.dto.PlanStepOutput;
 import com.agenthub.application.usecase.ExecutionPlanUseCase;
 import com.agenthub.infrastructure.context.TenantContextHolder;
 import com.agenthub.infrastructure.context.TenantThreadContext;
-import com.agenthub.infrastructure.tools.base_tools.KnowledgeTools;
-import com.agenthub.infrastructure.tools.base_tools.ModelTools;
-import com.agenthub.infrastructure.tools.core_tools.dto.KnowledgeBaseSummary;
-import com.agenthub.infrastructure.tools.core_tools.dto.ModelCapabilitySummary;
 import com.agenthub.test.TestAgentHubApplication;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,11 +30,6 @@ class AutonomousAgentWorkflowTest {
     @Autowired
     private ExecutionPlanUseCase executionPlanUseCase;
 
-    @Autowired
-    private ModelTools modelTools;
-
-    @Autowired
-    private KnowledgeTools knowledgeTools;
     private static final String agentId = "2054196010662010881";
     private static final String sessionId = "2057834835146399745";
     private ExecutionPlanOutput currentPlan;
@@ -51,31 +42,6 @@ class AutonomousAgentWorkflowTest {
 
     @Test
     @Order(1)
-    void step1_discoverAvailableModels() {
-        List<ModelCapabilitySummary> capabilities = modelTools.getModelCapabilities();
-        assertNotNull(capabilities);
-        System.out.println("=== 可用模型 ===");
-        for (ModelCapabilitySummary cap : capabilities) {
-            System.out.printf("  - %s (%s): %s, 成本=%s, 速度=%s%n",
-                    cap.getModelName(), cap.getSupplier(),
-                    cap.getCapabilityDomain(), cap.getCostLevel(), cap.getSpeedLevel());
-        }
-    }
-
-    @Test
-    @Order(2)
-    void step2_discoverAvailableKnowledgeBases() {
-        List<KnowledgeBaseSummary> summaries = knowledgeTools.getKnowledgeBaseSummaries(null);
-        assertNotNull(summaries);
-        System.out.println("=== 可用知识库 ===");
-        for (KnowledgeBaseSummary kb : summaries) {
-            System.out.printf("  - %s: %s (文档数=%d)%n",
-                    kb.getName(), kb.getDescription(), kb.getDocumentCount());
-        }
-    }
-
-    @Test
-    @Order(3)
     void step3_createExecutionPlan() {
         currentPlan = executionPlanUseCase.createPlan(buildResearchPlanCommand());
         assertNotNull(currentPlan);
@@ -88,16 +54,16 @@ class AutonomousAgentWorkflowTest {
     }
 
     @Test
-    @Order(4)
-    void step4_startExecution() {
+    @Order(2)
+    void step2_startExecution() {
         ExecutionPlanOutput plan = executionPlanUseCase.startExecution(currentPlan.getId());
         assertEquals("EXECUTING", plan.getStatus());
         System.out.println("=== 开始执行 ===");
     }
 
     @Test
-    @Order(5)
-    void step5_executeStep1_search() {
+    @Order(3)
+    void step3_executeStep1_search() {
 
         List<PlanStepOutput> nextSteps = executionPlanUseCase.getNextSteps(currentPlan.getId());
         assertFalse(nextSteps.isEmpty());
@@ -110,8 +76,8 @@ class AutonomousAgentWorkflowTest {
     }
 
     @Test
-    @Order(6)
-    void step6_executeStep2_analyze() {
+    @Order(4)
+    void step4_executeStep2_analyze() {
 
         List<PlanStepOutput> nextSteps = executionPlanUseCase.getNextSteps(currentPlan.getId());
         assertFalse(nextSteps.isEmpty());
@@ -125,8 +91,8 @@ class AutonomousAgentWorkflowTest {
     }
 
     @Test
-    @Order(7)
-    void step7_executeStep3_generate() {
+    @Order(5)
+    void step5_executeStep3_generate() {
 
         List<PlanStepOutput> nextSteps = executionPlanUseCase.getNextSteps(currentPlan.getId());
         assertFalse(nextSteps.isEmpty());
@@ -140,8 +106,8 @@ class AutonomousAgentWorkflowTest {
     }
 
     @Test
-    @Order(8)
-    void step8_executeStep4_review() {
+    @Order(6)
+    void step6_executeStep4_review() {
 
         List<PlanStepOutput> nextSteps = executionPlanUseCase.getNextSteps(currentPlan.getId());
         assertFalse(nextSteps.isEmpty());
@@ -155,8 +121,8 @@ class AutonomousAgentWorkflowTest {
     }
 
     @Test
-    @Order(9)
-    void step9_completePlan() {
+    @Order(7)
+    void step7_completePlan() {
         ExecutionPlanOutput plan = executionPlanUseCase.completePlan(
                 currentPlan.getId(), "研究报告已完成，包含3个关键洞察，已通过审核");
         assertEquals("COMPLETED", plan.getStatus());
@@ -168,8 +134,8 @@ class AutonomousAgentWorkflowTest {
     }
 
     @Test
-    @Order(10)
-    void step10_verifyPlanHistory() {
+    @Order(8)
+    void step8_verifyPlanHistory() {
         List<ExecutionPlanOutput> plans = executionPlanUseCase.getPlansByAgent(agentId);
         assertNotNull(plans);
         assertFalse(plans.isEmpty());

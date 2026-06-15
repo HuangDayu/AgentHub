@@ -1,9 +1,10 @@
 package com.agenthub.application.command;
 
+import com.agenthub.domain.enums.AgentRuntimeCategory;
+import com.agenthub.domain.enums.AgentType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 /**
  * @author huangdayu
@@ -20,4 +21,6 @@ public class CreateAgentCommand {
     private String description;
     private String status;
     private boolean enabled;
+    private AgentType type;
+    private AgentRuntimeCategory runtimeCategory;
 }

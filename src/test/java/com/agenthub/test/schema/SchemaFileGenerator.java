@@ -1,5 +1,6 @@
 package com.agenthub.test.schema;
 
+import org.apache.ibatis.type.JdbcType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +21,9 @@ public final class SchemaFileGenerator {
     private static final Logger log = LoggerFactory.getLogger(SchemaFileGenerator.class);
 
     public static final List<SchemaDialect> DIALECTS = List.of(
-        new PostgresDialect(),
-        new H2Dialect(),
-        new MysqlDialect()
+            new PostgresDialect(),
+            new H2Dialect(),
+            new MysqlDialect()
     );
 
     private SchemaFileGenerator() {
@@ -48,7 +49,7 @@ public final class SchemaFileGenerator {
         Files.writeString(dir.resolve("schema.sql"), schema);
         Files.writeString(dir.resolve("init.sql"), init);
         log.info("[{}] schema.sql {} bytes, init.sql {} bytes",
-            dialect.name(), schema.length(), init.length());
+                dialect.name(), schema.length(), init.length());
     }
 
     /**
@@ -124,7 +125,7 @@ public final class SchemaFileGenerator {
         if (col.isAutoIncrement) {
             sb.append(dialect.autoIncrementType());
         } else {
-            sb.append(dialect.mapType(col.javaType, col.columnName));
+            sb.append(dialect.mapType(col));
         }
         if (!col.nullable) {
             sb.append(" NOT NULL");
@@ -135,13 +136,59 @@ public final class SchemaFileGenerator {
     private static void appendSeedRow(StringBuilder sb, SchemaDialect dialect, SeedDataProvider.SeedRow row) {
         String prefix = dialect.schemaPrefix();
         SchemaDialect.SqlInsert insert = new SchemaDialect.SqlInsert(
-            prefix + row.table(), row.columns(), row.values(),
-            row.columns().stream().filter(c -> !"id".equals(c) && !"created_at".equals(c)).toList());
+                prefix + row.table(), row.columns(), row.values(),
+                row.columns().stream().filter(c -> !"id".equals(c) && !"created_at".equals(c)).toList());
         if (row.mode() == SeedDataProvider.ConflictMode.DO_NOTHING) {
             sb.append(dialect.insertOrIgnore(insert));
         } else {
             sb.append(dialect.insertOrUpdate(insert));
         }
         sb.append("\n");
+    }
+
+    public static String mapJdbcType(JdbcType jdbcType) {
+        return switch (jdbcType) {
+            case VARCHAR -> "varchar(255)";
+            case INTEGER -> "integer";
+            case BIGINT -> "bigint";
+            case BOOLEAN -> "boolean";
+            case REAL -> "text";
+            case DOUBLE -> "double precision";
+            case FLOAT -> "real";
+            case TIMESTAMP -> "timestamptz";
+            case DATE -> "date";
+            case NUMERIC -> "numeric(19,2)";
+            case BLOB -> "bytea";
+            case CLOB -> "text";
+            case BINARY -> "bytea";
+            case VARBINARY -> "bytea";
+            case LONGVARBINARY -> "bytea";
+            case TIME -> "time";
+            case NCHAR -> "text";
+            case NVARCHAR -> "text";
+            case NCLOB -> "text";
+            case SQLXML -> "text";
+            case OTHER -> "text";
+            case ARRAY -> "text";
+            case REF -> "text";
+            case DATALINK -> "text";
+            case ROWID -> "text";
+            case STRUCT -> "text";
+            case NULL -> "text";
+            case UNDEFINED -> "text";
+            case DISTINCT -> "text";
+            case JAVA_OBJECT -> "text";
+            case CURSOR -> "text";
+            case DATETIMEOFFSET -> "text";
+            case TIME_WITH_TIMEZONE -> "timestamptz";
+            case TIMESTAMP_WITH_TIMEZONE -> "timestamptz";
+            case BIT -> "boolean";
+            case TINYINT -> "smallint";
+            case SMALLINT -> "smallint";
+            case DECIMAL -> "numeric(19,2)";
+            case CHAR -> "char(1)";
+            case LONGNVARCHAR -> "text";
+            case LONGVARCHAR -> "text";
+        };
     }
 }

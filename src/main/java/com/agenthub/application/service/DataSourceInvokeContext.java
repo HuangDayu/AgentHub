@@ -1,6 +1,6 @@
 package com.agenthub.application.service;
 
-import com.agenthub.domain.model.data_source.AgentDataSource;
+import com.agenthub.domain.model.datasource.AgentDataSource;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

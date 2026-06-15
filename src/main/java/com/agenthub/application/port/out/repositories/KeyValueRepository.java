@@ -49,7 +49,7 @@ public interface KeyValueRepository {
     void mset(Map<String, String> keyValueMap);
 
     /**
-     * 追加值
+     * 追加值 
      */
     void append(String key, String value);
 

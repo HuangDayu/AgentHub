@@ -1,9 +1,9 @@
 package com.agenthub.infrastructure.camel;
 
 import com.agenthub.application.port.out.AgentDataSourcePort;
-import com.agenthub.domain.model.data_source.AgentDataSource;
-import com.agenthub.domain.model.data_source.AgentDataSourceDescriptor;
-import com.agenthub.domain.model.data_source.DataSourceSchema;
+import com.agenthub.domain.model.datasource.AgentDataSource;
+import com.agenthub.domain.model.datasource.AgentDataSourceDescriptor;
+import com.agenthub.domain.model.datasource.DataSourceSchema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -1,4 +1,4 @@
-package com.agenthub.domain.model.data_source;
+package com.agenthub.domain.model.datasource;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

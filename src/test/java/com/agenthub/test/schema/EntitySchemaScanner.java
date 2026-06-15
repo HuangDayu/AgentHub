@@ -72,6 +72,7 @@ public final class EntitySchemaScanner {
         col.isPrimaryKey = tid != null;
         col.isAutoIncrement = tid != null && tid.type() == IdType.AUTO;
         col.nullable = !col.isPrimaryKey;
+        col.tableField = tf;
         return col;
     }
 
@@ -106,5 +107,6 @@ public final class EntitySchemaScanner {
         public boolean isPrimaryKey;
         public boolean isAutoIncrement;
         public boolean nullable;
+        public TableField tableField;
     }
 }

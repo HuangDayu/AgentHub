@@ -2,6 +2,8 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.AgentRepository;
+import com.agenthub.domain.enums.AgentRuntimeCategory;
+import com.agenthub.domain.enums.AgentType;
 import com.agenthub.domain.model.agent.Agent;
 import com.agenthub.infrastructure.store.db.entity.AgentEntity;
 import com.agenthub.infrastructure.store.db.mapper.AgentMybatisMapper;
@@ -65,11 +67,17 @@ public class MybatisAgentRepository implements AgentRepository {
 
     private AgentEntity toEntity(Agent agent) {
         if (agent == null) return null;
-        return BeanUtil.copyProperties(agent, AgentEntity.class);
+        AgentEntity entity = BeanUtil.copyProperties(agent, AgentEntity.class);
+        entity.setType(agent.getType() != null ? agent.getType().name() : null);
+        entity.setRuntimeCategory(agent.getRuntimeCategory() != null ? agent.getRuntimeCategory().name() : null);
+        return entity;
     }
 
     private Agent toDomain(AgentEntity entity) {
         if (entity == null) return null;
-        return BeanUtil.copyProperties(entity, Agent.class);
+        Agent agent = BeanUtil.copyProperties(entity, Agent.class);
+        agent.setType(entity.getType() != null ? AgentType.valueOf(entity.getType()) : null);
+        agent.setRuntimeCategory(entity.getRuntimeCategory() != null ? AgentRuntimeCategory.valueOf(entity.getRuntimeCategory()) : null);
+        return agent;
     }
 }

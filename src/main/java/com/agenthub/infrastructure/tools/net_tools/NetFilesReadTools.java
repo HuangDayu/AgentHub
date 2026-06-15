@@ -47,13 +47,9 @@ public class NetFilesReadTools {
     @Tool(description = "批量读取多个网络文件，返回URL到内容的映射")
     public Map<String, String> readNetFiles(@ToolParam(description = "URL列表") List<String> urls) {
         Map<String, String> r = new LinkedHashMap<>();
-        for (String u : urls)
-            try {
-                r.put(u, readNetFile(u));
-            } catch (Exception e) {
-                r.put(u, "【失败】" + e.getMessage());
-                log.warn("读取失败: {}", u, e);
-            }
+        urls.forEach(u -> {
+            try { r.put(u, readNetFile(u)); } catch (Exception e) { r.put(u, "【失败】" + e.getMessage()); log.warn("读取失败: {}", u, e); }
+        });
         return r;
     }
 
@@ -80,14 +76,17 @@ public class NetFilesReadTools {
 
     private static String name(String url) {
         try {
-            String p = URI.create(url).getPath();
-            if (p == null || p.isEmpty() || p.endsWith("/")) return FALLBACK;
-            String n = p.substring(p.lastIndexOf('/') + 1);
-            if (n.isEmpty()) return FALLBACK;
-            int q = n.indexOf('?');
-            return q > 0 ? n.substring(0, q) : n;
+            return extractFileName(url);
         } catch (Exception e) {
             return FALLBACK;
         }
+    }
+
+    private static String extractFileName(String url) {
+        String p = URI.create(url).getPath();
+        if (p == null || p.isEmpty() || p.endsWith("/")) return FALLBACK;
+        String n = p.substring(p.lastIndexOf('/') + 1);
+        int q = n.indexOf('?');
+        return n.isEmpty() ? FALLBACK : (q > 0 ? n.substring(0, q) : n);
     }
 }

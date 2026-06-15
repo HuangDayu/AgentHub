@@ -1,4 +1,4 @@
-package com.agenthub.domain.model.data_source;
+package com.agenthub.domain.model.datasource;
 
 import com.agenthub.domain.enums.TableOperation;
 import lombok.AllArgsConstructor;

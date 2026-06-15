@@ -2,9 +2,9 @@ package com.agenthub.infrastructure.store.db.repository;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.DataSourceSchemaRepository;
-import com.agenthub.domain.model.data_source.DataSourceColumn;
-import com.agenthub.domain.model.data_source.DataSourceSchema;
-import com.agenthub.domain.model.data_source.DataSourceTable;
+import com.agenthub.domain.model.datasource.DataSourceColumn;
+import com.agenthub.domain.model.datasource.DataSourceSchema;
+import com.agenthub.domain.model.datasource.DataSourceTable;
 import com.agenthub.infrastructure.store.db.entity.DataSourceColumnEntity;
 import com.agenthub.infrastructure.store.db.entity.DataSourceSchemaEntity;
 import com.agenthub.infrastructure.store.db.entity.DataSourceTableEntity;

@@ -2,6 +2,8 @@ export interface Agent {
   id: string
   name: string
   description: string
+  type: string
+  runtimeCategory: string
   publishedVersionId?: string
   createdAt: string
   updatedAt: string

@@ -334,7 +334,9 @@ public class AgentFullLifecycleIntegrationTest {
                                     "workspaceId": "%s",
                                     "agentCode": "test-agent-full",
                                     "name": "test-agent-%s",
-                                    "description": "Agent for full lifecycle integration test"
+                                    "description": "Agent for full lifecycle integration test",
+                                    "type": "MAIN_AGENT",
+                                    "runtimeCategory": "SPRING_AGENT"
                                 }
                                 """, TENANT_ID, WORKSPACE_ID,randomShortId())))
                 .andExpect(status().isCreated())

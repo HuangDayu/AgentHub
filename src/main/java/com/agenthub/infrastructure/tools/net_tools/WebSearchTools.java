@@ -28,30 +28,27 @@ public class WebSearchTools {
     @Tool(description = "互联网在线搜索服务，比如搜索新闻，文档，事件等")
     public String searchWeb(@ToolParam String query) throws IOException, InterruptedException {
         String apiUrl = "https://api.duckduckgo.com/?q=" +
-                URLEncoder.encode(query, StandardCharsets.UTF_8) +
-                "&format=json&no_html=1";
+                URLEncoder.encode(query, StandardCharsets.UTF_8) + "&format=json&no_html=1";
+        String body = httpGet(apiUrl);
+        return extractSearchResults(body);
+    }
 
+    private String httpGet(String url) throws IOException, InterruptedException {
         HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
-                .build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        return extractSearchResults(response.body());
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
+        return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
     }
 
     @SneakyThrows
     private String extractSearchResults(String jsonResponse) {
-        StringBuilder results = new StringBuilder();
         JsonNode root = objectMapper.readTree(jsonResponse);
-        JsonNode relatedTopics = root.get("RelatedTopics");
-        if (relatedTopics != null && relatedTopics.isArray()) {
-            for (JsonNode topic : relatedTopics) {
-                JsonNode textNode = topic.get("Text");
-                if (textNode != null && textNode.isTextual()) {
-                    results.append("• ").append(textNode.asText()).append("\n");
-                }
-            }
-        }
+        JsonNode topics = root.get("RelatedTopics");
+        if (topics == null || !topics.isArray()) return "";
+        StringBuilder results = new StringBuilder();
+        topics.forEach(t -> {
+            JsonNode text = t.get("Text");
+            if (text != null && text.isTextual()) results.append("• ").append(text.asText()).append("\n");
+        });
         return results.toString();
     }
 }

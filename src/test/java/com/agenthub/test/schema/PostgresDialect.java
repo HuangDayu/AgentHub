@@ -1,11 +1,15 @@
 package com.agenthub.test.schema;
 
+import org.apache.ibatis.type.JdbcType;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.agenthub.test.schema.SchemaFileGenerator.mapJdbcType;
 
 /**
  * PostgreSQL 方言：双引号标识符、timestamptz、ON CONFLICT (id) DO NOTHING/UPDATE。
@@ -23,12 +27,17 @@ public class PostgresDialect implements SchemaDialect {
     }
 
     @Override
-    public String mapType(Class<?> javaType, String colName) {
+    public String mapType(EntitySchemaScanner.ColumnDefinition col) {
+        Class<?> javaType = col.javaType;
+        String colName = col.columnName;
+        if (col.tableField != null && !col.tableField.jdbcType().equals(JdbcType.UNDEFINED)) {
+            return mapJdbcType(col.tableField.jdbcType()).toUpperCase();
+        }
         if ("id".equals(colName)) {
             return "varchar(64)";
         }
         if (javaType == String.class) {
-            return mapStringType(colName);
+            return mapStringType(col);
         }
         if (javaType == Long.class || javaType == long.class) {
             return "bigint";
@@ -71,16 +80,16 @@ public class PostgresDialect implements SchemaDialect {
     @Override
     public String insertOrIgnore(SqlInsert insert) {
         return "INSERT INTO " + insert.table() + " (" + String.join(", ", insert.columns()) + ") VALUES "
-            + joinValues(insert.values()) + " ON CONFLICT (id) DO NOTHING;";
+                + joinValues(insert.values()) + " ON CONFLICT (id) DO NOTHING;";
     }
 
     @Override
     public String insertOrUpdate(SqlInsert insert) {
         String setClause = insert.updateColumns().stream()
-            .map(c -> c + " = EXCLUDED." + c)
-            .collect(Collectors.joining(", "));
+                .map(c -> c + " = EXCLUDED." + c)
+                .collect(Collectors.joining(", "));
         return "INSERT INTO " + insert.table() + " (" + String.join(", ", insert.columns()) + ") VALUES "
-            + joinValues(insert.values()) + " ON CONFLICT (id) DO UPDATE SET " + setClause + ";";
+                + joinValues(insert.values()) + " ON CONFLICT (id) DO UPDATE SET " + setClause + ";";
     }
 
     @Override
@@ -106,11 +115,12 @@ public class PostgresDialect implements SchemaDialect {
     @Override
     public String schemaHeader() {
         return "CREATE SCHEMA IF NOT EXISTS app;\n"
-            + "CREATE EXTENSION IF NOT EXISTS pgcrypto;\n"
-            + "SET search_path TO app, public;\n";
+                + "CREATE EXTENSION IF NOT EXISTS pgcrypto;\n"
+                + "SET search_path TO app, public;\n";
     }
 
-    private String mapStringType(String columnName) {
+    private String mapStringType(EntitySchemaScanner.ColumnDefinition col) {
+        String columnName = col.columnName;
         if (columnName.contains("url") || columnName.contains("uri") || columnName.contains("payload")) {
             return "text";
         }

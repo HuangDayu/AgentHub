@@ -1,8 +1,8 @@
 package com.agenthub.application.port.out;
 
-import com.agenthub.domain.model.data_source.AgentDataSource;
-import com.agenthub.domain.model.data_source.AgentDataSourceDescriptor;
-import com.agenthub.domain.model.data_source.DataSourceSchema;
+import com.agenthub.domain.model.datasource.AgentDataSource;
+import com.agenthub.domain.model.datasource.AgentDataSourceDescriptor;
+import com.agenthub.domain.model.datasource.DataSourceSchema;
 
 import java.util.List;
 import java.util.Map;

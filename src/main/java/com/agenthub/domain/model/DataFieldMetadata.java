@@ -121,15 +121,9 @@ public class DataFieldMetadata {
      * 解析枚举值，优先从 enumType 提取，其次使用 enumValues
      */
     private static List<String> resolveEnumValues(AgentDataField annotation) {
-        if (annotation == null) {
-            return new ArrayList<>();
-        }
-        if (isEnumTypeSet(annotation)) {
-            return extractEnumNames(annotation.enumType());
-        }
-        if (annotation.enumValues().length > 0) {
-            return Arrays.asList(annotation.enumValues());
-        }
+        if (annotation == null) return new ArrayList<>();
+        if (isEnumTypeSet(annotation)) return extractEnumNames(annotation.enumType());
+        if (annotation.enumValues().length > 0) return Arrays.asList(annotation.enumValues());
         return new ArrayList<>();
     }
 

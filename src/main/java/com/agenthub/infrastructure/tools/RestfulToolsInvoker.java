@@ -77,18 +77,12 @@ public class RestfulToolsInvoker {
      * 调用外部工具。
      */
     public HttpToolInvokeResult invoke(HttpTool httpTool, Map<java.lang.String, Object> payload) {
-        log.info("调用外部工具: toolId={}, endpoint={}, method={}", httpTool.getId(), httpTool.getEndpoint(), httpTool.getHttpMethod());
         try {
             return doInvoke(httpTool, payload);
-        } catch (HttpClientErrorException e) {
-            return handleClientError(httpTool, e);
-        } catch (HttpServerErrorException e) {
-            return handleServerError(httpTool, e);
-        } catch (ResourceAccessException e) {
-            return handleTimeout(httpTool, e);
-        } catch (Exception e) {
-            return handleGeneralError(httpTool, e);
-        }
+        } catch (HttpClientErrorException e) { return handleClientError(httpTool, e); }
+        catch (HttpServerErrorException e) { return handleServerError(httpTool, e); }
+        catch (ResourceAccessException e) { return handleTimeout(httpTool, e); }
+        catch (Exception e) { return handleGeneralError(httpTool, e); }
     }
 
     /**
@@ -142,9 +136,7 @@ public class RestfulToolsInvoker {
      * 参数白名单校验：仅允许 inputSchema 中定义的属性通过。
      */
     private Map<java.lang.String, Object> validateAndFilter(HttpTool httpTool, Map<java.lang.String, Object> payload) {
-        if (httpTool.getInputSchemaJson() == null || httpTool.getInputSchemaJson().isBlank()) {
-            return payload;
-        }
+        if (httpTool.getInputSchemaJson() == null || httpTool.getInputSchemaJson().isBlank()) return payload;
         try {
             return filterBySchema(httpTool, payload);
         } catch (JsonProcessingException e) {
@@ -159,10 +151,7 @@ public class RestfulToolsInvoker {
     private Map<java.lang.String, Object> filterBySchema(HttpTool httpTool, Map<java.lang.String, Object> payload) throws JsonProcessingException {
         JsonNode schemaNode = objectMapper.readTree(httpTool.getInputSchemaJson());
         JsonNode propertiesNode = schemaNode.get("properties");
-        if (propertiesNode == null || !propertiesNode.isObject()) {
-            log.warn("inputSchema 缺少 properties 定义，跳过校验: toolId={}", httpTool.getId());
-            return payload;
-        }
+        if (propertiesNode == null || !propertiesNode.isObject()) return payload;
         Set<java.lang.String> allowedKeys = getAllowedKeys(propertiesNode);
         validateRequiredFields(schemaNode, payload);
         return filterPayload(payload, allowedKeys);
@@ -182,13 +171,10 @@ public class RestfulToolsInvoker {
      */
     private void validateRequiredFields(JsonNode schemaNode, Map<java.lang.String, Object> payload) {
         JsonNode requiredNode = schemaNode.get("required");
-        if (requiredNode != null && requiredNode.isArray()) {
-            for (JsonNode req : requiredNode) {
-                String key = req.asText();
-                if (!payload.containsKey(key)) {
-                    throw new IllegalArgumentException("缺少必填参数: " + key);
-                }
-            }
+        if (requiredNode == null || !requiredNode.isArray()) return;
+        for (JsonNode req : requiredNode) {
+            String key = req.asText();
+            if (!payload.containsKey(key)) throw new IllegalArgumentException("缺少必填参数: " + key);
         }
     }
 
@@ -212,14 +198,16 @@ public class RestfulToolsInvoker {
     private String resolveUrlVariables(String endpoint, Map<java.lang.String, Object> payload) {
         Matcher matcher = URL_VARIABLE_PATTERN.matcher(endpoint);
         StringBuilder resolved = new StringBuilder();
-        while (matcher.find()) {
-            String varName = matcher.group(1);
-            Object value = payload.get(varName);
-            String replacement = value != null ? value.toString() : matcher.group();
-            matcher.appendReplacement(resolved, Matcher.quoteReplacement(replacement));
-        }
+        while (matcher.find()) replaceVariable(matcher, payload, resolved);
         matcher.appendTail(resolved);
         return resolved.toString();
+    }
+
+    private void replaceVariable(Matcher matcher, Map<java.lang.String, Object> payload, StringBuilder resolved) {
+        String varName = matcher.group(1);
+        Object value = payload.get(varName);
+        String replacement = value != null ? value.toString() : matcher.group();
+        matcher.appendReplacement(resolved, Matcher.quoteReplacement(replacement));
     }
 
     /**
@@ -239,11 +227,10 @@ public class RestfulToolsInvoker {
      */
     private ResponseEntity<java.lang.String> doHttpRequest(String url, String method, Map<java.lang.String, Object> payload) {
         HttpMethod httpMethod = HttpMethod.valueOf(method);
-        HttpHeaders headers = createHeaders();
         if (httpMethod == HttpMethod.GET || httpMethod == HttpMethod.DELETE) {
-            return executeGetOrDelete(url, httpMethod, payload, headers);
+            return executeGetOrDelete(url, httpMethod, payload);
         }
-        return executePostOrPut(url, httpMethod, payload, headers);
+        return executePostOrPut(url, httpMethod, payload);
     }
 
     /**
@@ -259,24 +246,21 @@ public class RestfulToolsInvoker {
     /**
      * 执行 GET 或 DELETE 请求。
      */
-    private ResponseEntity<java.lang.String> executeGetOrDelete(String url, HttpMethod httpMethod, Map<java.lang.String, Object> payload, HttpHeaders headers) {
+    private ResponseEntity<java.lang.String> executeGetOrDelete(String url, HttpMethod httpMethod, Map<java.lang.String, Object> payload) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url);
         Set<java.lang.String> urlVars = extractUrlVariableNames(url);
         for (Map.Entry<java.lang.String, Object> entry : payload.entrySet()) {
-            if (!urlVars.contains(entry.getKey())) {
-                builder.queryParam(entry.getKey(), entry.getValue());
-            }
+            if (!urlVars.contains(entry.getKey())) builder.queryParam(entry.getKey(), entry.getValue());
         }
         String finalUrl = builder.build().toUriString();
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-        return restTemplate.exchange(finalUrl, httpMethod, entity, java.lang.String.class);
+        return restTemplate.exchange(finalUrl, httpMethod, new HttpEntity<>(createHeaders()), java.lang.String.class);
     }
 
     /**
      * 执行 POST 或 PUT 请求。
      */
-    private ResponseEntity<java.lang.String> executePostOrPut(String url, HttpMethod httpMethod, Map<java.lang.String, Object> payload, HttpHeaders headers) {
-        HttpEntity<Map<java.lang.String, Object>> entity = new HttpEntity<>(payload, headers);
+    private ResponseEntity<java.lang.String> executePostOrPut(String url, HttpMethod httpMethod, Map<java.lang.String, Object> payload) {
+        HttpEntity<Map<java.lang.String, Object>> entity = new HttpEntity<>(payload, createHeaders());
         return restTemplate.exchange(url, httpMethod, entity, java.lang.String.class);
     }
 

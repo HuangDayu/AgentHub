@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import org.apache.ibatis.type.JdbcType;
 
 import java.time.Instant;
 
@@ -25,12 +26,18 @@ public class AuditLogEntity {
     private String sessionId;
     private String resourceType;
     private String resourceId;
+    @TableField(jdbcType = JdbcType.LONGVARCHAR)
     private String resourceName;
+    @TableField(jdbcType = JdbcType.LONGVARCHAR)
     private String action;
     private String status;
+    @TableField(jdbcType = JdbcType.LONGVARCHAR)
     private String request;
+    @TableField(jdbcType = JdbcType.LONGVARCHAR)
     private String response;
+    @TableField(jdbcType = JdbcType.LONGVARCHAR)
     private String errorMessage;
+    @TableField(jdbcType = JdbcType.LONGVARCHAR)
     private String metadata;
     private Long elapsedMs;
     @TableField(fill = FieldFill.INSERT)

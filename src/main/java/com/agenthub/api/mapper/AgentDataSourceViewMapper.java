@@ -28,12 +28,12 @@ import com.agenthub.application.port.out.AgentDataSourcePort;
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
 import com.agenthub.domain.enums.OperationLevel;
 import com.agenthub.domain.enums.TableOperation;
-import com.agenthub.domain.model.data_source.AgentDataSourceDescriptor;
-import com.agenthub.domain.model.data_source.AgentDataSourceField;
-import com.agenthub.domain.model.data_source.DataSourceColumn;
-import com.agenthub.domain.model.data_source.DataSourceSchema;
-import com.agenthub.domain.model.data_source.DataSourceTable;
-import com.agenthub.domain.model.data_source.TableRelationship;
+import com.agenthub.domain.model.datasource.AgentDataSourceDescriptor;
+import com.agenthub.domain.model.datasource.AgentDataSourceField;
+import com.agenthub.domain.model.datasource.DataSourceColumn;
+import com.agenthub.domain.model.datasource.DataSourceSchema;
+import com.agenthub.domain.model.datasource.DataSourceTable;
+import com.agenthub.domain.model.datasource.TableRelationship;
 
 import java.util.ArrayList;
 import java.util.HashSet;

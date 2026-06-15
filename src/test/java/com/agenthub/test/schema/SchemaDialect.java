@@ -20,7 +20,7 @@ public interface SchemaDialect {
     /**
      * Java 类型到 SQL 类型的映射（colName 用于"id"特殊处理）
      */
-    String mapType(Class<?> javaType, String colName);
+    String mapType(EntitySchemaScanner.ColumnDefinition  col);
 
     /**
      * 自增主键类型（PG BIGSERIAL / H2 BIGINT AUTO_INCREMENT / MySQL BIGINT NOT NULL AUTO_INCREMENT）

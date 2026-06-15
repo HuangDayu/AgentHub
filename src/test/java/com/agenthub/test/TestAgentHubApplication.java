@@ -18,7 +18,6 @@ import static com.agenthub.test.common.TestCommonTools.TOKEN_FILE;
  */
 @EnableAsync
 @EnableScheduling
-@ActiveProfiles({"test", "test-h2"})
 @MapperScan("com.agenthub.infrastructure.store.db.mapper")
 @SpringBootApplication(scanBasePackages = "com.agenthub")
 public class TestAgentHubApplication {

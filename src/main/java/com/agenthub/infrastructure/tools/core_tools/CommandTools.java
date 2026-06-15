@@ -45,8 +45,7 @@ public class CommandTools {
     }
 
     @Tool(description = "获取进程状态信息")
-    public ProcessResult process(
-            @ToolParam(description = "进程ID") String processId) {
+    public ProcessResult process(@ToolParam(description = "进程ID") String processId) {
         try {
             long pid = Long.parseLong(processId);
             var handle = ProcessHandle.of(pid).orElse(null);
@@ -58,9 +57,8 @@ public class CommandTools {
     }
 
     @Tool(description = "执行代码片段（支持Python和JavaScript）")
-    public ProcessResult codeExecution(
-            @ToolParam(description = "要执行的代码") String code,
-            @ToolParam(description = "编程语言：python 或 javascript") String language) {
+    public ProcessResult codeExecution(@ToolParam(description = "要执行的代码") String code,
+                                       @ToolParam(description = "编程语言") String language) {
         if (code == null || code.isBlank()) return error("代码不能为空");
         String[] cmd = buildCommand(code, language);
         if (cmd == null) return error("不支持的语言: " + language);
@@ -70,16 +68,24 @@ public class CommandTools {
     private ProcessResult executeProcess(String[] cmd, long timeout) {
         long start = System.currentTimeMillis();
         try {
-            ProcessBuilder pb = new ProcessBuilder(cmd);
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-            String output = readStream(process.getInputStream());
-            boolean done = process.waitFor(timeout, TimeUnit.SECONDS);
-            if (!done) process.destroyForcibly();
-            return buildResult(new ResultSpec(done, process.exitValue(), truncate(output), System.currentTimeMillis() - start));
+            return runAndCollect(cmd, timeout, start);
         } catch (Exception e) {
             return error(e.getMessage());
         }
+    }
+
+    private ProcessResult runAndCollect(String[] cmd, long timeout, long start) throws Exception {
+        Process process = startProcess(cmd);
+        String output = readStream(process.getInputStream());
+        boolean done = process.waitFor(timeout, TimeUnit.SECONDS);
+        if (!done) process.destroyForcibly();
+        return buildResult(new ResultSpec(done, process.exitValue(), truncate(output), System.currentTimeMillis() - start));
+    }
+
+    private Process startProcess(String[] cmd) throws IOException {
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        pb.redirectErrorStream(true);
+        return pb.start();
     }
 
     private String[] buildCommand(String code, String language) {

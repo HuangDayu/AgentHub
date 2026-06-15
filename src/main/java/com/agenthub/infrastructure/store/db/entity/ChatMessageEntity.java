@@ -2,6 +2,7 @@ package com.agenthub.infrastructure.store.db.entity;
 import lombok.Data;
 
 import com.baomidou.mybatisplus.annotation.*;
+import org.apache.ibatis.type.JdbcType;
 
 import java.time.Instant;
 
@@ -15,6 +16,7 @@ public class ChatMessageEntity {
     private String id;
     private String sessionId;
     private String role;
+    @TableField(jdbcType = JdbcType.LONGVARCHAR)
     private String content;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;

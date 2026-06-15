@@ -78,12 +78,14 @@ public class FileTools {
         Path path = Paths.get(dirPath);
         if (!Files.exists(path)) return "目录不存在: " + dirPath;
         if (!Files.isDirectory(path)) return "路径不是目录: " + dirPath;
-        return Files.list(path).sorted((a, b) -> {
-            boolean aDir = Files.isDirectory(a);
-            boolean bDir = Files.isDirectory(b);
-            return aDir != bDir ? (aDir ? -1 : 1)
-                    : a.getFileName().toString().compareTo(b.getFileName().toString());
-        }).map(this::formatEntry).collect(Collectors.joining("\n"));
+        return Files.list(path).sorted(this::comparePath).map(this::formatEntry).collect(Collectors.joining("\n"));
+    }
+
+    private int comparePath(Path a, Path b) {
+        boolean aDir = Files.isDirectory(a);
+        boolean bDir = Files.isDirectory(b);
+        return aDir != bDir ? (aDir ? -1 : 1)
+                : a.getFileName().toString().compareTo(b.getFileName().toString());
     }
 
     @Tool(description = "检查文件或目录是否存在")

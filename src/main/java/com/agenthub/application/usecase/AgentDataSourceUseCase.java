@@ -13,7 +13,7 @@ import com.agenthub.domain.event.AgentDataSourceChangedEvent;
 import com.agenthub.domain.exception.AgentDataSourceConflictException;
 import com.agenthub.domain.exception.AgentDataSourceNotFoundException;
 import com.agenthub.domain.exception.AgentDataSourceValidationException;
-import com.agenthub.domain.model.data_source.AgentDataSource;
+import com.agenthub.domain.model.datasource.AgentDataSource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;

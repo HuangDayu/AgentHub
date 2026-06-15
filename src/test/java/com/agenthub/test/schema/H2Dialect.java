@@ -1,11 +1,15 @@
 package com.agenthub.test.schema;
 
+import org.apache.ibatis.type.JdbcType;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.agenthub.test.schema.SchemaFileGenerator.mapJdbcType;
 
 /**
  * H2 方言：双引号标识符、PG 模式兼容（timestamptz、ON CONFLICT）。
@@ -23,12 +27,17 @@ public class H2Dialect implements SchemaDialect {
     }
 
     @Override
-    public String mapType(Class<?> javaType, String colName) {
+    public String mapType(EntitySchemaScanner.ColumnDefinition col) {
+        Class<?> javaType = col.javaType;
+        String colName = col.columnName;
+        if (col.tableField != null && !col.tableField.jdbcType().equals(JdbcType.UNDEFINED)) {
+            return mapJdbcType(col.tableField.jdbcType());
+        }
         if ("id".equals(colName)) {
             return "varchar(64)";
         }
         if (javaType == String.class) {
-            return mapStringType(colName);
+            return mapStringType(col);
         }
         if (javaType == Long.class || javaType == long.class) {
             return "bigint";
@@ -73,10 +82,10 @@ public class H2Dialect implements SchemaDialect {
         StringBuilder sb = new StringBuilder();
         for (String row : insert.values()) {
             sb.append("INSERT INTO ").append(insert.table()).append(" (")
-              .append(String.join(", ", insert.columns())).append(") SELECT ")
-              .append(row).append(" FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM ")
-              .append(insert.table()).append(" WHERE id = '")
-              .append(extractIdFromValues(row)).append("');\n");
+                    .append(String.join(", ", insert.columns())).append(") SELECT ")
+                    .append(row).append(" FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM ")
+                    .append(insert.table()).append(" WHERE id = '")
+                    .append(extractIdFromValues(row)).append("');\n");
         }
         return sb.toString();
     }
@@ -84,13 +93,13 @@ public class H2Dialect implements SchemaDialect {
     @Override
     public String insertOrUpdate(SqlInsert insert) {
         String setClause = insert.updateColumns().stream()
-            .map(c -> "t." + c + " = s." + c)
-            .collect(Collectors.joining(", "));
+                .map(c -> "t." + c + " = s." + c)
+                .collect(Collectors.joining(", "));
         return "MERGE INTO " + insert.table() + " t USING (VALUES " + joinValues(insert.values()) + ") s("
-            + String.join(", ", insert.columns()) + ") ON t.id = s.id "
-            + "WHEN MATCHED THEN UPDATE SET " + setClause + " "
-            + "WHEN NOT MATCHED THEN INSERT (" + String.join(", ", insert.columns()) + ") "
-            + "VALUES (" + insert.columns().stream().map(c -> "s." + c).collect(Collectors.joining(", ")) + ");";
+                + String.join(", ", insert.columns()) + ") ON t.id = s.id "
+                + "WHEN MATCHED THEN UPDATE SET " + setClause + " "
+                + "WHEN NOT MATCHED THEN INSERT (" + String.join(", ", insert.columns()) + ") "
+                + "VALUES (" + insert.columns().stream().map(c -> "s." + c).collect(Collectors.joining(", ")) + ");";
     }
 
     @Override
@@ -118,7 +127,8 @@ public class H2Dialect implements SchemaDialect {
         return "-- H2 PG 模式由 JDBC URL 启用；不需要 CREATE SCHEMA / EXTENSION";
     }
 
-    private String mapStringType(String columnName) {
+    private String mapStringType(EntitySchemaScanner.ColumnDefinition col) {
+        String columnName = col.columnName;
         if (columnName.contains("url") || columnName.contains("uri") || columnName.contains("payload")) {
             return "text";
         }

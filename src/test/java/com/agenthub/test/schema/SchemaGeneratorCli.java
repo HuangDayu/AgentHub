@@ -3,6 +3,7 @@ package com.agenthub.test.schema;
 /**
  * Schema 生成器命令行工具。
  */
+@Deprecated
 public class SchemaGeneratorCli {
 
     /**

@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.agenthub.application.port.out.repositories.AgentDataSourceRepository;
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
 import com.agenthub.domain.enums.AgentDataSourceStatus;
-import com.agenthub.domain.model.data_source.AgentDataSource;
+import com.agenthub.domain.model.datasource.AgentDataSource;
 import com.agenthub.infrastructure.store.db.entity.AgentDataSourceEntity;
 import com.agenthub.infrastructure.store.db.mapper.AgentDataSourceMybatisMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

@@ -1,6 +1,6 @@
 package com.agenthub.application.dto;
 
-import com.agenthub.domain.model.data_source.TableRelationship;
+import com.agenthub.domain.model.datasource.TableRelationship;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

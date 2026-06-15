@@ -4,7 +4,7 @@ import com.agenthub.application.port.out.AgentDataSourcePort;
 import com.agenthub.application.port.out.repositories.AgentDataSourceRepository;
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
 import com.agenthub.domain.exception.ValidationException;
-import com.agenthub.domain.model.data_source.AgentDataSource;
+import com.agenthub.domain.model.datasource.AgentDataSource;
 import com.agenthub.infrastructure.tools.camel_tools.dto.DataSourceCommandResult;
 import com.agenthub.infrastructure.tools.camel_tools.dto.KafkaConsumeRequest;
 import com.agenthub.infrastructure.tools.camel_tools.dto.KafkaSendRequest;

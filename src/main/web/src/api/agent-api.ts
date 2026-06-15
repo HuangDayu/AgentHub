@@ -26,13 +26,15 @@ export async function listAgents(selection: Selection): Promise<Agent[]> {
 export async function createAgent(
   selection: Selection,
   name: string,
-  description: string
+  description: string,
+  type?: string,
+  runtimeCategory?: string
 ): Promise<Agent> {
   return requestJson<Agent>(`/api/v1/workspaces/${selection.workspaceId}/agents`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'POST',
     headers: buildHeaders(selection),
-    bodyJson: { name, description },
+    bodyJson: { name, description, type, runtimeCategory },
   })
 }
 
@@ -48,13 +50,15 @@ export async function updateAgent(
   selection: Selection,
   agentId: string,
   name: string,
-  description: string
+  description: string,
+  type?: string,
+  runtimeCategory?: string
 ): Promise<Agent> {
   return requestJson<Agent>(`/api/v1/workspaces/${selection.workspaceId}/agents/${agentId}`, {
     baseUrl: runtimeConfig.agentApiBase,
     method: 'PUT',
     headers: buildHeaders(selection),
-    bodyJson: { name, description },
+    bodyJson: { name, description, type, runtimeCategory },
   })
 }
 

@@ -1,10 +1,10 @@
 package com.agenthub.infrastructure.camel;
 
-import com.agenthub.domain.model.data_source.AgentDataSource;
-import com.agenthub.domain.model.data_source.DataSourceColumn;
-import com.agenthub.domain.model.data_source.DataSourceSchema;
-import com.agenthub.domain.model.data_source.DataSourceTable;
-import com.agenthub.domain.model.data_source.TableRelationship;
+import com.agenthub.domain.model.datasource.AgentDataSource;
+import com.agenthub.domain.model.datasource.DataSourceColumn;
+import com.agenthub.domain.model.datasource.DataSourceSchema;
+import com.agenthub.domain.model.datasource.DataSourceTable;
+import com.agenthub.domain.model.datasource.TableRelationship;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

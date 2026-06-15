@@ -75,17 +75,16 @@ public class SubagentTools {
             @ToolParam(description = "超时时间（秒）") int timeoutSeconds,
             ToolContext toolContext) {
         long deadline = System.currentTimeMillis() + (timeoutSeconds * 1000L);
+        return pollUntilDone(request, deadline);
+    }
+
+    private SubagentRuntimeOutput pollUntilDone(SubagentHandleToolInput request, long deadline) {
         while (System.currentTimeMillis() < deadline) {
-            SubagentRuntimeOutput status = subagentRuntimeUseCase.status(
-                    request.getSubagentId(), request.getSubsessionId());
-            if (isTerminal(status.getStatus())) {
-                return subagentRuntimeUseCase.result(
-                        request.getSubagentId(), request.getSubsessionId());
-            }
+            SubagentRuntimeOutput status = subagentRuntimeUseCase.status(request.getSubagentId(), request.getSubsessionId());
+            if (isTerminal(status.getStatus())) return subagentRuntimeUseCase.result(request.getSubagentId(), request.getSubsessionId());
             sleepBriefly();
         }
-        return subagentRuntimeUseCase.status(
-                request.getSubagentId(), request.getSubsessionId());
+        return subagentRuntimeUseCase.status(request.getSubagentId(), request.getSubsessionId());
     }
 
     @Tool(description = "批量创建子Agent并返回所有子Agent句柄")

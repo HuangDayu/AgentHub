@@ -59,7 +59,6 @@ import static com.agenthub.common.constants.AgentConstants.THREAD_CONTEXT_KEY;
  *   <li><b>Spring AI 桥接</b> — 通过 {@link AgentScopeSpringModelAdapter} 包装</li>
  * </ul>
  */
-@Primary
 @RequiredArgsConstructor
 @Component
 public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
@@ -127,7 +126,7 @@ public class AgentScopeHarnessAgentFactory implements ReActAgentFactory {
                 .compaction(memoryConfigFactory.createDefaultCompactionConfig()).enablePendingToolRecovery(true)
                 .hooks(buildHooks(config, ctx)).toolExecutionContext(resolveToolExecutionContext(ctx))
                 .toolResultEviction(memoryConfigFactory.createDefaultToolResultEvictionConfig()).toolkit(resolveToolkit(ctx))
-                .knowledges(resolveKnowledge(ctx)).build();
+                .build();
     }
 
     private AgentSkillRepository resolveSkillRepository(ReActAgentContext ctx) {

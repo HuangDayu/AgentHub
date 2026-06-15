@@ -27,6 +27,23 @@
             <span>描述</span>
             <input v-model="agentDescription" placeholder="Agent 的目标与交互风格" />
           </label>
+          <label class="field">
+            <span>类型</span>
+            <select v-model="agentType">
+              <option value="">-- 请选择 --</option>
+              <option value="MAIN_AGENT">主 Agent</option>
+              <option value="SUB_AGENT">子 Agent</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>运行类别</span>
+            <select v-model="agentRuntimeCategory">
+              <option value="">-- 请选择 --</option>
+              <option value="SPRING_AGENT">Spring Agent</option>
+              <option value="AGENT_SCOPE">AgentScope</option>
+              <option value="ALIBABA_AGENT">阿里 Agent</option>
+            </select>
+          </label>
         </form>
       </ModalDialog>
 
@@ -84,6 +101,8 @@ const error = ref('')
 const showCreateForm = ref(false)
 const agentName = ref('')
 const agentDescription = ref('')
+const agentType = ref('')
+const agentRuntimeCategory = ref('')
 const editingAgent = ref<Agent | null>(null)
 
 const selectionReady = computed(() => store.tenantId && store.workspaceId)
@@ -128,8 +147,10 @@ async function performSubmitAgent(): Promise<void> {
   const selection = { tenantId: store.tenantId, workspaceId: store.workspaceId }
   const name = agentName.value.trim()
   const description = agentDescription.value.trim()
-  if (editingAgent.value) { await updateAgent(selection, editingAgent.value.id, name, description) }
-  else { await createAgent(selection, name, description) }
+  const type = agentType.value || undefined
+  const runtimeCategory = agentRuntimeCategory.value || undefined
+  if (editingAgent.value) { await updateAgent(selection, editingAgent.value.id, name, description, type, runtimeCategory) }
+  else { await createAgent(selection, name, description, type, runtimeCategory) }
   cancelForm()
   await loadAgents()
 }
@@ -137,6 +158,8 @@ async function performSubmitAgent(): Promise<void> {
 function cancelForm() {
   agentName.value = ''
   agentDescription.value = ''
+  agentType.value = ''
+  agentRuntimeCategory.value = ''
   showCreateForm.value = false
   editingAgent.value = null
 }
@@ -145,6 +168,8 @@ function handleEdit(agent: Agent) {
   editingAgent.value = agent
   agentName.value = agent.name
   agentDescription.value = agent.description || ''
+  agentType.value = agent.type || ''
+  agentRuntimeCategory.value = agent.runtimeCategory || ''
   showCreateForm.value = true
 }
 
@@ -303,13 +328,13 @@ button.ghost:hover {
   background: var(--bg-stripe);
 }
 
-input, textarea {
+input, textarea, select {
   padding: 0.5rem;
   border: 1px solid var(--color-border-strong);
   border-radius: 0.25rem;
 }
 
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--color-primary);
 }

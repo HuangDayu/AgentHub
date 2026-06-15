@@ -103,14 +103,9 @@ public class SkillTools {
      * 格式化文件列表为字符串。
      */
     private String formatFileList(List<SkillFile> files) {
-        if (files.isEmpty()) {
-            return "技能没有关联的文件";
-        }
+        if (files.isEmpty()) return "技能没有关联的文件";
         StringBuilder sb = new StringBuilder();
-        for (SkillFile f : files) {
-            sb.append(f.getFilePath());
-            sb.append(" (").append(f.getFileSize()).append(" bytes)\n");
-        }
+        files.forEach(f -> sb.append(f.getFilePath()).append(" (").append(f.getFileSize()).append(" bytes)\n"));
         return sb.toString();
     }
 

@@ -1,18 +1,18 @@
 package com.agenthub.infrastructure.workflow.state;
 
+import com.agenthub.application.port.out.repositories.ReactiveKeyValueRepository;
 import com.agenthub.domain.enums.workflow.DagWorkflowStatus;
 import com.agenthub.domain.model.workflow.NodeResult;
 import com.agenthub.domain.model.workflow.DagWorkflowContext;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 工作流状态管理器。
@@ -25,7 +25,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class DagWorkflowStateManager {
 
-    private final ReactiveStringRedisTemplate redisTemplate;
+    private final ReactiveKeyValueRepository reactiveKeyValueRepository;
     private final ObjectMapper objectMapper;
     
     /** 状态过期时间 */
@@ -48,7 +48,7 @@ public class DagWorkflowStateManager {
         String historyKey = buildHistoryKey(context.getWorkflowId());
         return serializeContext(context)
             .flatMap(json -> saveToRedis(key, json))
-            .then(redisTemplate.opsForList().leftPush(historyKey, context.getExecutionId()).then())
+            .then(reactiveKeyValueRepository.lpush(historyKey, context.getExecutionId()).then())
             .doOnSuccess(v -> log.debug("保存执行上下文: {}", context.getExecutionId()))
             .doOnError(e -> log.error("保存执行上下文失败: {}", context.getExecutionId(), e));
     }
@@ -61,7 +61,7 @@ public class DagWorkflowStateManager {
      */
     public Mono<DagWorkflowContext> loadContext(String executionId) {
         String key = buildContextKey(executionId);
-        return redisTemplate.opsForValue().get(key)
+        return reactiveKeyValueRepository.get(key)
             .flatMap(this::deserializeContext)
             .flatMap(context -> loadAndUpdateStatus(context, executionId))
             .doOnSuccess(ctx -> log.debug("加载执行上下文: {}", executionId))
@@ -73,7 +73,7 @@ public class DagWorkflowStateManager {
      */
     private Mono<DagWorkflowContext> loadAndUpdateStatus(DagWorkflowContext context, String executionId) {
         String statusKey = buildStatusKey(executionId);
-        return redisTemplate.opsForValue().get(statusKey)
+        return reactiveKeyValueRepository.get(statusKey)
             .map(statusStr -> updateContextStatus(context, statusStr))
             .onErrorResume(e -> handleStatusLoadError(context, executionId, e))
             .defaultIfEmpty(context);
@@ -124,7 +124,7 @@ public class DagWorkflowStateManager {
      */
     public Mono<NodeResult> loadNodeResult(String executionId, String nodeId) {
         String key = buildNodeResultKey(executionId, nodeId);
-        return redisTemplate.opsForValue().get(key)
+        return reactiveKeyValueRepository.get(key)
             .flatMap(this::deserializeNodeResult)
             .doOnSuccess(result -> log.debug("加载节点结果: {} -> {}", executionId, nodeId));
     }
@@ -138,8 +138,7 @@ public class DagWorkflowStateManager {
      */
     public Mono<Void> updateStatus(String executionId, DagWorkflowStatus status) {
         String key = buildStatusKey(executionId);
-        return redisTemplate.opsForValue().set(key, status.name(), STATE_TTL)
-            .then()
+        return reactiveKeyValueRepository.setex(key, status.name(), STATE_TTL.getSeconds(), TimeUnit.SECONDS)
             .doOnSuccess(v -> log.debug("更新工作流状态: {} -> {}", executionId, status));
     }
 
@@ -152,7 +151,7 @@ public class DagWorkflowStateManager {
     public Mono<Void> deleteState(String executionId) {
         String contextKey = buildContextKey(executionId);
         String statusKey = buildStatusKey(executionId);
-        return redisTemplate.delete(contextKey, statusKey)
+        return reactiveKeyValueRepository.del(contextKey, statusKey)
             .then()
             .doOnSuccess(v -> log.debug("删除执行状态: {}", executionId));
     }
@@ -168,8 +167,7 @@ public class DagWorkflowStateManager {
     public Mono<Void> updateNodeStatus(String executionId, String nodeId, 
                                        com.agenthub.domain.enums.workflow.DagNodeStatus status) {
         String key = buildNodeResultKey(executionId, nodeId) + ":status";
-        return redisTemplate.opsForValue().set(key, status.name(), STATE_TTL)
-            .then()
+        return reactiveKeyValueRepository.setex(key, status.name(), STATE_TTL.getSeconds(), TimeUnit.SECONDS)
             .doOnSuccess(v -> log.debug("更新节点状态: {} -> {} = {}", executionId, nodeId, status));
     }
 
@@ -182,7 +180,7 @@ public class DagWorkflowStateManager {
      */
     public Flux<DagWorkflowContext> listContexts(String workflowId, int limit) {
         String historyKey = buildHistoryKey(workflowId);
-        return redisTemplate.opsForList().range(historyKey, 0, limit - 1)
+        return reactiveKeyValueRepository.lrange(historyKey, 0, limit - 1)
             .flatMap(executionId -> loadContext(executionId)
                 .onErrorResume(e -> {
                     log.warn("加载历史执行上下文失败: {}", executionId, e);
@@ -280,6 +278,6 @@ public class DagWorkflowStateManager {
      * @return 保存结果的Mono
      */
     private Mono<Void> saveToRedis(String key, String value) {
-        return redisTemplate.opsForValue().set(key, value, STATE_TTL).then();
+        return reactiveKeyValueRepository.setex(key, value, STATE_TTL.getSeconds(), TimeUnit.SECONDS);
     }
 }

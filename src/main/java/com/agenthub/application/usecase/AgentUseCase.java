@@ -66,6 +66,7 @@ public class AgentUseCase {
         return new AgentOutput(agent.getId(), agent.getTenantId(), agent.getWorkspaceId(),
                 agent.getAgentCode(), agent.getName(), agent.getDescription(),
                 agent.getStatus(), agent.isEnabled(),
+                agent.getType(), agent.getRuntimeCategory(),
                 agent.getCreatedAt(), agent.getUpdatedAt());
     }
 }

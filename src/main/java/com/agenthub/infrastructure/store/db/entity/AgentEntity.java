@@ -4,7 +4,9 @@ import lombok.Data;
 import com.agenthub.common.annotations.ConfigChangeListenerEntity;
 import com.agenthub.domain.annotation.AgentDataField;
 import com.agenthub.domain.annotation.AgentDataModel;
+import com.agenthub.domain.enums.AgentRuntimeCategory;
 import com.agenthub.domain.enums.AgentStatus;
+import com.agenthub.domain.enums.AgentType;
 import com.agenthub.infrastructure.store.db.mapper.AgentMybatisMapper;
 import com.baomidou.mybatisplus.annotation.*;
 
@@ -44,6 +46,14 @@ public class AgentEntity {
     
     @AgentDataField(description = "是否启用")
     private boolean enabled;
+
+    @AgentDataField(description = "Agent类型", filterable = true, enumType = AgentType.class)
+    private String type;
+
+    @AgentDataField(description = "Agent运行时类别", filterable = true, enumType = AgentRuntimeCategory.class)
+    @TableField(value = "runtime_category")
+    private String runtimeCategory;
+
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private Instant createdAt;
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)

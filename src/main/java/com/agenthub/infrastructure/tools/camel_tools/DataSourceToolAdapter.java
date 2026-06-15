@@ -3,7 +3,7 @@ package com.agenthub.infrastructure.tools.camel_tools;
 import cn.hutool.json.JSONUtil;
 import com.agenthub.application.port.out.AgentDataSourcePort;
 import com.agenthub.domain.enums.AgentDataSourceProtocol;
-import com.agenthub.domain.model.data_source.AgentDataSource;
+import com.agenthub.domain.model.datasource.AgentDataSource;
 import lombok.Getter;
 
 import java.util.Map;
