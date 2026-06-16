@@ -65,11 +65,7 @@
           </label>
           <label class="field">
             <span>协议 *</span>
-            <select v-model="form.protocol" required>
-              <option v-for="c in components" :key="c.protocol" :value="c.protocol">
-                {{ c.displayName }} ({{ c.protocol }})
-              </option>
-            </select>
+            <CustomSelect v-model="form.protocol" :options="protocolOptions" />
           </label>
         </div>
         <label class="field">
@@ -155,6 +151,7 @@ import type {
   AgentDataSourceDescriptor,
   AgentDataSourceTestResult,
 } from '@/types/agent-data-source'
+import CustomSelect from '@/components/CustomSelect.vue'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomButton from '@/components/CustomButton.vue'
 import SchemaPanel from '@/components/datasource/SchemaPanel.vue'
@@ -178,6 +175,8 @@ const form = reactive({
   endpointUri: '',
   propertiesJson: '',
 })
+
+const protocolOptions = computed(() => components.value.map(c => ({ value: c.protocol, label: `${c.displayName} (${c.protocol})` })))
 
 const selectionReady = computed(() => Boolean(store.tenantId && store.workspaceId))
 const currentExampleUri = computed(() => components.value.find((c) => c.protocol === form.protocol)?.exampleUri || '')

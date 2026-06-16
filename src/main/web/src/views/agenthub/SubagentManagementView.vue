@@ -11,10 +11,7 @@
 
     <div class="agent-selector">
       <label>父Agent：</label>
-      <select v-model="selectedAgentId" @change="loadSubagents">
-        <option disabled value="">请选择 Agent</option>
-        <option v-for="agent in agents" :key="agent.id" :value="agent.id">{{ agent.name }}</option>
-      </select>
+      <CustomSelect v-model="selectedAgentId" @change="loadSubagents" :options="agentOptions" placeholder="请选择 Agent" />
     </div>
 
     <div v-if="subagents.length" class="subagent-list">
@@ -56,12 +53,15 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import CustomSelect from '@/components/CustomSelect.vue'
 import { listAgents } from '@/api/agent-api'
 import { listSubagents } from '@/api/subagent-api'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import type { Subagent } from '@/types/subagent'
 import type { Agent } from '@/types/agent'
+
+const agentOptions = computed(() => agents.value.map(a => ({ value: a.id, label: a.name })))
 
 const store = useWorkspaceStore()
 const error = ref('')

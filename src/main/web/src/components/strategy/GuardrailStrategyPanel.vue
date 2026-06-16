@@ -25,38 +25,23 @@
         </label>
         <label class="field">
           <span>启用输入验证</span>
-          <select v-model="newStrategy.inputValidationEnabled">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="newStrategy.inputValidationEnabled" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用输出验证</span>
-          <select v-model="newStrategy.outputValidationEnabled">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="newStrategy.outputValidationEnabled" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用PII检测</span>
-          <select v-model="newStrategy.piiDetectionEnabled">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="newStrategy.piiDetectionEnabled" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用PII掩码</span>
-          <select v-model="newStrategy.piiMaskingEnabled">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="newStrategy.piiMaskingEnabled" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用提示注入检测</span>
-          <select v-model="newStrategy.promptInjectionDetection">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="newStrategy.promptInjectionDetection" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>最大输入长度</span>
@@ -89,38 +74,23 @@
         </label>
         <label class="field">
           <span>启用输入验证</span>
-          <select v-model="editStrategyData.inputValidationEnabled">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.inputValidationEnabled" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用输出验证</span>
-          <select v-model="editStrategyData.outputValidationEnabled">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.outputValidationEnabled" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用PII检测</span>
-          <select v-model="editStrategyData.piiDetectionEnabled">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.piiDetectionEnabled" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用PII掩码</span>
-          <select v-model="editStrategyData.piiMaskingEnabled">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.piiMaskingEnabled" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用提示注入检测</span>
-          <select v-model="editStrategyData.promptInjectionDetection">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.promptInjectionDetection" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>最大输入长度</span>
@@ -173,6 +143,12 @@ import { ref, onMounted, reactive } from 'vue'
 import { showConfirm } from '@/utils/confirm'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomButton from '@/components/CustomButton.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const booleanOptions = [
+  { value: true, label: '是' },
+  { value: false, label: '否' },
+]
 import { useWorkspaceStore } from '@/store/workspace-store'
 import {
   listGuardrailStrategies,
@@ -325,7 +301,7 @@ onMounted(loadStrategies)
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--color-heading); }
-.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--color-border-strong); border-radius: 4px; }
+.form-group input, .form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--color-border-strong); border-radius: 4px; }
 .form-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
 .loading, .empty-state { text-align: center; padding: 2rem; color: var(--color-text-muted); }
 .strategy-table { width: 100%; border-collapse: collapse; }

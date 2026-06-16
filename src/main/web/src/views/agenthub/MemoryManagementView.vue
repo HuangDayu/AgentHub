@@ -58,11 +58,7 @@
         </div>
         <div class="form-group">
           <label>记忆类型</label>
-          <select v-model="form.memoryType" required>
-            <option value="EPISODIC">情景记忆</option>
-            <option value="SEMANTIC">语义记忆</option>
-            <option value="PROCEDURAL">程序记忆</option>
-          </select>
+          <CustomSelect v-model="form.memoryType" :options="memoryTypeOptions" />
         </div>
         <div class="form-group">
           <label>内容</label>
@@ -88,6 +84,12 @@ import type { Agent } from '@/types/agent'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
+
+const memoryTypeOptions = [
+  { value: 'EPISODIC', label: '情景记忆' },
+  { value: 'SEMANTIC', label: '语义记忆' },
+  { value: 'PROCEDURAL', label: '程序记忆' },
+]
 
 const store = useWorkspaceStore()
 const agents = ref<Agent[]>([])

@@ -111,11 +111,7 @@
           </div>
           <div class="property-group">
             <label>节点类型</label>
-            <select v-model="selectedNode.type" class="select" @change="updateGraph">
-              <option v-for="template in NODE_TEMPLATES" :key="template.type" :value="template.type">
-                {{ template.name }}
-              </option>
-            </select>
+            <CustomSelect v-model="selectedNode.type" :options="nodeTypeOptions" @change="updateGraph" />
           </div>
           <div class="property-group">
             <label>描述</label>
@@ -169,6 +165,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { DAGGraph, DAGNode, DAGEdge, NodeTemplate, NODE_TEMPLATES, NodeType } from '@/types/dag'
+import CustomSelect from '@/components/CustomSelect.vue'
 
 // Props
 const props = defineProps<{
@@ -239,6 +236,8 @@ watch(() => props.modelValue, (newValue) => {
     }
   }
 })
+
+const nodeTypeOptions = computed(() => NODE_TEMPLATES.map(t => ({ value: t.type, label: t.name })))
 
 // 方法
 function getNodeIcon(type: NodeType): string {

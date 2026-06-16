@@ -3,11 +3,7 @@
     <p class="hint">任务节点配置</p>
     <div class="form-group">
       <label>任务类型</label>
-      <select v-model="localConfig.task_type" @change="emitUpdate">
-        <option value="agent">Agent执行</option>
-        <option value="tool">工具调用</option>
-        <option value="notification">通知发送</option>
-      </select>
+      <CustomSelect v-model="localConfig.task_type" :options="taskTypeOptions" @change="emitUpdate" />
     </div>
     <div class="form-group">
       <label>配置 (JSON)</label>
@@ -18,6 +14,13 @@
 
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const taskTypeOptions = [
+  { value: 'agent', label: 'Agent执行' },
+  { value: 'tool', label: '工具调用' },
+  { value: 'notification', label: '通知发送' },
+]
 
 const props = defineProps<{ node: any }>()
 const emit = defineEmits<{ update: [updates: any] }>()

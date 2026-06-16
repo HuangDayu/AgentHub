@@ -4,10 +4,7 @@
     <div v-for="(fieldConfig, key) in schemaFields" :key="key" class="form-group">
       <label>{{ fieldConfig.label }}</label>
       <!-- 布尔值 -->
-      <select v-if="fieldConfig.type === 'boolean'" v-model="localConfig[key]" @change="emitUpdate">
-        <option :value="true">是</option>
-        <option :value="false">否</option>
-      </select>
+      <CustomSelect v-if="fieldConfig.type === 'boolean'" v-model="localConfig[key]" :options="booleanOptions" @change="emitUpdate" />
       <!-- 数字 -->
       <input v-else-if="fieldConfig.type === 'number'"
         type="number"
@@ -27,9 +24,7 @@
         class="json-input"
       ></textarea>
       <!-- 选择框 -->
-      <select v-else-if="fieldConfig.options" v-model="localConfig[key]" @change="emitUpdate">
-        <option v-for="opt in fieldConfig.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
+      <CustomSelect v-else-if="fieldConfig.options" v-model="localConfig[key]" :options="fieldConfig.options" @change="emitUpdate" />
       <!-- 文本 -->
       <input v-else
         v-model="localConfig[key]"
@@ -60,6 +55,12 @@
 <script setup lang="ts">
 import { reactive, watch, computed } from 'vue'
 import { NODE_SCHEMA_MAP } from '@/constants/node-schemas'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const booleanOptions = [
+  { value: true, label: '是' },
+  { value: false, label: '否' },
+]
 
 const props = defineProps<{ node: any }>()
 const emit = defineEmits<{ update: [updates: any] }>()

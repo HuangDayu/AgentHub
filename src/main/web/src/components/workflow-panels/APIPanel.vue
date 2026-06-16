@@ -2,12 +2,7 @@
   <div class="api-panel">
     <div class="form-group">
       <label>请求方法</label>
-      <select v-model="localConfig.method" @change="emitUpdate">
-        <option value="GET">GET</option>
-        <option value="POST">POST</option>
-        <option value="PUT">PUT</option>
-        <option value="DELETE">DELETE</option>
-      </select>
+      <CustomSelect v-model="localConfig.method" :options="methodOptions" @change="emitUpdate" />
     </div>
     <div class="form-group">
       <label>请求URL</label>
@@ -24,6 +19,14 @@
 
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const methodOptions = [
+  { value: 'GET', label: 'GET' },
+  { value: 'POST', label: 'POST' },
+  { value: 'PUT', label: 'PUT' },
+  { value: 'DELETE', label: 'DELETE' },
+]
 
 const props = defineProps<{ node: any }>()
 const emit = defineEmits<{ update: [updates: any] }>()

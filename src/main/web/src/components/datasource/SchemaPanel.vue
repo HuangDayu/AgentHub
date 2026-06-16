@@ -64,14 +64,8 @@
           <div v-for="(col, idx) in newTable.columns" :key="idx" class="column-row">
             <input v-model="col.name" placeholder="字段名" />
             <input v-model="col.type" placeholder="类型, 如 BIGINT" />
-            <select v-model="col.isPrimary">
-              <option :value="true">主键</option>
-              <option :value="false">非主键</option>
-            </select>
-            <select v-model="col.nullable">
-              <option :value="true">可空</option>
-              <option :value="false">非空</option>
-            </select>
+            <CustomSelect v-model="col.isPrimary" :options="primaryKeyOptions" />
+            <CustomSelect v-model="col.nullable" :options="nullableOptions" />
             <input v-model="col.description" placeholder="描述" />
             <button type="button" @click="newTable.columns.splice(idx, 1)" class="btn-remove">×</button>
           </div>
@@ -91,6 +85,16 @@ import { useWorkspaceStore } from '@/store/workspace-store'
 import type { DataSourceSchema, DataSourceTable } from '@/types/agent-data-source'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomButton from '@/components/CustomButton.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const primaryKeyOptions = [
+  { value: true, label: '主键' },
+  { value: false, label: '非主键' },
+]
+const nullableOptions = [
+  { value: true, label: '可空' },
+  { value: false, label: '非空' },
+]
 
 const props = defineProps<{ dataSourceId: string }>()
 const store = useWorkspaceStore()
@@ -197,7 +201,7 @@ watch(() => [props.dataSourceId, store.tenantId, store.workspaceId], load)
 .field input, .field textarea { padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 6px; }
 .columns-editor { display: flex; flex-direction: column; gap: 0.5rem; }
 .column-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1.5fr 32px; gap: 4px; }
-.column-row input, .column-row select { padding: 4px 6px; border: 1px solid var(--color-border); border-radius: 4px; }
+.column-row input { padding: 4px 6px; border: 1px solid var(--color-border); border-radius: 4px; }
 .btn-remove { background: var(--color-error); color: white; border: none; border-radius: 4px; cursor: pointer; }
 .btn-add { background: var(--bg-hover); border: 1px dashed var(--color-border); padding: 6px; border-radius: 4px; cursor: pointer; }
 </style>

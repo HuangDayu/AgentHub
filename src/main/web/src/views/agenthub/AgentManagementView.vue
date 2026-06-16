@@ -29,20 +29,11 @@
           </label>
           <label class="field">
             <span>类型</span>
-            <select v-model="agentType">
-              <option value="">-- 请选择 --</option>
-              <option value="MAIN_AGENT">主 Agent</option>
-              <option value="SUB_AGENT">子 Agent</option>
-            </select>
+            <CustomSelect v-model="agentType" :options="agentTypeOptions" placeholder="-- 请选择 --" />
           </label>
           <label class="field">
             <span>运行类别</span>
-            <select v-model="agentRuntimeCategory">
-              <option value="">-- 请选择 --</option>
-              <option value="SPRING_AGENT">Spring Agent</option>
-              <option value="AGENT_SCOPE">AgentScope</option>
-              <option value="ALIBABA_AGENT">阿里 Agent</option>
-            </select>
+            <CustomSelect v-model="agentRuntimeCategory" :options="runtimeCategoryOptions" placeholder="-- 请选择 --" />
           </label>
         </form>
       </ModalDialog>
@@ -89,6 +80,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { showConfirm } from '@/utils/confirm'
 import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
 import { useRouter } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listAgents, createAgent, updateAgent, deleteAgent, publishAgent, unpublishAgent } from '@/api/agent-api'
@@ -104,6 +96,15 @@ const agentDescription = ref('')
 const agentType = ref('')
 const agentRuntimeCategory = ref('')
 const editingAgent = ref<Agent | null>(null)
+const agentTypeOptions = [
+  { value: 'MAIN_AGENT', label: '主 Agent' },
+  { value: 'SUB_AGENT', label: '子 Agent' },
+]
+const runtimeCategoryOptions = [
+  { value: 'SPRING_AGENT', label: 'Spring Agent' },
+  { value: 'AGENT_SCOPE', label: 'AgentScope' },
+  { value: 'ALIBABA_AGENT', label: '阿里 Agent' },
+]
 
 const selectionReady = computed(() => store.tenantId && store.workspaceId)
 
@@ -328,13 +329,13 @@ button.ghost:hover {
   background: var(--bg-stripe);
 }
 
-input, textarea, select {
+input, textarea {
   padding: 0.5rem;
   border: 1px solid var(--color-border-strong);
   border-radius: 0.25rem;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus, textarea:focus {
   outline: none;
   border-color: var(--color-primary);
 }

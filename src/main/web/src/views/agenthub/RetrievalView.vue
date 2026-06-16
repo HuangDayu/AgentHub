@@ -15,12 +15,7 @@
           <!-- 第一行：知识库选择 -->
           <label class="field" style="grid-column: 1 / -1">
             <span>知识库</span>
-            <select v-model="selectedKbId">
-              <option disabled value="">选择知识库</option>
-              <option v-for="kb in knowledgeBases" :key="kb.id" :value="kb.id">
-                {{ kb.name }}（{{ kb.id }}）
-              </option>
-            </select>
+            <CustomSelect v-model="selectedKbId" :options="kbOptions" placeholder="选择知识库" />
           </label>
           <!-- 第二行：返回数量、分数阈值、向量权重 -->
           <label class="field">
@@ -42,32 +37,20 @@
           </label>
           <label class="field">
             <span>启用查询改写</span>
-            <select v-model="enableQueryRewrite">
-              <option :value="true">是</option>
-              <option :value="false">否</option>
-            </select>
+            <CustomSelect v-model="enableQueryRewrite" :options="booleanOptions" />
           </label>
           <label class="field">
             <span>启用重排序</span>
-            <select v-model="enableRerank">
-              <option :value="true">是</option>
-              <option :value="false">否</option>
-            </select>
+            <CustomSelect v-model="enableRerank" :options="booleanOptions" />
           </label>
           <!-- 第四行：文本搜索、向量搜索 -->
           <label class="field">
             <span>启用文本搜索</span>
-            <select v-model="enableTextSearch">
-              <option :value="true">是</option>
-              <option :value="false">否</option>
-            </select>
+            <CustomSelect v-model="enableTextSearch" :options="booleanOptions" />
           </label>
           <label class="field">
             <span>启用向量搜索</span>
-            <select v-model="enableVectorSearch">
-              <option :value="true">是</option>
-              <option :value="false">否</option>
-            </select>
+            <CustomSelect v-model="enableVectorSearch" :options="booleanOptions" />
           </label>
           <!-- 查询文本 -->
           <label class="field" style="grid-column: 1 / -1">
@@ -109,6 +92,11 @@ import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
 
+const booleanOptions = [
+  { value: true, label: '是' },
+  { value: false, label: '否' },
+]
+
 const store = useWorkspaceStore()
 const knowledgeBases = ref<KnowledgeBase[]>([])
 const selectedKbId = ref('')
@@ -126,6 +114,8 @@ const rewrittenQuery = ref('')
 const error = ref('')
 const searching = ref(false)
 const searched = ref(false)
+
+const kbOptions = computed(() => knowledgeBases.value.map(kb => ({ value: kb.id, label: `${kb.name}（${kb.id}）` })))
 
 const selectionReady = computed(() => Boolean(store.tenantId && store.workspaceId))
 

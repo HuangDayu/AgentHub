@@ -45,32 +45,17 @@
       <div class="form-grid">
         <div class="form-group">
           <label>分类</label>
-          <select v-model="selectedCategory" @change="onCategoryChange" class="form-select">
-            <option value="">请选择分类</option>
-            <option v-for="ct in configTypes" :key="ct.category" :value="ct.category">
-              {{ ct.displayName }}
-            </option>
-          </select>
+          <CustomSelect v-model="selectedCategory" :options="categoryOptions" @change="onCategoryChange" class="form-select" placeholder="请选择分类" />
         </div>
 
         <div class="form-group">
           <label>类型</label>
-          <select v-model="selectedType" @change="onTypeChange" :disabled="!selectedCategory" class="form-select">
-            <option value="">请选择类型</option>
-            <option v-for="t in typesForCategory" :key="t.type" :value="t.type">
-              {{ t.displayName }}
-            </option>
-          </select>
+          <CustomSelect v-model="selectedType" :options="typeOptions" @change="onTypeChange" :disabled="!selectedCategory" class="form-select" placeholder="请选择类型" />
         </div>
 
         <div class="form-group">
           <label>配置项</label>
-          <select v-model="selectedConfigId" :disabled="!selectedType" class="form-select">
-            <option value="">请选择配置</option>
-            <option v-for="c in availableConfigsForType" :key="c.id" :value="c.id">
-              {{ c.name }}
-            </option>
-          </select>
+          <CustomSelect v-model="selectedConfigId" :options="configIdOptions" :disabled="!selectedType" class="form-select" placeholder="请选择配置" />
         </div>
 
         <div class="form-group">
@@ -112,6 +97,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { getConfigTypes, getAvailableConfigs, type ConfigTypeDefinition, type AvailableConfig } from '@/api/agent-config-type-api'
 import { setAgentConfig, listAgentConfigs, deleteAgentConfig, type AgentConfigResponse } from '@/api/agent-config-api'
+import CustomSelect from '@/components/CustomSelect.vue'
 
 interface Props {
   selection: { tenantId: string; workspaceId: string }
@@ -140,6 +126,12 @@ const typesForCategory = computed(() => {
 const availableConfigsForType = computed(() => {
   return availableConfigs.value.get(selectedType.value) || []
 })
+
+const categoryOptions = computed(() => configTypes.value.map(ct => ({ value: ct.category, label: ct.displayName })))
+
+const typeOptions = computed(() => typesForCategory.value.map(t => ({ value: t.type, label: t.displayName })))
+
+const configIdOptions = computed(() => availableConfigsForType.value.map(c => ({ value: c.id, label: c.name })))
 
 function getCategoryDisplayName(category: string): string {
   const ct = configTypes.value.find(c => c.category === category)

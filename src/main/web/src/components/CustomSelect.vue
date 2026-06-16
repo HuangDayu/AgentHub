@@ -1,58 +1,58 @@
 <template>
   <div class="custom-select-wrapper" :class="{ disabled: disabled, 'has-error': error }">
     <label v-if="label" class="select-label">{{ label }}</label>
-    <div 
-      class="custom-select" 
-      :class="{ 'is-open': isOpen, 'has-value': modelValue }"
-      @click="toggleDropdown"
+    <div
+      class="custom-select"
+      :class="{ 'is-open': isOpen, 'has-value': modelValue != null && modelValue !== '' }"
       v-click-outside="closeDropdown"
     >
-      <div class="select-trigger">
-        <span class="select-value" :class="{ placeholder: !selectedOption }">
-          {{ selectedOption ? selectedOption.label : placeholder }}
-        </span>
-        <span class="select-arrow" :class="{ rotated: isOpen }">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
-      </div>
-      
+<input
+  ref="inputRef"
+  v-model="inputValue"
+  type="text"
+  class="select-input"
+  :placeholder="placeholder"
+  :disabled="disabled"
+  @focus="onFocus"
+  @click="onInputClick"
+  @input="onInput"
+  @keydown.down.prevent="highlightNext"
+  @keydown.up.prevent="highlightPrev"
+  @keydown.enter.prevent="selectHighlighted"
+  @keydown.esc="closeDropdown"
+/>
+      <span class="select-arrow" :class="{ rotated: isOpen }">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+
       <transition name="dropdown">
         <div v-if="isOpen" class="select-dropdown">
-          <div class="dropdown-search" v-if="searchable">
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              class="search-input"
-              :placeholder="searchPlaceholder"
-              @click.stop
-            />
+          <div
+            v-for="(option, index) in filteredOptions"
+            :key="option.value"
+            class="dropdown-option"
+            :class="{
+              selected: option.value === modelValue,
+              highlighted: index === highlightedIndex,
+              disabled: option.disabled
+            }"
+            @click="selectOption(option)"
+            @mouseenter="highlightedIndex = index"
+          >
+            <div class="option-content">
+              <span class="option-label">{{ option.label }}</span>
+              <span v-if="option.description" class="option-desc">{{ option.description }}</span>
+            </div>
+            <span v-if="option.value === modelValue" class="option-check">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3.5 8L6.5 11L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
           </div>
-          <div class="dropdown-options">
-            <div
-              v-for="option in filteredOptions"
-              :key="option.value"
-              class="dropdown-option"
-              :class="{
-                selected: option.value === modelValue,
-                disabled: option.disabled
-              }"
-              @click.stop="selectOption(option)"
-            >
-              <div class="option-content">
-                <span class="option-label">{{ option.label }}</span>
-                <span v-if="option.description" class="option-desc">{{ option.description }}</span>
-              </div>
-              <span v-if="option.value === modelValue" class="option-check">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M3.5 8L6.5 11L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-            </div>
-            <div v-if="filteredOptions.length === 0" class="dropdown-empty">
-              {{ emptyText }}
-            </div>
+          <div v-if="filteredOptions.length === 0" class="dropdown-empty">
+            {{ emptyText }}
           </div>
         </div>
       </transition>
@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 
 interface Option {
   value: string | number
@@ -80,16 +80,12 @@ interface Props {
   disabled?: boolean
   error?: string
   hint?: string
-  searchable?: boolean
-  searchPlaceholder?: string
   emptyText?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   placeholder: '请选择',
   disabled: false,
-  searchable: false,
-  searchPlaceholder: '搜索...',
   emptyText: '暂无数据'
 })
 
@@ -98,44 +94,96 @@ const emit = defineEmits<{
   change: [value: string | number, option: Option]
 }>()
 
+const inputRef = ref<HTMLInputElement>()
 const isOpen = ref(false)
-const searchQuery = ref('')
+const inputValue = ref('')
+const highlightedIndex = ref(-1)
+const selectedGuard = ref(false)
 
 const selectedOption = computed(() => {
   return props.options.find(opt => opt.value === props.modelValue)
 })
 
 const filteredOptions = computed(() => {
-  if (!props.searchable || !searchQuery.value) {
-    return props.options
-  }
-  const query = searchQuery.value.toLowerCase()
-  return props.options.filter(opt => 
+  const query = inputValue.value.trim().toLowerCase()
+  if (!query) return props.options
+  return props.options.filter(opt =>
     opt.label.toLowerCase().includes(query)
   )
 })
 
-const toggleDropdown = () => {
-  if (props.disabled) return
-  isOpen.value = !isOpen.value
+watch(isOpen, (open) => {
+  if (open) {
+    inputValue.value = ''
+    highlightedIndex.value = 0
+  } else {
+    const opt = selectedOption.value
+    inputValue.value = opt ? opt.label : ''
+  }
+})
+
+watch(() => props.modelValue, () => {
   if (!isOpen.value) {
-    searchQuery.value = ''
+    const opt = selectedOption.value
+    inputValue.value = opt ? opt.label : ''
+  }
+}, { immediate: true })
+
+function onFocus() {
+  if (props.disabled || selectedGuard.value) return
+  isOpen.value = true
+}
+
+function onInputClick() {
+  if (props.disabled || selectedGuard.value) return
+  isOpen.value = true
+}
+
+function onInput() {
+  if (!isOpen.value) isOpen.value = true
+  highlightedIndex.value = -1
+}
+
+function closeDropdown() {
+  isOpen.value = false
+}
+
+function highlightNext() {
+  if (filteredOptions.value.length === 0) return
+  highlightedIndex.value = Math.min(highlightedIndex.value + 1, filteredOptions.value.length - 1)
+  scrollToHighlighted()
+}
+
+function highlightPrev() {
+  if (filteredOptions.value.length === 0) return
+  highlightedIndex.value = Math.max(highlightedIndex.value - 1, 0)
+  scrollToHighlighted()
+}
+
+function selectHighlighted() {
+  if (highlightedIndex.value >= 0 && highlightedIndex.value < filteredOptions.value.length) {
+    selectOption(filteredOptions.value[highlightedIndex.value])
+  } else if (filteredOptions.value.length === 1) {
+    selectOption(filteredOptions.value[0])
   }
 }
 
-const closeDropdown = () => {
-  isOpen.value = false
-  searchQuery.value = ''
+function scrollToHighlighted() {
+  nextTick(() => {
+    const el = document.querySelector('.dropdown-option.highlighted')
+    if (el) el.scrollIntoView({ block: 'nearest' })
+  })
 }
 
-const selectOption = (option: Option) => {
+function selectOption(option: Option) {
   if (option.disabled) return
   emit('update:modelValue', option.value)
   emit('change', option.value, option)
   closeDropdown()
+  selectedGuard.value = true
+  setTimeout(() => { selectedGuard.value = false }, 200)
 }
 
-// 点击外部关闭下拉框
 const vClickOutside = {
   mounted(el: any, binding: any) {
     el._clickOutside = (event: Event) => {
@@ -156,14 +204,12 @@ const vClickOutside = {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: 150px;
 }
 
 .select-label {
   font-size: 14px;
   font-weight: 500;
   color: var(--color-primary-dark);
-  margin-bottom: 2px;
 }
 
 .custom-select {
@@ -171,66 +217,53 @@ const vClickOutside = {
   width: 100%;
 }
 
-.select-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
+.select-input {
+  width: 100%;
+  padding: 10px 36px 10px 14px;
   background: var(--bg-input, #ffffff);
   border: 1px solid var(--color-border-strong);
   border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 40px;
+  font-size: 14px;
   color: var(--color-text);
+  outline: none;
+  cursor: text;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
 }
 
-.select-trigger:hover {
-  border-color: var(--color-primary, #3a7bd5);
-  background: var(--bg-hover, rgba(58, 123, 213, 0.02));
-}
-
-.custom-select.is-open .select-trigger {
+.select-input:focus {
   border-color: var(--color-primary, #3a7bd5);
   box-shadow: 0 0 0 3px var(--color-primary-subtle, rgba(58, 123, 213, 0.1));
 }
 
-.custom-select.disabled .select-trigger {
+.select-input::placeholder {
+  color: var(--color-text-light);
+}
+
+.custom-select.disabled .select-input {
   background: var(--bg-stripe, rgba(0, 0, 0, 0.03));
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-.custom-select.has-error .select-trigger {
+.custom-select-wrapper.has-error .select-input {
   border-color: var(--color-error);
 }
 
-.select-value {
-  flex: 1;
-  font-size: 14px;
-  color: var(--color-text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.select-value.placeholder {
-  color: var(--color-text-light);
-}
-
 .select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  color: var(--color-text-light, var(--color-text-muted));
-  transition: transform 0.2s ease;
-  margin-left: 8px;
+  color: var(--color-text-light);
+  pointer-events: none;
+  transition: transform 0.2s;
 }
 
 .select-arrow.rotated {
-  transform: rotate(180deg);
+  transform: translateY(-50%) rotate(180deg);
 }
 
 .select-dropdown {
@@ -243,31 +276,6 @@ const vClickOutside = {
   border-radius: 10px;
   box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.12));
   z-index: 1000;
-  overflow: hidden;
-}
-
-.dropdown-search {
-  padding: 8px;
-  border-bottom: 1px solid var(--color-border, rgba(38, 66, 102, 0.08));
-}
-
-.search-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-  background: var(--bg-input, #ffffff);
-  color: var(--color-text);
-}
-
-.search-input:focus {
-  border-color: var(--color-primary, #3a7bd5);
-}
-
-.dropdown-options {
   max-height: 240px;
   overflow-y: auto;
   padding: 4px 0;
@@ -281,9 +289,11 @@ const vClickOutside = {
   cursor: pointer;
   transition: background 0.15s;
   color: var(--color-text);
+  font-size: 14px;
 }
 
-.dropdown-option:hover:not(.disabled) {
+.dropdown-option:hover:not(.disabled),
+.dropdown-option.highlighted {
   background: var(--color-primary-subtle, rgba(58, 123, 213, 0.06));
 }
 
@@ -339,16 +349,13 @@ const vClickOutside = {
 .select-error {
   font-size: 12px;
   color: var(--color-error);
-  margin-top: 2px;
 }
 
 .select-hint {
   font-size: 12px;
-  color: var(--color-text-light, var(--color-text-muted));
-  margin-top: 2px;
+  color: var(--color-text-light);
 }
 
-/* 下拉动画 */
 .dropdown-enter-active,
 .dropdown-leave-active {
   transition: all 0.2s ease;

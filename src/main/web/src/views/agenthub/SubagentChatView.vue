@@ -13,10 +13,7 @@
         </div>
         <div class="sidebar-section">
           <label>子Agent</label>
-          <select v-model="selectedSubagentId" @change="loadSubsessions">
-            <option disabled value="">请选择</option>
-            <option v-for="sub in subagents" :key="sub.id" :value="sub.id">{{ sub.name }}</option>
-          </select>
+          <CustomSelect v-model="selectedSubagentId" @change="loadSubsessions" :options="subagentOptions" placeholder="请选择" />
         </div>
         <div class="sidebar-section">
           <button class="primary" :disabled="!selectedSubagentId" @click="createNewSubsession">新建子会话</button>
@@ -101,6 +98,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import CustomSelect from '@/components/CustomSelect.vue'
 import { listAgents } from '@/api/agent-api'
 import {
   createSubsession,
@@ -118,6 +116,7 @@ const agents = ref<Agent[]>([])
 const selectedAgentId = ref('')
 const subagents = ref<Subagent[]>([])
 const selectedSubagentId = ref('')
+const subagentOptions = computed(() => subagents.value.map(s => ({ value: s.id, label: s.name })))
 const subsessions = ref<Subsession[]>([])
 const selectedSubsessionId = ref('')
 const messages = ref<{ role: string; content: string }[]>([])

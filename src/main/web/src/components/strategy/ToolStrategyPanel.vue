@@ -37,10 +37,7 @@
         </label>
         <label class="field">
           <span>启用降级</span>
-          <select v-model="newStrategy.fallbackEnabled">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="newStrategy.fallbackEnabled" :options="booleanOptions" />
         </label>
       </form>
     </ModalDialog>
@@ -77,10 +74,7 @@
         </label>
         <label class="field">
           <span>启用降级</span>
-          <select v-model="editStrategyData.fallbackEnabled">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.fallbackEnabled" :options="booleanOptions" />
         </label>
       </form>
     </ModalDialog>
@@ -125,6 +119,12 @@ import { ref, onMounted, reactive } from 'vue'
 import { showConfirm } from '@/utils/confirm'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomButton from '@/components/CustomButton.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const booleanOptions = [
+  { value: true, label: '是' },
+  { value: false, label: '否' },
+]
 import { useWorkspaceStore } from '@/store/workspace-store'
 import {
   listToolStrategies,
@@ -267,7 +267,7 @@ onMounted(loadStrategies)
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--color-heading); }
-.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--color-border-strong); border-radius: 4px; }
+.form-group input, .form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--color-border-strong); border-radius: 4px; }
 .form-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
 .loading, .empty-state { text-align: center; padding: 2rem; color: var(--color-text-muted); }
 .strategy-table { width: 100%; border-collapse: collapse; }

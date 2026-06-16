@@ -25,14 +25,7 @@
           </label>
           <label class="field">
             <span>类型</span>
-            <select v-model="form.type" required :disabled="!!editingId">
-              <option value="">选择类型</option>
-              <option value="QDRANT">Qdrant</option>
-              <option value="CHROMA">Chroma</option>
-              <option value="MILVUS">Milvus</option>
-              <option value="WEAVIATE">Weaviate</option>
-              <option value="PINECONE">Pinecone</option>
-            </select>
+            <CustomSelect v-model="form.type" :options="storeTypeOptions" placeholder="选择类型" :disabled="!!editingId" />
           </label>
           <label class="field">
             <span>主机地址</span>
@@ -56,10 +49,7 @@
           </label>
           <label class="field" v-if="editingId">
             <span>启用状态</span>
-            <select v-model="form.enabled">
-              <option :value="true">启用</option>
-              <option :value="false">禁用</option>
-            </select>
+            <CustomSelect v-model="form.enabled" :options="enabledOptions" />
           </label>
         </form>
       </ModalDialog>
@@ -167,6 +157,18 @@ const form = reactive({
   extraParams: '',
   enabled: true,
 })
+
+const storeTypeOptions = [
+  { value: 'QDRANT', label: 'Qdrant' },
+  { value: 'CHROMA', label: 'Chroma' },
+  { value: 'MILVUS', label: 'Milvus' },
+  { value: 'WEAVIATE', label: 'Weaviate' },
+  { value: 'PINECONE', label: 'Pinecone' },
+]
+const enabledOptions = [
+  { value: true, label: '启用' },
+  { value: false, label: '禁用' },
+]
 
 const selectionReady = computed(() => Boolean(store.tenantId && store.workspaceId))
 

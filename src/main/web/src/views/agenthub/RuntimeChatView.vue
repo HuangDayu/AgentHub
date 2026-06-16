@@ -36,12 +36,7 @@
           <!-- Agent 选择 -->
           <div class="sidebar-section">
             <div class="agent-selector">
-              <select v-model="selectedAgentId" @change="onAgentChange">
-                <option disabled value="">请选择 Agent</option>
-                <option v-for="agent in agents" :key="agent.id" :value="agent.id">
-                  {{ agent.name }}
-                </option>
-              </select>
+              <CustomSelect v-model="selectedAgentId" @change="onAgentChange" :options="agentOptions" placeholder="请选择 Agent" />
               <button class="refresh-btn" @click="loadAgents" title="刷新Agent列表">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M23 4v6h-6M1 20v-6h6"/>
@@ -663,6 +658,7 @@ import ToolCallMessage from '@/components/ToolCallMessage.vue'
 import ToolResultMessage from '@/components/ToolResultMessage.vue'
 import SkillMessage from '@/components/SkillMessage.vue'
 import ModalDialog from '@/components/ModalDialog.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
 
 const router = useRouter()
 const store = useWorkspaceStore()
@@ -676,6 +672,7 @@ const runtimeExpanded = ref(false)
 const agents = ref<Agent[]>([])
 const selectedAgentId = ref('')
 const loadingAgents = ref(false)
+const agentOptions = computed(() => agents.value.map(a => ({ value: a.id, label: a.name })))
 
 // Session
 const sessions = ref<ChatSession[]>([])

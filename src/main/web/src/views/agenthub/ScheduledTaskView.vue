@@ -92,12 +92,7 @@
         </div>
         <div class="form-group">
           <label>任务类型</label>
-          <select v-model="form.taskType" required :disabled="showEditDialog">
-            <option value="AGENT_CALL">Agent调用</option>
-            <option value="WORKFLOW">工作流</option>
-            <option value="DATA_SYNC">数据同步</option>
-            <option value="CLEANUP">清理任务</option>
-          </select>
+          <CustomSelect v-model="form.taskType" :options="taskTypeOptions" :disabled="showEditDialog" />
         </div>
         <div class="form-group">
           <label>Cron表达式</label>
@@ -152,6 +147,13 @@ const form = ref({
   executorConfig: '{}',
   prompt: ''
 })
+
+const taskTypeOptions = [
+  { value: 'AGENT_CALL', label: 'Agent调用' },
+  { value: 'WORKFLOW', label: '工作流' },
+  { value: 'DATA_SYNC', label: '数据同步' },
+  { value: 'CLEANUP', label: '清理任务' },
+]
 
 const selectionReady = computed(() => !!store.tenantId && !!store.workspaceId)
 

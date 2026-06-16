@@ -21,11 +21,7 @@
           </label>
           <label class="field">
             <span>服务器类型 *</span>
-            <select v-model="form.serverType" required>
-              <option value="STDIO">STDIO</option>
-              <option value="HTTP">HTTP</option>
-              <option value="SSE">SSE</option>
-            </select>
+            <CustomSelect v-model="form.serverType" :options="serverTypeOptions" />
           </label>
           <label class="field">
             <span>服务器URL *</span>
@@ -49,17 +45,11 @@
           </label>
           <label class="field">
             <span>异步模式</span>
-            <select v-model="form.async">
-              <option :value="true">异步</option>
-              <option :value="false">同步</option>
-            </select>
+            <CustomSelect v-model="form.async" :options="asyncOptions" />
           </label>
           <label class="field">
             <span>启用状态</span>
-            <select v-model="form.enabled">
-              <option :value="true">启用</option>
-              <option :value="false">禁用</option>
-            </select>
+            <CustomSelect v-model="form.enabled" :options="enabledOptions" />
           </label>
         </form>
       </ModalDialog>
@@ -113,6 +103,20 @@ import { useWorkspaceStore } from '@/store/workspace-store'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
+
+const serverTypeOptions = [
+  { value: 'STDIO', label: 'STDIO' },
+  { value: 'HTTP', label: 'HTTP' },
+  { value: 'SSE', label: 'SSE' },
+]
+const asyncOptions = [
+  { value: true, label: '异步' },
+  { value: false, label: '同步' },
+]
+const enabledOptions = [
+  { value: true, label: '启用' },
+  { value: false, label: '禁用' },
+]
 
 const store = useWorkspaceStore()
 const error = ref('')

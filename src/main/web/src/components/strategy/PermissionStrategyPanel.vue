@@ -77,17 +77,11 @@
         </div>
         <label class="field">
           <span>危险 SQL 拦截</span>
-          <select v-model="form.dangerousSqlBlock">
-            <option :value="true">开启</option>
-            <option :value="false">关闭</option>
-          </select>
+          <CustomSelect v-model="form.dangerousSqlBlock" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>审计日志</span>
-          <select v-model="form.auditLogEnabled">
-            <option :value="true">开启</option>
-            <option :value="false">关闭</option>
-          </select>
+          <CustomSelect v-model="form.auditLogEnabled" :options="booleanOptions" />
         </label>
       </form>
     </ModalDialog>
@@ -106,6 +100,12 @@ import { useWorkspaceStore } from '@/store/workspace-store'
 import type { PermissionStrategy } from '@/types/permission-strategy'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomButton from '@/components/CustomButton.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const booleanOptions = [
+  { value: true, label: '是' },
+  { value: false, label: '否' },
+]
 
 const store = useWorkspaceStore()
 const strategies = ref<PermissionStrategy[]>([])
@@ -238,7 +238,7 @@ watch(() => [store.tenantId, store.workspaceId], load)
 .field-grid { display: flex; flex-direction: column; gap: 0.75rem; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 .field { display: flex; flex-direction: column; gap: 0.25rem; }
-.field input, .field textarea, .field select {
+.field input, .field textarea {
   padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--bg-card-solid);
 }
 </style>

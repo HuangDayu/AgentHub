@@ -1,29 +1,26 @@
 <template>
-  <div class="workspace-selector">
-    <select 
-      v-model="selectedWorkspaceId" 
-      @change="handleWorkspaceChange"
-      class="workspace-select"
-    >
-      <option value="" disabled>选择工作区</option>
-      <option v-for="ws in workspaces" :key="ws.id" :value="ws.id">
-        {{ ws.name }}
-      </option>
-    </select>
-  </div>
+  <CustomSelect
+    v-model="selectedWorkspaceId"
+    :options="workspaceOptions"
+    @change="handleWorkspaceChange"
+    class="workspace-select"
+    placeholder="选择工作区"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listWorkspaces } from '@/api/tenant-api'
 import type { Workspace } from '@/domain/types'
+import CustomSelect from '@/components/CustomSelect.vue'
 
 const store = useWorkspaceStore()
 const router = useRouter()
 const workspaces = ref<Workspace[]>([])
 const selectedWorkspaceId = ref(store.workspaceId)
+const workspaceOptions = computed(() => workspaces.value.map(ws => ({ value: ws.id, label: ws.name })))
 
 // 加载工作区列表
 async function loadWorkspaces() {
@@ -32,7 +29,9 @@ async function loadWorkspaces() {
 }
 
 function autoSelectFirstWorkspace() {
-  if (workspaces.value.length && !store.workspaceId) { store.selectWorkspace(workspaces.value[0].id); selectedWorkspaceId.value = workspaces.value[0].id }
+  if (workspaces.value.length && (!store.workspaceId || !workspaces.value.some(w => w.id === store.workspaceId))) {
+    store.selectWorkspace(workspaces.value[0].id); selectedWorkspaceId.value = workspaces.value[0].id
+  }
 }
 
 // 处理工作区切换
@@ -91,31 +90,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.workspace-selector {
-  display: flex;
-  align-items: center;
-}
-
 .workspace-select {
-  padding: 6px 12px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 8px;
-  background: var(--bg-input, white);
-  font-family: var(--font-body, inherit);
-  font-size: 0.85rem;
-  color: var(--color-text);
-  cursor: pointer;
   min-width: 150px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.workspace-select:hover {
-  border-color: var(--color-primary, rgba(58, 123, 213, 0.5));
-}
-
-.workspace-select:focus {
-  outline: none;
-  border-color: var(--color-primary, #3a7bd5);
-  box-shadow: 0 0 0 3px var(--color-primary-subtle, rgba(58, 123, 213, 0.1));
+  font-size: 0.85rem;
 }
 </style>

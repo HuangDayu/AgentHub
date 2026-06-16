@@ -18,18 +18,11 @@
     </div>
     <div class="form-group">
       <label>检索类型</label>
-      <select v-model="localConfig.retrievalType" @change="emitUpdate">
-        <option value="similarity">相似度检索 (Similarity)</option>
-        <option value="hybrid">混合检索 (Hybrid)</option>
-      </select>
+      <CustomSelect v-model="localConfig.retrievalType" :options="retrievalTypeOptions" @change="emitUpdate" />
     </div>
     <div class="form-group">
       <label>处理模式</label>
-      <select v-model="localConfig.processMode" @change="emitUpdate">
-        <option value="list">列表 (List)</option>
-        <option value="concat">拼接 (Concat)</option>
-        <option value="structured">结构化 (Structured)</option>
-      </select>
+      <CustomSelect v-model="localConfig.processMode" :options="processModeOptions" @change="emitUpdate" />
     </div>
     <div class="form-group">
       <label class="checkbox-label">
@@ -58,6 +51,18 @@
 
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const retrievalTypeOptions = [
+  { value: 'similarity', label: '相似度检索 (Similarity)' },
+  { value: 'hybrid', label: '混合检索 (Hybrid)' },
+]
+
+const processModeOptions = [
+  { value: 'list', label: '列表 (List)' },
+  { value: 'concat', label: '拼接 (Concat)' },
+  { value: 'structured', label: '结构化 (Structured)' },
+]
 
 const props = defineProps<{ node: any }>()
 const emit = defineEmits<{ update: [updates: any] }>()

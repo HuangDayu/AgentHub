@@ -24,21 +24,11 @@
           </label>
           <label class="field">
             <span>类型</span>
-            <select v-model="form.type" required :disabled="!!editingId">
-              <option value="">选择类型</option>
-              <option value="CHAT">对话模型</option>
-              <option value="EMBEDDING">嵌入模型</option>
-            </select>
+            <CustomSelect v-model="form.type" :options="typeOptions" placeholder="选择类型" :disabled="!!editingId" />
           </label>
           <label class="field">
             <span>供应商</span>
-            <select v-model="form.supplier" required :disabled="!!editingId">
-              <option value="">选择供应商</option>
-              <option value="OPENAI">OpenAI</option>
-              <option value="DEEPSEEK">DeepSeek</option>
-              <option value="OLLAMA">Ollama</option>
-              <option value="OPENROUTER">OpenRouter</option>
-            </select>
+            <CustomSelect v-model="form.supplier" :options="supplierOptions" placeholder="选择供应商" :disabled="!!editingId" />
           </label>
           <label class="field">
             <span>模型名称</span>
@@ -54,10 +44,7 @@
           </label>
           <label class="field">
             <span>启用状态</span>
-            <select v-model="form.enabled">
-              <option :value="true">启用</option>
-              <option :value="false">禁用</option>
-            </select>
+            <CustomSelect v-model="form.enabled" :options="booleanOptions" />
           </label>
       </form>
     </ModalDialog>
@@ -144,6 +131,21 @@ import type { ModelConfig } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
+
+const typeOptions = [
+  { value: 'CHAT', label: '对话模型' },
+  { value: 'EMBEDDING', label: '嵌入模型' },
+]
+const supplierOptions = [
+  { value: 'OPENAI', label: 'OpenAI' },
+  { value: 'DEEPSEEK', label: 'DeepSeek' },
+  { value: 'OLLAMA', label: 'Ollama' },
+  { value: 'OPENROUTER', label: 'OpenRouter' },
+]
+const booleanOptions = [
+  { value: true, label: '启用' },
+  { value: false, label: '禁用' },
+]
 
 const store = useWorkspaceStore()
 const error = ref('')

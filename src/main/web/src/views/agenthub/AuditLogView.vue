@@ -18,26 +18,15 @@
           </label>
           <label class="field">
             <span>资源类型</span>
-            <select v-model="filter.resourceType">
-              <option value="">全部</option>
-              <option v-for="rt in resourceTypes" :key="rt" :value="rt">{{ rt }}</option>
-            </select>
+            <CustomSelect v-model="filter.resourceType" :options="resourceTypeOptions" placeholder="全部" />
           </label>
           <label class="field">
             <span>动作</span>
-            <select v-model="filter.action">
-              <option value="">全部</option>
-              <option v-for="a in actions" :key="a" :value="a">{{ a }}</option>
-            </select>
+            <CustomSelect v-model="filter.action" :options="actionOptions" placeholder="全部" />
           </label>
           <label class="field">
             <span>状态</span>
-            <select v-model="filter.status">
-              <option value="">全部</option>
-              <option value="SUCCESS">成功</option>
-              <option value="FAILED">失败</option>
-              <option value="DENIED">拒绝</option>
-            </select>
+            <CustomSelect v-model="filter.status" :options="statusOptions" placeholder="全部" />
           </label>
           <label class="field">
             <span>起始时间</span>
@@ -49,11 +38,7 @@
           </label>
           <label class="field">
             <span>每页</span>
-            <select v-model.number="filter.size">
-              <option :value="20">20</option>
-              <option :value="50">50</option>
-              <option :value="100">100</option>
-            </select>
+            <CustomSelect v-model="filter.size" :options="sizeOptions" />
           </label>
         </div>
         <div class="filter-actions">
@@ -114,6 +99,7 @@ import {
 } from '@/api/audit-log-api'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import type { AuditEvent, AuditLogQuery } from '@/types/audit-log'
+import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
@@ -135,6 +121,19 @@ const filter = reactive<Required<AuditLogQuery>>({
   page: 1,
   size: 50,
 })
+
+const resourceTypeOptions = computed(() => resourceTypes.value.map(rt => ({ value: rt, label: rt })))
+const actionOptions = computed(() => actions.value.map(a => ({ value: a, label: a })))
+const statusOptions = [
+  { value: 'SUCCESS', label: '成功' },
+  { value: 'FAILED', label: '失败' },
+  { value: 'DENIED', label: '拒绝' },
+]
+const sizeOptions = [
+  { value: 20, label: '20' },
+  { value: 50, label: '50' },
+  { value: 100, label: '100' },
+]
 
 const selectionReady = computed(() => Boolean(store.tenantId))
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / filter.size)))

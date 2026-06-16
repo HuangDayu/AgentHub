@@ -21,11 +21,7 @@
         </label>
         <label class="field">
           <span>检索类型</span>
-          <select v-model="newStrategy.retrievalType">
-            <option value="HYBRID">混合检索</option>
-            <option value="VECTOR">向量检索</option>
-            <option value="KEYWORD">关键词检索</option>
-          </select>
+          <CustomSelect v-model="newStrategy.retrievalType" :options="retrievalTypeOptions" />
         </label>
         <label class="field">
           <span>描述</span>
@@ -49,31 +45,19 @@
         </label>
         <label class="field">
           <span>启用查询改写</span>
-          <select v-model="newStrategy.enableQueryRewrite">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="newStrategy.enableQueryRewrite" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用重排序</span>
-          <select v-model="newStrategy.enableRerank">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="newStrategy.enableRerank" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用文本搜索</span>
-          <select v-model="newStrategy.enableTextSearch">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="newStrategy.enableTextSearch" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用向量搜索</span>
-          <select v-model="newStrategy.enableVectorSearch">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="newStrategy.enableVectorSearch" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>重排序模型</span>
@@ -98,11 +82,7 @@
         </label>
         <label class="field">
           <span>检索类型</span>
-          <select v-model="editStrategyData.retrievalType">
-            <option value="HYBRID">混合检索</option>
-            <option value="VECTOR">向量检索</option>
-            <option value="KEYWORD">关键词检索</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.retrievalType" :options="retrievalTypeOptions" />
         </label>
         <label class="field">
           <span>描述</span>
@@ -126,31 +106,19 @@
         </label>
         <label class="field">
           <span>启用查询改写</span>
-          <select v-model="editStrategyData.enableQueryRewrite">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.enableQueryRewrite" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用重排序</span>
-          <select v-model="editStrategyData.enableRerank">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.enableRerank" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用文本搜索</span>
-          <select v-model="editStrategyData.enableTextSearch">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.enableTextSearch" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>启用向量搜索</span>
-          <select v-model="editStrategyData.enableVectorSearch">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
+          <CustomSelect v-model="editStrategyData.enableVectorSearch" :options="booleanOptions" />
         </label>
         <label class="field">
           <span>重排序模型</span>
@@ -205,6 +173,17 @@ import { ref, onMounted, reactive } from 'vue'
 import { showConfirm } from '@/utils/confirm'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomButton from '@/components/CustomButton.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const retrievalTypeOptions = [
+  { value: 'HYBRID', label: '混合检索' },
+  { value: 'VECTOR', label: '向量检索' },
+  { value: 'KEYWORD', label: '关键词检索' },
+]
+const booleanOptions = [
+  { value: true, label: '是' },
+  { value: false, label: '否' },
+]
 import { useWorkspaceStore } from '@/store/workspace-store'
 import {
   listRetrievalStrategies,
@@ -388,7 +367,6 @@ onMounted(loadStrategies)
   color: var(--color-heading);
 }
 .form-group input,
-.form-group select,
 .form-group textarea {
   width: 100%;
   padding: 0.5rem;

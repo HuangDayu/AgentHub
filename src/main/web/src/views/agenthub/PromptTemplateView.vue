@@ -21,12 +21,7 @@
           </label>
           <label class="field">
             <span>分类</span>
-            <select v-model="form.category">
-              <option value="SYSTEM">SYSTEM</option>
-              <option value="USER">USER</option>
-              <option value="ASSISTANT">ASSISTANT</option>
-              <option value="GENERAL">GENERAL</option>
-            </select>
+            <CustomSelect v-model="form.category" :options="categoryOptions" />
           </label>
           <label class="field">
             <span>描述</span>
@@ -38,10 +33,7 @@
           </div>
           <label class="field">
             <span>启用状态</span>
-            <select v-model="form.active">
-              <option :value="true">启用</option>
-              <option :value="false">禁用</option>
-            </select>
+            <CustomSelect v-model="form.active" :options="activeOptions" />
           </label>
         </form>
       </ModalDialog>
@@ -96,6 +88,17 @@ import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
 import CustomButton from '@/components/CustomButton.vue'
+
+const categoryOptions = [
+  { value: 'SYSTEM', label: 'SYSTEM' },
+  { value: 'USER', label: 'USER' },
+  { value: 'ASSISTANT', label: 'ASSISTANT' },
+  { value: 'GENERAL', label: 'GENERAL' },
+]
+const activeOptions = [
+  { value: true, label: '启用' },
+  { value: false, label: '禁用' },
+]
 
 const store = useWorkspaceStore()
 const error = ref('')

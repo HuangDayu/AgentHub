@@ -31,32 +31,20 @@
           </label>
           <label class="field">
             <span>启用查询改写</span>
-            <select v-model="enableQueryRewrite">
-              <option :value="true">是</option>
-              <option :value="false">否</option>
-            </select>
+            <CustomSelect v-model="enableQueryRewrite" :options="booleanOptions" />
           </label>
           <label class="field">
             <span>启用重排序</span>
-            <select v-model="enableRerank">
-              <option :value="true">是</option>
-              <option :value="false">否</option>
-            </select>
+            <CustomSelect v-model="enableRerank" :options="booleanOptions" />
           </label>
           <!-- 第三行：文本搜索、向量搜索 -->
           <label class="field">
             <span>启用文本搜索</span>
-            <select v-model="enableTextSearch">
-              <option :value="true">是</option>
-              <option :value="false">否</option>
-            </select>
+            <CustomSelect v-model="enableTextSearch" :options="booleanOptions" />
           </label>
           <label class="field">
             <span>启用向量搜索</span>
-            <select v-model="enableVectorSearch">
-              <option :value="true">是</option>
-              <option :value="false">否</option>
-            </select>
+            <CustomSelect v-model="enableVectorSearch" :options="booleanOptions" />
           </label>
           <!-- 查询文本 -->
           <label class="field" style="grid-column: 1 / -1">
@@ -97,6 +85,12 @@ import type { RetrievalChunk } from '@/domain/types'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import ModalDialog from '@/components/ModalDialog.vue'
 import CustomButton from '@/components/CustomButton.vue'
+import CustomSelect from '@/components/CustomSelect.vue'
+
+const booleanOptions = [
+  { value: true, label: '是' },
+  { value: false, label: '否' },
+]
 
 const props = defineProps<{
   visible: boolean
@@ -269,7 +263,6 @@ function handleClose() {
 }
 
 .field input,
-.field select,
 .field textarea {
   padding: 0.5rem;
   border: 1px solid var(--color-border-strong);

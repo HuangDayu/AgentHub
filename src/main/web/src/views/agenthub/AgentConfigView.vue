@@ -308,6 +308,8 @@ if (agentIdFromQuery) {
 
 watch(() => [store.tenantId, store.workspaceId], () => {
   if (selectionReady.value) {
+    selectedAgentId.value = null
+    configs.value = []
     loadAgents()
     loadConfigTypes()
   }
@@ -489,6 +491,20 @@ async function toggleEnabled(config: AgentConfig) {
 async function performToggleEnabled(config: AgentConfig): Promise<void> {
   await updateAgentConfig(getSelection(), selectedAgentId.value!, config.id, { ...config, enabled: !config.enabled })
   await loadConfigs()
+}
+
+async function handleDelete(configId: string) {
+  if (!await showConfirm('确定要删除此配置吗？')) return
+  loading.value = true
+  error.value = ''
+  try {
+    await deleteAgentConfig(getSelection(), selectedAgentId.value!, configId)
+    await loadConfigs()
+  } catch (e: any) {
+    error.value = e.message
+  } finally {
+    loading.value = false
+  }
 }
 
 async function handleSync() {

@@ -64,12 +64,7 @@
         </label>
         <label class="field">
           <span>协调模式 *</span>
-          <select v-model="form.coordinationMode" required>
-            <option value="SEQUENTIAL">顺序执行</option>
-            <option value="PARALLEL">并行执行</option>
-            <option value="HIERARCHICAL">层级协调</option>
-            <option value="CONSENSUS">共识决策</option>
-          </select>
+          <CustomSelect v-model="form.coordinationMode" :options="coordinationModeOptions" placeholder="选择协调模式" />
         </label>
         <label class="field">
           <span>成员配置 (JSON)</span>
@@ -86,8 +81,8 @@ import { showConfirm } from '@/utils/confirm'
 import { useWorkspaceStore } from '@/store/workspace-store'
 import { listTeams, createTeam, updateTeam, activateTeam, deactivateTeam, deleteTeam } from '@/api/team-api'
 import type { AgentTeam } from '@/types/memory'
-import ModalDialog from '@/components/ModalDialog.vue'
 import CustomSelect from '@/components/CustomSelect.vue'
+import ModalDialog from '@/components/ModalDialog.vue'
 import CustomButton from '@/components/CustomButton.vue'
 
 const store = useWorkspaceStore()
@@ -102,6 +97,13 @@ const form = ref({
   coordinationMode: 'SEQUENTIAL',
   memberConfig: '{}'
 })
+
+const coordinationModeOptions = [
+  { value: 'SEQUENTIAL', label: '顺序执行' },
+  { value: 'PARALLEL', label: '并行执行' },
+  { value: 'HIERARCHICAL', label: '层级协调' },
+  { value: 'CONSENSUS', label: '共识决策' },
+]
 
 const selection = () => ({
   tenantId: store.tenantId,
